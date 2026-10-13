@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "2.1.6 Events: system, pages, conditions, triggers, priority, move routes, all commands",
+  "last_completed": "2.1.7 Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug",
   "tasks": [
     {
       "id": "0",
@@ -398,7 +398,7 @@
         "plan/research/rpgmaker/06_events_commands_1.md",
         "plan/research/rpgmaker/07_event_commands_2.md"
       ],
-      "commit": "pending",
+      "commit": "0aec90fe28",
       "notes": ""
     },
     {
@@ -407,7 +407,7 @@
       "description": "Message window behaviour and control characters; menu screens; turn-based and TPB; damage formula semantics; save/load; audio types; generator; debug tools.",
       "parent": "2.1",
       "dependencies": [],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Sections written with sources"
@@ -416,7 +416,7 @@
       "files": [
         "plan/research/rpgmaker/08_runtime_systems.md"
       ],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

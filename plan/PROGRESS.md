@@ -2,10 +2,10 @@
 
 <!-- status:begin -->
 - **Updated:** 2026-10-13 15:38 -0600
-- **Current task:** 2.1.7 Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug, 2.1.8 Other versions' notable features
-- **Last completed:** 2.1.6 Events: system, pages, conditions, triggers, priority, move routes, all commands
+- **Current task:** 2.1.8 Other versions' notable features
+- **Last completed:** 2.1.7 Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug
 - **Next task:** 4.2 HTTP/1.1 server component
-- **Done leaf tasks:** 19
+- **Done leaf tasks:** 20
 <!-- status:end -->
 
 ## Log
@@ -49,4 +49,5 @@
 | 2026-10-13 15:38 -0600 | 2.1.3 | done: Database A: actors, classes, skills, items, weapons/armors — Official-source inventory slice: 99 items (DB 10, ACT 12, CLS 12, SKL 23, ITM 22, WPN 10, ARM 10); every item cites an official URL; paraphrase check run | c2cca57cf2 |
 | 2026-10-13 15:38 -0600 | 2.1.4 | done: Database B: enemies, troops, states, animations, common events — Official-source inventory slice: 93 items (ENM 24, TRP 22, STA 19, ANI 20, CEV 8); every item cites an official URL; paraphrase check run | 2a82d83e30 |
 | 2026-10-13 15:38 -0600 | 2.1.5 | done: Database C: system 1/2, types, terms, traits, effects — Official-source inventory slice: 84 items (SYS 32, TYP 6, TRM 6, TRT 26, EFF 14); every item cites an official URL; paraphrase check run | 434f27dce2 |
-| 2026-10-13 15:38 -0600 | 2.1.6 | done: Events: system, pages, conditions, triggers, priority, move routes, all commands — Official-source inventory slice: 223 items (EVT 48, CMD 53, MSG 19, MRT 51, CMD2 52); every item cites an official URL; paraphrase check run | pending |
+| 2026-10-13 15:38 -0600 | 2.1.6 | done: Events: system, pages, conditions, triggers, priority, move routes, all commands — Official-source inventory slice: 223 items (EVT 48, CMD 53, MSG 19, MRT 51, CMD2 52); every item cites an official URL; paraphrase check run | 0aec90fe28 |
+| 2026-10-13 15:38 -0600 | 2.1.7 | done: Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug — Official-source inventory slice: 125 items (MNU 20, BTL 26, FRM 21, SAV 7, AUD 15, MSGB 13, INP 9, GEN 7, DBG 7); every item cites an official URL; paraphrase check run | pending |
