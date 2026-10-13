@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "4.6 Editor tools: tree, nodes, project",
+  "last_completed": "4.7 Logs and errors",
   "tasks": [
     {
       "id": "0",
@@ -784,7 +784,7 @@
       ],
       "test_strategy": "Bridge calls on plain_2d.",
       "files": [],
-      "commit": "pending",
+      "commit": "3c278a7942",
       "notes": ""
     },
     {
@@ -795,7 +795,7 @@
       "dependencies": [
         "4.6"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Editor print and game print both retrievable",
@@ -803,7 +803,7 @@
       ],
       "test_strategy": "Run plain_2d with a print + push_error.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

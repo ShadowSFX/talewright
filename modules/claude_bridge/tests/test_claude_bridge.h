@@ -9,6 +9,7 @@
 
 #include "modules/claude_bridge/claude_bridge_auth.h"
 #include "modules/claude_bridge/claude_bridge_http.h"
+#include "modules/claude_bridge/claude_bridge_logs.h"
 #include "modules/claude_bridge/claude_bridge_mcp.h"
 #include "modules/claude_bridge/claude_bridge_plugin.h"
 #include "modules/claude_bridge/claude_bridge_tools.h"
@@ -428,6 +429,49 @@ TEST_CASE("[ClaudeBridge][Tools] res:// path validation rejects traversal") {
 	CHECK(ClaudeBridgeTools::validate_res_path("res://a/../../x").is_empty());
 	CHECK(ClaudeBridgeTools::validate_res_path("C:/Windows/win.ini").is_empty());
 	CHECK(ClaudeBridgeTools::validate_res_path("").is_empty());
+}
+
+TEST_CASE("[ClaudeBridge][Logs] Ring buffer, filters and game messages") {
+	ClaudeBridgeLogs logs;
+	logs.set_capacity(16);
+	for (int i = 0; i < 20; i++) {
+		logs.add("editor", "info", "line " + itos(i));
+	}
+	ClaudeBridgeLogs::Query q;
+	uint64_t last = 0;
+	Array all = logs.query(q, last);
+	CHECK(all.size() == 16); // Oldest four dropped.
+	CHECK(last == 20);
+	CHECK(String(Dictionary(all[0])["text"]) == "line 4");
+	CHECK(int(logs.get_counts()["dropped"]) == 4);
+
+	q.since_seq = 18;
+	CHECK(logs.query(q, last).size() == 2);
+
+	Array output;
+	PackedStringArray strings;
+	strings.push_back("hello from game");
+	strings.push_back("bad thing");
+	PackedInt32Array types;
+	types.push_back(0); // MESSAGE_TYPE_LOG
+	types.push_back(1); // MESSAGE_TYPE_ERROR
+	output.push_back(strings);
+	output.push_back(types);
+	logs.add_game_debug_message("output", output);
+
+	ClaudeBridgeLogs::Query game;
+	game.source = "game";
+	Array g = logs.query(game, last);
+	CHECK(g.size() == 2);
+	CHECK(String(Dictionary(g[1])["level"]) == "error");
+
+	ClaudeBridgeLogs::Query errs;
+	errs.errors_only = true;
+	errs.contains = "BAD";
+	CHECK(logs.query(errs, last).size() == 1);
+
+	logs.clear();
+	CHECK(logs.query(ClaudeBridgeLogs::Query(), last).is_empty());
 }
 
 } // namespace TestClaudeBridge

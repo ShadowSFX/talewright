@@ -1,6 +1,7 @@
 #pragma once
 
 #include "claude_bridge_http.h"
+#include "claude_bridge_logs.h"
 #include "claude_bridge_mcp.h"
 
 #include "editor/plugins/editor_plugin.h"
@@ -38,6 +39,11 @@ private:
 	LocalVector<PendingCall> pending_calls;
 	String token;
 	uint64_t started_msec = 0;
+	ClaudeBridgeLogs logs;
+	uint64_t last_debugger_scan_msec = 0;
+
+	void _connect_debuggers();
+	void _on_debug_data(const String &p_message, const Array &p_data);
 
 	void _register_tools();
 	void _process_pending(uint64_t p_now);
@@ -63,6 +69,7 @@ public:
 	virtual String get_plugin_name() const override { return "ClaudeBridge"; }
 
 	ClaudeBridgeMCP &get_mcp() { return mcp; }
+	ClaudeBridgeLogs &get_logs() { return logs; }
 	bool is_enabled() const { return enabled; }
 	bool is_listening() const { return server.is_listening(); }
 	int get_port() const { return server.get_port(); }

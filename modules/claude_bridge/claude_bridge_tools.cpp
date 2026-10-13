@@ -506,6 +506,38 @@ static void _tool_undo_redo(const Dictionary &p_args, const Ref<ClaudeBridgeTool
 	p_call->complete_data(out);
 }
 
+static void _tool_get_logs(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_plugin) {
+	ClaudeBridgePlugin *plugin = static_cast<ClaudeBridgePlugin *>(p_plugin);
+	ClaudeBridgeLogs::Query q;
+	q.since_seq = (uint64_t)MAX(int64_t(p_args.get("since_seq", 0)), (int64_t)0);
+	const String source = p_args.get("source", "all");
+	if (source != "all") {
+		if (source != "editor" && source != "game") {
+			p_call->fail("source must be \"all\", \"editor\" or \"game\".");
+			return;
+		}
+		q.source = source;
+	}
+	q.errors_only = p_args.get("errors_only", false);
+	q.contains = p_args.get("contains", "");
+	q.limit = CLAMP(int(p_args.get("limit", 200)), 1, 2000);
+	uint64_t last = 0;
+	Dictionary out;
+	out["entries"] = plugin->get_logs().query(q, last);
+	out["last_seq"] = (int64_t)last;
+	out["counts"] = plugin->get_logs().get_counts();
+	p_call->complete_data(out);
+}
+
+static void _tool_clear_logs(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_plugin) {
+	ClaudeBridgePlugin *plugin = static_cast<ClaudeBridgePlugin *>(p_plugin);
+	plugin->get_logs().clear();
+	Dictionary out;
+	out["cleared"] = true;
+	out["last_seq"] = (int64_t)plugin->get_logs().get_last_seq();
+	p_call->complete_data(out);
+}
+
 // --- registration --------------------------------------------------------------------------------------
 
 static Dictionary _prop(const String &p_type, const String &p_description) {
@@ -595,6 +627,15 @@ void register_editor_tools(ClaudeBridgeMCP &r_mcp, ClaudeBridgePlugin *p_plugin)
 	_add(r_mcp, "project_read_file", "Read project file", "Reads a project file as UTF-8 text (binary files report only their size).", p, req, &_tool_read_file, true, p_plugin);
 
 	_add(r_mcp, "editor_rescan", "Rescan filesystem", "Asks the editor to rescan the project files (the editor otherwise rescans only when it regains focus).", Dictionary(), PackedStringArray(), &_tool_rescan, false, p_plugin);
+
+	p.clear();
+	p["since_seq"] = _prop("integer", "Only entries newer than this sequence number (use last_seq from a previous call).");
+	p["source"] = _prop("string", "\"all\" (default), \"editor\" (editor process prints/errors) or \"game\" (running game output/errors).");
+	p["errors_only"] = _prop("boolean", "Only warnings and errors.");
+	p["contains"] = _prop("string", "Case-insensitive text filter.");
+	p["limit"] = _prop("integer", "Maximum entries, newest kept (default 200).");
+	_add(r_mcp, "get_logs", "Output and errors", "Returns editor and game output/errors (with file:line for errors) from a ring buffer, plus counts.", p, PackedStringArray(), &_tool_get_logs, true, p_plugin);
+	_add(r_mcp, "clear_logs", "Clear logs", "Clears the bridge log buffer.", Dictionary(), PackedStringArray(), &_tool_clear_logs, false, p_plugin);
 
 	p.clear();
 	p["action"] = _prop("string", "\"undo\" or \"redo\".");

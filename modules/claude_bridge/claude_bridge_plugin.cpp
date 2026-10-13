@@ -10,6 +10,8 @@
 #include "core/object/callable_mp.h"
 #include "core/os/os.h"
 #include "core/version.h"
+#include "editor/debugger/editor_debugger_node.h"
+#include "editor/debugger/script_editor_debugger.h"
 #include "editor/file_system/editor_paths.h"
 #include "editor/settings/editor_settings.h"
 
@@ -60,6 +62,7 @@ void ClaudeBridgePlugin::_start_server() {
 		return;
 	}
 	_write_connection_file();
+	logs.install_handlers();
 	set_process(true);
 	print_verbose(vformat("Claude bridge: listening on http://127.0.0.1:%d%s", server.get_port(), MCP_PATH));
 }
@@ -70,6 +73,7 @@ void ClaudeBridgePlugin::_stop_server() {
 		pc.call->cancel();
 	}
 	pending_calls.clear();
+	logs.remove_handlers();
 	if (server.is_listening()) {
 		server.stop();
 		_remove_connection_file();
@@ -161,6 +165,27 @@ void ClaudeBridgePlugin::_handle_request(uint64_t p_connection_id, const ClaudeB
 	_respond_json(p_connection_id, reply.http_status, reply.body);
 }
 
+void ClaudeBridgePlugin::_connect_debuggers() {
+	// Game output reaches the editor only as debugger messages (editor/debugger/script_editor_debugger.cpp:561-593);
+	// `debug_data` is emitted for every message before dispatch (script_editor_debugger.cpp:984). New sessions
+	// (one per running instance) appear over time, so connect idempotently. get_debugger() returns null past the end
+	// (scene/gui/tab_container.cpp:725), as used by EditorDebuggerNode::add_debugger_plugin.
+	EditorDebuggerNode *edn = EditorDebuggerNode::get_singleton();
+	if (!edn) {
+		return;
+	}
+	const Callable cb = callable_mp(this, &ClaudeBridgePlugin::_on_debug_data);
+	for (int i = 0; ScriptEditorDebugger *dbg = edn->get_debugger(i); i++) {
+		if (!dbg->is_connected("debug_data", cb)) {
+			dbg->connect("debug_data", cb);
+		}
+	}
+}
+
+void ClaudeBridgePlugin::_on_debug_data(const String &p_message, const Array &p_data) {
+	logs.add_game_debug_message(p_message, p_data);
+}
+
 void ClaudeBridgePlugin::_process_pending(uint64_t p_now) {
 	for (uint32_t i = 0; i < pending_calls.size();) {
 		PendingCall &pc = pending_calls[i];
@@ -228,6 +253,10 @@ void ClaudeBridgePlugin::_notification(int p_what) {
 		} break;
 		case NOTIFICATION_PROCESS: {
 			const uint64_t now = OS::get_singleton()->get_ticks_msec();
+			if (now - last_debugger_scan_msec > 500) {
+				last_debugger_scan_msec = now;
+				_connect_debuggers();
+			}
 			server.poll(now);
 			_process_pending(now);
 		} break;
