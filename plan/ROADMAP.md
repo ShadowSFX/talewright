@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 153, in_progress: 0, done: 52, blocked: 0, deferred: 3 (of 208)
+**Totals:** pending: 152, in_progress: 0, done: 53, blocked: 0, deferred: 3 (of 208)
 
 ## [x] 0 Bootstrap and task system
 
@@ -58,7 +58,7 @@ Decision log, upstream patch ledger, design specs, refined task tree.
   - [x] **3.5.2** Review fixes: tiles, autotiles, passage bits, character sheets (spec 05) (P1) _(deps: 3.5.1; commit: 8eb312e55e)_
   - [x] **3.5.3** Review fixes: core layering, save robustness, determinism (specs 01, 03, 05, 06) (P1) _(deps: 3.5.2; commit: 67d53aa4ac)_
   - [x] **3.5.4** Review fixes: online page authority, localization keys, inconsistencies (P1) _(deps: 3.5.3; commit: d25927e933)_
-  - [x] **3.5.5** Review fixes: task tree order, slice gaps, criteria, core_diff_check; review record (P1) _(deps: 3.5.4; commit: pending)_
+  - [x] **3.5.5** Review fixes: task tree order, slice gaps, criteria, core_diff_check; review record (P1) _(deps: 3.5.4; commit: 2ab7e3196b)_
 
 ## [x] 4 Claude bridge (MCP)
 
@@ -83,7 +83,7 @@ Editor-only C++ module: MCP Streamable HTTP server on 127.0.0.1 with token; edit
 modules/jrpg with pure-logic core (no Node dependency), database, game state, RNG, formulas.
 
 - [ ] **5.1** Module skeleton and dynamic workspace (P1)
-  - [ ] **5.1.1** Module skeleton (P1)
+  - [x] **5.1.1** Module skeleton (P1) _(commit: pending)_
   - [ ] **5.1.2** jrpg/enabled + dynamic workspace (P1) _(deps: 5.1.1)_
 - [ ] **5.2** Database core (P1) _(deps: 5.1)_
   - [ ] **5.2.1** Entry/table/manifest classes (P1)

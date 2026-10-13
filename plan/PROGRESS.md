@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 17:24 -0600
+- **Updated:** 2026-10-13 17:34 -0600
 - **Current task:** none
-- **Last completed:** 3.5.5 Review fixes: task tree order, slice gaps, criteria, core_diff_check; review record
-- **Next task:** 5.1.1 Module skeleton
-- **Done leaf tasks:** 45
+- **Last completed:** 5.1.1 Module skeleton
+- **Next task:** 5.1.2 jrpg/enabled + dynamic workspace
+- **Done leaf tasks:** 46
 <!-- status:end -->
 
 ## Log
@@ -108,4 +108,7 @@
 | 2026-10-13 17:20 -0600 | 3.5.4 | done: Review fixes: online page authority, localization keys, inconsistencies — D-025 online page authority (switch/variable scopes character/account/world/instance/temp, per-character self switches unless shared, per-player events evaluated by clients and validated per trigger with fixed movement, shared events evaluated once per zone; editor flags mixed scopes); D-026 localization keys (<Kind>_<id>.<field>, random per-command text_key, keys+args over the network, saves store only name overrides, EditorTranslationParserPlugin export); game_id moved to JRPGSystemData; D-007 benchmark -> 9.2.1; spec 07 own direction order (clockwise from north), own path limits 24/64 with reasons, step-based movement messages, content hash in handshake; spec 03 dialog timeouts 120/300 s instead of rAthena's 60/180; tasks 9.5, 10.2, 19, 35 linked (containers: 3.5 in_progress->pending, 3 in_progress->pending) | d25927e933 |
 | 2026-10-13 17:20 -0600 | 3.5.5 | started: Review fixes: task tree order, slice gaps, criteria, core_diff_check; review record (containers: 3.5 pending->in_progress, 3 pending->in_progress) |  |
 | 2026-10-13 17:24 -0600 | - | imported 17 new / 92 updated tasks | |
-| 2026-10-13 17:24 -0600 | 3.5.5 | done: Review fixes: task tree order, slice gaps, criteria, core_diff_check; review record — Epic 3 review closed: task order fixed (epic 10 before 9, save screens after the save format, demo content before export), slice gaps covered (slice field set + start position in spec 02, encounter rule in spec 05, jrpg_* input actions in spec 01 via setup tool, battle return/BGM/UI sounds/map BGM criteria, template_release rebuilt with jrpg, fixtures in test code), vague criteria rewritten (img_compare tolerance, M1 pass definition, boot check with --quit-after/--log-file), splits 9.3/9.6/11.1/12.1.1/12.2.1/13.1/13.3; core_diff_check.py --no-renames -z + table-only parsing + --root, fixture-tested and added to every epic gate and 13.5; record in plan/evidence/reviews/epic_3.md (all 17 findings) (containers: 3.5 in_progress->done, 3 in_progress->done) | pending |
+| 2026-10-13 17:24 -0600 | 3.5.5 | done: Review fixes: task tree order, slice gaps, criteria, core_diff_check; review record — Epic 3 review closed: task order fixed (epic 10 before 9, save screens after the save format, demo content before export), slice gaps covered (slice field set + start position in spec 02, encounter rule in spec 05, jrpg_* input actions in spec 01 via setup tool, battle return/BGM/UI sounds/map BGM criteria, template_release rebuilt with jrpg, fixtures in test code), vague criteria rewritten (img_compare tolerance, M1 pass definition, boot check with --quit-after/--log-file), splits 9.3/9.6/11.1/12.1.1/12.2.1/13.1/13.3; core_diff_check.py --no-renames -z + table-only parsing + --root, fixture-tested and added to every epic gate and 13.5; record in plan/evidence/reviews/epic_3.md (all 17 findings) (containers: 3.5 in_progress->done, 3 in_progress->done) | 2ab7e3196b |
+| 2026-10-13 17:25 -0600 | 5.1.1 | started: Module skeleton (containers: 5.1 pending->in_progress, 5 pending->in_progress) |  |
+| 2026-10-13 17:33 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 17:34 -0600 | 5.1.1 | done: Module skeleton — modules/jrpg skeleton (config.py can_build always, doc path doc_classes; SCsub core/runtime always, editor/ only for editor builds; register_types SCENE/EDITOR levels; core/jrpg_core.h; [JRPG] doctest) + tests/check_core_includes.py (core: only core/, modules/jrpg/core/, thirdparty/misc/pcg.h; runtime: no editor includes; caught 6/6 planted violations on a fixture). Builds with the module (0 warnings; full suite 1403/1403) and without (editor-vanilla now has its own binary via extra_suffix=vanilla; vanilla suite 1380/1380, 419763 assertions and the case list identical to the 1.3 baseline) (containers: 5.1 in_progress->pending, 5 in_progress->pending) | pending |

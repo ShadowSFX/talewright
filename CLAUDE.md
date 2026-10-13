@@ -67,11 +67,14 @@ and move on to the next ready task.
   `"$APPDATA/Python/Python311/Scripts/clang-format.exe" -i <files>` (repo `.clang-format`).
 - Build: always `python talewright/tools/build.py <profile>` (profiles: `editor`, `editor-vanilla`,
   `template_release`, `template_debug`; `--dry-run` prints the SCons line; `-- k=v` passes extra options).
+  `editor-vanilla` disables every Talewright module and builds `bin/godot.windows.editor.x86_64.vanilla.exe`
+  (own objects via `extra_suffix`), so it never replaces the working editor.
   It adds `--site-dir=talewright/tools/site_scons` (vswhere shim: SCons would otherwise pick a VS instance
   without a compiler on this machine), `d3d12=no`, the SCons cache and the AccessKit path, stops processes
   locking that target's binaries, and logs to `talewright/build_logs/`. Full editor build ≈6 min, no-op ≈0.4 min.
 - Regression smoke after every epic: `python talewright/tools/smoke_samples.py` (plain_2d/plain_3d editor
   open, run, export + exported run; full log in `talewright/build_logs/smoke-*.log`).
+- JRPG core boundary (run before committing jrpg changes): `python modules/jrpg/tests/check_core_includes.py`.
 - Tests: `bin/<editor binary> --test` (all) or `--test --test-case="*[JRPG]*"`; module tests live in
   `modules/<m>/tests/*.h` (auto-included when built with `tests=yes`, which `dev_mode=yes` enables).
 - Tracker: `python plan/tools/tasks.py validate|render|next|show <id>|start <id>|done <id> -m ..|block <id> -m ..|defer <id> -m ..|stamp|import <file>`.

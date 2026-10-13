@@ -38,7 +38,8 @@ TALEWRIGHT_MODULES = ("jrpg", "mmo", "claude_bridge")
 COMMON = ["platform=windows", "d3d12=no"]
 PROFILES = {
     "editor": [*COMMON, "target=editor", "dev_mode=yes"],
-    "editor-vanilla": [*COMMON, "target=editor", "dev_mode=yes"],
+    # Own binary name and object files (SConstruct:258,630-633,1051), so checking vanilla never replaces the editor.
+    "editor-vanilla": [*COMMON, "target=editor", "dev_mode=yes", "extra_suffix=vanilla"],
     "template_release": [*COMMON, "target=template_release"],
     "template_debug": [*COMMON, "target=template_debug"],
 }
@@ -53,15 +54,16 @@ def existing_talewright_modules() -> list:
     return [m for m in TALEWRIGHT_MODULES if (ROOT / "modules" / m / "config.py").exists()]
 
 
-def stop_locking_processes(target: str) -> list:
-    """Stop processes running this target's binaries from bin/ (they lock the link output on Windows, LNK1104).
+def stop_locking_processes(stem: str) -> list:
+    """Stop processes running this build's binaries from bin/ (they lock the link output on Windows, LNK1104).
 
-    Only `bin/godot.windows.<target>*` executables are stopped, so building a template does not kill a running
-    editor. Returns the stopped process names.
+    Only `bin/<stem>*` executables are stopped (stem = `godot.windows.<target>`, plus `.x86_64.vanilla` for the
+    vanilla profile), so building a template or the vanilla editor does not kill a running editor. Returns the
+    stopped process names.
     """
     if os.name != "nt":
         return []
-    prefix = (str(BIN.resolve()) + os.sep + f"godot.windows.{target}").replace("'", "''")
+    prefix = (str(BIN.resolve()) + os.sep + stem).replace("'", "''")
     script = (
         "$p = Get-Process | Where-Object { $_.Path -and $_.Path.StartsWith('"
         + prefix
@@ -114,7 +116,8 @@ def main() -> int:
 
     if not args.no_kill:
         target = next(a.split("=", 1)[1] for a in PROFILES[args.profile] if a.startswith("target="))
-        stopped = stop_locking_processes(target)
+        stem = f"godot.windows.{target}" + (".x86_64.vanilla" if args.profile == "editor-vanilla" else "")
+        stopped = stop_locking_processes(stem)
         if stopped:
             print("stopped processes locking bin/:", ", ".join(stopped), flush=True)
 

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "3.5.5 Review fixes: task tree order, slice gaps, criteria, core_diff_check; review record",
+  "last_completed": "5.1.1 Module skeleton",
   "tasks": [
     {
       "id": "0",
@@ -774,7 +774,7 @@
         "CLAUDE.md"
       ],
       "status": "done",
-      "commit": "pending",
+      "commit": "2ab7e3196b",
       "notes": ""
     },
     {
@@ -1099,10 +1099,20 @@
         "Boundary check script passes"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
-      "files": [],
-      "commit": "",
+      "files": [
+        "modules/jrpg/config.py",
+        "modules/jrpg/SCsub",
+        "modules/jrpg/register_types.h",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/core/jrpg_core.h",
+        "modules/jrpg/tests/test_jrpg_module.h",
+        "modules/jrpg/tests/check_core_includes.py",
+        "talewright/tools/build.py",
+        "CLAUDE.md"
+      ],
+      "commit": "pending",
       "notes": "",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "5.1.2",
