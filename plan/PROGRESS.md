@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 15:51 -0600
+- **Updated:** 2026-10-13 15:52 -0600
 - **Current task:** 2.5 Epic review: research
-- **Last completed:** 4.4 MCP JSON-RPC layer
-- **Next task:** 4.5 bridge.py CLI
-- **Done leaf tasks:** 26
+- **Last completed:** 4.5 bridge.py CLI
+- **Next task:** 4.6 Editor tools: tree, nodes, project
+- **Done leaf tasks:** 27
 <!-- status:end -->
 
 ## Log
@@ -61,4 +61,6 @@
 | 2026-10-13 15:45 -0600 | 4.2 | done: HTTP/1.1 server component — HTTP/1.1 component: incremental parser (411/413/431/501/505/400), non-blocking server with bounded buffers, deferred responses, keep-alive, idle/request/write timeouts, header-injection-safe responses; 6 new doctests incl. loopback; full suite 1387/1387 (containers: 4 in_progress->pending) | 4eac8ec916 |
 | 2026-10-13 15:45 -0600 | 4.3 | started: Auth, Origin/Host checks, connection file (containers: 4 pending->in_progress) |  |
 | 2026-10-13 15:48 -0600 | 4.3 | done: Auth, Origin/Host checks, connection file — Auth: persistent 256-bit token in editor config dir, Host/Origin/Bearer checks (constant-time), port fallback 47700-47709, .godot/claude_bridge/connection.json; e2e curl: 401/401/403/403/405/415/404, non-loopback refused; 3 new doctests (containers: 4 in_progress->pending) | b4d7680cd4 |
-| 2026-10-13 15:51 -0600 | 4.4 | done: MCP JSON-RPC layer — MCP JSON-RPC dispatcher: initialize (version negotiation), ping, tools/list (schemas+annotations), tools/call (sync/async with deadlines, isError), notifications 202, parse/batch/invalid errors, integer id preservation, stateless calls without initialize; plugin pending-call processing; bridge_status tool; 3 new doctests (13 total) | pending |
+| 2026-10-13 15:51 -0600 | 4.4 | done: MCP JSON-RPC layer — MCP JSON-RPC dispatcher: initialize (version negotiation), ping, tools/list (schemas+annotations), tools/call (sync/async with deadlines, isError), notifications 202, parse/batch/invalid errors, integer id preservation, stateless calls without initialize; plugin pending-call processing; bridge_status tool; 3 new doctests (13 total) | 110b884601 |
+| 2026-10-13 15:51 -0600 | 4.5 | started: bridge.py CLI (containers: 4 pending->in_progress) |  |
+| 2026-10-13 15:52 -0600 | 4.5 | done: bridge.py CLI — bridge.py CLI: connection discovery, status/list/call/raw/launch/wait, images saved as PNG files, exit codes; verified against a live headless editor (containers: 4 in_progress->pending) | pending |

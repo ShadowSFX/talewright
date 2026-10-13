@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "4.4 MCP JSON-RPC layer",
+  "last_completed": "4.5 bridge.py CLI",
   "tasks": [
     {
       "id": "0",
@@ -745,7 +745,7 @@
       ],
       "test_strategy": "Doctests + curl.",
       "files": [],
-      "commit": "pending",
+      "commit": "110b884601",
       "notes": ""
     },
     {
@@ -756,7 +756,7 @@
       "dependencies": [
         "4.4"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "`bridge.py status` and `bridge.py list` work against a running editor"
@@ -765,7 +765,7 @@
       "files": [
         "talewright/tools/bridge.py"
       ],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
