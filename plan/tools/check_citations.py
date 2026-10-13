@@ -21,7 +21,7 @@ CITE = re.compile(
     r":(\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*)"
     r'(?:~"([^"]+)")?'
 )
-SKIP_PREFIXES = ("http", "ro server", "rathena/", "src/", "conf/", "db/", "sql-files/", "npc/", "doc/re", "game/", "tools/", "docs/")
+SKIP_PREFIXES = ("http", "ro server", "server/rathena", "rathena/", "src/", "conf/", "db/", "sql-files/", "npc/", "doc/re", "game/", "tools/", "docs/")
 
 
 def main() -> int:

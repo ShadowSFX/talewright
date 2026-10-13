@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "1.2 Vanilla editor dev_mode build",
+  "last_completed": "1.3 Upstream test baseline",
   "tasks": [
     {
       "id": "0",
@@ -163,7 +163,7 @@
       ],
       "test_strategy": "Build log review.",
       "files": [],
-      "commit": "pending",
+      "commit": "ed36cad7e0",
       "notes": ""
     },
     {
@@ -174,7 +174,7 @@
       "dependencies": [
         "1.2"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Baseline file lists totals and failing test names (expected 0)"
@@ -183,7 +183,7 @@
       "files": [
         "plan/research/baseline_tests.md"
       ],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
