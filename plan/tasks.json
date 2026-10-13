@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "2.1.1 Lineup, baseline, project structure, editor basics",
+  "last_completed": "2.1.2 Map editor, map properties, tilesets",
   "tasks": [
     {
       "id": "0",
@@ -307,7 +307,7 @@
       "files": [
         "plan/research/rpgmaker/01_project_editor_tools.md"
       ],
-      "commit": "pending",
+      "commit": "01307d3dd1",
       "notes": ""
     },
     {
@@ -316,7 +316,7 @@
       "description": "Tile layers, autotile kinds, passability/flags, regions, shadows, map properties, encounters, map data controls, tileset settings.",
       "parent": "2.1",
       "dependencies": [],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Sections written with sources"
@@ -325,7 +325,7 @@
       "files": [
         "plan/research/rpgmaker/02_maps_tilesets_assets.md"
       ],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

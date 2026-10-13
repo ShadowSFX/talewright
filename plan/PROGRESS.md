@@ -2,10 +2,10 @@
 
 <!-- status:begin -->
 - **Updated:** 2026-10-13 15:38 -0600
-- **Current task:** 2.1.2 Map editor, map properties, tilesets, 2.1.3 Database A: actors, classes, skills, items, weapons/armors, 2.1.4 Database B: enemies, troops, states, animations, common events, 2.1.5 Database C: system 1/2, types, terms, traits, effects, 2.1.6 Events: system, pages, conditions, triggers, priority, move routes, all commands, 2.1.7 Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug, 2.1.8 Other versions' notable features
-- **Last completed:** 2.1.1 Lineup, baseline, project structure, editor basics
+- **Current task:** 2.1.3 Database A: actors, classes, skills, items, weapons/armors, 2.1.4 Database B: enemies, troops, states, animations, common events, 2.1.5 Database C: system 1/2, types, terms, traits, effects, 2.1.6 Events: system, pages, conditions, triggers, priority, move routes, all commands, 2.1.7 Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug, 2.1.8 Other versions' notable features
+- **Last completed:** 2.1.2 Map editor, map properties, tilesets
 - **Next task:** 4.2 HTTP/1.1 server component
-- **Done leaf tasks:** 14
+- **Done leaf tasks:** 15
 <!-- status:end -->
 
 ## Log
@@ -44,4 +44,5 @@
 | 2026-10-13 15:32 -0600 | 4.1 | done: Module skeleton modules/claude_bridge — claude_bridge module skeleton: editor-only config.py, internal EditorPlugin with settings (enabled, port), doctest; builds with and without the module (vanilla: 1380/1380 tests, smoke pass); build.py gains SCons cache + UTF-8-safe output; add_header.py | 00c95dc78e |
 | 2026-10-13 15:33 -0600 | - | imported 3 new / 8 updated tasks (containers: 1 done->in_progress) | |
 | 2026-10-13 15:36 -0600 | 1.6 | done: Epic 0+1 review fixes — All 14 findings of the epic 0+1 review fixed; record in plan/evidence/reviews/epic_0_1.md (containers: 1 in_progress->done) | a6fbf412ba |
-| 2026-10-13 15:38 -0600 | 2.1.1 | done: Lineup, baseline, project structure, editor basics — Official-source inventory slice: 203 items (PRJ 10, EDT 52, AID 21, TST 22, PLG 41, DEP 11, AST 10, L10N 6, NEW 30); every item cites an official URL; paraphrase check run | pending |
+| 2026-10-13 15:38 -0600 | 2.1.1 | done: Lineup, baseline, project structure, editor basics — Official-source inventory slice: 203 items (PRJ 10, EDT 52, AID 21, TST 22, PLG 41, DEP 11, AST 10, L10N 6, NEW 30); every item cites an official URL; paraphrase check run | 01307d3dd1 |
+| 2026-10-13 15:38 -0600 | 2.1.2 | done: Map editor, map properties, tilesets — Official-source inventory slice: 119 items (MAP 38, MPR 21, TIL 31, AST 29); every item cites an official URL; paraphrase check run | pending |

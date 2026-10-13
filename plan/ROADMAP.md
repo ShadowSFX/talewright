@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 117, in_progress: 9, done: 16, blocked: 0, deferred: 3 (of 145)
+**Totals:** pending: 117, in_progress: 8, done: 17, blocked: 0, deferred: 3 (of 145)
 
 ## [x] 0 Bootstrap and task system
 
@@ -31,8 +31,8 @@ Reproducible builds and a recorded vanilla baseline before any engine change.
 Sourced RPG Maker inventory, Godot current state from the clone, MMO feasibility, gap map.
 
 - [~] **2.1** RPG Maker inventory (P1)
-  - [x] **2.1.1** Lineup, baseline, project structure, editor basics (P1) _(commit: pending)_
-  - [~] **2.1.2** Map editor, map properties, tilesets (P1)
+  - [x] **2.1.1** Lineup, baseline, project structure, editor basics (P1) _(commit: 01307d3dd1)_
+  - [x] **2.1.2** Map editor, map properties, tilesets (P1) _(commit: pending)_
   - [~] **2.1.3** Database A: actors, classes, skills, items, weapons/armors (P1)
   - [~] **2.1.4** Database B: enemies, troops, states, animations, common events (P1)
   - [~] **2.1.5** Database C: system 1/2, types, terms, traits, effects (P1)
