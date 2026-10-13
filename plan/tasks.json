@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "0.3 CLAUDE.md resume protocol, NOTICE and fork README",
+  "last_completed": "0.4 Persist planning research reports",
   "tasks": [
     {
       "id": "0",
@@ -9,7 +9,7 @@
       "description": "Fork, local clone, working branch, persistent tracker, resume protocol, persisted planning research.",
       "parent": null,
       "dependencies": [],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Fork + clone + branch exist",
@@ -18,7 +18,7 @@
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
       "files": [],
-      "commit": "",
+      "commit": "children",
       "notes": ""
     },
     {
@@ -85,7 +85,7 @@
         "CLAUDE.md",
         "TALEWRIGHT.md"
       ],
-      "commit": "pending",
+      "commit": "12253dd0a5",
       "notes": ""
     },
     {
@@ -96,14 +96,14 @@
       "dependencies": [
         "0.2"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "plan/research/planning_notes/*.md exist with file:line and URL citations"
       ],
       "test_strategy": "Read files.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

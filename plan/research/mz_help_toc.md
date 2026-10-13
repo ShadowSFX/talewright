@@ -1,0 +1,74 @@
+# RPG Maker MZ official help — table of contents
+
+_Crawled from `https://rpgmakerofficial.com/product/MZ_help-en/whxdata/toc*.new.js` by `plan/tools/crawl_mz_toc.py`. Titles only (no content)._
+
+- RPG Maker MZ Help — https://rpgmakerofficial.com/product/MZ_help-en/01.html
+  - About RPG Maker MZ — https://rpgmakerofficial.com/product/MZ_help-en/01_01.html
+    - New Functions
+      - Main Features of RPG Maker MZ — https://rpgmakerofficial.com/product/MZ_help-en/01_01_01_01.html
+      - MV Data Conversion — https://rpgmakerofficial.com/product/MZ_help-en/01_01_01_02.html
+      - Time Progression Battles — https://rpgmakerofficial.com/product/MZ_help-en/01_01_01_03.html
+      - Animations — https://rpgmakerofficial.com/product/MZ_help-en/01_01_01_04.html
+      - Improvements to Artistic Expressions in Games — https://rpgmakerofficial.com/product/MZ_help-en/01_01_01_05.html
+      - Game Control Improvements — https://rpgmakerofficial.com/product/MZ_help-en/01_01_01_06.html
+    - System Requirements — https://rpgmakerofficial.com/product/MZ_help-en/01_01_02.html
+  - Getting Started Making Your Game — https://rpgmakerofficial.com/product/MZ_help-en/01_02.html
+  - Basic Editor Controls — https://rpgmakerofficial.com/product/MZ_help-en/01_03.html
+  - Menu Bar Content — https://rpgmakerofficial.com/product/MZ_help-en/01_04.html
+  - How to Use Aid Tools — https://rpgmakerofficial.com/product/MZ_help-en/01_05.html
+  - Playing Your Game — https://rpgmakerofficial.com/product/MZ_help-en/01_06.html
+  - Map — https://rpgmakerofficial.com/product/MZ_help-en/01_07.html
+    - Editing Map Designs — https://rpgmakerofficial.com/product/MZ_help-en/01_07_01.html
+    - Map Data Controls — https://rpgmakerofficial.com/product/MZ_help-en/01_07_02.html
+    - Map Properties — https://rpgmakerofficial.com/product/MZ_help-en/01_07_03.html
+  - Database — https://rpgmakerofficial.com/product/MZ_help-en/01_08.html
+    - Actor Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_08_01.html
+    - Class Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_08_02.html
+    - Skill Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
+    - Item Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
+    - Weapon/Armor Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
+    - Enemy Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_08_06.html
+    - Troop Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_08_07.html
+    - State Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_08_08.html
+    - Animation Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_08_09.html
+      - Effekseer — https://rpgmakerofficial.com/product/MZ_help-en/01_08_09_01.html
+    - Tileset Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_08_10.html
+    - Common Event Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_08_11.html
+    - System 1 Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_08_12_01.html
+    - System 2 Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_08_12_02.html
+    - Type Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_08_13.html
+    - Terms Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_08_14.html
+    - How to Set Traits — https://rpgmakerofficial.com/product/MZ_help-en/01_08_15.html
+    - How to Set Effects — https://rpgmakerofficial.com/product/MZ_help-en/01_08_16.html
+  - Events — https://rpgmakerofficial.com/product/MZ_help-en/01_09.html
+    - Map Event System — https://rpgmakerofficial.com/product/MZ_help-en/01_09_01.html
+    - Map Event Creation and Controls — https://rpgmakerofficial.com/product/MZ_help-en/01_09_02.html
+    - Map Event Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
+  - Event Commands — https://rpgmakerofficial.com/product/MZ_help-en/01_10.html
+    - Messages — https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
+    - Game Progression — https://rpgmakerofficial.com/product/MZ_help-en/01_10_02.html
+    - Flow Control — https://rpgmakerofficial.com/product/MZ_help-en/01_10_03.html
+    - Party — https://rpgmakerofficial.com/product/MZ_help-en/01_10_04.html
+    - Actor — https://rpgmakerofficial.com/product/MZ_help-en/01_10_05.html
+    - Movement — https://rpgmakerofficial.com/product/MZ_help-en/01_10_06.html
+      - Movement Route Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
+    - Character — https://rpgmakerofficial.com/product/MZ_help-en/01_10_07.html
+    - Picture — https://rpgmakerofficial.com/product/MZ_help-en/01_10_08.html
+    - Timing — https://rpgmakerofficial.com/product/MZ_help-en/01_10_09.html
+    - Screen — https://rpgmakerofficial.com/product/MZ_help-en/01_10_10.html
+    - Audio & Video — https://rpgmakerofficial.com/product/MZ_help-en/01_10_11.html
+    - Scene Control — https://rpgmakerofficial.com/product/MZ_help-en/01_10_12.html
+    - System Settings — https://rpgmakerofficial.com/product/MZ_help-en/01_10_13.html
+    - Map — https://rpgmakerofficial.com/product/MZ_help-en/01_10_14.html
+    - Battle — https://rpgmakerofficial.com/product/MZ_help-en/01_10_15.html
+    - Advanced — https://rpgmakerofficial.com/product/MZ_help-en/01_10_16.html
+  - Documentation
+    - Asset Standards — https://rpgmakerofficial.com/product/MZ_help-en/01_11_01.html
+    - Side-View Character Standards — https://rpgmakerofficial.com/product/MZ_help-en/01_11_02.html
+    - Output Formats — https://rpgmakerofficial.com/product/MZ_help-en/01_11_03.html
+    - Enabling Plugins — https://rpgmakerofficial.com/product/MZ_help-en/01_11_04.html
+    - Using Official Plugins — https://rpgmakerofficial.com/product/MZ_help-en/01_11_05.html
+- User License Agreement — https://rpgmakerofficial.com/product/MZ_help-en/02.html
+- About Trademarks and Registered Trademarks — https://rpgmakerofficial.com/product/MZ_help-en/04.html
+- Staff Credits — https://rpgmakerofficial.com/product/MZ_help-en/05.html
+- API documentation — https://developer.rpgmakerweb.com/rpg-maker-mz/
