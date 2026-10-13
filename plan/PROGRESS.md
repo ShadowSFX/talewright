@@ -2,10 +2,10 @@
 
 <!-- status:begin -->
 - **Updated:** 2026-10-13 15:38 -0600
-- **Current task:** 2.1.8 Other versions' notable features
-- **Last completed:** 2.1.7 Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug
-- **Next task:** 4.2 HTTP/1.1 server component
-- **Done leaf tasks:** 20
+- **Current task:** none
+- **Last completed:** 2.1.8 Other versions' notable features
+- **Next task:** 2.1.9 Inventory merge and TOC gate
+- **Done leaf tasks:** 21
 <!-- status:end -->
 
 ## Log
@@ -50,4 +50,5 @@
 | 2026-10-13 15:38 -0600 | 2.1.4 | done: Database B: enemies, troops, states, animations, common events — Official-source inventory slice: 93 items (ENM 24, TRP 22, STA 19, ANI 20, CEV 8); every item cites an official URL; paraphrase check run | 2a82d83e30 |
 | 2026-10-13 15:38 -0600 | 2.1.5 | done: Database C: system 1/2, types, terms, traits, effects — Official-source inventory slice: 84 items (SYS 32, TYP 6, TRM 6, TRT 26, EFF 14); every item cites an official URL; paraphrase check run | 434f27dce2 |
 | 2026-10-13 15:38 -0600 | 2.1.6 | done: Events: system, pages, conditions, triggers, priority, move routes, all commands — Official-source inventory slice: 223 items (EVT 48, CMD 53, MSG 19, MRT 51, CMD2 52); every item cites an official URL; paraphrase check run | 0aec90fe28 |
-| 2026-10-13 15:38 -0600 | 2.1.7 | done: Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug — Official-source inventory slice: 125 items (MNU 20, BTL 26, FRM 21, SAV 7, AUD 15, MSGB 13, INP 9, GEN 7, DBG 7); every item cites an official URL; paraphrase check run | pending |
+| 2026-10-13 15:38 -0600 | 2.1.7 | done: Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug — Official-source inventory slice: 125 items (MNU 20, BTL 26, FRM 21, SAV 7, AUD 15, MSGB 13, INP 9, GEN 7, DBG 7); every item cites an official URL; paraphrase check run | ca16b51e19 |
+| 2026-10-13 15:38 -0600 | 2.1.8 | done: Other versions' notable features — Official-source inventory slice: 77 items across 2000/2003/XP/VX/VX Ace/MV/Unite/WITH/U2U; every item cites an official URL; paraphrase check run (containers: 2.1 in_progress->pending, 2 in_progress->pending) | pending |

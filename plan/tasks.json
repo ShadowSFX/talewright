@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "2.1.7 Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug",
+  "last_completed": "2.1.8 Other versions' notable features",
   "tasks": [
     {
       "id": "0",
@@ -263,7 +263,7 @@
       "dependencies": [
         "0"
       ],
-      "status": "in_progress",
+      "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
         "Inventory covers the full official MZ help TOC with a source per row",
@@ -280,7 +280,7 @@
       "description": "plan/research/rpgmaker_inventory.md: baseline determination + exhaustive sourced inventory with item IDs (RM-<AREA>-<n>), paraphrased (no verbatim text).",
       "parent": "2",
       "dependencies": [],
-      "status": "in_progress",
+      "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
         "Every TOC page of the MZ help is covered",
@@ -416,7 +416,7 @@
       "files": [
         "plan/research/rpgmaker/08_runtime_systems.md"
       ],
-      "commit": "pending",
+      "commit": "ca16b51e19",
       "notes": ""
     },
     {
@@ -425,7 +425,7 @@
       "description": "MV, VX Ace, XP, 2003, Unite features absent from MZ (e.g. XP 3-layer priority, 2003 side-view ATB, Unite features), sourced.",
       "parent": "2.1",
       "dependencies": [],
-      "status": "in_progress",
+      "status": "done",
       "priority": 2,
       "acceptance_criteria": [
         "Section written with sources"
@@ -434,7 +434,7 @@
       "files": [
         "plan/research/rpgmaker/09_other_versions.md"
       ],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

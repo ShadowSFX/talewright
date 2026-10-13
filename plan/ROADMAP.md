@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 117, in_progress: 3, done: 22, blocked: 0, deferred: 3 (of 145)
+**Totals:** pending: 119, in_progress: 0, done: 23, blocked: 0, deferred: 3 (of 145)
 
 ## [x] 0 Bootstrap and task system
 
@@ -26,19 +26,19 @@ Reproducible builds and a recorded vanilla baseline before any engine change.
 - [x] **1.5** Plain general-purpose samples (P2) _(deps: 1.2, 1.4; commit: 51255adeae)_
 - [x] **1.6** Epic 0+1 review fixes (P1) _(commit: a6fbf412ba)_
 
-## [~] 2 Research (Phase 1)
+## [ ] 2 Research (Phase 1)
 
 Sourced RPG Maker inventory, Godot current state from the clone, MMO feasibility, gap map.
 
-- [~] **2.1** RPG Maker inventory (P1)
+- [ ] **2.1** RPG Maker inventory (P1)
   - [x] **2.1.1** Lineup, baseline, project structure, editor basics (P1) _(commit: 01307d3dd1)_
   - [x] **2.1.2** Map editor, map properties, tilesets (P1) _(commit: b8e9d81f47)_
   - [x] **2.1.3** Database A: actors, classes, skills, items, weapons/armors (P1) _(commit: c2cca57cf2)_
   - [x] **2.1.4** Database B: enemies, troops, states, animations, common events (P1) _(commit: 2a82d83e30)_
   - [x] **2.1.5** Database C: system 1/2, types, terms, traits, effects (P1) _(commit: 434f27dce2)_
   - [x] **2.1.6** Events: system, pages, conditions, triggers, priority, move routes, all commands (P1) _(commit: 0aec90fe28)_
-  - [x] **2.1.7** Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug (P1) _(commit: pending)_
-  - [~] **2.1.8** Other versions' notable features (P2)
+  - [x] **2.1.7** Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug (P1) _(commit: ca16b51e19)_
+  - [x] **2.1.8** Other versions' notable features (P2) _(commit: pending)_
   - [ ] **2.1.9** Inventory merge and TOC gate (P1) _(deps: 2.1.1, 2.1.2, 2.1.3, 2.1.4, 2.1.5, 2.1.6, 2.1.7, 2.1.8)_
 - [x] **2.2** Godot current state (from the clone) (P1) _(deps: 0.4; commit: 23d0dcdf80)_
 - [x] **2.3** MMO feasibility and rAthena techniques (P1) _(deps: 0.4; commit: 0a33c6e7da)_
