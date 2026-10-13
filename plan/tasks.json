@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "2.1.5 Database C: system 1/2, types, terms, traits, effects",
+  "last_completed": "2.1.6 Events: system, pages, conditions, triggers, priority, move routes, all commands",
   "tasks": [
     {
       "id": "0",
@@ -379,7 +379,7 @@
       "files": [
         "plan/research/rpgmaker/05_database_c.md"
       ],
-      "commit": "pending",
+      "commit": "434f27dce2",
       "notes": ""
     },
     {
@@ -388,7 +388,7 @@
       "description": "Map event system/creation/settings; every event command in all 16 categories one by one; every movement route command.",
       "parent": "2.1",
       "dependencies": [],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Every command listed with parameters and behaviour"
@@ -398,7 +398,7 @@
         "plan/research/rpgmaker/06_events_commands_1.md",
         "plan/research/rpgmaker/07_event_commands_2.md"
       ],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
