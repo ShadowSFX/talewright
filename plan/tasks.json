@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "2.4 Gap map",
+  "last_completed": "4.2 HTTP/1.1 server component",
   "tasks": [
     {
       "id": "0",
@@ -263,7 +263,7 @@
       "dependencies": [
         "0"
       ],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Inventory covers the full official MZ help TOC with a source per row",
@@ -517,7 +517,7 @@
       ],
       "test_strategy": "Script compares IDs between inventory and gap map.",
       "files": [],
-      "commit": "pending",
+      "commit": "89239e392b",
       "notes": ""
     },
     {
@@ -532,7 +532,7 @@
         "Findings fixed and logged in PROGRESS.md"
       ],
       "test_strategy": "Reviewer report + fixes.",
-      "status": "pending",
+      "status": "in_progress",
       "files": [],
       "commit": "",
       "notes": "",
@@ -697,7 +697,7 @@
       "dependencies": [
         "4.1"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Parser doctests: partial reads, pipelining off, oversize 413, bad request 400",
@@ -705,7 +705,7 @@
       ],
       "test_strategy": "Doctests + curl.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

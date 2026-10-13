@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 15:42 -0600
-- **Current task:** none
-- **Last completed:** 2.4 Gap map
-- **Next task:** 2.5 Epic review: research
-- **Done leaf tasks:** 23
+- **Updated:** 2026-10-13 15:45 -0600
+- **Current task:** 2.5 Epic review: research
+- **Last completed:** 4.2 HTTP/1.1 server component
+- **Next task:** 4.3 Auth, Origin/Host checks, connection file
+- **Done leaf tasks:** 24
 <!-- status:end -->
 
 ## Log
@@ -55,4 +55,7 @@
 | 2026-10-13 15:38 -0600 | 2.1.9 | started: Inventory merge and TOC gate (containers: 2.1 pending->in_progress, 2 pending->in_progress) |  |
 | 2026-10-13 15:39 -0600 | 2.1.9 | done: Inventory merge and TOC gate — Inventory gate: TOC coverage 65/65 pages, 1023 sourced unique items (file 01 AST->ASV), verbatim check 0 prose overlaps (3 rewritten, 6 name lists allowed); rpgmaker_inventory.md index; D-022 (containers: 2.1 in_progress->done, 2 in_progress->pending) | 8daa29608b |
 | 2026-10-13 15:41 -0600 | 2.4 | started: Gap map (containers: 2 pending->in_progress) |  |
-| 2026-10-13 15:42 -0600 | 2.4 | done: Gap map — gap_map.md generated: 1023 inventory rows (ID parity verified) + 16 MMO rows; 1873 Godot citations verified (anchors checked at generation); reuse 86 / extend 488 / NEW 465 (containers: 2 in_progress->pending) | pending |
+| 2026-10-13 15:42 -0600 | 2.4 | done: Gap map — gap_map.md generated: 1023 inventory rows (ID parity verified) + 16 MMO rows; 1873 Godot citations verified (anchors checked at generation); reuse 86 / extend 488 / NEW 465 (containers: 2 in_progress->pending) | 89239e392b |
+| 2026-10-13 15:42 -0600 | 2.5 | started: Epic review: research (containers: 2 pending->in_progress) |  |
+| 2026-10-13 15:42 -0600 | 4.2 | started: HTTP/1.1 server component (containers: 4 pending->in_progress) |  |
+| 2026-10-13 15:45 -0600 | 4.2 | done: HTTP/1.1 server component — HTTP/1.1 component: incremental parser (411/413/431/501/505/400), non-blocking server with bounded buffers, deferred responses, keep-alive, idle/request/write timeouts, header-injection-safe responses; 6 new doctests incl. loopback; full suite 1387/1387 (containers: 4 in_progress->pending) | pending |
