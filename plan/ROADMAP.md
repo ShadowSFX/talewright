@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 117, in_progress: 8, done: 14, blocked: 0, deferred: 3 (of 142)
+**Totals:** pending: 117, in_progress: 10, done: 15, blocked: 0, deferred: 3 (of 145)
 
 ## [x] 0 Bootstrap and task system
 
@@ -24,12 +24,13 @@ Reproducible builds and a recorded vanilla baseline before any engine change.
 - [x] **1.3** Upstream test baseline (P1) _(deps: 1.2; commit: 499d506b7c)_
 - [x] **1.4** Export template builds (template_release, template_debug) (P2) _(deps: 1.2; commit: b96aeaeae0)_
 - [x] **1.5** Plain general-purpose samples (P2) _(deps: 1.2, 1.4; commit: 51255adeae)_
+- [x] **1.6** Epic 0+1 review fixes (P1) _(commit: pending)_
 
-## [ ] 2 Research (Phase 1)
+## [~] 2 Research (Phase 1)
 
 Sourced RPG Maker inventory, Godot current state from the clone, MMO feasibility, gap map.
 
-- [ ] **2.1** RPG Maker inventory (P1)
+- [~] **2.1** RPG Maker inventory (P1)
   - [~] **2.1.1** Lineup, baseline, project structure, editor basics (P1)
   - [~] **2.1.2** Map editor, map properties, tilesets (P1)
   - [~] **2.1.3** Database A: actors, classes, skills, items, weapons/armors (P1)
@@ -42,6 +43,7 @@ Sourced RPG Maker inventory, Godot current state from the clone, MMO feasibility
 - [x] **2.2** Godot current state (from the clone) (P1) _(deps: 0.4; commit: 23d0dcdf80)_
 - [x] **2.3** MMO feasibility and rAthena techniques (P1) _(deps: 0.4; commit: 0a33c6e7da)_
 - [ ] **2.4** Gap map (P1) _(deps: 2.1, 2.2, 2.3)_
+- [ ] **2.5** Epic review: research (P1) _(deps: 2.4)_
 
 ## [ ] 3 Architecture decisions and specs (Phases 2-3)
 
@@ -51,12 +53,13 @@ Decision log, upstream patch ledger, design specs, refined task tree.
 - [ ] **3.2** UPSTREAM_PATCHES.md ledger (P2)
 - [ ] **3.3** Specs (P1) _(deps: 3.1)_
 - [ ] **3.4** Refine task tree (P1) _(deps: 3.3)_
+- [ ] **3.5** Epic review: decisions and specs (P1) _(deps: 3.4)_
 
 ## [ ] 4 Claude bridge (MCP)
 
 Editor-only C++ module: MCP Streamable HTTP server on 127.0.0.1 with token; editor + game inspection and driving; CLI.
 
-- [x] **4.1** Module skeleton modules/claude_bridge (P1) _(commit: pending)_
+- [x] **4.1** Module skeleton modules/claude_bridge (P1) _(commit: 00c95dc78e)_
 - [ ] **4.2** HTTP/1.1 server component (P1) _(deps: 4.1)_
 - [ ] **4.3** Auth, Origin/Host checks, connection file (P1) _(deps: 4.2)_
 - [ ] **4.4** MCP JSON-RPC layer (P1) _(deps: 4.3)_

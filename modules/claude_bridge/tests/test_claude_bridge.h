@@ -31,9 +31,9 @@
 
 #pragma once
 
+#include "core/object/class_db.h"
 #include "tests/test_macros.h"
 
-#include "core/object/class_db.h"
 #include "modules/claude_bridge/claude_bridge_plugin.h"
 
 namespace TestClaudeBridge {

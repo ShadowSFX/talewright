@@ -11,10 +11,16 @@ Approved plan: `C:\Users\Relic\.claude\plans\zesty-hugging-wilkinson.md` (summar
 
 ## Resume protocol (follow at the start of every session, after any context compaction, or when unsure)
 1. Read `plan/PROGRESS.md`, `plan/tasks.json` and `plan/DECISIONS.md`.
-2. Run `git status` and `git log -n 20` and reconcile them with the tracker. If a task is `in_progress`
-   with uncommitted changes, finish it or revert it before doing anything else.
+2. Run `git status` and `git log -n 20` and reconcile them with the tracker — `python plan/tools/tasks.py doctor`
+   prints the in-progress leaf tasks with their recorded `files`, done tasks whose commit is not stamped, and
+   the uncommitted paths. Then:
+   - a task `in_progress` with uncommitted changes: finish it or revert it before doing anything else (its
+     files are the ones listed in its `files` field; parallel tasks must each record their own output paths);
+   - a task `done` whose commit is still `pending` and has no `<id>: ...` commit (session died between `done`
+     and `git commit`): commit its files now with message `<id>: ...`, then `tasks.py stamp`;
+   - a tree dirty only because of a `stamp` (tasks.json/ROADMAP.md/PROGRESS.md): fine, it goes into the next commit.
 3. Continue with the highest-priority pending task whose dependencies are all done
-   (`python plan/tools/tasks.py next`).
+   (`python plan/tools/tasks.py next`; it also lists in-progress tasks and epics that must be split first).
 
 A new session given only "continue" must resume from these files alone. Never ask the owner anything:
 when a decision is needed, choose, record it in `plan/DECISIONS.md` (context, options, choice, why,
@@ -58,9 +64,13 @@ and move on to the next ready task.
 ## Commands (Windows; Git Bash shown)
 - SCons is installed per-user: `python -m SCons` (4.10.1). clang-format 21.1.7:
   `"$APPDATA/Python/Python311/Scripts/clang-format.exe" -i <files>` (repo `.clang-format`).
-- Build (exact flags confirmed in task 1.2 and recorded in `plan/research/godot_current_state.md`):
-  `python talewright/tools/build.py editor` (wrapper; created in task 1.1) or directly
-  `python -m SCons platform=windows target=editor dev_mode=yes -j32`.
+- Build: always `python talewright/tools/build.py <profile>` (profiles: `editor`, `editor-vanilla`,
+  `template_release`, `template_debug`; `--dry-run` prints the SCons line; `-- k=v` passes extra options).
+  It adds `--site-dir=talewright/tools/site_scons` (vswhere shim: SCons would otherwise pick a VS instance
+  without a compiler on this machine), `d3d12=no`, the SCons cache and the AccessKit path, stops processes
+  locking that target's binaries, and logs to `talewright/build_logs/`. Full editor build ≈6 min, no-op ≈0.4 min.
+- Regression smoke after every epic: `python talewright/tools/smoke_samples.py` (plain_2d/plain_3d editor
+  open, run, export + exported run; full log in `talewright/build_logs/smoke-*.log`).
 - Tests: `bin/<editor binary> --test` (all) or `--test --test-case="*[JRPG]*"`; module tests live in
   `modules/<m>/tests/*.h` (auto-included when built with `tests=yes`, which `dev_mode=yes` enables).
 - Tracker: `python plan/tools/tasks.py validate|render|next|show <id>|start <id>|done <id> -m ..|block <id> -m ..|defer <id> -m ..|stamp|import <file>`.

@@ -24,10 +24,16 @@ def fetch(key: str) -> list:
     with urllib.request.urlopen(f"{BASE}whxdata/{key}.new.js", timeout=30) as r:
         text = r.read().decode("utf-8")
     m = TOC_RE.search(text)
-    return json.loads(m.group(1)) if m else []
+    if not m:
+        raise SystemExit(f"TOC format changed: no `var toc = [...]` in {key}.new.js")
+    return json.loads(m.group(1))
 
 
-def walk(key: str, depth: int = 0) -> list:
+def walk(key: str, depth: int = 0, visited: set | None = None) -> list:
+    visited = set() if visited is None else visited
+    if key in visited:
+        return []
+    visited.add(key)
     out = []
     for item in fetch(key):
         url = item.get("url", "")
@@ -39,7 +45,7 @@ def walk(key: str, depth: int = 0) -> list:
             "children": [],
         }
         if item.get("key"):
-            entry["children"] = walk(item["key"], depth + 1)
+            entry["children"] = walk(item["key"], depth + 1, visited)
         out.append(entry)
     return out
 
@@ -58,6 +64,8 @@ def main() -> None:
     args = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", newline="\n")
     tree = walk("toc")
+    if not tree:
+        raise SystemExit("empty TOC")
     if args.json:
         json.dump(tree, sys.stdout, indent=2)
         return

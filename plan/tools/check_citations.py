@@ -43,7 +43,7 @@ def main() -> int:
             total += 1
             target = root / path
             if path not in cache:
-                cache[path] = target.read_text(encoding="utf-8", errors="replace").splitlines() if target.is_file() else None
+                cache[path] = target.read_text(encoding="utf-8", errors="replace").split(chr(10)) if target.is_file() else None
             lines = cache[path]
             if lines is None:
                 failures += 1
@@ -61,6 +61,9 @@ def main() -> int:
                 elif args.verbose:
                     print(f"ok {path}:{span}")
     print(f"checked {total} citations, {failures} failures")
+    if total == 0:
+        print("no citations found (nothing verified)")
+        return 1
     return 1 if failures else 0
 
 

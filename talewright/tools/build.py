@@ -51,14 +51,18 @@ def existing_talewright_modules() -> list:
     return [m for m in TALEWRIGHT_MODULES if (ROOT / "modules" / m / "config.py").exists()]
 
 
-def stop_locking_processes() -> list:
-    """Stop processes running an executable from bin/. Returns the stopped process names."""
+def stop_locking_processes(target: str) -> list:
+    """Stop processes running this target's binaries from bin/ (they lock the link output on Windows, LNK1104).
+
+    Only `bin/godot.windows.<target>*` executables are stopped, so building a template does not kill a running
+    editor. Returns the stopped process names.
+    """
     if os.name != "nt":
         return []
-    bin_path = str(BIN.resolve()).replace("'", "''")
+    prefix = (str(BIN.resolve()) + os.sep + f"godot.windows.{target}").replace("'", "''")
     script = (
         "$p = Get-Process | Where-Object { $_.Path -and $_.Path.StartsWith('"
-        + bin_path
+        + prefix
         + "', [System.StringComparison]::OrdinalIgnoreCase) }; "
         "$p | ForEach-Object { $_.ProcessName + ' ' + $_.Id }; $p | Stop-Process -Force -ErrorAction SilentlyContinue"
     )
@@ -107,7 +111,8 @@ def main() -> int:
         return 0
 
     if not args.no_kill:
-        stopped = stop_locking_processes()
+        target = next(a.split("=", 1)[1] for a in PROFILES[args.profile] if a.startswith("target="))
+        stopped = stop_locking_processes(target)
         if stopped:
             print("stopped processes locking bin/:", ", ".join(stopped), flush=True)
 
@@ -145,6 +150,12 @@ def main() -> int:
     print(f"errors: {len(errors)}  warnings: {len(warnings)}")
     for line in (errors[:40] if errors else warnings[:20]):
         print("  " + line[:400])
+    if code != 0 and not errors:
+        # Failures that are not compiler errors (e.g. a Python traceback in SConstruct): show the log tail.
+        tail = log_path.read_text(encoding="utf-8", errors="replace").splitlines()[-30:]
+        print("  (no compiler error matched; last 30 log lines:)")
+        for line in tail:
+            print("  " + line[:400])
     return code
 
 

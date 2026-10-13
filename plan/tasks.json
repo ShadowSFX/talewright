@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "4.1 Module skeleton modules/claude_bridge",
+  "last_completed": "1.6 Epic 0+1 review fixes",
   "tasks": [
     {
       "id": "0",
@@ -124,7 +124,7 @@
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
       "files": [],
       "commit": "children",
-      "notes": ""
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "1.1",
@@ -230,6 +230,32 @@
       "notes": ""
     },
     {
+      "id": "1.6",
+      "title": "Epic 0+1 review fixes",
+      "description": "Fix all 14 findings of the fresh-context review of epics 0 and 1 (tracker import/containers/validate/doctor/escaping, build wrapper summaries and kill scope, vswhere shim fallback and docs, smoke runner regex/robustness, citation checker and TOC crawler robustness, missing epic-review tasks).",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Each of the 14 findings fixed or answered with a reason in PROGRESS.md",
+        "tasks.py validate ok; import keeps status/commit/notes; containers reopen",
+        "smoke_samples.py and build.py verified"
+      ],
+      "test_strategy": "Re-run the reviewer's reproductions on a scratch copy; run tools.",
+      "files": [
+        "plan/tools/tasks.py",
+        "talewright/tools/build.py",
+        "talewright/tools/site_scons/site_init.py",
+        "talewright/tools/smoke_samples.py",
+        "plan/tools/check_citations.py",
+        "plan/tools/crawl_mz_toc.py",
+        "CLAUDE.md"
+      ],
+      "status": "done",
+      "commit": "pending",
+      "notes": "",
+      "parent": "1"
+    },
+    {
       "id": "2",
       "title": "Research (Phase 1)",
       "description": "Sourced RPG Maker inventory, Godot current state from the clone, MMO feasibility, gap map.",
@@ -237,7 +263,7 @@
       "dependencies": [
         "0"
       ],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Inventory covers the full official MZ help TOC with a source per row",
@@ -254,7 +280,7 @@
       "description": "plan/research/rpgmaker_inventory.md: baseline determination + exhaustive sourced inventory with item IDs (RM-<AREA>-<n>), paraphrased (no verbatim text).",
       "parent": "2",
       "dependencies": [],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Every TOC page of the MZ help is covered",
@@ -278,7 +304,9 @@
         "Sections written with sources"
       ],
       "test_strategy": "Reviewer spot-checks 10 random rows against sources.",
-      "files": [],
+      "files": [
+        "plan/research/rpgmaker/01_project_editor_tools.md"
+      ],
       "commit": "",
       "notes": ""
     },
@@ -294,7 +322,9 @@
         "Sections written with sources"
       ],
       "test_strategy": "Spot-check.",
-      "files": [],
+      "files": [
+        "plan/research/rpgmaker/02_maps_tilesets_assets.md"
+      ],
       "commit": "",
       "notes": ""
     },
@@ -310,7 +340,9 @@
         "Sections written with sources"
       ],
       "test_strategy": "Spot-check.",
-      "files": [],
+      "files": [
+        "plan/research/rpgmaker/03_database_a.md"
+      ],
       "commit": "",
       "notes": ""
     },
@@ -326,7 +358,9 @@
         "Sections written with sources"
       ],
       "test_strategy": "Spot-check.",
-      "files": [],
+      "files": [
+        "plan/research/rpgmaker/04_database_b.md"
+      ],
       "commit": "",
       "notes": ""
     },
@@ -342,7 +376,9 @@
         "Sections written with sources"
       ],
       "test_strategy": "Spot-check.",
-      "files": [],
+      "files": [
+        "plan/research/rpgmaker/05_database_c.md"
+      ],
       "commit": "",
       "notes": ""
     },
@@ -358,7 +394,10 @@
         "Every command listed with parameters and behaviour"
       ],
       "test_strategy": "Count commands per category vs help pages.",
-      "files": [],
+      "files": [
+        "plan/research/rpgmaker/06_events_commands_1.md",
+        "plan/research/rpgmaker/07_event_commands_2.md"
+      ],
       "commit": "",
       "notes": ""
     },
@@ -374,7 +413,9 @@
         "Sections written with sources"
       ],
       "test_strategy": "Spot-check.",
-      "files": [],
+      "files": [
+        "plan/research/rpgmaker/08_runtime_systems.md"
+      ],
       "commit": "",
       "notes": ""
     },
@@ -390,7 +431,9 @@
         "Section written with sources"
       ],
       "test_strategy": "Spot-check.",
-      "files": [],
+      "files": [
+        "plan/research/rpgmaker/09_other_versions.md"
+      ],
       "commit": "",
       "notes": ""
     },
@@ -476,6 +519,24 @@
       "files": [],
       "commit": "",
       "notes": ""
+    },
+    {
+      "id": "2.5",
+      "title": "Epic review: research",
+      "description": "Fresh-context reviewer subagent over the inventory, Godot state, MMO docs and gap map; fix all findings.",
+      "dependencies": [
+        "2.4"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Findings fixed and logged in PROGRESS.md"
+      ],
+      "test_strategy": "Reviewer report + fixes.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "parent": "2"
     },
     {
       "id": "3",
@@ -571,6 +632,24 @@
       "notes": ""
     },
     {
+      "id": "3.5",
+      "title": "Epic review: decisions and specs",
+      "description": "Fresh-context reviewer subagent over DECISIONS.md, specs and the refined task tree; fix all findings.",
+      "dependencies": [
+        "3.4"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Findings fixed and logged in PROGRESS.md"
+      ],
+      "test_strategy": "Reviewer report + fixes.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "parent": "3"
+    },
+    {
       "id": "4",
       "title": "Claude bridge (MCP)",
       "description": "Editor-only C++ module: MCP Streamable HTTP server on 127.0.0.1 with token; editor + game inspection and driving; CLI.",
@@ -607,7 +686,7 @@
       "files": [
         "modules/claude_bridge/*"
       ],
-      "commit": "pending",
+      "commit": "00c95dc78e",
       "notes": ""
     },
     {
