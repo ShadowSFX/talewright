@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "2.1.3 Database A: actors, classes, skills, items, weapons/armors",
+  "last_completed": "2.1.4 Database B: enemies, troops, states, animations, common events",
   "tasks": [
     {
       "id": "0",
@@ -343,7 +343,7 @@
       "files": [
         "plan/research/rpgmaker/03_database_a.md"
       ],
-      "commit": "pending",
+      "commit": "c2cca57cf2",
       "notes": ""
     },
     {
@@ -352,7 +352,7 @@
       "description": "Every field incl. troop battle event pages and conditions.",
       "parent": "2.1",
       "dependencies": [],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Sections written with sources"
@@ -361,7 +361,7 @@
       "files": [
         "plan/research/rpgmaker/04_database_b.md"
       ],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
