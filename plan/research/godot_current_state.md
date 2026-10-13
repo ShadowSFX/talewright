@@ -35,6 +35,10 @@ reports (with more citations) are in `plan/research/planning_notes/01..05`.
     0 warnings** (werror on), toolchain "Visual Studio 14.3 with Windows SDK 10.0.22621.0"; no-op rebuild 0.4 min.
     Outputs: `bin/godot.windows.editor.x86_64.exe` (178 MB) and the console wrapper
     `bin/godot.windows.editor.x86_64.console.exe`. Logs in `talewright/build_logs/` (git-ignored).
+  - Export templates (task 1.4): `template_release` 3.7 min → `bin/godot.windows.template_release.x86_64.exe` (68.6 MB);
+    `template_debug` 3.9 min → `bin/godot.windows.template_debug.x86_64.exe` (83.0 MB); 0 errors, 0 warnings.
+  - Regression smoke (task 1.5): `python talewright/tools/smoke_samples.py` — plain_2d/plain_3d open in the editor,
+    run with `-- --smoke`, and plain_2d exports with the custom release template and runs: ALL PASS (2026-10-13).
 - Tests: built when `tests=yes` (`SConstruct:1238-1239`); `--test` handled by `Main::test_entrypoint`
   (`main/main.cpp:982-997`) → doctest (`tests/test_main.cpp:75-147`). Windows CI runs
   `bin/godot.windows.editor.x86_64.exe --test --force-colors` (`.github/workflows/windows_builds.yml:137-141`).

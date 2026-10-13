@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 121, in_progress: 8, done: 10, blocked: 0, deferred: 3 (of 142)
+**Totals:** pending: 120, in_progress: 8, done: 11, blocked: 0, deferred: 3 (of 142)
 
 ## [x] 0 Bootstrap and task system
 
@@ -22,7 +22,7 @@ Reproducible builds and a recorded vanilla baseline before any engine change.
 - [x] **1.1** Build wrapper talewright/tools/build.py (P1) _(commit: 2c1f389019)_
 - [x] **1.2** Vanilla editor dev_mode build (P1) _(deps: 1.1; commit: ed36cad7e0)_
 - [x] **1.3** Upstream test baseline (P1) _(deps: 1.2; commit: 499d506b7c)_
-- [ ] **1.4** Export template builds (template_release, template_debug) (P2) _(deps: 1.2)_
+- [x] **1.4** Export template builds (template_release, template_debug) (P2) _(deps: 1.2; commit: pending)_
 - [ ] **1.5** Plain general-purpose samples (P2) _(deps: 1.2, 1.4)_
 
 ## [ ] 2 Research (Phase 1)
@@ -40,7 +40,7 @@ Sourced RPG Maker inventory, Godot current state from the clone, MMO feasibility
   - [~] **2.1.8** Other versions' notable features (P2)
   - [ ] **2.1.9** Inventory merge and TOC gate (P1) _(deps: 2.1.1, 2.1.2, 2.1.3, 2.1.4, 2.1.5, 2.1.6, 2.1.7, 2.1.8)_
 - [x] **2.2** Godot current state (from the clone) (P1) _(deps: 0.4; commit: 23d0dcdf80)_
-- [x] **2.3** MMO feasibility and rAthena techniques (P1) _(deps: 0.4; commit: pending)_
+- [x] **2.3** MMO feasibility and rAthena techniques (P1) _(deps: 0.4; commit: 0a33c6e7da)_
 - [ ] **2.4** Gap map (P1) _(deps: 2.1, 2.2, 2.3)_
 
 ## [ ] 3 Architecture decisions and specs (Phases 2-3)

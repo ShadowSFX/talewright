@@ -224,3 +224,12 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   no verbatim text, no RTP, no file formats); the RPG Maker project importer is task 45 (`deferred`). No
   Gravity/Nintendo data or protocols. GPL/AGPL projects are design references only; FishNet code is not
   read (its license forbids competing implementations).
+
+## D-021 — Bridge epic starts before the research/decision epics finish
+- **Context:** epic 4 (Claude bridge) was seeded with dependencies on epics 1 and 3; epic 3 waits for the RPG Maker
+  inventory (epic 2), which runs in parallel research agents. The bridge design is already fixed (D-012) and does not
+  depend on RPG Maker research.
+- **Options:** keep the dependency (idle time while agents research); depend only on epic 1 (toolchain baseline).
+- **Choice:** epic 4 depends only on epic 1. Epics 2/3 continue in parallel; epic 5 still depends on epics 3 and 4.
+- **Why:** no idle time; the bridge is the verification tool for everything after it.
+- **Reversal:** restore `"dependencies": ["1", "3"]` on task 4.
