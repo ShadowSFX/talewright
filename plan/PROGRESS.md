@@ -2,10 +2,10 @@
 
 <!-- status:begin -->
 - **Updated:** 2026-10-13 15:38 -0600
-- **Current task:** 2.1.5 Database C: system 1/2, types, terms, traits, effects, 2.1.6 Events: system, pages, conditions, triggers, priority, move routes, all commands, 2.1.7 Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug, 2.1.8 Other versions' notable features
-- **Last completed:** 2.1.4 Database B: enemies, troops, states, animations, common events
+- **Current task:** 2.1.6 Events: system, pages, conditions, triggers, priority, move routes, all commands, 2.1.7 Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug, 2.1.8 Other versions' notable features
+- **Last completed:** 2.1.5 Database C: system 1/2, types, terms, traits, effects
 - **Next task:** 4.2 HTTP/1.1 server component
-- **Done leaf tasks:** 17
+- **Done leaf tasks:** 18
 <!-- status:end -->
 
 ## Log
@@ -47,4 +47,5 @@
 | 2026-10-13 15:38 -0600 | 2.1.1 | done: Lineup, baseline, project structure, editor basics — Official-source inventory slice: 203 items (PRJ 10, EDT 52, AID 21, TST 22, PLG 41, DEP 11, AST 10, L10N 6, NEW 30); every item cites an official URL; paraphrase check run | 01307d3dd1 |
 | 2026-10-13 15:38 -0600 | 2.1.2 | done: Map editor, map properties, tilesets — Official-source inventory slice: 119 items (MAP 38, MPR 21, TIL 31, AST 29); every item cites an official URL; paraphrase check run | b8e9d81f47 |
 | 2026-10-13 15:38 -0600 | 2.1.3 | done: Database A: actors, classes, skills, items, weapons/armors — Official-source inventory slice: 99 items (DB 10, ACT 12, CLS 12, SKL 23, ITM 22, WPN 10, ARM 10); every item cites an official URL; paraphrase check run | c2cca57cf2 |
-| 2026-10-13 15:38 -0600 | 2.1.4 | done: Database B: enemies, troops, states, animations, common events — Official-source inventory slice: 93 items (ENM 24, TRP 22, STA 19, ANI 20, CEV 8); every item cites an official URL; paraphrase check run | pending |
+| 2026-10-13 15:38 -0600 | 2.1.4 | done: Database B: enemies, troops, states, animations, common events — Official-source inventory slice: 93 items (ENM 24, TRP 22, STA 19, ANI 20, CEV 8); every item cites an official URL; paraphrase check run | 2a82d83e30 |
+| 2026-10-13 15:38 -0600 | 2.1.5 | done: Database C: system 1/2, types, terms, traits, effects — Official-source inventory slice: 84 items (SYS 32, TYP 6, TRM 6, TRT 26, EFF 14); every item cites an official URL; paraphrase check run | pending |

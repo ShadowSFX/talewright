@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "2.1.4 Database B: enemies, troops, states, animations, common events",
+  "last_completed": "2.1.5 Database C: system 1/2, types, terms, traits, effects",
   "tasks": [
     {
       "id": "0",
@@ -361,7 +361,7 @@
       "files": [
         "plan/research/rpgmaker/04_database_b.md"
       ],
-      "commit": "pending",
+      "commit": "2a82d83e30",
       "notes": ""
     },
     {
@@ -370,7 +370,7 @@
       "description": "Every option; full trait and effect lists.",
       "parent": "2.1",
       "dependencies": [],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Sections written with sources"
@@ -379,7 +379,7 @@
       "files": [
         "plan/research/rpgmaker/05_database_c.md"
       ],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

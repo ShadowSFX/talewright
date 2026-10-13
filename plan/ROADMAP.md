@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 117, in_progress: 6, done: 19, blocked: 0, deferred: 3 (of 145)
+**Totals:** pending: 117, in_progress: 5, done: 20, blocked: 0, deferred: 3 (of 145)
 
 ## [x] 0 Bootstrap and task system
 
@@ -34,8 +34,8 @@ Sourced RPG Maker inventory, Godot current state from the clone, MMO feasibility
   - [x] **2.1.1** Lineup, baseline, project structure, editor basics (P1) _(commit: 01307d3dd1)_
   - [x] **2.1.2** Map editor, map properties, tilesets (P1) _(commit: b8e9d81f47)_
   - [x] **2.1.3** Database A: actors, classes, skills, items, weapons/armors (P1) _(commit: c2cca57cf2)_
-  - [x] **2.1.4** Database B: enemies, troops, states, animations, common events (P1) _(commit: pending)_
-  - [~] **2.1.5** Database C: system 1/2, types, terms, traits, effects (P1)
+  - [x] **2.1.4** Database B: enemies, troops, states, animations, common events (P1) _(commit: 2a82d83e30)_
+  - [x] **2.1.5** Database C: system 1/2, types, terms, traits, effects (P1) _(commit: pending)_
   - [~] **2.1.6** Events: system, pages, conditions, triggers, priority, move routes, all commands (P1)
   - [~] **2.1.7** Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug (P1)
   - [~] **2.1.8** Other versions' notable features (P2)
