@@ -4,7 +4,20 @@
 #include "claude_bridge_logs.h"
 #include "claude_bridge_mcp.h"
 
+#include "editor/debugger/editor_debugger_plugin.h"
 #include "editor/plugins/editor_plugin.h"
+
+class ClaudeBridgePlugin;
+
+// Receives the game's "claude_bridge:reply" messages (EditorDebuggerNode::plugins_capture matches the prefix).
+class ClaudeBridgeDebuggerPlugin : public EditorDebuggerPlugin {
+	GDCLASS(ClaudeBridgeDebuggerPlugin, EditorDebuggerPlugin);
+
+public:
+	ClaudeBridgePlugin *bridge = nullptr;
+	virtual bool has_capture(const String &p_capture) const override { return p_capture == "claude_bridge"; }
+	virtual bool capture(const String &p_message, const Array &p_data, int p_session) override;
+};
 
 // Editor-side entry point of the Claude bridge: an MCP server (Streamable HTTP, JSON responses) bound to
 // 127.0.0.1 with a bearer token, polled non-blockingly on the editor main thread (plan/DECISIONS.md D-012).
@@ -54,6 +67,32 @@ private:
 	};
 	LocalVector<ScreenshotRequest> screenshot_requests;
 	bool screenshot_frame_requested = false;
+
+	struct GameRequest {
+		Ref<ClaudeBridgeToolCall> call;
+		String command;
+		int max_width = 1280;
+		bool include_image = true;
+	};
+	HashMap<int, GameRequest> game_requests;
+	int next_game_request_id = 1000000; // Far from GameView's screenshot ids (editor/run/game_view_plugin.h:71).
+	Ref<ClaudeBridgeDebuggerPlugin> debugger_plugin;
+
+	void _send_to_game(const String &p_command, const Array &p_args, const Ref<ClaudeBridgeToolCall> &p_call, int p_max_width = 1280, bool p_include_image = true);
+	static void _tool_game_screenshot(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata);
+	static void _tool_game_tree(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata);
+	static void _tool_game_node_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata);
+	static void _tool_game_node_set(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata);
+	static void _tool_game_input(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata);
+	static void _tool_game_wait(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata);
+	static void _tool_game_call(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata);
+	static void _tool_game_logs(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata);
+	void _register_game_tools();
+
+public:
+	void on_game_reply(const Array &p_data);
+
+private:
 	void _on_frame_post_draw();
 	static void _tool_editor_screenshot(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata);
 

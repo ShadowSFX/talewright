@@ -135,7 +135,8 @@ Dictionary ClaudeBridgeLogs::get_counts() const {
 }
 
 void ClaudeBridgeLogs::_print_handler(void *p_self, const String &p_string, bool p_error, bool p_rich) {
-	static_cast<ClaudeBridgeLogs *>(p_self)->add("editor", p_error ? "error" : (p_rich ? "rich" : "info"), p_string);
+	ClaudeBridgeLogs *self = static_cast<ClaudeBridgeLogs *>(p_self);
+	self->add(self->local_source, p_error ? "error" : (p_rich ? "rich" : "info"), p_string);
 }
 
 void ClaudeBridgeLogs::_error_handler(void *p_self, const char *p_function, const char *p_file, int p_line, const char *p_error, const char *p_message, bool p_editor_notify, ErrorHandlerType p_type) {
@@ -157,7 +158,8 @@ void ClaudeBridgeLogs::_error_handler(void *p_self, const char *p_function, cons
 	if (p_message && p_message[0] != '\0') {
 		text += ": " + String::utf8(p_message);
 	}
-	static_cast<ClaudeBridgeLogs *>(p_self)->add("editor", level, text, String::utf8(p_file), String::utf8(p_function), p_line);
+	ClaudeBridgeLogs *self = static_cast<ClaudeBridgeLogs *>(p_self);
+	self->add(self->local_source, level, text, String::utf8(p_file), String::utf8(p_function), p_line);
 }
 
 void ClaudeBridgeLogs::install_handlers() {

@@ -31,6 +31,7 @@
 
 #include "register_types.h"
 
+#include "claude_bridge_game.h"
 #include "claude_bridge_plugin.h"
 
 #include "core/object/class_db.h"
@@ -44,12 +45,17 @@ void initialize_claude_bridge_module(ModuleInitializationLevel p_level) {
 	// which is the editor binary itself (editor/run/editor_run.cpp:161); editor plugins are only instantiated
 	// when an EditorNode exists (editor/editor_node.cpp:9420-9421).
 	GDREGISTER_INTERNAL_CLASS(ClaudeBridgeToolCall);
+	GDREGISTER_INTERNAL_CLASS(ClaudeBridgeGame);
+	GDREGISTER_INTERNAL_CLASS(ClaudeBridgeDebuggerPlugin);
 	GDREGISTER_INTERNAL_CLASS(ClaudeBridgePlugin);
 	EditorPlugins::add_by_type<ClaudeBridgePlugin>();
+	// Game side: only in a play process launched by the editor (see ClaudeBridgeGame::initialize).
+	ClaudeBridgeGame::initialize();
 }
 
 void uninitialize_claude_bridge_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_EDITOR) {
 		return;
 	}
+	ClaudeBridgeGame::finalize();
 }

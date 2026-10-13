@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 16:14 -0600
+- **Updated:** 2026-10-13 16:18 -0600
 - **Current task:** none
-- **Last completed:** 4.9 Editor screenshots
+- **Last completed:** 4.10 Game-side capture
 - **Next task:** 3.3 Specs
-- **Done leaf tasks:** 34
+- **Done leaf tasks:** 35
 <!-- status:end -->
 
 ## Log
@@ -77,4 +77,6 @@
 | 2026-10-13 16:09 -0600 | 4.8 | started: Run/stop (containers: 4 pending->in_progress) |  |
 | 2026-10-13 16:11 -0600 | 4.8 | done: Run/stop — run_project (main/current/custom + args, pre-checks avoid blocking dialogs), stop_project, run_status (pid, debugger_connected); bridge_probe sample; live: game print + deliberate error captured with source=game and script location res://probe.gd:10 (moved 4.7 criterion) (containers: 4 in_progress->pending) | a2a9c2529f |
 | 2026-10-13 16:11 -0600 | 4.9 | started: Editor screenshots (containers: 4 pending->in_progress) |  |
-| 2026-10-13 16:14 -0600 | 4.9 | done: Editor screenshots — editor_screenshot (window/main_screen/viewport_2d/viewport_3d) after Main::force_redraw + frame_post_draw, HDR->sRGB as EditorNode, downscale, PNG saved under .godot/claude_bridge/screenshots (pruned) + inline image; editor_set_main_screen; hidden-viewport guidance; verified visually (evidence in plan/evidence/bridge/) (containers: 4 in_progress->pending) | pending |
+| 2026-10-13 16:14 -0600 | 4.9 | done: Editor screenshots — editor_screenshot (window/main_screen/viewport_2d/viewport_3d) after Main::force_redraw + frame_post_draw, HDR->sRGB as EditorNode, downscale, PNG saved under .godot/claude_bridge/screenshots (pruned) + inline image; editor_set_main_screen; hidden-viewport guidance; verified visually (evidence in plan/evidence/bridge/) (containers: 4 in_progress->pending) | 12773911ae |
+| 2026-10-13 16:14 -0600 | 4.10 | started: Game-side capture (containers: 4 pending->in_progress) |  |
+| 2026-10-13 16:18 -0600 | 4.10 | done: Game-side capture — Game-side capture (ClaudeBridgeGame, registered only when !editor_hint && EngineDebugger active) + editor EditorDebuggerPlugin: game_screenshot, game_scene_tree, game_node_get/set, game_input (actions/keys/mouse, timed holds), game_wait, game_call, game_logs (game-side buffer); live: square moved by injected ui_right hold, recolored, ui_accept counted, screenshot evidence; not-running case fails gracefully (containers: 4 in_progress->pending) | pending |

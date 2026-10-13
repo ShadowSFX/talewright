@@ -272,7 +272,245 @@ void ClaudeBridgePlugin::_on_frame_post_draw() {
 	}
 }
 
+// --- game channel ----------------------------------------------------------------------------------------
+
+bool ClaudeBridgeDebuggerPlugin::capture(const String &p_message, const Array &p_data, int p_session) {
+	if (p_message == "claude_bridge:reply" && bridge) {
+		bridge->on_game_reply(p_data);
+		return true;
+	}
+	return false;
+}
+
+void ClaudeBridgePlugin::_send_to_game(const String &p_command, const Array &p_args, const Ref<ClaudeBridgeToolCall> &p_call, int p_max_width, bool p_include_image) {
+	ScriptEditorDebugger *target = nullptr;
+	EditorDebuggerNode *edn = EditorDebuggerNode::get_singleton();
+	for (int i = 0; edn && edn->get_debugger(i); i++) {
+		if (edn->get_debugger(i)->is_session_active()) {
+			target = edn->get_debugger(i);
+			break;
+		}
+	}
+	if (!target) {
+		p_call->fail("The game is not running or not connected yet (run_project, then poll run_status for debugger_connected).");
+		return;
+	}
+	const int id = next_game_request_id++;
+	Array args;
+	args.push_back(id);
+	args.append_array(p_args);
+	GameRequest req;
+	req.call = p_call;
+	req.command = p_command;
+	req.max_width = p_max_width;
+	req.include_image = p_include_image;
+	game_requests[id] = req;
+	target->send_message("claude_bridge:" + p_command, args);
+}
+
+void ClaudeBridgePlugin::on_game_reply(const Array &p_data) {
+	if (p_data.size() < 4) {
+		return;
+	}
+	const int id = p_data[0];
+	GameRequest *req = game_requests.getptr(id);
+	if (!req) {
+		return; // Timed out and dropped earlier.
+	}
+	const GameRequest r = *req;
+	game_requests.erase(id);
+	if (r.call->is_cancelled() || r.call->is_done()) {
+		return;
+	}
+	if (!bool(p_data[1])) {
+		r.call->fail("Game: " + String(p_data[3]));
+		return;
+	}
+	if (r.command == "screenshot") {
+		const Dictionary d = p_data[2];
+		const Vector<uint8_t> png = d.get("png", Vector<uint8_t>());
+		Ref<Image> img;
+		img.instantiate();
+		if (png.is_empty() || img->load_png_from_buffer(png) != OK) {
+			r.call->fail("Game screenshot could not be decoded.");
+			return;
+		}
+		ClaudeBridgeTools::complete_with_image(r.call, img, "game", r.max_width, r.include_image);
+		return;
+	}
+	r.call->complete_data(p_data[2]);
+}
+
+void ClaudeBridgePlugin::_tool_game_screenshot(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	const int max_width = p_args.get("max_width", 1280);
+	Array args;
+	args.push_back(max_width);
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("screenshot", args, p_call, max_width, p_args.get("include_image", true));
+}
+
+void ClaudeBridgePlugin::_tool_game_tree(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	Array args;
+	args.push_back(String(p_args.get("path", "/root")));
+	args.push_back(int(p_args.get("depth", 8)));
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("tree", args, p_call);
+}
+
+void ClaudeBridgePlugin::_tool_game_node_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	Array args;
+	args.push_back(String(p_args.get("path", "")));
+	args.push_back(Array(p_args.get("properties", Array())));
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("node_get", args, p_call);
+}
+
+void ClaudeBridgePlugin::_tool_game_node_set(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	Array args;
+	args.push_back(String(p_args.get("path", "")));
+	args.push_back(String(p_args.get("property", "")));
+	args.push_back(p_args.get("value", Variant()));
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("node_set", args, p_call);
+}
+
+void ClaudeBridgePlugin::_tool_game_input(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	Array events = p_args.get("events", Array());
+	if (events.is_empty() && (p_args.has("action") || p_args.has("key"))) {
+		// Shorthand: {action: "ui_accept"} or {key: "Enter", hold_frames: 4}.
+		Dictionary e;
+		for (const String key : { "action", "key", "hold_frames", "pressed" }) {
+			if (p_args.has(key)) {
+				e[key] = p_args[key];
+			}
+		}
+		events.push_back(e);
+	}
+	if (events.is_empty()) {
+		p_call->fail("Provide events:[...] or action/key.");
+		return;
+	}
+	Array args;
+	args.push_back(events);
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("input", args, p_call);
+}
+
+void ClaudeBridgePlugin::_tool_game_wait(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	Array args;
+	args.push_back(CLAMP(int(p_args.get("frames", 1)), 1, 3600));
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("wait", args, p_call);
+}
+
+void ClaudeBridgePlugin::_tool_game_call(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	Array args;
+	args.push_back(String(p_args.get("path", "")));
+	args.push_back(String(p_args.get("method", "")));
+	args.push_back(Array(p_args.get("args", Array())));
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("call", args, p_call);
+}
+
+void ClaudeBridgePlugin::_tool_game_logs(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	Array args;
+	args.push_back(int64_t(p_args.get("since_seq", 0)));
+	args.push_back(int(p_args.get("limit", 200)));
+	args.push_back(bool(p_args.get("errors_only", false)));
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("logs", args, p_call);
+}
+
+static Dictionary _schema_prop(const String &p_type, const String &p_description) {
+	Dictionary d;
+	d["type"] = p_type;
+	d["description"] = p_description;
+	return d;
+}
+
+void ClaudeBridgePlugin::_register_game_tools() {
+	struct Def {
+		const char *name;
+		const char *title;
+		const char *description;
+		ClaudeBridgeMCP::ToolFunc func;
+		bool read_only;
+		uint64_t timeout;
+	};
+	const Def defs[] = {
+		{ "game_screenshot", "Game screenshot", "Captures the running game's root viewport. Saves a PNG under .godot/claude_bridge/screenshots and returns its path (and the image unless include_image=false).", &ClaudeBridgePlugin::_tool_game_screenshot, true, 15000 },
+		{ "game_scene_tree", "Game scene tree", "Returns the running game's live node tree (from /root or a given path).", &ClaudeBridgePlugin::_tool_game_tree, true, 10000 },
+		{ "game_node_get", "Game node properties", "Reads properties of a node in the running game (path absolute like /root/Main/Player or relative to the current scene).", &ClaudeBridgePlugin::_tool_game_node_get, true, 10000 },
+		{ "game_node_set", "Set game node property", "Sets a property on a node in the running game (not undoable; the game is a separate process).", &ClaudeBridgePlugin::_tool_game_node_set, false, 10000 },
+		{ "game_input", "Inject input", "Injects input into the running game: events [{action|key|type:'mouse_button', pressed?, hold_frames?, button?, position?}] or shorthand action/key. Without 'pressed' the input is pressed and released after hold_frames (default 2).", &ClaudeBridgePlugin::_tool_game_input, false, 10000 },
+		{ "game_wait", "Wait frames", "Waits until the running game has processed the given number of frames.", &ClaudeBridgePlugin::_tool_game_wait, true, 70000 },
+		{ "game_call", "Call game method", "Calls a method on a node in the running game and returns the result.", &ClaudeBridgePlugin::_tool_game_call, false, 10000 },
+		{ "game_logs", "Game-side logs", "Reads the game's own log buffer (complete even when debugger output is rate-limited).", &ClaudeBridgePlugin::_tool_game_logs, true, 10000 },
+	};
+	for (const Def &d : defs) {
+		ClaudeBridgeMCP::Tool t;
+		t.name = d.name;
+		t.title = d.title;
+		t.description = d.description;
+		t.func = d.func;
+		t.userdata = this;
+		t.read_only = d.read_only;
+		t.timeout_msec = d.timeout;
+		Dictionary props;
+		const String name = d.name;
+		if (name == "game_screenshot") {
+			props["max_width"] = _schema_prop("integer", "Downscale to at most this width (default 1280).");
+			props["include_image"] = _schema_prop("boolean", "Return the PNG inline (default true).");
+		} else if (name == "game_scene_tree") {
+			props["path"] = _schema_prop("string", "Start node (default /root).");
+			props["depth"] = _schema_prop("integer", "Maximum depth (default 8).");
+		} else if (name == "game_node_get") {
+			props["path"] = _schema_prop("string", "Node path.");
+			Dictionary items;
+			items["type"] = "string";
+			Dictionary arr = _schema_prop("array", "Property names (default: editor-visible and script variables).");
+			arr["items"] = items;
+			props["properties"] = arr;
+		} else if (name == "game_node_set") {
+			props["path"] = _schema_prop("string", "Node path.");
+			props["property"] = _schema_prop("string", "Property name.");
+			Dictionary any;
+			any["description"] = "JSON value or Godot literal string such as \"Vector2(1, 2)\".";
+			props["value"] = any;
+		} else if (name == "game_input") {
+			Dictionary arr = _schema_prop("array", "Input events.");
+			Dictionary item;
+			item["type"] = "object";
+			arr["items"] = item;
+			props["events"] = arr;
+			props["action"] = _schema_prop("string", "Shorthand: InputMap action to tap, e.g. ui_accept.");
+			props["key"] = _schema_prop("string", "Shorthand: key name to tap, e.g. Enter, Up, A.");
+			props["hold_frames"] = _schema_prop("integer", "Frames to hold before releasing (default 2).");
+			props["pressed"] = _schema_prop("boolean", "Send only a press (true) or a release (false) instead of a tap.");
+		} else if (name == "game_wait") {
+			props["frames"] = _schema_prop("integer", "Frames to wait (1-3600).");
+		} else if (name == "game_call") {
+			props["path"] = _schema_prop("string", "Node path.");
+			props["method"] = _schema_prop("string", "Method name.");
+			Dictionary arr = _schema_prop("array", "Arguments.");
+			props["args"] = arr;
+		} else if (name == "game_logs") {
+			props["since_seq"] = _schema_prop("integer", "Entries newer than this sequence number.");
+			props["limit"] = _schema_prop("integer", "Maximum entries (default 200).");
+			props["errors_only"] = _schema_prop("boolean", "Only warnings and errors.");
+		}
+		t.input_schema = ClaudeBridgeMCP::object_schema(props);
+		mcp.register_tool(t);
+	}
+}
+
 void ClaudeBridgePlugin::_process_pending(uint64_t p_now) {
+	for (KeyValue<int, GameRequest> &kv : game_requests) {
+		if (kv.value.call->is_cancelled() || kv.value.call->is_done()) {
+			kv.value.command = String(); // Marked for removal below.
+		}
+	}
+	LocalVector<int> stale;
+	for (const KeyValue<int, GameRequest> &kv : game_requests) {
+		if (kv.value.command.is_empty()) {
+			stale.push_back(kv.key);
+		}
+	}
+	for (int id : stale) {
+		game_requests.erase(id);
+	}
 	for (uint32_t i = 0; i < pending_calls.size();) {
 		PendingCall &pc = pending_calls[i];
 		if (!server.has_connection(pc.connection_id)) {
@@ -317,6 +555,7 @@ void ClaudeBridgePlugin::_register_tools() {
 	status.userdata = this;
 	mcp.register_tool(status);
 	ClaudeBridgeTools::register_editor_tools(mcp, this);
+	_register_game_tools();
 
 	ClaudeBridgeMCP::Tool shot;
 	shot.name = "editor_screenshot";
@@ -361,12 +600,20 @@ void ClaudeBridgePlugin::_notification(int p_what) {
 			_define_settings();
 			_read_settings();
 			EditorSettings::get_singleton()->connect("settings_changed", callable_mp(this, &ClaudeBridgePlugin::_on_settings_changed));
+			debugger_plugin.instantiate();
+			debugger_plugin->bridge = this;
+			add_debugger_plugin(debugger_plugin);
 			if (enabled) {
 				_start_server();
 			}
 		} break;
 		case NOTIFICATION_EXIT_TREE: {
 			_stop_server();
+			if (debugger_plugin.is_valid()) {
+				remove_debugger_plugin(debugger_plugin);
+				debugger_plugin->bridge = nullptr;
+				debugger_plugin.unref();
+			}
 			EditorSettings::get_singleton()->disconnect("settings_changed", callable_mp(this, &ClaudeBridgePlugin::_on_settings_changed));
 		} break;
 		case NOTIFICATION_PROCESS: {

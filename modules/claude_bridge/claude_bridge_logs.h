@@ -73,12 +73,14 @@ private:
 	PrintHandlerList print_handler;
 	ErrorHandlerList error_handler;
 	bool handlers_installed = false;
+	String local_source = "editor"; // Source label for this process's own prints/errors.
 
 	static void _print_handler(void *p_self, const String &p_string, bool p_error, bool p_rich);
 	static void _error_handler(void *p_self, const char *p_function, const char *p_file, int p_line, const char *p_error, const char *p_message, bool p_editor_notify, ErrorHandlerType p_type);
 
 public:
 	void set_capacity(uint32_t p_capacity);
+	void set_local_source(const String &p_source) { local_source = p_source; }
 	void add(const String &p_source, const String &p_level, const String &p_text, const String &p_file = String(), const String &p_function = String(), int p_line = -1);
 	Array query(const Query &p_query, uint64_t &r_last_seq) const;
 	void clear();

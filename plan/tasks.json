@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "4.9 Editor screenshots",
+  "last_completed": "4.10 Game-side capture",
   "tasks": [
     {
       "id": "0",
@@ -840,7 +840,7 @@
       ],
       "test_strategy": "Read PNG.",
       "files": [],
-      "commit": "pending",
+      "commit": "12773911ae",
       "notes": ""
     },
     {
@@ -851,7 +851,7 @@
       "dependencies": [
         "4.9"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Game screenshot works embedded and floating",
@@ -860,7 +860,7 @@
       ],
       "test_strategy": "Bridge calls on plain_2d.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
