@@ -65,6 +65,10 @@ void ClaudeBridgePlugin::_start_server() {
 
 void ClaudeBridgePlugin::_stop_server() {
 	set_process(false);
+	for (PendingCall &pc : pending_calls) {
+		pc.call->cancel();
+	}
+	pending_calls.clear();
 	if (server.is_listening()) {
 		server.stop();
 		_remove_connection_file();
@@ -140,7 +144,66 @@ void ClaudeBridgePlugin::_handle_request(uint64_t p_connection_id, const ClaudeB
 		_respond_json(p_connection_id, 415, _error_json("Content-Type must be application/json."));
 		return;
 	}
-	_respond_json(p_connection_id, 501, _error_json("MCP dispatcher not available yet."));
+	const ClaudeBridgeMCP::Reply reply = mcp.handle(p_request.get_body_as_utf8(), OS::get_singleton()->get_ticks_msec());
+	if (reply.pending) {
+		PendingCall pc;
+		pc.connection_id = p_connection_id;
+		pc.id = reply.id;
+		pc.call = reply.call;
+		pending_calls.push_back(pc);
+		return;
+	}
+	if (reply.http_status == 202) {
+		server.respond(p_connection_id, 202, ClaudeBridgeHTTPServer::Headers(), Vector<uint8_t>());
+		return;
+	}
+	_respond_json(p_connection_id, reply.http_status, reply.body);
+}
+
+void ClaudeBridgePlugin::_process_pending(uint64_t p_now) {
+	for (uint32_t i = 0; i < pending_calls.size();) {
+		PendingCall &pc = pending_calls[i];
+		if (!server.has_connection(pc.connection_id)) {
+			pc.call->cancel(); // Client went away: let the tool stop work early.
+			pending_calls.remove_at(i);
+			continue;
+		}
+		if (pc.call->is_done() || p_now > pc.call->get_deadline_msec()) {
+			if (!pc.call->is_done()) {
+				pc.call->cancel();
+			}
+			_respond_json(pc.connection_id, 200, mcp.finish(pc.id, pc.call));
+			pending_calls.remove_at(i);
+			continue;
+		}
+		i++;
+	}
+}
+
+void ClaudeBridgePlugin::_tool_bridge_status(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	ClaudeBridgePlugin *self = static_cast<ClaudeBridgePlugin *>(p_userdata);
+	Dictionary d;
+	d["server"] = ClaudeBridgeMCP::SERVER_NAME;
+	d["server_version"] = ClaudeBridgeMCP::SERVER_VERSION;
+	d["engine"] = GODOT_VERSION_FULL_CONFIG;
+	d["project_name"] = GLOBAL_GET("application/config/name");
+	d["project_path"] = ProjectSettings::get_singleton()->globalize_path("res://");
+	d["port"] = self->server.get_port();
+	d["tools"] = self->mcp.get_tool_count();
+	d["uptime_msec"] = OS::get_singleton()->get_ticks_msec() - self->started_msec;
+	d["pid"] = OS::get_singleton()->get_process_id();
+	p_call->complete_data(d);
+}
+
+void ClaudeBridgePlugin::_register_tools() {
+	mcp.set_instructions("Talewright editor bridge. Tools inspect and drive the Godot-based Talewright editor, the running game and (later) the JRPG database, maps and the MMO cluster. Paths use res:// for project files; node paths are relative to the edited scene root unless stated.");
+	ClaudeBridgeMCP::Tool status;
+	status.name = "bridge_status";
+	status.title = "Bridge status";
+	status.description = "Returns the bridge/server version, engine version, project name and path, port and number of tools.";
+	status.func = &ClaudeBridgePlugin::_tool_bridge_status;
+	status.userdata = this;
+	mcp.register_tool(status);
 }
 
 void ClaudeBridgePlugin::RequestHandler::handle_http_request(uint64_t p_connection_id, const ClaudeBridgeHTTPRequest &p_request) {
@@ -162,7 +225,9 @@ void ClaudeBridgePlugin::_notification(int p_what) {
 			EditorSettings::get_singleton()->disconnect("settings_changed", callable_mp(this, &ClaudeBridgePlugin::_on_settings_changed));
 		} break;
 		case NOTIFICATION_PROCESS: {
-			server.poll(OS::get_singleton()->get_ticks_msec());
+			const uint64_t now = OS::get_singleton()->get_ticks_msec();
+			server.poll(now);
+			_process_pending(now);
 		} break;
 	}
 }
@@ -170,6 +235,8 @@ void ClaudeBridgePlugin::_notification(int p_what) {
 ClaudeBridgePlugin::ClaudeBridgePlugin() {
 	request_handler.plugin = this;
 	server.set_handler(&request_handler);
+	started_msec = OS::get_singleton()->get_ticks_msec();
+	_register_tools();
 }
 
 ClaudeBridgePlugin::~ClaudeBridgePlugin() {

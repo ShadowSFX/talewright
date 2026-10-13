@@ -43,6 +43,7 @@ void initialize_claude_bridge_module(ModuleInitializationLevel p_level) {
 	// The module only builds for target=editor (config.py). EDITOR-level init also runs in the play process,
 	// which is the editor binary itself (editor/run/editor_run.cpp:161); editor plugins are only instantiated
 	// when an EditorNode exists (editor/editor_node.cpp:9420-9421).
+	GDREGISTER_INTERNAL_CLASS(ClaudeBridgeToolCall);
 	GDREGISTER_INTERNAL_CLASS(ClaudeBridgePlugin);
 	EditorPlugins::add_by_type<ClaudeBridgePlugin>();
 }

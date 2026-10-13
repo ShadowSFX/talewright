@@ -2,12 +2,14 @@
 
 #include "core/io/dir_access.h"
 #include "core/io/file_access.h"
+#include "core/io/json.h"
 #include "core/object/class_db.h"
 #include "core/os/os.h"
 #include "tests/test_macros.h"
 
 #include "modules/claude_bridge/claude_bridge_auth.h"
 #include "modules/claude_bridge/claude_bridge_http.h"
+#include "modules/claude_bridge/claude_bridge_mcp.h"
 #include "modules/claude_bridge/claude_bridge_plugin.h"
 
 namespace TestClaudeBridge {
@@ -280,6 +282,122 @@ TEST_CASE("[ClaudeBridge][Auth] Token file is created once and reused") {
 	DirAccess::remove_absolute(path);
 	DirAccess::remove_absolute(path.get_base_dir());
 	DirAccess::remove_absolute(dir);
+}
+
+static void tool_sync(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	Dictionary d;
+	d["echo"] = p_args.get("value", "none");
+	p_call->complete_data(d);
+}
+
+static Ref<ClaudeBridgeToolCall> stored_call;
+
+static void tool_async(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	stored_call = p_call;
+}
+
+static void tool_fail(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	p_call->fail("boom");
+}
+
+static ClaudeBridgeMCP make_mcp() {
+	ClaudeBridgeMCP mcp;
+	ClaudeBridgeMCP::Tool t;
+	t.name = "sync";
+	t.description = "Echo.";
+	t.func = &tool_sync;
+	mcp.register_tool(t);
+	t.name = "async";
+	t.func = &tool_async;
+	t.timeout_msec = 100;
+	mcp.register_tool(t);
+	t.name = "fail";
+	t.func = &tool_fail;
+	mcp.register_tool(t);
+	return mcp;
+}
+
+static Dictionary parse_obj(const String &p_json) {
+	JSON json;
+	REQUIRE(json.parse(p_json) == OK);
+	return json.get_data();
+}
+
+TEST_CASE("[ClaudeBridge][MCP] initialize negotiates protocol versions and keeps integer ids") {
+	ClaudeBridgeMCP mcp = make_mcp();
+	ClaudeBridgeMCP::Reply r = mcp.handle(R"({"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"t","version":"1"}}})", 0);
+	CHECK(r.http_status == 200);
+	CHECK(r.body.contains("\"id\":1,"));
+	Dictionary res = parse_obj(r.body)["result"];
+	CHECK(String(res["protocolVersion"]) == "2025-06-18");
+	CHECK(Dictionary(res["capabilities"]).has("tools"));
+	CHECK(String(Dictionary(res["serverInfo"])["name"]) == ClaudeBridgeMCP::SERVER_NAME);
+
+	r = mcp.handle(R"({"jsonrpc":"2.0","id":"abc","method":"initialize","params":{"protocolVersion":"1999-01-01"}})", 0);
+	res = parse_obj(r.body)["result"];
+	CHECK(String(res["protocolVersion"]) == ClaudeBridgeMCP::DEFAULT_PROTOCOL);
+	CHECK(r.body.contains("\"id\":\"abc\""));
+}
+
+TEST_CASE("[ClaudeBridge][MCP] Notifications, ping, errors and batches") {
+	ClaudeBridgeMCP mcp = make_mcp();
+	CHECK(mcp.handle(R"({"jsonrpc":"2.0","method":"notifications/initialized"})", 0).http_status == 202);
+	CHECK(mcp.handle(R"({"jsonrpc":"2.0","id":7,"method":"ping"})", 0).body == R"({"jsonrpc":"2.0","id":7,"result":{}})");
+
+	ClaudeBridgeMCP::Reply r = mcp.handle("{not json", 0);
+	CHECK(r.http_status == 400);
+	CHECK(int(Dictionary(parse_obj(r.body)["error"])["code"]) == ClaudeBridgeMCP::ERR_PARSE);
+
+	r = mcp.handle(R"([{"jsonrpc":"2.0","id":1,"method":"ping"}])", 0);
+	CHECK(r.http_status == 400);
+	CHECK(int(Dictionary(parse_obj(r.body)["error"])["code"]) == ClaudeBridgeMCP::ERR_INVALID_REQUEST);
+
+	r = mcp.handle(R"({"jsonrpc":"2.0","id":2,"method":"nope"})", 0);
+	CHECK(int(Dictionary(parse_obj(r.body)["error"])["code"]) == ClaudeBridgeMCP::ERR_METHOD_NOT_FOUND);
+
+	r = mcp.handle(R"({"jsonrpc":"1.0","id":2,"method":"ping"})", 0);
+	CHECK(r.http_status == 400);
+
+	r = mcp.handle(R"({"jsonrpc":"2.0","id":{"x":1},"method":"ping"})", 0);
+	CHECK(r.http_status == 400);
+}
+
+TEST_CASE("[ClaudeBridge][MCP] tools/list and tools/call (sync, error, unknown, async, timeout)") {
+	ClaudeBridgeMCP mcp = make_mcp();
+	ClaudeBridgeMCP::Reply r = mcp.handle(R"({"jsonrpc":"2.0","id":1,"method":"tools/list"})", 0);
+	const Array tools = Dictionary(parse_obj(r.body)["result"])["tools"];
+	CHECK(tools.size() == 3);
+	CHECK(String(Dictionary(tools[0])["name"]) == "sync");
+	CHECK(Dictionary(Dictionary(tools[0])["inputSchema"]).has("type"));
+
+	r = mcp.handle(R"({"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"sync","arguments":{"value":"hi"}}})", 0);
+	Dictionary res = parse_obj(r.body)["result"];
+	CHECK_FALSE(bool(res["isError"]));
+	CHECK(String(Dictionary(res["structuredContent"])["echo"]) == "hi");
+	CHECK(String(Dictionary(Array(res["content"])[0])["type"]) == "text");
+
+	r = mcp.handle(R"({"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"fail","arguments":{}}})", 0);
+	res = parse_obj(r.body)["result"];
+	CHECK(bool(res["isError"]));
+
+	r = mcp.handle(R"({"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"missing"}})", 0);
+	CHECK(int(Dictionary(parse_obj(r.body)["error"])["code"]) == ClaudeBridgeMCP::ERR_INVALID_PARAMS);
+
+	r = mcp.handle(R"({"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"sync","arguments":[1]}})", 0);
+	CHECK(int(Dictionary(parse_obj(r.body)["error"])["code"]) == ClaudeBridgeMCP::ERR_INVALID_PARAMS);
+
+	r = mcp.handle(R"({"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"async","arguments":{}}})", 1000);
+	CHECK(r.pending);
+	CHECK(r.call == stored_call);
+	CHECK(r.call->get_deadline_msec() == 1100);
+	stored_call->complete_text("later");
+	res = parse_obj(mcp.finish(r.id, r.call))["result"];
+	CHECK(String(Dictionary(Array(res["content"])[0])["text"]) == "later");
+
+	r = mcp.handle(R"({"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"async","arguments":{}}})", 0);
+	res = parse_obj(mcp.finish(r.id, r.call))["result"];
+	CHECK(bool(res["isError"])); // Not completed before the deadline.
+	stored_call.unref();
 }
 
 } // namespace TestClaudeBridge

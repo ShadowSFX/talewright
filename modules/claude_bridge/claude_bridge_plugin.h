@@ -1,6 +1,7 @@
 #pragma once
 
 #include "claude_bridge_http.h"
+#include "claude_bridge_mcp.h"
 
 #include "editor/plugins/editor_plugin.h"
 
@@ -23,11 +24,24 @@ private:
 		virtual void handle_http_request(uint64_t p_connection_id, const ClaudeBridgeHTTPRequest &p_request) override;
 	};
 
+	struct PendingCall {
+		uint64_t connection_id = 0;
+		Variant id;
+		Ref<ClaudeBridgeToolCall> call;
+	};
+
 	bool enabled = false;
 	int configured_port = DEFAULT_PORT;
 	ClaudeBridgeHTTPServer server;
 	RequestHandler request_handler;
+	ClaudeBridgeMCP mcp;
+	LocalVector<PendingCall> pending_calls;
 	String token;
+	uint64_t started_msec = 0;
+
+	void _register_tools();
+	void _process_pending(uint64_t p_now);
+	static void _tool_bridge_status(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata);
 
 	void _define_settings();
 	void _read_settings();
@@ -48,6 +62,7 @@ public:
 
 	virtual String get_plugin_name() const override { return "ClaudeBridge"; }
 
+	ClaudeBridgeMCP &get_mcp() { return mcp; }
 	bool is_enabled() const { return enabled; }
 	bool is_listening() const { return server.is_listening(); }
 	int get_port() const { return server.get_port(); }
