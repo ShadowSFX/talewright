@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 110, in_progress: 2, done: 30, blocked: 0, deferred: 3 (of 145)
+**Totals:** pending: 110, in_progress: 0, done: 32, blocked: 0, deferred: 3 (of 145)
 
 ## [x] 0 Bootstrap and task system
 
@@ -26,7 +26,7 @@ Reproducible builds and a recorded vanilla baseline before any engine change.
 - [x] **1.5** Plain general-purpose samples (P2) _(deps: 1.2, 1.4; commit: 51255adeae)_
 - [x] **1.6** Epic 0+1 review fixes (P1) _(commit: a6fbf412ba)_
 
-## [~] 2 Research (Phase 1)
+## [x] 2 Research (Phase 1)
 
 Sourced RPG Maker inventory, Godot current state from the clone, MMO feasibility, gap map.
 
@@ -43,7 +43,7 @@ Sourced RPG Maker inventory, Godot current state from the clone, MMO feasibility
 - [x] **2.2** Godot current state (from the clone) (P1) _(deps: 0.4; commit: 23d0dcdf80)_
 - [x] **2.3** MMO feasibility and rAthena techniques (P1) _(deps: 0.4; commit: 0a33c6e7da)_
 - [x] **2.4** Gap map (P1) _(deps: 2.1, 2.2, 2.3; commit: 89239e392b)_
-- [~] **2.5** Epic review: research (P1) _(deps: 2.4)_
+- [x] **2.5** Epic review: research (P1) _(deps: 2.4; commit: pending)_
 
 ## [ ] 3 Architecture decisions and specs (Phases 2-3)
 
@@ -63,7 +63,7 @@ Editor-only C++ module: MCP Streamable HTTP server on 127.0.0.1 with token; edit
 - [x] **4.2** HTTP/1.1 server component (P1) _(deps: 4.1; commit: 4eac8ec916)_
 - [x] **4.3** Auth, Origin/Host checks, connection file (P1) _(deps: 4.2; commit: b4d7680cd4)_
 - [x] **4.4** MCP JSON-RPC layer (P1) _(deps: 4.3; commit: 110b884601)_
-- [x] **4.5** bridge.py CLI (P1) _(deps: 4.4; commit: pending)_
+- [x] **4.5** bridge.py CLI (P1) _(deps: 4.4; commit: 6f08aa1d78)_
 - [ ] **4.6** Editor tools: tree, nodes, project (P1) _(deps: 4.5)_
 - [ ] **4.7** Logs and errors (P1) _(deps: 4.6)_
 - [ ] **4.8** Run/stop (P1) _(deps: 4.7)_
@@ -175,7 +175,7 @@ Save format, title/game over, slice export, demo playthrough.
 
 ## [ ] 14 MMO protocol and transport
 
-IDL + codegen, framing/reassembly, ENet (DTLS) and WebSocket (TLS) transports, per-opcode token buckets, session-state gating, fuzz tests. Subtasks are defined when the epic starts (rule: split before starting).
+Go/no-go spikes first (D-024): raw ENetConnection 1000-peer loopback test; 1000-entity zone tick prototype with AoI (p99 < 50 ms); handoff chaos test. Then: IDL + codegen, framing/reassembly, ENet (DTLS) and WebSocket (TLS) transports, per-opcode token buckets, session-state gating, fuzz tests. Subtasks are defined when the epic starts (rule: split before starting).
 
 
 ## [ ] 15 Server runtime

@@ -29,8 +29,14 @@ def main() -> int:
     ap.add_argument("files", nargs="+")
     ap.add_argument("--root", default=".")
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument(
+        "--rathena-root",
+        default=r"C:\Users\Relic\Desktop\ro server\rathena",
+        help="root for citations written as ra:<path>:<line> (rAthena d4b8e7b8, read-only)",
+    )
     args = ap.parse_args()
     root = Path(args.root)
+    ra_root = Path(args.rathena_root)
     cache: dict = {}
     failures = 0
     total = 0
@@ -38,13 +44,20 @@ def main() -> int:
         text = Path(f).read_text(encoding="utf-8")
         for m in CITE.finditer(text):
             path, spans, needle = m.group(1), m.group(2), m.group(3)
-            if path.startswith(SKIP_PREFIXES):
+            is_ra = text[max(0, m.start() - 3) : m.start()] == "ra:"
+            if is_ra:
+                if not ra_root.is_dir():
+                    continue
+                base, key = ra_root, "ra:" + path
+            elif path.startswith(SKIP_PREFIXES):
                 continue
+            else:
+                base, key = root, path
             total += 1
-            target = root / path
-            if path not in cache:
-                cache[path] = target.read_text(encoding="utf-8", errors="replace").split(chr(10)) if target.is_file() else None
-            lines = cache[path]
+            target = base / path
+            if key not in cache:
+                cache[key] = target.read_text(encoding="utf-8", errors="replace").split(chr(10)) if target.is_file() else None
+            lines = cache[key]
             if lines is None:
                 failures += 1
                 print(f"{f}: missing file {path}")

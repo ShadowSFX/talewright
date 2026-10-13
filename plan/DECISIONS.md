@@ -244,3 +244,26 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   "parity: functional, exact numbers not verified".
 - **Why:** functional parity without copying or guessing; users can tune values to taste.
 - **Reversal:** change the documented defaults; the values are data, not code.
+
+## D-015a — Amendment: "independent reimplementation", not "clean-room"
+- **Context:** the epic 2 review noted that the same agents read the rAthena study and implement the MMO servers, so
+  "clean-room" (separate spec writers and implementers) overstates the process.
+- **Choice:** call it an *independent reimplementation*. Rules: implement from Talewright's own behaviour-level specs in
+  `plan/specs/`; never transcribe rAthena code; never reuse rAthena packet ids/layouts, opcodes, inter-server message
+  numbers, YAML schemas or script syntax/variable sigils; techniques (algorithms, state machines) are reimplemented in
+  Talewright's own structure and naming.
+- **Reversal:** a true clean-room process would require separate spec writers and implementers.
+
+## D-023 — No monster-capture template without legal review
+- **Context:** Nintendo and The Pokémon Company sued Pocketpair (Palworld) for patent infringement on 2024-09-18
+  (https://www.nbcnews.com/tech/nintendo-pokemon-company-palworld-pocketpair-lawsuit-rcna171817); status not verified.
+- **Choice:** Talewright provides generic systems (actors, battles, events, items) with which users can build any game, but
+  ships no monster-capture template/sample; such a template needs counsel review first. Original assets and UI only.
+- **Reversal:** add the template after review.
+
+## D-024 — MMO go/no-go spikes gate the MMO epics
+- **Context:** epic 2 review: capacity is unmeasured; feasibility is conditional.
+- **Choice:** epic 14 starts with three spikes (1000-peer raw ENet loopback; 1000-entity zone tick prototype with AoI;
+  handoff chaos test). Failing spikes block dependent MMO epics with measured reasons and trigger a design revision
+  (e.g. TCP/WebSocket transport behind the same protocol layer).
+- **Reversal:** none needed; the spikes are cheap insurance.

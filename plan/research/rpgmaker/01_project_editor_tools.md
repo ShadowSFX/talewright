@@ -888,7 +888,7 @@ Note on area use: the help's "Playing Your Game" page (runtime controls, title/m
 ### RM-PLG-003 — Adding a plugin to the list
 - **What:** Registers a plugin file in the project's active list.
 - **Behaviour:**
-  - You double-click an empty row in the Plugin Manager, choose the plugin from the Name drop-down (which lists the files in the plugin folder) and confirm with OK.
+  - A blank line in the Plugin Manager list opens the add dialog when activated; the Name drop-down offers every file found in the project's plugin folder, and OK registers the choice.
   - The blog adds that you set Status to ON before applying.
   - The plugin then appears in the list.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_11_04.html ; https://www.rpgmakerweb.com/blog/beginners-guide-to-plugins-part1

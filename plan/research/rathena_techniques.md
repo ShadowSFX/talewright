@@ -2,8 +2,10 @@
 
 Reference: rAthena commit `d4b8e7b8f16061cc2496d377ac8f777ce72a4f39` (2026-10-06), read-only at
 `C:\Users\Relic\Desktop\ro server\rathena` (the owner's Ragnarok Relic submodule). Paths below are relative to
-that directory and prefixed `ra:`. **rAthena is GPL-3.0: Talewright reimplements techniques clean-room and
-copies no code.** Full study with more citations: `plan/research/planning_notes/06_rathena_study.md`.
+that directory and prefixed `ra:` (checked by `python plan/tools/check_citations.py`, which resolves `ra:` paths
+against that tree). **rAthena is GPL-3.0. Talewright is an independent reimplementation, not a clean-room one** (the same people read the study and implement): rules — implementers work from Talewright's own specs
+(`plan/specs/`, behaviour-level descriptions), never transcribe rAthena code, and never reuse rAthena packet
+ids/layouts, opcodes, inter-server message numbers, YAML schemas or script syntax/variable sigils (D-015). Full study with more citations: `plan/research/planning_notes/06_rathena_study.md`.
 
 Each row: technique → why it matters → rAthena reference → Talewright mapping (task/epic).
 
@@ -74,11 +76,11 @@ Each row: technique → why it matters → rAthena reference → Talewright mapp
 | # | Weakness | rAthena | Talewright fix |
 |---|---|---|---|
 | W1 | Synchronous SQL on the game thread | `ra:src/char/char.cpp:305-336`; `ra:src/map/log.cpp:242` | async DB worker (D-017) |
-| W2 | MyISAM, non-transactional character saves | `ra:sql-files/main.sql:309,757`; `ra:src/char/char.cpp:525-527` | atomic versioned transactions |
+| W2 | MyISAM, non-transactional character saves | `ra:sql-files/main.sql:309,752`; `ra:src/char/char.cpp:525-527` | atomic versioned transactions |
 | W3 | Raw C structs between processes, 64 KB ceiling | `ra:src/map/chrif.cpp:317-328,1941-1945` | schema-generated messages |
 | W4 | Hand-maintained packet length tables | `ra:src/map/chrif.cpp:42-50`; `ra:src/char/inter.cpp:58-70` | IDL codegen |
 | W5 | Hard caps (2 map-servers per char, 5 char-servers, FD_SETSIZE) | `ra:src/char/char.hpp:212`; `ra:src/login/login.hpp:62` | dynamic registries |
-| W6 | 32-bit tokens, ID-only XOR "obfuscation", MD5 passwords | `ra:src/login/login.cpp:413-414`; `ra:src/map/clif.cpp:25717` | HMAC tickets, DTLS/TLS, Argon2id |
+| W6 | 32-bit tokens, ID-only XOR "obfuscation", plain-text passwords by default (`use_MD5_passwords: no`, `ra:conf/login_athena.conf:116-118`) | `ra:src/login/login.cpp:413-414`; `ra:src/map/clif.cpp:25717` | HMAC tickets, DTLS/TLS, Argon2id |
 | W7 | Partial packet = disconnect; 3 packets/loop cap | `ra:src/map/clif.cpp:25679,25773-25780` | reassembly + token buckets |
 | W8 | `exit()` on write-buffer misuse | `ra:src/common/socket.cpp:831-846` | per-session failure isolation |
 | W9 | Global scratch state (bl_list, path heap) blocks parallelism | `ra:src/map/path.cpp:267,327-330` | per-instance scratch |

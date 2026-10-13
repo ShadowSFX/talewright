@@ -51,7 +51,7 @@ How the pages were read:
   - No parameters.
   - The screen stays black until a **Fadein Screen** command runs.
   - UI stays visible while the screen is faded out: menus, the message window, and the battle command window.
-  - In a battle event, everything except the command window and messages goes black, enemies included.
+  - Used during battle, the whole battle view turns black (enemies too) while the command and message windows stay visible.
   - Fade speed/duration: not stated.
   - Map/battle restriction: none stated. The page describes its use in battle events.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_10.html#p01
@@ -249,7 +249,7 @@ How the pages were read:
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_12.html#p01
 
 ### RM-CMD2-019 — Scene Control: Shop Processing
-- **What:** Opens the shop screen, where the player can buy weapons, armour and items.
+- **What:** Starts a shop scene in which the party purchases goods (items, weapons, armour) from a configured list.
 - **Behaviour:**
   - **Merchandise**: the list of goods for sale, with two columns, Merchandise and Price.
     - Double-click an empty row to open an entry dialog where you set the good and its price.

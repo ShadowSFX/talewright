@@ -1,7 +1,20 @@
-01_project_editor_tools.md: RM-PRJ-008 — Project data and asset file layout (as revealed by the MV -> allowed (name list): 16 shared runs
-01_project_editor_tools.md: RM-PLG-025 — Official plugin: EventCommandByCode -> allowed (name list): 1 shared runs
-04_database_b.md: RM-TRP-012 — Battle Event pages and page buttons -> allowed (name list): 2 shared runs
-05_database_c.md: RM-TRM-003 — Parameters terms -> allowed (name list): 1 shared runs
-08_runtime_systems.md: RM-INP-001 — Logical actions and default bindings -> allowed (name list): 18 shared runs
-08_runtime_systems.md: RM-INP-003 — Function keys -> allowed (name list): 2 shared runs
-official 12-grams: 75921; blocks with shared runs: 0
+01_project_editor_tools.md: RM-PRJ-008 — Project data and asset file layout (as revealed by the MV -> allowed (name list): 19 shared runs
+01_project_editor_tools.md: RM-EDT-051 — Editor host requirements (help page) -> allowed (name list): 3 shared runs
+01_project_editor_tools.md: RM-PLG-025 — Official plugin: EventCommandByCode -> allowed (name list): 4 shared runs
+01_project_editor_tools.md: RM-DEP-006 — Recommended browsers and cautions -> allowed (name list): 1 shared runs
+01_project_editor_tools.md: RM-L10N-003 — Type Settings: renameable category names -> allowed (name list): 2 shared runs
+01_project_editor_tools.md: RM-NEW-012 — System settings split into System 1 / System 2 -> allowed (name list): 1 shared runs
+03_database_a.md: RM-ITM-009 — Scope (Faction / Number / Status) -> allowed (name list): 1 shared runs
+04_database_b.md: RM-TRP-012 — Battle Event pages and page buttons -> allowed (name list): 5 shared runs
+04_database_b.md: RM-ANI-013 — Effekseer: samples and documentation -> allowed (name list): 1 shared runs
+05_database_c.md: RM-TYP-001 — Type name lists (shared editing model) -> allowed (name list): 2 shared runs
+05_database_c.md: RM-TRM-003 — Parameters terms -> allowed (name list): 4 shared runs
+05_database_c.md: RM-TRT-006 — Regular Parameters (Param tab) -> allowed (name list): 3 shared runs
+06_events_commands_1.md: RM-CMD-001 — Messages: Show Text -> allowed (name list): 2 shared runs
+06_events_commands_1.md: RM-CMD-050 — Picture: Move Picture -> allowed (name list): 2 shared runs
+06_events_commands_1.md: RM-MRT-051 — Option: Wait for Completion -> allowed (name list): 3 shared runs
+07_event_commands_2.md: RM-CMD2-018 — Scene Control: Battle Processing -> allowed (name list): 2 shared runs
+08_runtime_systems.md: RM-FRM-011 — Regular parameters and their limits -> allowed (name list): 3 shared runs
+08_runtime_systems.md: RM-INP-001 — Logical actions and default bindings -> allowed (name list): 24 shared runs
+08_runtime_systems.md: RM-INP-003 — Function keys -> allowed (name list): 5 shared runs
+official 9-grams: 73276; blocks with shared runs: 0

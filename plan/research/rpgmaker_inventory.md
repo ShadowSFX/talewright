@@ -5,7 +5,7 @@ documentation (https://rpgmakerofficial.com/product/MZ_help-en/). Lineup and bas
 `plan/research/planning_notes/00_lineup_baseline_trademark.md` (U2U announced 2026-06-15, unreleased).
 Notable features of other versions: slice 09.
 
-The inventory has **1023 sourced items**, each `### RM-<AREA>-<NNN> — <name>` with **What**, **Behaviour**
+The inventory has **1023 sourced items** (1007 distinct features; 16 items describe the same feature in two slices and are cross-referenced as duplicates in `gap_map.md`), each `### RM-<AREA>-<NNN> — <name>` with **What**, **Behaviour**
 and an official **Source** URL. Items are paraphrased from official pages (legal rule D-020); behaviour that the
 official pages do not state is listed in each slice's final "Not verified" section, never guessed.
 
@@ -48,3 +48,10 @@ the six damage-type names beyond Damage/Recover/Drain; state duration randomness
 storage location; full Options screen list; message fast-forward keys; several dropdown option lists only
 visible in screenshots. Per D-022 Talewright defines and documents its own behaviour for these instead of
 guessing RPG Maker's.
+
+## Gates added by the epic 2 review (task 2.5)
+- **Field-label coverage:** `python plan/tools/label_gate.py` — the `<h3>/<h4>/<dt>` labels of every content page
+  (1157) must appear in the inventory; 0 missing, 126 waived with reasons in `plan/research/label_gate_waivers.txt`
+  (heading wording differences; every candidate field label was grep-verified). Output: `plan/evidence/research/label_gate.txt`.
+- **Stricter verbatim check:** default lowered to 9-word runs; 0 prose overlaps; reviewed name-list items in
+  `plan/research/verbatim_allowlist.txt`.

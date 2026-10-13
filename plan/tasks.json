@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "4.5 bridge.py CLI",
+  "last_completed": "2.5 Epic review: research",
   "tasks": [
     {
       "id": "0",
@@ -263,7 +263,7 @@
       "dependencies": [
         "0"
       ],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Inventory covers the full official MZ help TOC with a source per row",
@@ -271,8 +271,8 @@
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified. Plus TOC comparison gate.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "2.1",
@@ -532,9 +532,9 @@
         "Findings fixed and logged in PROGRESS.md"
       ],
       "test_strategy": "Reviewer report + fixes.",
-      "status": "in_progress",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": "",
       "parent": "2"
     },
@@ -765,7 +765,7 @@
       "files": [
         "talewright/tools/bridge.py"
       ],
-      "commit": "pending",
+      "commit": "6f08aa1d78",
       "notes": ""
     },
     {
@@ -2085,7 +2085,7 @@
     {
       "id": "14",
       "title": "MMO protocol and transport",
-      "description": "IDL + codegen, framing/reassembly, ENet (DTLS) and WebSocket (TLS) transports, per-opcode token buckets, session-state gating, fuzz tests. Subtasks are defined when the epic starts (rule: split before starting).",
+      "description": "Go/no-go spikes first (D-024): raw ENetConnection 1000-peer loopback test; 1000-entity zone tick prototype with AoI (p99 < 50 ms); handoff chaos test. Then: IDL + codegen, framing/reassembly, ENet (DTLS) and WebSocket (TLS) transports, per-opcode token buckets, session-state gating, fuzz tests. Subtasks are defined when the epic starts (rule: split before starting).",
       "parent": null,
       "dependencies": [
         "13"
@@ -2099,7 +2099,7 @@
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
       "files": [],
       "commit": "",
-      "notes": ""
+      "notes": "D-024: spikes gate the MMO epics; record results in plan/evidence/mmo_spikes/."
     },
     {
       "id": "15",

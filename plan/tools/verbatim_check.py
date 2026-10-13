@@ -42,7 +42,7 @@ def ngrams(text: str, n: int) -> set:
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser()
-    ap.add_argument("--n", type=int, default=12)
+    ap.add_argument("--n", type=int, default=9)
     ap.add_argument("files", nargs="*")
     ap.add_argument(
         "--allow",
@@ -58,7 +58,11 @@ def main() -> int:
             official |= ngrams(page_text(url), args.n)
         except OSError as e:
             print(f"warning: could not fetch {url}: {e}")
-    allow = {a.strip() for a in args.allow.split(",") if a.strip()}
+    allow_text = args.allow
+    allow_file = ROOT / "plan/research/verbatim_allowlist.txt"
+    if not allow_text and allow_file.exists():
+        allow_text = allow_file.read_text(encoding="utf-8")  # Reviewed name-list items (task 2.5).
+    allow = {a.strip() for a in allow_text.replace("\n", ",").split(",") if a.strip()}
     hits = 0
     for f in files:
         text = f.read_text(encoding="utf-8")

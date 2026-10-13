@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 15:52 -0600
-- **Current task:** 2.5 Epic review: research
-- **Last completed:** 4.5 bridge.py CLI
-- **Next task:** 4.6 Editor tools: tree, nodes, project
-- **Done leaf tasks:** 27
+- **Updated:** 2026-10-13 16:01 -0600
+- **Current task:** none
+- **Last completed:** 2.5 Epic review: research
+- **Next task:** 3.1 DECISIONS.md
+- **Done leaf tasks:** 28
 <!-- status:end -->
 
 ## Log
@@ -63,4 +63,6 @@
 | 2026-10-13 15:48 -0600 | 4.3 | done: Auth, Origin/Host checks, connection file — Auth: persistent 256-bit token in editor config dir, Host/Origin/Bearer checks (constant-time), port fallback 47700-47709, .godot/claude_bridge/connection.json; e2e curl: 401/401/403/403/405/415/404, non-loopback refused; 3 new doctests (containers: 4 in_progress->pending) | b4d7680cd4 |
 | 2026-10-13 15:51 -0600 | 4.4 | done: MCP JSON-RPC layer — MCP JSON-RPC dispatcher: initialize (version negotiation), ping, tools/list (schemas+annotations), tools/call (sync/async with deadlines, isError), notifications 202, parse/batch/invalid errors, integer id preservation, stateless calls without initialize; plugin pending-call processing; bridge_status tool; 3 new doctests (13 total) | 110b884601 |
 | 2026-10-13 15:51 -0600 | 4.5 | started: bridge.py CLI (containers: 4 pending->in_progress) |  |
-| 2026-10-13 15:52 -0600 | 4.5 | done: bridge.py CLI — bridge.py CLI: connection discovery, status/list/call/raw/launch/wait, images saved as PNG files, exit codes; verified against a live headless editor (containers: 4 in_progress->pending) | pending |
+| 2026-10-13 15:52 -0600 | 4.5 | done: bridge.py CLI — bridge.py CLI: connection discovery, status/list/call/raw/launch/wait, images saved as PNG files, exit codes; verified against a live headless editor (containers: 4 in_progress->pending) | 6f08aa1d78 |
+| 2026-10-13 16:01 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 16:01 -0600 | 2.5 | done: Epic review: research — Epic 2 review: all 15 findings fixed (gap map rules/overrides/duplicates, research corrections, media gaps, MMO conditional verdict + go/no-go spikes + risk table + legal, rAthena citation checking, label gate, 9-word verbatim); record in plan/evidence/reviews/epic_2.md (containers: 2 in_progress->done) | pending |

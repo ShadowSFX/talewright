@@ -49,7 +49,7 @@ Method note: each primary help page was fetched with WebFetch, once for a full p
 | Official forum: "RPG Maker MZ 1.4.0 Update" (staff post by Archeia, 2021-12-09) | https://forums.rpgmakerweb.com/index.php?threads/rpg-maker-mz-1-4-0-update.142845/ | Loaded (first post only) | Version that added MV-format animations; Effekseer runtime changes |
 | Official product page | https://www.rpgmakerweb.com/products/rpg-maker-mz | Loaded | Nothing used beyond marketing claims; no new detail |
 
-No page failed to load. Every help page has a "Click here to see this page in full context" label, but the fetched text gave it no target, so it was not followed.
+No page failed to load. Every help page has a full-context link label, but the fetched text gave it no target, so it was not followed.
 
 ---
 
@@ -428,7 +428,7 @@ No page failed to load. Every help page has a "Click here to see this page in fu
 ### RM-STA-004 — Icon
 - **What:** The icon that marks an affected battler.
 - **Behaviour:**
-  - Shown next to an actor's name, or above an enemy's head.
+  - Party members display it beside their name; enemies display it over the sprite.
   - Chosen through the [Select an Image] window (double-click). The editor shows the chosen icon's index number under it (screenshot).
   - Icons come from the system icon sheet (IconSet.png in `img/system`, per Asset Standards).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_08.html ; https://rpgmakerofficial.com/product/MZ_help-en/01_11_01.html ; https://rpgmakerofficial.com/product/MZ_help-en/assets/img/01_08_08_img01.png

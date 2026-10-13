@@ -20,13 +20,13 @@ Method note: WebFetch returns text processed by the fetch tool, not raw HTML. Wh
 | How to Set Traits (linked from Actors, Classes, Weapons/Armors) | https://rpgmakerofficial.com/product/MZ_help-en/01_08_15.html | Loaded | Cross-reference only (trait names and the editor workflow); the full trait inventory belongs to another slice |
 | How to Set Effects (linked from Skills, Items) | https://rpgmakerofficial.com/product/MZ_help-en/01_08_16.html | Loaded | Cross-reference only (effect names and the editor workflow); the full effect inventory belongs to another slice |
 
-No page failed to load. Each primary page shows a "Click here to see this page in full context" label, but the fetched text gave no target for it, so it was not followed.
+No page failed to load. Each primary page shows a full-context link label, but the fetched text gave no target for it, so it was not followed.
 
 ---
 
 ## 2. Items
 
-### RM-DB-001: Database scope and data categories
+### RM-DB-001 — Database scope and data categories
 - **What:** The Database is the editor that holds all game data except maps and the events placed on maps.
 - **Behaviour:**
   - The overview says there are 15 data types, but the list has 16 entries because System appears as two tabs. In page order: Actor, Classes, Skills, Items, Weapons, Armor, Enemies, Troops, States, Animations, Tilesets, Common Events, System 1, System 2, Type, Terms.
@@ -37,7 +37,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - System, Type and Terms are single settings pages, not lists of entries.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08.html
 
-### RM-DB-002: Opening the Database editor
+### RM-DB-002 — Opening the Database editor
 - **What:** Ways to open the Database window.
 - **Behaviour:**
   - From the Database button on the main toolbar.
@@ -45,7 +45,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - No other entry points (such as a shortcut key) are given.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08.html
 
-### RM-DB-003: Edit screen layout and entry navigation
+### RM-DB-003 — Edit screen layout and entry navigation
 - **What:** How the Database window is laid out and how the user moves between entries.
 - **Behaviour:**
   - A side menu selects the data type (tab).
@@ -54,7 +54,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The page mentions no OK, Cancel, Apply, save or undo behaviour for the Database window.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08.html
 
-### RM-DB-004: Change Maximum (entry count per type)
+### RM-DB-004 — Change Maximum (entry count per type)
 - **What:** Sets how many entries (ID slots) a data type has.
 - **Behaviour:**
   - A "Change Maximum" button sits below the entry list. Clicking it lets the user type a new count.
@@ -63,7 +63,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - Whether a confirmation prompt appears: not verified (the page does not mention one).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08.html
 
-### RM-DB-005: Entry context menu (Copy / Paste / Clear)
+### RM-DB-005 — Entry context menu (Copy / Paste / Clear)
 - **What:** Right-click operations on entries in the data list.
 - **Behaviour:**
   - **Copy:** puts the selected entry's full parameter set on the clipboard. Holding Shift while selecting lets several entries be copied at once.
@@ -72,7 +72,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The page does not say whether multi-selection works with Paste or Clear, or whether Ctrl selection is supported.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08.html
 
-### RM-DB-006: Data IDs
+### RM-DB-006 — Data IDs
 - **What:** Each entry has a unique number, shown at the start of its row in the list.
 - **Behaviour:**
   - Each ID is unique within its data type.
@@ -80,7 +80,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The ID display format (for example zero padding) is not described.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08.html
 
-### RM-DB-007: Notes field (shared)
+### RM-DB-007 — Notes field (shared)
 - **What:** A free-text field on most entry types, for the developer's own notes and for plugin data.
 - **Behaviour:**
   - Present on Actors, Classes, Skills, Items, Weapons, Armors, Enemies, States and Tilesets.
@@ -89,7 +89,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The Actor page labels this field "Memo". The overview and the other pages call it Notes.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08.html ; https://rpgmakerofficial.com/product/MZ_help-en/01_08_01.html
 
-### RM-DB-008: Traits editor (shared mechanism, cross-reference)
+### RM-DB-008 — Traits editor (shared mechanism, cross-reference)
 - **What:** A list of traits used by Actors, Classes, Weapons, Armors, Enemies and States to grant properties.
 - **Behaviour:**
   - Add a trait by double-clicking an empty row, choosing a trait kind and setting its values.
@@ -108,7 +108,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The full detail of every trait belongs to the slice that covers 01_08_15.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_15.html
 
-### RM-DB-009: Effects editor (shared mechanism, cross-reference)
+### RM-DB-009 — Effects editor (shared mechanism, cross-reference)
 - **What:** A list of non-damage effects that Skills and Items apply on use. Several effects can be combined on one entry.
 - **Behaviour:**
   - Add an effect by double-clicking an empty row, choosing the effect kind and setting its target, strength and options.
@@ -122,7 +122,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The full detail of every effect belongs to the slice that covers 01_08_16.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_16.html
 
-### RM-DB-010: Terms page (cross-reference for type and parameter names)
+### RM-DB-010 — Terms page (cross-reference for type and parameter names)
 - **What:** The Skill and Weapon/Armor pages point to Terms for renaming skill, weapon and armor types. The Terms page itself describes renaming built-in vocabulary.
 - **Behaviour:**
   - Terms covers:
@@ -136,33 +136,33 @@ No page failed to load. Each primary page shows a "Click here to see this page i
 
 ---
 
-### RM-ACT-001: Actor data role
+### RM-ACT-001 — Actor data role
 - **What:** Actors are the player-controlled characters. Each one can carry its own traits.
 - **Behaviour:**
   - The Actor page has these sections: Basic Settings, Images, Initial Equipment, Traits, Memo.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_01.html
 
-### RM-ACT-002: Name
+### RM-ACT-002 — Name
 - **What:** The actor's display name in the game.
 - **Behaviour:**
   - A long name may be cut off in menus and in battle.
   - No character limit is stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_01.html
 
-### RM-ACT-003: Nickname
+### RM-ACT-003 — Nickname
 - **What:** A secondary title for the actor.
 - **Behaviour:**
   - Shown in the upper-right area of the status screen.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_01.html
 
-### RM-ACT-004: Class
+### RM-ACT-004 — Class
 - **What:** The class the actor belongs to.
 - **Behaviour:**
   - The class affects which skills the actor can use, which weapons it can equip, which items it can use, and similar things.
   - Class details are edited on the Classes tab (see RM-CLS-*).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_01.html
 
-### RM-ACT-005: Initial Level / Max Level
+### RM-ACT-005 — Initial Level / Max Level
 - **What:** The actor's starting level and its level cap.
 - **Behaviour:**
   - Both values range from 1 to 99.
@@ -170,35 +170,35 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - What happens if Initial Level is set above Max Level: not verified.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_01.html
 
-### RM-ACT-006: Profile
+### RM-ACT-006 — Profile
 - **What:** Introductory text about the actor.
 - **Behaviour:**
   - Shown at the bottom of the status screen.
   - No line limit is stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_01.html
 
-### RM-ACT-007: Face image
+### RM-ACT-007 — Face image
 - **What:** The actor's face graphic.
 - **Behaviour:**
   - Used on the menu screen.
   - How the image is picked, and its size, are not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_01.html
 
-### RM-ACT-008: Walking Character image
+### RM-ACT-008 — Walking Character image
 - **What:** The actor's sprite on the map.
 - **Behaviour:**
   - Used on the Map Screen.
   - How the image is picked, and its size, are not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_01.html
 
-### RM-ACT-009: [SV] Battler image
+### RM-ACT-009 — [SV] Battler image
 - **What:** The actor's battle graphic.
 - **Behaviour:**
   - Used on the Battle Screen only when the game is in Side-View battle mode.
   - What is shown for actors in front-view battles is not described.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_01.html
 
-### RM-ACT-010: Initial Equipment
+### RM-ACT-010 — Initial Equipment
 - **What:** The gear the actor has equipped when the game starts.
 - **Behaviour:**
   - Each equipment slot has a drop-down list for choosing one item.
@@ -207,14 +207,14 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The number and names of slots are not listed on this page. They come from equipment types; see RM-ARM-006.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_01.html
 
-### RM-ACT-011: Traits
+### RM-ACT-011 — Traits
 - **What:** Traits specific to this actor.
 - **Behaviour:**
   - Each trait is set up in a detail window opened by double-clicking a row of the traits list.
   - The trait kinds are listed in RM-DB-008.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_01.html ; https://rpgmakerofficial.com/product/MZ_help-en/01_08_15.html
 
-### RM-ACT-012: Memo (Notes)
+### RM-ACT-012 — Memo (Notes)
 - **What:** The developer's notes for the actor.
 - **Behaviour:**
   - Right-clicking the field offers "Plugin Help..." to show plugin help. See RM-DB-007.
@@ -222,21 +222,21 @@ No page failed to load. Each primary page shows a "Click here to see this page i
 
 ---
 
-### RM-CLS-001: Class data role
+### RM-CLS-001 — Class data role
 - **What:** A class defines an actor's abilities. Every actor must belong to one.
 - **Behaviour:**
   - The class controls how EXP and level-ups work, how parameters grow with level, and which skills are learned.
   - Classes can carry their own traits.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_02.html
 
-### RM-CLS-002: Name
+### RM-CLS-002 — Name
 - **What:** The class's name.
 - **Behaviour:**
   - Shown on the menu screen and at the top of the status screen.
   - No length limit is stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_02.html
 
-### RM-CLS-003: EXP Curve parameters
+### RM-CLS-003 — EXP Curve parameters
 - **What:** Four numbers that together set how much EXP each level requires.
 - **Behaviour:**
   - **Base Value:** the core figure the required EXP is built from. Lowering it lowers the EXP needed across the board.
@@ -247,7 +247,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The formula that combines them is not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_02.html
 
-### RM-CLS-004: EXP Curve preview window
+### RM-CLS-004 — EXP Curve preview window
 - **What:** A window, opened from the "..." button next to the EXP Curve values, for editing the curve and seeing its result.
 - **Behaviour:**
   - It has two tabs:
@@ -256,7 +256,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The level range shown in this window is not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_02.html
 
-### RM-CLS-005: Parameter Curves editor window
+### RM-CLS-005 — Parameter Curves editor window
 - **What:** A per-level value table for each base parameter, edited in a settings window.
 - **Behaviour:**
   - Opened by double-clicking the parameter graph on the Class page.
@@ -265,7 +265,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The Class page names only Max HP and Max MP; the others are called "all others". The tab names are not verified. The Skill page's formula help (RM-SKL-019) lists eight parameters: Max HP, Max MP, Attack, Defense, Magic Attack, Magic Defense, Agility and Luck. It is an inference, not stated on the Class page, that these are the eight tabs.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_02.html
 
-### RM-CLS-006: Parameter Curves: Quick Settings (presets A to E)
+### RM-CLS-006 — Parameter Curves: Quick Settings (presets A to E)
 - **What:** One-click presets that fill every level's value for the current parameter.
 - **Behaviour:**
   - There are five preset patterns, A, B, C, D and E, each with its own button.
@@ -273,7 +273,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The actual values or shape of each preset are not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_02.html
 
-### RM-CLS-007: Parameter Curves: Level/Value direct edit
+### RM-CLS-007 — Parameter Curves: Level/Value direct edit
 - **What:** Manual entry of one level's value.
 - **Behaviour:**
   - Choose a level from 1 to 99, then type its value.
@@ -283,7 +283,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
     - Every other parameter: 0 to 999.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_02.html
 
-### RM-CLS-008: Parameter Curves: Generate Curve
+### RM-CLS-008 — Parameter Curves: Generate Curve
 - **What:** A tool that fills in every level automatically from two end values.
 - **Behaviour:**
   - The Generate Curve button opens a window where the user enters the level 1 value and the level 99 value:
@@ -295,14 +295,14 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The interpolation formula is not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_02.html
 
-### RM-CLS-009: Parameter Curves: Graph
+### RM-CLS-009 — Parameter Curves: Graph
 - **What:** A bar chart of the parameter's value at every level.
 - **Behaviour:**
   - Clicking or dragging on the graph reads out the value at the level under the cursor.
   - Whether dragging also edits values is not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_02.html
 
-### RM-CLS-010: Skills to Learn (learnable skills)
+### RM-CLS-010 — Skills to Learn (learnable skills)
 - **What:** The skills actors of this class gain when they reach given levels.
 - **Behaviour:**
   - Double-clicking the list opens a window for setting a level and a skill.
@@ -310,13 +310,13 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - Whether the list can hold several skills per level, and what happens to skills of levels already passed, are not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_02.html
 
-### RM-CLS-011: Traits
+### RM-CLS-011 — Traits
 - **What:** Traits applied to every actor of this class.
 - **Behaviour:**
   - Edited with the shared traits editor (RM-DB-008).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_02.html ; https://rpgmakerofficial.com/product/MZ_help-en/01_08_15.html
 
-### RM-CLS-012: Notes
+### RM-CLS-012 — Notes
 - **What:** The developer's notes for the class.
 - **Behaviour:**
   - Right-clicking the field offers "Plugin Help". See RM-DB-007.
@@ -324,34 +324,34 @@ No page failed to load. Each primary page shows a "Click here to see this page i
 
 ---
 
-### RM-SKL-001: Skill data role
+### RM-SKL-001 — Skill data role
 - **What:** Skills are the actions taken in battle, including the plain attack, guarding, magic and special moves.
 - **Behaviour:**
   - A skill sets when it can be used, its use conditions, its success rate, the damage it deals to targets, and so on.
   - Whether skill IDs 1 and 2 (Attack and Guard) have special roles: not verified (the page does not mention it).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-002: Name
+### RM-SKL-002 — Name
 - **What:** The skill's display name.
 - **Behaviour:**
   - A long name may be cut off on the play screen.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-003: Icon
+### RM-SKL-003 — Icon
 - **What:** A small image shown next to the skill name during play.
 - **Behaviour:**
   - Double-clicking the field opens the "Select an Image" window.
   - The help suggests picking an icon that fits the skill.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-004: Description
+### RM-SKL-004 — Description
 - **What:** Help text for the skill.
 - **Behaviour:**
   - Shown during play while the cursor is on the skill.
   - No line limit is stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-005: Skill Type
+### RM-SKL-005 — Skill Type
 - **What:** The category the skill belongs to.
 - **Behaviour:**
   - The default types are Magic and TP Skills. The help says they can be renamed through Terms.
@@ -359,7 +359,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The page does not state outright what the None type allows. By implication it is not restricted by that trait, but this is not verified.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-006: MP Cost / TP Cost
+### RM-SKL-006 — MP Cost / TP Cost
 - **What:** The resource cost of using the skill.
 - **Behaviour:**
   - MP Cost ranges from 0 to 999.
@@ -367,7 +367,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - An actor without enough MP or TP cannot use the skill.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-007: Occasion
+### RM-SKL-007 — Occasion
 - **What:** Where the skill can be used.
 - **Behaviour:**
   - Always: in battle and from the menu screen.
@@ -376,7 +376,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - Never: cannot be used anywhere.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-008: Scope (Faction / Number / Status)
+### RM-SKL-008 — Scope (Faction / Number / Status)
 - **What:** Who the skill targets, set through three fields that must all have a value.
 - **Behaviour:**
   - **Faction:** Enemy, Ally, Enemy & Ally, User, or Unspecified.
@@ -385,7 +385,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - How many targets Random picks, and how Enemy & Ally and Unspecified behave, are not described.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-009: Speed (Invocation)
+### RM-SKL-009 — Speed (Invocation)
 - **What:** An action-order modifier.
 - **Behaviour:**
   - An integer from -2000 to 2000, added to the user's Agility when the skill is used.
@@ -393,20 +393,20 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The help does not say which sign (positive or negative) makes the skill act earlier: not verified.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-010: Success
+### RM-SKL-010 — Success
 - **What:** The skill's base chance of success.
 - **Behaviour:**
   - Ranges from 0 to 100%.
   - The final chance is also affected by how effective the skill is against the target. How the two combine is not described.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-011: Repeat
+### RM-SKL-011 — Repeat
 - **What:** How many times the effect is applied per use.
 - **Behaviour:**
   - Ranges from 1 to 9.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-012: TP Gain
+### RM-SKL-012 — TP Gain
 - **What:** TP the user gains when the skill takes effect.
 - **Behaviour:**
   - Granted after the effect is applied to a target on a successful use.
@@ -414,21 +414,21 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - Whether it is granted per target or per repeat is not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-013: Hit Type
+### RM-SKL-013 — Hit Type
 - **What:** How hitting is decided and which reactive mechanics apply.
 - **Behaviour:**
   - **Certain Hit:** if the use succeeds, it always hits. Counterattack, Magic Reflection and Substitute have no effect on it.
   - **Physical Attack:** whether it hits depends on the user's Accuracy against the target's Evasion. Counterattack and Substitute can apply.
-  - **Magic Attack:** whether it hits depends on the target's Magic Evasion. Magic Reflection and Substitute can apply.
+  - **Magic Attack:** success is checked against Magic Evasion of the receiver; the Magic Reflection and Substitute mechanics may intervene.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-014: Animation
+### RM-SKL-014 — Animation
 - **What:** The battle animation played when the skill is used.
 - **Behaviour:**
   - The page lists no options. Special choices such as "Normal Attack" are not verified.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-015: Message
+### RM-SKL-015 — Message
 - **What:** A fixed battle-log phrase shown when the skill is used.
 - **Behaviour:**
   - Up to 2 lines.
@@ -436,7 +436,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - Three preset buttons insert ready-made phrases: "casts *!", "does *!" and "used *!".
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-016: Required Weapon
+### RM-SKL-016 — Required Weapon
 - **What:** Weapon types that must be equipped before the skill can be used.
 - **Behaviour:**
   - Two fields, Weapon Type 1 and Weapon Type 2.
@@ -445,25 +445,25 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - Whether this applies to enemies is not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-017: Damage: Type
+### RM-SKL-017 — Damage: Type
 - **What:** What the skill's formula does to HP or MP.
 - **Behaviour:**
   - One of six choices, all acting on HP or MP.
   - The help describes three behaviours:
     - Damage lowers the value.
     - Recover raises the value.
-    - Drain takes an amount from the target and gives the same amount to the user.
-  - The exact names of all six options are not verified (presumably the three behaviours applied to HP and to MP, but this is not stated).
+    - Drain subtracts from the target and adds that same quantity to the caster.
+  - The exact names of all six options are not verified.
   - Whether a "None" option exists is not verified.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-018: Damage: Element
+### RM-SKL-018 — Damage: Element
 - **What:** The element attached to the damage.
 - **Behaviour:**
   - The available choices (for example a "Normal Attack" or "None" entry) are not listed on the page.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-019: Damage: Formula
+### RM-SKL-019 — Damage: Formula
 - **What:** A typed expression that computes the base amount of the effect.
 - **Behaviour:**
   - **Subjects:** the letter a stands for the user (attacker) and b for the target. A property is read by writing the subject letter, a dot, then the property name. For example, the user's attack power is "a" followed by ".atk".
@@ -489,7 +489,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - **Not stated:** whether the expression is evaluated as a script language, whether functions, comparisons or conditionals are allowed, rounding, a damage cap, and what happens with negative results.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-020: Damage: Variance
+### RM-SKL-020 — Damage: Variance
 - **What:** A random spread applied to the computed amount.
 - **Behaviour:**
   - Ranges from 0 to 100%.
@@ -497,7 +497,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The random distribution is not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-021: Damage: Critical Hits
+### RM-SKL-021 — Damage: Critical Hits
 - **What:** Whether the skill can land a critical hit.
 - **Behaviour:**
   - Options are Yes or No.
@@ -505,14 +505,14 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The critical damage multiplier is not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html
 
-### RM-SKL-022: Effects
+### RM-SKL-022 — Effects
 - **What:** Additional non-damage outcomes of the skill.
 - **Behaviour:**
   - Set in the Effects window, opened by double-clicking the list.
   - Uses the shared effects editor (RM-DB-009).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html ; https://rpgmakerofficial.com/product/MZ_help-en/01_08_16.html
 
-### RM-SKL-023: Notes
+### RM-SKL-023 — Notes
 - **What:** The developer's notes for the skill.
 - **Behaviour:**
   - Right-clicking the field offers "Plugin Help". See RM-DB-007.
@@ -520,32 +520,32 @@ No page failed to load. Each primary page shows a "Click here to see this page i
 
 ---
 
-### RM-ITM-001: Item data role
+### RM-ITM-001 — Item data role
 - **What:** Items are everything other than equipment. They can have effects that trigger when an actor uses them.
 - **Behaviour:**
   - The item page has no Message field and no Required Weapon field. Those exist only on skills.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-002: Name
+### RM-ITM-002 — Name
 - **What:** The item's display name.
 - **Behaviour:**
   - A long name may be cut off on the play screen.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-003: Icon
+### RM-ITM-003 — Icon
 - **What:** An image shown with the item name during play.
 - **Behaviour:**
   - Double-clicking opens the "Select an Image" window.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-004: Description
+### RM-ITM-004 — Description
 - **What:** Help text for the item.
 - **Behaviour:**
   - Shown on the play screen when the item is selected.
   - No line limit is stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-005: Item Type
+### RM-ITM-005 — Item Type
 - **What:** Controls where the item appears.
 - **Behaviour:**
   - The item types are:
@@ -555,7 +555,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - How A differs from B is not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-006: Price
+### RM-ITM-006 — Price
 - **What:** The shop purchase price.
 - **Behaviour:**
   - Items sell for half their purchase price.
@@ -564,7 +564,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - How half of an odd price is rounded is not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-007: Consumable
+### RM-ITM-007 — Consumable
 - **What:** Whether using the item uses it up.
 - **Behaviour:**
   - Options are Yes and No.
@@ -573,7 +573,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The default is not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-008: Occasion
+### RM-ITM-008 — Occasion
 - **What:** Where the item can be used.
 - **Behaviour:**
   - Always: in battle and from the menu screen.
@@ -582,7 +582,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - Never: cannot be used anywhere.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-009: Scope (Faction / Number / Status)
+### RM-ITM-009 — Scope (Faction / Number / Status)
 - **What:** Who the item targets. Same three-field system as skills; all three fields must be set.
 - **Behaviour:**
   - **Faction:** Enemy, Ally, Enemy & Ally, User, or Unspecified.
@@ -590,7 +590,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - **Status:** Alive, Knocked Out, or No Condition. It can only be set when targeting allies.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-010: Speed
+### RM-ITM-010 — Speed
 - **What:** An action-order modifier.
 - **Behaviour:**
   - An integer from -2000 to 2000, added to the user's Agility when the item is used.
@@ -598,27 +598,27 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - Which sign acts earlier is not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-011: Success
+### RM-ITM-011 — Success
 - **What:** The item's base chance of success.
 - **Behaviour:**
   - Ranges from 0 to 100%.
   - The final chance is also affected by the item's effectiveness on the target.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-012: Repeat
+### RM-ITM-012 — Repeat
 - **What:** How many times the effect is applied per use.
 - **Behaviour:**
   - Ranges from 1 to 9.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-013: TP Gain
+### RM-ITM-013 — TP Gain
 - **What:** TP the user gains when the item takes effect.
 - **Behaviour:**
   - Granted after the effect lands on a target on a successful use.
   - The range is not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-014: Hit Type
+### RM-ITM-014 — Hit Type
 - **What:** How hitting is decided. Same three options as skills.
 - **Behaviour:**
   - **Certain Hit:** always hits once the use succeeds. Counterattack, Magic Reflection and Substitute have no effect on it.
@@ -626,13 +626,13 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - **Magic Attack:** the target's Magic Evasion. Magic Reflection and Substitute can apply.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-015: Animation
+### RM-ITM-015 — Animation
 - **What:** The battle animation played when the item is used.
 - **Behaviour:**
   - No options are listed.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-016: Damage: Type
+### RM-ITM-016 — Damage: Type
 - **What:** What the item's formula does to HP or MP.
 - **Behaviour:**
   - One of six choices.
@@ -640,13 +640,13 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The full names of all six options are not verified.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-017: Damage: Element
+### RM-ITM-017 — Damage: Element
 - **What:** The element attached to the item's damage.
 - **Behaviour:**
   - The choices are not listed.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-018: Damage: Formula
+### RM-ITM-018 — Damage: Formula
 - **What:** The same expression system as skills (RM-SKL-019).
 - **Behaviour:**
   - a is the user and b the target, read with the dotted property form.
@@ -657,28 +657,28 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - Elements and guarding are applied separately, outside the formula.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-019: Damage: Variance
+### RM-ITM-019 — Damage: Variance
 - **What:** A random spread applied to the amount.
 - **Behaviour:**
   - Ranges from 0 to 100%.
   - Same worked example as skills: 100 with 20% variance gives 80 to 120.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-020: Damage: Critical Hits
+### RM-ITM-020 — Damage: Critical Hits
 - **What:** Whether the item can land a critical hit.
 - **Behaviour:**
   - Options are Yes or No.
   - With Yes, the chance comes from the user's Critical Chance and the target's Critical Evasion Rate.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
-### RM-ITM-021: Effects
+### RM-ITM-021 — Effects
 - **What:** Non-damage outcomes of using the item.
 - **Behaviour:**
   - Set in the Effects window, opened by double-clicking the list.
   - Uses the shared effects editor (RM-DB-009).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html ; https://rpgmakerofficial.com/product/MZ_help-en/01_08_16.html
 
-### RM-ITM-022: Notes
+### RM-ITM-022 — Notes
 - **What:** The developer's notes for the item.
 - **Behaviour:**
   - Right-clicking the field offers "Plugin Help...". See RM-DB-007.
@@ -686,31 +686,31 @@ No page failed to load. Each primary page shows a "Click here to see this page i
 
 ---
 
-### RM-WPN-001: Weapon data role
+### RM-WPN-001 — Weapon data role
 - **What:** Weapons are actor equipment that can raise or lower values and grant special traits while equipped.
 - **Behaviour:**
   - Weapons and armors share one help page. Fields marked weapon-only or armor-only below come from that page.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-WPN-002: Name
+### RM-WPN-002 — Name
 - **What:** The weapon's display name.
 - **Behaviour:**
   - A long name may be cut off on the play screen.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-WPN-003: Icon
+### RM-WPN-003 — Icon
 - **What:** An image shown with the name during play.
 - **Behaviour:**
   - Double-clicking opens the "Select an Image" window.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-WPN-004: Description
+### RM-WPN-004 — Description
 - **What:** Help text for the weapon.
 - **Behaviour:**
   - Shown when the weapon is selected on the play screen.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-WPN-005: Weapon Type
+### RM-WPN-005 — Weapon Type
 - **What:** The weapon's category.
 - **Behaviour:**
   - Whether an actor can equip the weapon depends on the Equip Weapon traits of the actor or its class (see RM-DB-008).
@@ -718,7 +718,7 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The weapon type is also what a skill's Required Weapon checks (RM-SKL-016).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-WPN-006: Price
+### RM-WPN-006 — Price
 - **What:** The shop purchase price.
 - **Behaviour:**
   - Sells for half the purchase price.
@@ -726,14 +726,14 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The maximum is not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-WPN-007: Animation (weapon only)
+### RM-WPN-007 — Animation (weapon only)
 - **What:** The animation played when the actor attacks with this weapon.
 - **Behaviour:**
   - Only present on weapons.
   - No option list is given.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-WPN-008: Parameter Changes
+### RM-WPN-008 — Parameter Changes
 - **What:** Flat bonuses or penalties to the wearer's parameters while the weapon is equipped.
 - **Behaviour:**
   - Max HP and Max MP range from -5000 to 5000.
@@ -742,14 +742,14 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - The page does not list which parameters appear in the grid.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-WPN-009: Traits
+### RM-WPN-009 — Traits
 - **What:** Traits granted to the actor while the weapon is equipped.
 - **Behaviour:**
   - Each trait is set up in a detail window opened by double-clicking a row.
   - Uses the shared traits editor (RM-DB-008).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html ; https://rpgmakerofficial.com/product/MZ_help-en/01_08_15.html
 
-### RM-WPN-010: Notes
+### RM-WPN-010 — Notes
 - **What:** The developer's notes for the weapon.
 - **Behaviour:**
   - Right-clicking the field offers "Plugin Help...". See RM-DB-007.
@@ -757,38 +757,38 @@ No page failed to load. Each primary page shows a "Click here to see this page i
 
 ---
 
-### RM-ARM-001: Armor data role
+### RM-ARM-001 — Armor data role
 - **What:** Armors are actor equipment that can raise or lower values and grant special traits while equipped.
 - **Behaviour:**
   - Armors share the weapon help page and differ only in the fields noted below: an Equipment Type field instead of Animation.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-ARM-002: Name
+### RM-ARM-002 — Name
 - **What:** The armor's display name.
 - **Behaviour:**
   - A long name may be cut off on the play screen.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-ARM-003: Icon
+### RM-ARM-003 — Icon
 - **What:** An image shown with the name during play.
 - **Behaviour:**
   - Double-clicking opens the "Select an Image" window.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-ARM-004: Description
+### RM-ARM-004 — Description
 - **What:** Help text for the armor.
 - **Behaviour:**
   - Shown when the armor is selected on the play screen.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-ARM-005: Armor Type
+### RM-ARM-005 — Armor Type
 - **What:** The armor's category.
 - **Behaviour:**
   - Whether an actor can equip the armor depends on the Equip Armor traits of the actor or its class (see RM-DB-008).
   - The help says the list of armor types can be changed via Terms.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-ARM-006: Equipment Type (armor only)
+### RM-ARM-006 — Equipment Type (armor only)
 - **What:** The slot the armor goes into.
 - **Behaviour:**
   - The help names four slots: Shield, Head, Body and Accessory.
@@ -797,14 +797,14 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - Whether more slots can be added is not stated on this page; Terms lets equipment-type names be edited (RM-DB-010).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-ARM-007: Price
+### RM-ARM-007 — Price
 - **What:** The shop purchase price.
 - **Behaviour:**
   - Sells for half the purchase price.
   - A price of 0 means it cannot be sold.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-ARM-008: Parameter Changes
+### RM-ARM-008 — Parameter Changes
 - **What:** Flat parameter bonuses or penalties while the armor is equipped.
 - **Behaviour:**
   - Max HP and Max MP range from -5000 to 5000.
@@ -812,14 +812,14 @@ No page failed to load. Each primary page shows a "Click here to see this page i
   - Negative values lower the parameter.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html
 
-### RM-ARM-009: Traits
+### RM-ARM-009 — Traits
 - **What:** Traits granted while the armor is equipped.
 - **Behaviour:**
   - Each trait is set up in a detail window opened by double-clicking a row.
   - Uses the shared traits editor (RM-DB-008).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_05.html ; https://rpgmakerofficial.com/product/MZ_help-en/01_08_15.html
 
-### RM-ARM-010: Notes
+### RM-ARM-010 — Notes
 - **What:** The developer's notes for the armor.
 - **Behaviour:**
   - Right-clicking the field offers "Plugin Help...". See RM-DB-007.
@@ -839,7 +839,7 @@ These points were looked for on the fetched pages and are not stated there. Do n
 5. Whether Ctrl selection is supported.
 6. The Data ID display format.
 7. Where skill, weapon and armor type lists are edited. The help points to Terms, but the fetched Terms page does not list them. They are presumably on the Type tab, which is outside this slice.
-8. The target of the "Click here to see this page in full context" link on each page.
+8. The target of the full-context link on each page.
 
 ### Actors
 9. Limits on Name, Nickname and Profile length or lines.

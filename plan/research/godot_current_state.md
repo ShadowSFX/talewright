@@ -14,11 +14,12 @@ reports (with more citations) are in `plan/research/planning_notes/01..05`.
 
 ## 2. Build system and commands (from the repo, not memory)
 - SCons ≥ 4.4 / Python ≥ 3.9 (`SConstruct:4-5`); VS2022 needs SCons ≥ 4.8 (`platform/windows/detect.py:187-188`).
-  CI pins `scons==4.10.1` (`.github/actions/godot-deps/action.yml:7,13,30`). Installed here: SCons 4.10.1
+  CI pins `scons==4.10.1` (`.github/actions/godot-deps/action.yml:13,30`; Python `3.x` at `:7`). Installed here: SCons 4.10.1
   (`python -m SCons`), clang-format 21.1.7 (pre-commit pin, `.pre-commit-config.yaml:20-23`).
 - Targets: `target=editor|template_release|template_debug` (`SConstruct:162-166`); `editor` defines
   `TOOLS_ENABLED` (`SConstruct:548-549`); `editor`/`template_debug` define `DEBUG_ENABLED` (`SConstruct:551-554`).
-- `dev_mode=yes` ⇒ `verbose=yes warnings=extra werror=yes tests=yes strict_checks=yes` (`SConstruct:237`).
+- `dev_mode=yes` ⇒ `verbose=yes warnings=extra werror=yes tests=yes strict_checks=yes` (option help `SConstruct:237`,
+  applied at `SConstruct:668-673`).
 - Windows CI editor build: `.github/workflows/windows_builds.yml:8-33` (flags `dev_mode=yes
   module_text_server_fb_enabled=yes debug_symbols=no`, editor job adds `windows_subsystem=console vsproj=yes`).
 - **Local build (verified on this machine, task 1.1/1.2):** `python talewright/tools/build.py editor` =
@@ -82,28 +83,45 @@ reports (with more citations) are in `plan/research/planning_notes/01..05`.
 - `core/extension/` (interface JSON → generated C header, `core/extension/SCsub:17-18`); only exposed ClassDB
   classes are in `extension_api.json` (`core/extension/extension_api_dump.cpp:917-941`). Editor internals
   (`EditorNode`, `EditorMainScreen`) are not ClassDB-registered ⇒ engine modules can do more than GDExtension.
-- libgodot (`core/extension/libgodot.h:48-71`) — one engine instance per process.
+- libgodot API `core/extension/libgodot.h:48-71`; the one-instance-per-process limit is enforced by each platform,
+  e.g. `platform/windows/libgodot_windows.cpp:42`.
+- GDExtensions share the module initialization levels and can register editor plugins
+  (`GDExtensionEditorPlugins::add_extension_class`, `core/extension/gdextension.cpp:1108`); `--dump-extension-api`
+  dumps the exposed API. `EditorNode`/`EditorMainScreen` are GDCLASS objects but not exposed (ClassDB `exposed`
+  flag, `core/object/class_db.h:151`), so engine modules can reach editor internals that extensions cannot.
 
 ## 6. TileMap / TileSet
 - `TileMapLayer` (`scene/2d/tile_map_layer.h:332`): `set_cell` (`:557`), terrain painting
-  `set_cells_terrain_connect/path` (`:580-581`), runtime tile data hooks (`:592-594`); data property
+  `set_cells_terrain_connect/path` (`:580-581`), runtime tile data hooks (`scene/2d/tile_map_layer.h:591-594`); data property
   `tile_map_data` (`scene/2d/tile_map_layer.cpp:2272`).
 - `TileSet` (`scene/resources/2d/tile_set.h:149`): terrain modes (`:240-244`), custom data layers (`:500-507`),
-  physics/navigation/occlusion layers; `TileData` custom data (`:1028-1029`); animated atlas tiles
-  (`:754-766`); scene tiles (`:796`). Old `TileMap` node deprecated (`doc/classes/TileMap.xml:2`).
+  physics/navigation/occlusion layers; `TileData` custom data (`:1028-1029`); animated atlas tiles on `TileSetAtlasSource`
+  (`scene/resources/2d/tile_set.h:754-766`); scene tiles via `TileSetScenesCollectionSource` (`scene/resources/2d/tile_set.h:796`). Old `TileMap` node deprecated (`doc/classes/TileMap.xml:2`).
 - No quarter-tile autotile composition and no region concept ⇒ Talewright importer/resolver and custom data.
+
+## 6b. Media gaps relevant to RPG Maker parity
+- Video: the only video module in the tree is `modules/theora` (Ogg Theora); WebM/MP4 movies (RM-AUD-012) need a
+  conversion step or an extension.
+- Ogg loops: `AudioStreamOggVorbis` has a loop offset (`modules/vorbis/audio_stream_ogg_vorbis.h:148`) but no loop
+  end, and no importer reads `LOOPSTART`/`LOOPLENGTH` comments (no match for either string in `modules/vorbis` or
+  `editor/import`) ⇒ Talewright audio importer step (RM-AUD-011, epic 29).
+- Asset encryption: PCK encryption requires templates built with `SCRIPT_AES256_ENCRYPTION_KEY` (`core/SCsub:190`).
 - Tile editor sub-plugins hard-coded (`editor/scene/2d/tiles/tile_map_layer_editor.cpp:4532-4533`).
 
 ## 7. Resources
 - `Resource` (`core/io/resource.h:52`); `ResourceSaver::save` (`core/io/resource_saver.h:86`),
   `ResourceLoader::load` (`core/io/resource_loader.h:259`); text format v4 (`scene/resources/resource_format_text.h:46`);
   binary v6 (`core/io/resource_format_binary.cpp:99`); `ResourceUID` (`core/io/resource_uid.h:41`).
-- Deterministic sub-resource ids: existing ids kept, missing ones generated (`scene/resources/resource_format_text.cpp:1896-1935`).
+- Sub-resource ids: the text saver keeps existing ids and generates missing ones
+  (`scene/resources/resource_format_text.cpp:1896-1935`); generated ids are **random**, from a generator seeded by
+  the clock unless seeded explicitly (`core/io/resource.cpp:129-150`). Talewright therefore sets ids explicitly
+  (`Resource::set_scene_unique_id`, e.g. `Item_42`) to keep database diffs stable (D-005).
 
 ## 8. Debugger, remote scene tree, logs
 - Game ↔ editor protocol: `[name, thread_id, data]` arrays (`core/debugger/remote_debugger.cpp:105`), captures by
   prefix (`core/debugger/engine_debugger.h:118`), 8 MiB peer buffers (`core/debugger/remote_debugger_peer.cpp:84-85`).
-- Remote tree: `scene:request_scene_tree` → `scene:scene_tree` (`scene/debugger/scene_debugger.cpp:163-166`);
+- Remote tree: `scene:request_scene_tree` (`scene/debugger/scene_debugger.cpp:163-166`) → reply `scene:scene_tree`
+  (`scene/debugger/scene_debugger.cpp:847`); editor handlers `editor/debugger/script_editor_debugger.cpp:1007,1018,1022`;
   object inspection `scene:inspect_objects` (`scene/debugger/scene_debugger.cpp:177-185`).
 - Game screenshot round trip `scene:rq_screenshot` → `game_view:get_screenshot` (`scene/debugger/scene_debugger.cpp:529-567`).
 - Game output reaches the editor as `output`/`error` messages handled by `ScriptEditorDebugger`
@@ -113,14 +131,16 @@ reports (with more citations) are in `plan/research/planning_notes/01..05`.
   (`core/string/print_string.h:40-52`, `core/error/error_macros.h:61-71`).
 
 ## 9. Headless
-- `--headless` ⇒ headless display + dummy audio (`main/main.cpp:1505-1508`); `dedicated_server` feature tag forces it
+- `--headless` ⇒ headless display + dummy audio (`main/main.cpp:1505-1508`); the headless display server offers only
+  the dummy rendering driver, and `--doctool` implies headless (`main/main.cpp:1745-1748`); `dedicated_server` feature tag forces it
   (`main/main.cpp:2290-2293`). The dummy renderer returns no viewport texture
   (`servers/rendering/dummy/storage/texture_storage.h:229`) ⇒ screenshots need a real display.
 - Main loop type resolution incl. custom `MainLoop` classes (`main/main.cpp:4360-4436`).
 
 ## 10. Existing tests
 - 168 test `.cpp` files under `tests/` with `TEST_FORCE_LINK` (`tests/test_macros.h:53-56`); scaffolding
-  `tests/create_test.py:14-33`. Baseline numbers are recorded by task 1.3 in `plan/research/baseline_tests.md`.
+  `tests/create_test.py:14-33`. Baseline (task 1.3): 1380 passed, 0 failed, 3 skipped,
+  419763 assertions (`plan/research/baseline_tests.md`).
 
 ## 11. AI agents / MCP servers for the Godot editor (prior art) and decision
 Sources fetched 2026-10-13 (details and more projects in `plan/research/planning_notes/03_godot_debugger_bridge_mcp.md`):
@@ -132,7 +152,9 @@ Sources fetched 2026-10-13 (details and more projects in `plan/research/planning
   localhost + token + Host/Origin checks; MIT Lite + paid Full.
 - https://github.com/satelliteoflove/godot-mcp — Node stdio ↔ WebSocket ↔ addon ↔ game via debugger protocol; MIT.
 - https://gdaimcp.com/docs/installation — commercial; editor + game screenshots.
+- https://github.com/hi-godot/godot-ai — stdio attach → Python server → authenticated WebSocket to an editor plugin; MIT.
 - MCP spec: https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http and
   2025-06-18; Claude Code HTTP servers with headers: https://code.claude.com/docs/en/mcp
-- **Decision (D-012):** build natively as an editor-only C++ module; none of the prior art is an engine module, and
+- **Decision (D-012: Streamable HTTP with JSON responses, 127.0.0.1 only, bearer token, Origin/Host checks,
+  editor-only module):** build natively as an editor-only C++ module; none of the prior art is an engine module, and
   native access to `EditorNode`, debugger sessions and editor redraw control is needed for robustness.

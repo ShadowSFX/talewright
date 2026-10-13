@@ -658,10 +658,10 @@ Community forum threads (forums.rpgmakerweb.com) were returned by searches but w
 ### RM-FRM-002 — Damage types
 - **What:** What the computed amount does.
 - **Behaviour:**
-  - There are six types across HP and MP: Damage, Recover and Drain for each.
-  - **Damage** lowers the value. **Recover** raises it.
-  - **Drain** takes the amount from the target and gives the same amount to the user.
-  - The type list also includes "None" in the editor; how None behaves is not verified.
+  - The help says a skill or item picks one of six damage types acting on HP or MP, and describes three
+    behaviours: **Damage** lowers the value, **Recover** raises it, **Drain** moves the amount from the target to
+    the user.
+  - The exact six names and whether a "None" choice exists are not verified (see RM-SKL-017).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_08_03.html ; https://rpgmakerofficial.com/product/MZ_help-en/01_08_04.html
 
 ### RM-FRM-003 — Variance
