@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "3.3 Specs",
+  "last_completed": "3.4 Refine task tree",
   "tasks": [
     {
       "id": "0",
@@ -609,7 +609,7 @@
       ],
       "test_strategy": "Reviewer subagent critiques specs.",
       "files": [],
-      "commit": "pending",
+      "commit": "e5dbc43068",
       "notes": ""
     },
     {
@@ -620,7 +620,7 @@
       "dependencies": [
         "3.3"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "tasks.py validate ok",
@@ -628,7 +628,7 @@
       ],
       "test_strategy": "validate + review.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -960,6 +960,42 @@
       "notes": ""
     },
     {
+      "id": "5.1.1",
+      "parent": "5.1",
+      "title": "Module skeleton",
+      "description": "modules/jrpg config/SCsub/register_types, core/runtime/editor/tests/doc_classes dirs, include-boundary check (core must not include scene/ or editor/).",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Builds with and without module_jrpg_enabled",
+        "Boundary check script passes"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "5.1.2",
+      "parent": "5.1",
+      "title": "jrpg/enabled + dynamic workspace",
+      "description": "GLOBAL_DEF jrpg/enabled; bootstrap plugin adds/removes the JRPG main screen (placeholder) via EditorNode::add/remove_editor_plugin on settings change.",
+      "dependencies": [
+        "5.1.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Setting off: no JRPG tab (screenshot)",
+        "Setting on: JRPG tab appears without restart"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
       "id": "5.2",
       "title": "Database core",
       "description": "Entry/table/manifest resources, ID = slot, deterministic sub-resource ids, schema_version + migrations.",
@@ -977,6 +1013,42 @@
       "files": [],
       "commit": "",
       "notes": ""
+    },
+    {
+      "id": "5.2.1",
+      "parent": "5.2",
+      "title": "Entry/table/manifest classes",
+      "description": "JRPGEntry, JRPGTable (ID=slot API, change maximum, clear, scene-unique ids Kind_N), JRPGDatabase manifest.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "ID stays stable across clear/resize",
+        "Scene-unique ids assigned"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "5.2.2",
+      "parent": "5.2",
+      "title": "Schema versioning and byte-identical persistence",
+      "description": "schema_version, _migrate hooks, _set fallbacks; save/load/save byte-identical test.",
+      "dependencies": [
+        "5.2.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Byte-identical re-save",
+        "Old-version fixture migrates"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
     },
     {
       "id": "5.3",
@@ -999,6 +1071,58 @@
       "notes": ""
     },
     {
+      "id": "5.3.1",
+      "parent": "5.3",
+      "title": "Actors, classes, types, terms, system",
+      "description": "Slice fields per inventory slices 03/05 incl. parameter curves, learnings, EXP curve params.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "All fields serialize; defaults sane"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "5.3.2",
+      "parent": "5.3",
+      "title": "Skills, items, weapons, armors",
+      "description": "Damage block (type, element, formula, variance, critical), scope/occasion/invocation, effects, traits, prices.",
+      "dependencies": [
+        "5.3.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "All fields serialize"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "5.3.3",
+      "parent": "5.3",
+      "title": "Enemies, troops, states, animations stub, tilesets data, common events",
+      "description": "Actions/drops/rewards; troop members + battle event page model; state restriction/removal; tileset data wraps TileSet.",
+      "dependencies": [
+        "5.3.2"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "All fields serialize"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
       "id": "5.4",
       "title": "RNG, parameters, traits, formulas",
       "description": "Own PCG32 integer RNG; parameter curves; trait aggregation; Expression-based formula evaluator with proxies, iff(), deny-list.",
@@ -1019,6 +1143,60 @@
       "notes": ""
     },
     {
+      "id": "5.4.1",
+      "parent": "5.4",
+      "title": "JRPGRandom (PCG32)",
+      "description": "Integer-only RNG with range/chance/pick and serializable state.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Known-sequence test vectors",
+        "No modulo bias test"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "5.4.2",
+      "parent": "5.4",
+      "title": "Traits, effects, parameters, stat cache, EXP curve",
+      "description": "Packed trait/effect model, aggregation (rate/sum/set), 8 params + ex/sp-params, buffs, limits, dirty-flag cache, Talewright EXP curve.",
+      "dependencies": [
+        "5.4.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Hand-computed parameter cases pass"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "5.4.3",
+      "parent": "5.4",
+      "title": "JRPGFormula",
+      "description": "Expression wrapper with a/b/v proxies, helpers (iff/min/max/clamp/rand), lexical allow-list, error handling.",
+      "dependencies": [
+        "5.4.2"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Formula cases incl. invalid input -> 0 + warning",
+        "Deny-listed identifiers rejected"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
       "id": "5.5",
       "title": "Game state core",
       "description": "Switches, variables, self switches, party, runtime actors, inventory, gold; serialization.",
@@ -1035,6 +1213,40 @@
       "files": [],
       "commit": "",
       "notes": ""
+    },
+    {
+      "id": "5.5.1",
+      "parent": "5.5",
+      "title": "JRPGGameState core",
+      "description": "Switches (bitset), variables, self switches, gold, inventory, party, steps, playtime, system flags; serialize/deserialize.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Round-trip equality"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "5.5.2",
+      "parent": "5.5",
+      "title": "Runtime actor state",
+      "description": "JRPGActorState: level/exp/equips/skills/states with turns/buffs/hp/mp/tp; level up/down; equip rules.",
+      "dependencies": [
+        "5.5.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Round-trip equality; level-up cases"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
     },
     {
       "id": "5.6",
@@ -1164,6 +1376,40 @@
       "notes": ""
     },
     {
+      "id": "6.4.1",
+      "parent": "6.4",
+      "title": "Database window, tabs and entry list",
+      "description": "Workspace database view: tab per table, ID-slot list (virtualized), change maximum, clear, copy/paste.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "List operations via UI and bridge"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "6.4.2",
+      "parent": "6.4",
+      "title": "Entry form, undo, save, ID pickers",
+      "description": "Selected entry edited through EditorInspector; custom EditorProperty for ID references; global undo; Save All.",
+      "dependencies": [
+        "6.4.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Rename + undo + save via bridge; minimal .tres diff"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
       "id": "6.5",
       "title": "Database tab forms (slice)",
       "description": "Forms for slice tables incl. trait/effect editors, ID pickers.",
@@ -1180,6 +1426,58 @@
       "files": [],
       "commit": "",
       "notes": ""
+    },
+    {
+      "id": "6.5.1",
+      "parent": "6.5",
+      "title": "Trait and effect editors",
+      "description": "Custom inspector editors for packed traits/effects (add/edit/remove dialogs by tab).",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Edit traits/effects via UI; undo works"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "6.5.2",
+      "parent": "6.5",
+      "title": "Actors, classes, skills, items forms",
+      "description": "Forms incl. parameter curve editor and learnings.",
+      "dependencies": [
+        "6.5.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "All slice fields editable"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "6.5.3",
+      "parent": "6.5",
+      "title": "Weapons, armors, enemies, troops, states, system, types, terms forms",
+      "description": "Forms incl. enemy actions/drops and troop member placement.",
+      "dependencies": [
+        "6.5.2"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "All slice fields editable"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
     },
     {
       "id": "6.6",
@@ -1252,6 +1550,59 @@
       "files": [],
       "commit": "",
       "notes": ""
+    },
+    {
+      "id": "7.1.1",
+      "parent": "7.1",
+      "title": "Generated tiles and autotile templates",
+      "description": "Original ground/wall/water/tree/house tiles and autotile templates (spec 05 format).",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Deterministic hashes",
+        "LICENSES.md entry"
+      ],
+      "test_strategy": "Run twice, compare hashes; view samples.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "7.1.2",
+      "parent": "7.1",
+      "title": "Generated characters, faces, enemies, battlebacks, icons, window skin",
+      "description": "Original sprite sheets (4 dirs x 3 frames), faces, enemy sprites, battlebacks, icon set, window skin.",
+      "dependencies": [
+        "7.1.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Deterministic hashes"
+      ],
+      "test_strategy": "Run twice; screenshots.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "7.1.3",
+      "parent": "7.1",
+      "title": "Synthesized SFX and BGM",
+      "description": "Original SFX (cursor, decision, cancel, buzzer, hits, heal...) and short loopable BGM (Ogg) with loop metadata.",
+      "dependencies": [
+        "7.1.2"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Files play in Godot; loop correct"
+      ],
+      "test_strategy": "Headless play test + duration checks.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
     },
     {
       "id": "7.2",
@@ -1436,6 +1787,58 @@
       "notes": ""
     },
     {
+      "id": "8.4.1",
+      "parent": "8.4",
+      "title": "Map canvas view and MapEditSession",
+      "description": "SubViewport sharing the edited map's World2D, zoom/pan/grid overlay, scene-tab lifecycle adapter.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Map visible in JRPG workspace; tab switches safe"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "8.4.2",
+      "parent": "8.4",
+      "title": "Drawing tools with undo patches",
+      "description": "Pencil, rectangle, ellipse, flood fill, eraser, eyedropper; one stroke = one undo patch.",
+      "dependencies": [
+        "8.4.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Golden screenshot; undo restores layer hash"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "8.4.3",
+      "parent": "8.4",
+      "title": "Shadow, region, event modes and auto-layer",
+      "description": "Shadow pen, region painting, event mode (create/move/delete events on grid), auto layer selection by tile kind.",
+      "dependencies": [
+        "8.4.2"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Bridge-driven edit of each mode"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
       "id": "8.5",
       "title": "Tile palette",
       "description": "Tabs, multi-tile stamps, eyedropper.",
@@ -1471,6 +1874,40 @@
       "files": [],
       "commit": "",
       "notes": ""
+    },
+    {
+      "id": "8.6.1",
+      "parent": "8.6",
+      "title": "Scene manager, map loading and transfer",
+      "description": "JRPGSceneManager: load map scenes, transfer player (fade), missing map / out-of-bounds handling.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Transfer works; missing map handled"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "8.6.2",
+      "parent": "8.6",
+      "title": "Player movement, passability, dash, camera",
+      "description": "Cell-step movement with speed timers, 4-dir+star passability from cell cache, dash, camera follow and map bounds.",
+      "dependencies": [
+        "8.6.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Passability matrix doctest; walk blocked by wall via bridge"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
     },
     {
       "id": "8.7",
@@ -1583,6 +2020,40 @@
       "notes": ""
     },
     {
+      "id": "9.2.1",
+      "parent": "9.2",
+      "title": "Command storage benchmark",
+      "description": "Run the spec 03 benchmark (10k commands) for typed resources; record result and decision.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Benchmark recorded in plan/evidence; D-007 confirmed or reversed"
+      ],
+      "test_strategy": "Benchmark script.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "9.2.2",
+      "parent": "9.2",
+      "title": "Command model, registry, authority, script commands",
+      "description": "JRPGEventCommand base, metadata, registry, script subclass discovery.",
+      "dependencies": [
+        "9.2.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Script subclass discovered and executed"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
       "id": "9.3",
       "title": "Interpreter",
       "description": "Frames, waits, labels as paths, budgets, common events, autorun/parallel, serializable state.",
@@ -1638,6 +2109,58 @@
       "notes": ""
     },
     {
+      "id": "9.5.1",
+      "parent": "9.5",
+      "title": "Message and flow commands",
+      "description": "Show Text, Show Choices, Input Number, Conditional Branch, Loop/Break, Label/Jump, Common Event, Comment, Exit.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "One doctest per command"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "9.5.2",
+      "parent": "9.5",
+      "title": "State commands",
+      "description": "Control Switches/Variables/Self Switch, Change Gold/Items/Weapons/Armors, Recover All, Change HP/MP/State.",
+      "dependencies": [
+        "9.5.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "One doctest per command"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "9.5.3",
+      "parent": "9.5",
+      "title": "Scene and movement commands",
+      "description": "Transfer Player, Set Movement Route (basic), Erase Event, Battle Processing, Open Menu/Save, Game Over, Return to Title, Wait, Script.",
+      "dependencies": [
+        "9.5.2"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "One doctest per command"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
       "id": "9.6",
       "title": "Event characters runtime",
       "description": "Movement types, action/touch triggers, autorun/parallel on map.",
@@ -1673,6 +2196,58 @@
       "files": [],
       "commit": "",
       "notes": ""
+    },
+    {
+      "id": "9.7.1",
+      "parent": "9.7",
+      "title": "Event properties, pages and conditions UI",
+      "description": "Event editor window: pages tabs, conditions, graphic, movement, options, priority, trigger.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Create/edit pages via UI and bridge"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "9.7.2",
+      "parent": "9.7",
+      "title": "Command list, picker and forms",
+      "description": "Tree list with indentation display, command picker by category, inspector-based forms + custom forms for text/choices/branch.",
+      "dependencies": [
+        "9.7.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Insert/edit/delete commands with undo"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "9.7.3",
+      "parent": "9.7",
+      "title": "Quick events",
+      "description": "Quick event templates (door/transfer, treasure chest, inn) built from commands.",
+      "dependencies": [
+        "9.7.2"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Quick treasure chest works in playtest"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
     },
     {
       "id": "9.8",
@@ -1763,6 +2338,40 @@
       "notes": ""
     },
     {
+      "id": "10.2.1",
+      "parent": "10.2",
+      "title": "Control-code parser and text layout",
+      "description": "Message control codes (variables, names, colors, icons, font size, waits, instant, gold window...) to rich-text segments.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Parser doctests for every code"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "10.2.2",
+      "parent": "10.2",
+      "title": "Message window, choices, number input, gold window",
+      "description": "Typewriter, face, name box, positions, background, choices/number input windows, fast-forward.",
+      "dependencies": [
+        "10.2.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "E2E message advance via bridge"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
       "id": "10.3",
       "title": "Screen stack (GDScript managed addon)",
       "description": "Scene stack + transitions; embedded-script compile doctest.",
@@ -1833,6 +2442,40 @@
       "notes": ""
     },
     {
+      "id": "11.1.1",
+      "parent": "11.1",
+      "title": "Main menu, item and skill screens",
+      "description": "Managed GDScript screens over the UI kit.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Navigate and use a potion via bridge"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "11.1.2",
+      "parent": "11.1",
+      "title": "Equip, status, save and game end screens",
+      "description": "Equipment changes with stat preview; save slots UI.",
+      "dependencies": [
+        "11.1.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Equip changes stats; save from menu"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
       "id": "11.2",
       "title": "Epic review: menu",
       "description": "Reviewer subagent.",
@@ -1886,6 +2529,40 @@
       "notes": ""
     },
     {
+      "id": "12.1.1",
+      "parent": "12.1",
+      "title": "Battlers, actions and damage pipeline",
+      "description": "Battle model: battlers, action resolution, damage pipeline, hit/evasion/critical, element rates, basic states.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Golden damage cases"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "12.1.2",
+      "parent": "12.1",
+      "title": "Turn order, enemy AI, victory/defeat/escape, rewards",
+      "description": "Turn order with deterministic ties, AI action patterns, rewards and level-up, escape rule.",
+      "dependencies": [
+        "12.1.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Golden battle log for a fixed seed"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
       "id": "12.2",
       "title": "Battle scene (front view)",
       "description": "Status, commands, targets, log, popups, battleback, enemy sprites.",
@@ -1902,6 +2579,40 @@
       "files": [],
       "commit": "",
       "notes": ""
+    },
+    {
+      "id": "12.2.1",
+      "parent": "12.2",
+      "title": "Battle layout, status and command windows, targeting",
+      "description": "Front-view battle scene (GDScript) over the core model.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Battle navigable via bridge input"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
+    },
+    {
+      "id": "12.2.2",
+      "parent": "12.2",
+      "title": "Battle log, popups, battleback and enemy sprites",
+      "description": "Feedback layer: damage popups, log window, sprite flashes, simple animations.",
+      "dependencies": [
+        "12.2.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Battle won via bridge with screenshots"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "files": [],
+      "commit": "",
+      "notes": "",
+      "status": "pending"
     },
     {
       "id": "12.3",

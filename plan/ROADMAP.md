@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 98, in_progress: 2, done: 42, blocked: 0, deferred: 3 (of 145)
+**Totals:** pending: 138, in_progress: 2, done: 43, blocked: 0, deferred: 3 (of 186)
 
 ## [x] 0 Bootstrap and task system
 
@@ -51,8 +51,8 @@ Decision log, upstream patch ledger, design specs, refined task tree.
 
 - [x] **3.1** DECISIONS.md (P1) _(commit: 7d0964b4de)_
 - [x] **3.2** UPSTREAM_PATCHES.md ledger (P2) _(commit: 81bb919732)_
-- [x] **3.3** Specs (P1) _(deps: 3.1; commit: pending)_
-- [ ] **3.4** Refine task tree (P1) _(deps: 3.3)_
+- [x] **3.3** Specs (P1) _(deps: 3.1; commit: e5dbc43068)_
+- [x] **3.4** Refine task tree (P1) _(deps: 3.3; commit: pending)_
 - [ ] **3.5** Epic review: decisions and specs (P1) _(deps: 3.4)_
 
 ## [~] 4 Claude bridge (MCP)
@@ -78,10 +78,22 @@ Editor-only C++ module: MCP Streamable HTTP server on 127.0.0.1 with token; edit
 modules/jrpg with pure-logic core (no Node dependency), database, game state, RNG, formulas.
 
 - [ ] **5.1** Module skeleton and dynamic workspace (P1)
+  - [ ] **5.1.1** Module skeleton (P1)
+  - [ ] **5.1.2** jrpg/enabled + dynamic workspace (P1) _(deps: 5.1.1)_
 - [ ] **5.2** Database core (P1) _(deps: 5.1)_
+  - [ ] **5.2.1** Entry/table/manifest classes (P1)
+  - [ ] **5.2.2** Schema versioning and byte-identical persistence (P1) _(deps: 5.2.1)_
 - [ ] **5.3** Database tables (slice fields) (P1) _(deps: 5.2, 2.1)_
+  - [ ] **5.3.1** Actors, classes, types, terms, system (P1)
+  - [ ] **5.3.2** Skills, items, weapons, armors (P1) _(deps: 5.3.1)_
+  - [ ] **5.3.3** Enemies, troops, states, animations stub, tilesets data, common events (P1) _(deps: 5.3.2)_
 - [ ] **5.4** RNG, parameters, traits, formulas (P1) _(deps: 5.3)_
+  - [ ] **5.4.1** JRPGRandom (PCG32) (P1)
+  - [ ] **5.4.2** Traits, effects, parameters, stat cache, EXP curve (P1) _(deps: 5.4.1)_
+  - [ ] **5.4.3** JRPGFormula (P1) _(deps: 5.4.2)_
 - [ ] **5.5** Game state core (P1) _(deps: 5.4)_
+  - [ ] **5.5.1** JRPGGameState core (P1)
+  - [ ] **5.5.2** Runtime actor state (P1) _(deps: 5.5.1)_
 - [ ] **5.6** Reference scanner (P2) _(deps: 5.5)_
 - [ ] **5.7** Epic review: JRPG core (P1) _(deps: 5.6)_
 
@@ -93,7 +105,12 @@ Setup tool, managed addon, main-screen workspace, database editor, authoring API
 - [ ] **6.2** Set up JRPG Project tool (P1) _(deps: 6.1)_
 - [ ] **6.3** Workspace shell (P1) _(deps: 6.2)_
 - [ ] **6.4** Database editor framework (P1) _(deps: 6.3)_
+  - [ ] **6.4.1** Database window, tabs and entry list (P1)
+  - [ ] **6.4.2** Entry form, undo, save, ID pickers (P1) _(deps: 6.4.1)_
 - [ ] **6.5** Database tab forms (slice) (P1) _(deps: 6.4)_
+  - [ ] **6.5.1** Trait and effect editors (P1)
+  - [ ] **6.5.2** Actors, classes, skills, items forms (P1) _(deps: 6.5.1)_
+  - [ ] **6.5.3** Weapons, armors, enemies, troops, states, system, types, terms forms (P1) _(deps: 6.5.2)_
 - [ ] **6.6** Database authoring API + bridge tools (P1) _(deps: 6.5)_
 - [ ] **6.7** Epic review: workspace (P1) _(deps: 6.6)_
 
@@ -102,6 +119,9 @@ Setup tool, managed addon, main-screen workspace, database editor, authoring API
 Original generated assets, autotile importer and resolver, tileset flags.
 
 - [ ] **7.1** Original asset generator (P1)
+  - [ ] **7.1.1** Generated tiles and autotile templates (P1)
+  - [ ] **7.1.2** Generated characters, faces, enemies, battlebacks, icons, window skin (P1) _(deps: 7.1.1)_
+  - [ ] **7.1.3** Synthesized SFX and BGM (P1) _(deps: 7.1.2)_
 - [ ] **7.2** Autotile template + importer (P1) _(deps: 7.1)_
 - [ ] **7.3** JRPGTileset + flags + tileset tab (P1) _(deps: 7.2)_
 - [ ] **7.4** Autotile resolver (P1) _(deps: 7.2)_
@@ -116,8 +136,13 @@ JRPGMap scenes, map editor canvas, cell cache, runtime map and movement.
 - [ ] **8.2** Map cell cache compiler (P1) _(deps: 8.1)_
 - [ ] **8.3** Map list and properties (P1) _(deps: 8.1)_
 - [ ] **8.4** Map canvas tools (P1) _(deps: 8.3, 7.4)_
+  - [ ] **8.4.1** Map canvas view and MapEditSession (P1)
+  - [ ] **8.4.2** Drawing tools with undo patches (P1) _(deps: 8.4.1)_
+  - [ ] **8.4.3** Shadow, region, event modes and auto-layer (P1) _(deps: 8.4.2)_
 - [ ] **8.5** Tile palette (P1) _(deps: 8.4)_
 - [ ] **8.6** Runtime map, cell-step movement, camera, transfer (P1) _(deps: 8.2)_
+  - [ ] **8.6.1** Scene manager, map loading and transfer (P1)
+  - [ ] **8.6.2** Player movement, passability, dash, camera (P1) _(deps: 8.6.1)_
 - [ ] **8.7** Character sprites (P1) _(deps: 8.6)_
 - [ ] **8.8** Map authoring tools (P2) _(deps: 8.5)_
 - [ ] **8.9** Epic review: maps (P1) _(deps: 8.7, 8.8)_
@@ -128,11 +153,19 @@ Pages, conditions, triggers, command model with authority, interpreter with pres
 
 - [ ] **9.1** JRPGEvent + pages + conditions + triggers (P1)
 - [ ] **9.2** Command model + registry + authority + script commands (P1) _(deps: 9.1, 3.3)_
+  - [ ] **9.2.1** Command storage benchmark (P1)
+  - [ ] **9.2.2** Command model, registry, authority, script commands (P1) _(deps: 9.2.1)_
 - [ ] **9.3** Interpreter (P1) _(deps: 9.2)_
 - [ ] **9.4** Presentation port + local port (P1) _(deps: 9.3)_
 - [ ] **9.5** Slice commands (P1) _(deps: 9.4)_
+  - [ ] **9.5.1** Message and flow commands (P1)
+  - [ ] **9.5.2** State commands (P1) _(deps: 9.5.1)_
+  - [ ] **9.5.3** Scene and movement commands (P1) _(deps: 9.5.2)_
 - [ ] **9.6** Event characters runtime (P1) _(deps: 9.5, 8.7)_
 - [ ] **9.7** Event editor UI (P1) _(deps: 9.6)_
+  - [ ] **9.7.1** Event properties, pages and conditions UI (P1)
+  - [ ] **9.7.2** Command list, picker and forms (P1) _(deps: 9.7.1)_
+  - [ ] **9.7.3** Quick events (P1) _(deps: 9.7.2)_
 - [ ] **9.8** Event authoring tools (P2) _(deps: 9.7)_
 - [ ] **9.9** Epic review: events (P1) _(deps: 9.8)_
 
@@ -142,6 +175,8 @@ Window frame, selectable list, message system, screen stack.
 
 - [ ] **10.1** Window frame + selectable list (C++) (P1)
 - [ ] **10.2** Message system (P1) _(deps: 10.1)_
+  - [ ] **10.2.1** Control-code parser and text layout (P1)
+  - [ ] **10.2.2** Message window, choices, number input, gold window (P1) _(deps: 10.2.1)_
 - [ ] **10.3** Screen stack (GDScript managed addon) (P1) _(deps: 10.2)_
 - [ ] **10.4** Epic review: messages/UI (P1) _(deps: 10.3)_
 
@@ -150,6 +185,8 @@ Window frame, selectable list, message system, screen stack.
 Main menu, item, skill, equip, status, save, game end.
 
 - [ ] **11.1** Menu screens (P1)
+  - [ ] **11.1.1** Main menu, item and skill screens (P1)
+  - [ ] **11.1.2** Equip, status, save and game end screens (P1) _(deps: 11.1.1)_
 - [ ] **11.2** Epic review: menu (P1) _(deps: 11.1)_
 
 ## [ ] 12 Battle (slice)
@@ -157,7 +194,11 @@ Main menu, item, skill, equip, status, save, game end.
 Turn-based core, scene, encounters, troop events, battle test.
 
 - [ ] **12.1** Battle core (P1)
+  - [ ] **12.1.1** Battlers, actions and damage pipeline (P1)
+  - [ ] **12.1.2** Turn order, enemy AI, victory/defeat/escape, rewards (P1) _(deps: 12.1.1)_
 - [ ] **12.2** Battle scene (front view) (P1) _(deps: 12.1)_
+  - [ ] **12.2.1** Battle layout, status and command windows, targeting (P1)
+  - [ ] **12.2.2** Battle log, popups, battleback and enemy sprites (P1) _(deps: 12.2.1)_
 - [ ] **12.3** Encounters + troop events (P1) _(deps: 12.2)_
 - [ ] **12.4** Battle test + test from here (P2) _(deps: 12.3)_
 - [ ] **12.5** Epic review: battle (P1) _(deps: 12.4)_

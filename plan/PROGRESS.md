@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 16:26 -0600
+- **Updated:** 2026-10-13 16:27 -0600
 - **Current task:** 4.13 Epic review: Claude bridge
-- **Last completed:** 3.3 Specs
-- **Next task:** 3.4 Refine task tree
-- **Done leaf tasks:** 38
+- **Last completed:** 3.4 Refine task tree
+- **Next task:** 3.5 Epic review: decisions and specs
+- **Done leaf tasks:** 39
 <!-- status:end -->
 
 ## Log
@@ -86,4 +86,7 @@
 | 2026-10-13 16:23 -0600 | 4.12 | done: Docs, claude mcp add, template absence — Docs talewright/docs/claude_bridge.md (setup, security, claude mcp add, CLI, tool table, troubleshooting); check_binary_strings.py: bridge markers absent from template_release and template_debug (rebuilt from current tree), present in editor (positive control) (containers: 4 in_progress->pending) | 5302ccaedc |
 | 2026-10-13 16:23 -0600 | 4.13 | started: Epic review: Claude bridge (containers: 4 pending->in_progress) |  |
 | 2026-10-13 16:23 -0600 | 3.3 | started: Specs (containers: 3 pending->in_progress) |  |
-| 2026-10-13 16:26 -0600 | 3.3 | done: Specs — Specs 01-07: module layout, database model, events/interpreter/presentation port/authority (+storage benchmark gate), formulas/RNG/battle math (Talewright-defined numbers per D-022), maps/tiles/autotile template/cell cache/movement, save format, MMO protocol IDL + topology (containers: 3 in_progress->pending) | pending |
+| 2026-10-13 16:26 -0600 | 3.3 | done: Specs — Specs 01-07: module layout, database model, events/interpreter/presentation port/authority (+storage benchmark gate), formulas/RNG/battle math (Talewright-defined numbers per D-022), maps/tiles/autotile template/cell cache/movement, save format, MMO protocol IDL + topology (containers: 3 in_progress->pending) | e5dbc43068 |
+| 2026-10-13 16:27 -0600 | 3.4 | started: Refine task tree (containers: 3 pending->in_progress) |  |
+| 2026-10-13 16:27 -0600 | - | imported 41 new / 0 updated tasks | |
+| 2026-10-13 16:27 -0600 | 3.4 | done: Refine task tree — Task tree refined: 41 subtasks split from slice tasks (5.x-12.x) so each fits one sitting, incl. the command-storage benchmark gate (9.2.1); later epics split when started (tracker enforces) (containers: 3 in_progress->pending) | pending |
