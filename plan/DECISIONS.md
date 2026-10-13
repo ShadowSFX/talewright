@@ -233,3 +233,14 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Choice:** epic 4 depends only on epic 1. Epics 2/3 continue in parallel; epic 5 still depends on epics 3 and 4.
 - **Why:** no idle time; the bridge is the verification tool for everything after it.
 - **Reversal:** restore `"dependencies": ["1", "3"]` on task 4.
+
+## D-022 — Behaviour the official documentation does not specify
+- **Context:** the official MZ help leaves some mechanics unstated (escape formula, critical multiplier, damage
+  step order, EXP curve formula, save contents…; see `plan/research/rpgmaker_inventory.md`). The legal rule
+  forbids learning them from RPG Maker's code, and the "never guess" rule forbids presenting guesses as parity.
+- **Options:** copy community-reverse-engineered values; leave unimplemented; define our own documented behaviour.
+- **Choice:** Talewright defines its own behaviour for each gap, documents it in `talewright/docs/` and in the
+  relevant spec, makes it data-driven/overridable (system settings or formula fields), and marks the gap-map row
+  "parity: functional, exact numbers not verified".
+- **Why:** functional parity without copying or guessing; users can tune values to taste.
+- **Reversal:** change the documented defaults; the values are data, not code.

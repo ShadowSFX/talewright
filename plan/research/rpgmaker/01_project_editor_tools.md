@@ -631,7 +631,7 @@ Note on area use: the help's "Playing Your Game" page (runtime controls, title/m
   - Folder List on the left, which also sets the target folder for imports.
   - File List showing the files in the selected folder.
   - Preview, for images only. Audio is previewed in Sound Test instead.
-  - The help says custom files must meet the official asset standards (01_11_01; see RM-AST-004 onward).
+  - The help says custom files must meet the official asset standards (01_11_01; see RM-ASV-004 onward).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_05.html
 
 ### RM-AID-017 — Resource Manager: Import
@@ -1317,7 +1317,7 @@ Note on area use: the help's "Playing Your Game" page (runtime controls, title/m
 
 ### AST: Asset and side-view standards
 
-### RM-AST-001 — Side-view actor battler sheet
+### RM-ASV-001 — Side-view actor battler sheet
 - **What:** The image format for actor battle graphics in Side-View mode. Each actor has its own file.
 - **Behaviour:**
   - One sheet is a 9 × 6 grid, giving 54 cells.
@@ -1325,21 +1325,21 @@ Note on area use: the help's "Playing Your Game" page (runtime controls, title/m
   - By our arithmetic each cell is 64 × 64 px; the page does not state this.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_11_02.html
 
-### RM-AST-002 — Side-view motion = three frames in a row
+### RM-ASV-002 — Side-view motion = three frames in a row
 - **What:** How the frames on the sheet are grouped into motions.
 - **Behaviour:**
   - Three horizontally adjacent cells make one motion.
   - The page does not name the motions or give their order on the sheet.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_11_02.html
 
-### RM-AST-003 — Side-view frame playback order
+### RM-ASV-003 — Side-view frame playback order
 - **What:** How a motion's three frames are played.
 - **Behaviour:**
   - Looping idle (standby) motions cycle left to right through frames 1, 2, 3, 2.
   - One-shot motions, such as damage, play 1, 2, 3 once.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_11_02.html
 
-### RM-AST-004 — General asset placement rules
+### RM-ASV-004 — General asset placement rules
 - **What:** Custom assets become selectable in the editor once they are copied into the matching project folder.
 - **Behaviour:**
   - Subfolders are allowed.
@@ -1347,7 +1347,7 @@ Note on area use: the help's "Playing Your Game" page (runtime controls, title/m
   - Enemy and picture images with odd widths can look blurry, so even widths are recommended.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_11_01.html
 
-### RM-AST-005 — Image folders and sizes (PNG)
+### RM-ASV-005 — Image folders and sizes (PNG)
 - **What:** The image asset folders and their expected sizes.
 - **Behaviour:**
   - `img/battlebacks1` (floor) and `img/battlebacks2` (wall): 1000 × 740.
@@ -1355,14 +1355,14 @@ Note on area use: the help's "Playing Your Game" page (runtime controls, title/m
   - `img/faces`: 144 × 144 per face, in a 2 × 4 grid of 8.
   - `img/parallaxes`: any size, and can be made to loop seamlessly.
   - `img/pictures`: any size.
-  - `img/sv_actors`: see RM-AST-001.
+  - `img/sv_actors`: see RM-ASV-001.
   - `img/sv_enemies`: any size.
   - `img/titles1` and `img/titles2`: 816 × 624.
   - `img/characters`: 48 × 48 per frame, with 4 directions × 3 patterns per character.
   - `img/system`: `Baloon.png` (spelled this way on the page), `ButtonSet.png`, `GameOver.png`, `IconSet.png`, `Shadow1.png`, `Shadow2.png`, `States.png`, `Weapons1.png`, `Weapons2.png`, `Weapons3.png`, `Window.png`.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_11_01.html
 
-### RM-AST-006 — Character filename prefixes
+### RM-ASV-006 — Character filename prefixes
 - **What:** Special characters at the start of a character sheet's filename change how it is treated.
 - **Behaviour:**
   - `$`: the file holds a single character instead of a multi-character sheet.
@@ -1370,13 +1370,13 @@ Note on area use: the help's "Playing Your Game" page (runtime controls, title/m
   - The two prefixes can be combined.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_11_01.html
 
-### RM-AST-007 — Parallax filename prefix
+### RM-ASV-007 — Parallax filename prefix
 - **What:** A filename prefix for parallax images.
 - **Behaviour:**
   - A leading `!` makes the parallax act as a fixed floor image, with no parallax scrolling.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_11_01.html
 
-### RM-AST-008 — Tileset sheets
+### RM-ASV-008 — Tileset sheets
 - **What:** Layout and sizes of the tileset images in `img/tilesets`.
 - **Behaviour:**
   - Tiles are 48 × 48.
@@ -1389,14 +1389,14 @@ Note on area use: the help's "Playing Your Game" page (runtime controls, title/m
   - Behaviour varies with the tileset Mode setting in the Database.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_11_01.html
 
-### RM-AST-009 — Audio format and loop points
+### RM-ASV-009 — Audio format and loop points
 - **What:** The audio format MZ expects.
 - **Behaviour:**
   - Ogg Vorbis (`.ogg`).
   - If the file's metadata contains LOOPSTART and LOOPLENGTH, playback loops on those points.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_11_01.html
 
-### RM-AST-010 — Movie formats per platform
+### RM-ASV-010 — Movie formats per platform
 - **What:** The video formats MZ expects.
 - **Behaviour:**
   - WebM (`.webm`) and MP4 (H.264, `.mp4`).

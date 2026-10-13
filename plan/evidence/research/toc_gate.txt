@@ -1,0 +1,71 @@
+OK       01.html          items=   1  RPG Maker MZ Help
+OK       01_01.html       items=   1  About RPG Maker MZ
+OK       01_01_01_01.html items=   9  Main Features of RPG Maker MZ
+OK       01_01_01_02.html items=  12  MV Data Conversion
+OK       01_01_01_03.html items=   8  Time Progression Battles
+OK       01_01_01_04.html items=   3  Animations
+OK       01_01_01_05.html items=  46  Improvements to Artistic Expressions in Games
+OK       01_01_01_06.html items=  14  Game Control Improvements
+OK       01_01_02.html    items=   2  System Requirements
+OK       01_02.html       items=   7  Getting Started Making Your Game
+OK       01_03.html       items=  27  Basic Editor Controls
+OK       01_04.html       items=  42  Menu Bar Content
+OK       01_05.html       items=  60  How to Use Aid Tools
+OK       01_06.html       items=  53  Playing Your Game
+OK       01_07.html       items=   7  Map
+OK       01_07_01.html    items=  34  Editing Map Designs
+OK       01_07_02.html    items=  13  Map Data Controls
+OK       01_07_03.html    items=  28  Map Properties
+OK       01_08.html       items=  20  Database
+OK       01_08_01.html    items=  17  Actor Settings
+OK       01_08_02.html    items=  19  Class Settings
+OK       01_08_03.html    items=  43  Skill Settings
+OK       01_08_04.html    items=  33  Item Settings
+OK       01_08_05.html    items=  26  Weapon/Armor Settings
+OK       01_08_06.html    items=  30  Enemy Settings
+OK       01_08_07.html    items=  29  Troop Settings
+OK       01_08_08.html    items=  27  State Settings
+OK       01_08_09.html    items=  14  Animation Settings
+OK       01_08_09_01.html items=   4  Effekseer
+OK       01_08_10.html    items=  17  Tileset Settings
+OK       01_08_11.html    items=   9  Common Event Settings
+OK       01_08_12_01.html items=  62  System 1 Settings
+OK       01_08_12_02.html items=  27  System 2 Settings
+OK       01_08_13.html    items=  11  Type Settings
+OK       01_08_14.html    items=  16  Terms Settings
+OK       01_08_15.html    items=  64  How to Set Traits
+OK       01_08_16.html    items=  30  How to Set Effects
+OK       01_09.html       items=   3  Events
+OK       01_09_01.html    items=   8  Map Event System
+OK       01_09_02.html    items=  12  Map Event Creation and Controls
+OK       01_09_03.html    items=  36  Map Event Settings
+OK       01_10.html       items=   3  Event Commands
+OK       01_10_01.html    items=  46  Messages
+OK       01_10_02.html    items=   8  Game Progression
+OK       01_10_03.html    items=  12  Flow Control
+OK       01_10_04.html    items=   9  Party
+OK       01_10_05.html    items=  20  Actor
+OK       01_10_06.html    items=   7  Movement
+OK       01_10_06_01.html items=  52  Movement Route Settings
+OK       01_10_07.html    items=   7  Character
+OK       01_10_08.html    items=   6  Picture
+OK       01_10_09.html    items=   4  Timing
+OK       01_10_10.html    items=   8  Screen
+OK       01_10_11.html    items=  21  Audio & Video
+OK       01_10_12.html    items=  22  Scene Control
+OK       01_10_13.html    items=  23  System Settings
+OK       01_10_14.html    items=   7  Map
+OK       01_10_15.html    items=  18  Battle
+OK       01_10_16.html    items=   6  Advanced
+OK       01_11_01.html    items=  74  Asset Standards
+OK       01_11_02.html    items=  10  Side-View Character Standards
+OK       01_11_03.html    items=  15  Output Formats
+OK       01_11_04.html    items=   7  Enabling Plugins
+OK       01_11_05.html    items=  20  Using Official Plugins
+EXEMPT   02.html          User License Agreement
+EXEMPT   04.html          About Trademarks and Registered Trademarks
+EXEMPT   05.html          Staff Credits
+OK                        items=  22  API documentation
+
+TOC content pages without any citing inventory item: 0
+Inventory items: 1023

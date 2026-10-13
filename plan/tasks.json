@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "2.1.8 Other versions' notable features",
+  "last_completed": "2.1.9 Inventory merge and TOC gate",
   "tasks": [
     {
       "id": "0",
@@ -280,7 +280,7 @@
       "description": "plan/research/rpgmaker_inventory.md: baseline determination + exhaustive sourced inventory with item IDs (RM-<AREA>-<n>), paraphrased (no verbatim text).",
       "parent": "2",
       "dependencies": [],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Every TOC page of the MZ help is covered",
@@ -289,8 +289,8 @@
       ],
       "test_strategy": "TOC diff script compares crawled TOC vs inventory sections.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "2.1.1",
@@ -434,7 +434,7 @@
       "files": [
         "plan/research/rpgmaker/09_other_versions.md"
       ],
-      "commit": "pending",
+      "commit": "3f1bff4314",
       "notes": ""
     },
     {
@@ -452,7 +452,7 @@
         "2.1.7",
         "2.1.8"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "TOC comparison shows 0 uncovered pages",
@@ -460,7 +460,7 @@
       ],
       "test_strategy": "Script output saved to plan/evidence/research/toc_gate.txt.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

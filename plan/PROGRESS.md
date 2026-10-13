@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 15:38 -0600
+- **Updated:** 2026-10-13 15:39 -0600
 - **Current task:** none
-- **Last completed:** 2.1.8 Other versions' notable features
-- **Next task:** 2.1.9 Inventory merge and TOC gate
-- **Done leaf tasks:** 21
+- **Last completed:** 2.1.9 Inventory merge and TOC gate
+- **Next task:** 2.4 Gap map
+- **Done leaf tasks:** 22
 <!-- status:end -->
 
 ## Log
@@ -51,4 +51,6 @@
 | 2026-10-13 15:38 -0600 | 2.1.5 | done: Database C: system 1/2, types, terms, traits, effects — Official-source inventory slice: 84 items (SYS 32, TYP 6, TRM 6, TRT 26, EFF 14); every item cites an official URL; paraphrase check run | 434f27dce2 |
 | 2026-10-13 15:38 -0600 | 2.1.6 | done: Events: system, pages, conditions, triggers, priority, move routes, all commands — Official-source inventory slice: 223 items (EVT 48, CMD 53, MSG 19, MRT 51, CMD2 52); every item cites an official URL; paraphrase check run | 0aec90fe28 |
 | 2026-10-13 15:38 -0600 | 2.1.7 | done: Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug — Official-source inventory slice: 125 items (MNU 20, BTL 26, FRM 21, SAV 7, AUD 15, MSGB 13, INP 9, GEN 7, DBG 7); every item cites an official URL; paraphrase check run | ca16b51e19 |
-| 2026-10-13 15:38 -0600 | 2.1.8 | done: Other versions' notable features — Official-source inventory slice: 77 items across 2000/2003/XP/VX/VX Ace/MV/Unite/WITH/U2U; every item cites an official URL; paraphrase check run (containers: 2.1 in_progress->pending, 2 in_progress->pending) | pending |
+| 2026-10-13 15:38 -0600 | 2.1.8 | done: Other versions' notable features — Official-source inventory slice: 77 items across 2000/2003/XP/VX/VX Ace/MV/Unite/WITH/U2U; every item cites an official URL; paraphrase check run (containers: 2.1 in_progress->pending, 2 in_progress->pending) | 3f1bff4314 |
+| 2026-10-13 15:38 -0600 | 2.1.9 | started: Inventory merge and TOC gate (containers: 2.1 pending->in_progress, 2 pending->in_progress) |  |
+| 2026-10-13 15:39 -0600 | 2.1.9 | done: Inventory merge and TOC gate — Inventory gate: TOC coverage 65/65 pages, 1023 sourced unique items (file 01 AST->ASV), verbatim check 0 prose overlaps (3 rewritten, 6 name lists allowed); rpgmaker_inventory.md index; D-022 (containers: 2.1 in_progress->done, 2 in_progress->pending) | pending |

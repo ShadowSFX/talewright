@@ -1,0 +1,7 @@
+01_project_editor_tools.md: RM-PRJ-008 — Project data and asset file layout (as revealed by the MV -> allowed (name list): 16 shared runs
+01_project_editor_tools.md: RM-PLG-025 — Official plugin: EventCommandByCode -> allowed (name list): 1 shared runs
+04_database_b.md: RM-TRP-012 — Battle Event pages and page buttons -> allowed (name list): 2 shared runs
+05_database_c.md: RM-TRM-003 — Parameters terms -> allowed (name list): 1 shared runs
+08_runtime_systems.md: RM-INP-001 — Logical actions and default bindings -> allowed (name list): 18 shared runs
+08_runtime_systems.md: RM-INP-003 — Function keys -> allowed (name list): 2 shared runs
+official 12-grams: 75921; blocks with shared runs: 0
