@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 101, in_progress: 0, done: 41, blocked: 0, deferred: 3 (of 145)
+**Totals:** pending: 98, in_progress: 2, done: 42, blocked: 0, deferred: 3 (of 145)
 
 ## [x] 0 Bootstrap and task system
 
@@ -51,11 +51,11 @@ Decision log, upstream patch ledger, design specs, refined task tree.
 
 - [x] **3.1** DECISIONS.md (P1) _(commit: 7d0964b4de)_
 - [x] **3.2** UPSTREAM_PATCHES.md ledger (P2) _(commit: 81bb919732)_
-- [ ] **3.3** Specs (P1) _(deps: 3.1)_
+- [x] **3.3** Specs (P1) _(deps: 3.1; commit: pending)_
 - [ ] **3.4** Refine task tree (P1) _(deps: 3.3)_
 - [ ] **3.5** Epic review: decisions and specs (P1) _(deps: 3.4)_
 
-## [ ] 4 Claude bridge (MCP)
+## [~] 4 Claude bridge (MCP)
 
 Editor-only C++ module: MCP Streamable HTTP server on 127.0.0.1 with token; editor + game inspection and driving; CLI.
 
@@ -70,8 +70,8 @@ Editor-only C++ module: MCP Streamable HTTP server on 127.0.0.1 with token; edit
 - [x] **4.9** Editor screenshots (P1) _(deps: 4.8; commit: 12773911ae)_
 - [x] **4.10** Game-side capture (P1) _(deps: 4.9; commit: fea49bd11f)_
 - [x] **4.11** Hardening (P1) _(deps: 4.10; commit: 9c9ec40d5a)_
-- [x] **4.12** Docs, claude mcp add, template absence (P1) _(deps: 4.11; commit: pending)_
-- [ ] **4.13** Epic review: Claude bridge (P1) _(deps: 4.12)_
+- [x] **4.12** Docs, claude mcp add, template absence (P1) _(deps: 4.11; commit: 5302ccaedc)_
+- [~] **4.13** Epic review: Claude bridge (P1) _(deps: 4.12)_
 
 ## [ ] 5 JRPG module foundation and data core
 

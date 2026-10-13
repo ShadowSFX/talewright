@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "4.12 Docs, claude mcp add, template absence",
+  "last_completed": "3.3 Specs",
   "tasks": [
     {
       "id": "0",
@@ -602,14 +602,14 @@
       "dependencies": [
         "3.1"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Each spec has interfaces, data formats, edge cases"
       ],
       "test_strategy": "Reviewer subagent critiques specs.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -657,7 +657,7 @@
       "dependencies": [
         "1"
       ],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "All minimum capabilities work via bridge.py",
@@ -899,7 +899,7 @@
       ],
       "test_strategy": "Binary scan script.",
       "files": [],
-      "commit": "pending",
+      "commit": "5302ccaedc",
       "notes": ""
     },
     {
@@ -910,7 +910,7 @@
       "dependencies": [
         "4.12"
       ],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Findings fixed and logged"
