@@ -26,7 +26,7 @@ Text `.tres` keeps diffs readable; exports convert to binary automatically.
 | Property | Type | Notes |
 |---|---|---|
 | `id` | int | read-only, = slot index + 1 (set by the table) |
-| `name` | String | localizable (spec: L10N epic 35 extracts it) |
+| `name` | String | source-language text; translated through the stable key `<Kind>_<id>.name` (D-026) |
 | `note` | String | free text; `<tag:value>` metadata parsed on demand (plugin parity) |
 | `icon_index` | int | where applicable |
 

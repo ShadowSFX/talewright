@@ -3,11 +3,14 @@
 Inventory: RM-SAV-001..007, RM-NEW-026/027 (autosave, game id), RM-CMD2-029 (save access). Decision: D-005, D-022.
 
 ## What is saved (`JRPGGameState.serialize()` → Dictionary)
-`format: "talewright-save"`, `format_version: int`, `game_id: String` (project setting, RM-NEW-027),
+`format: "talewright-save"`, `format_version: int`, `game_id: String` (`JRPGSystemData.game_id`, a random id
+generated once by the setup tool and editable in the System tab, RM-NEW-027; not a project setting, D-008),
 `db_schema_version`, `db_content_hash`, `saved_at` (UTC ISO-8601), `playtime_frames`, `map: {map_id, player cell,
 direction, vehicle, followers}`, `switches: PackedByteArray (bitset)`, `variables: Array (int/float/String)`,
 `self_switches: Dictionary "map:event:letter" → bool`, `party: {members, gold, steps, items/weapons/armors counts}`,
-`actors: [{id, name, nickname, class_id, level, exp, hp, mp, tp, equips, skills, states with turns, buffs}]`,
+`actors: [{id, name_override, nickname_override, class_id, level, exp, hp, mp, tp, equips, skills, states with
+turns, buffs}]` (names are stored only when an event changed them; otherwise they come from the database through the
+current language, D-026),
 `system: {save/menu/encounter/formation access, window tone, battle/victory/defeat/vehicle BGM overrides, timer}`,
 `screen: {tint, pictures, weather}`, `audio: {bgm, bgs, saved bgm}`, `interpreters: [spec 03 serialized state for
 the map autorun/parallel processes and the current event, with list hashes]`, `rng: {stream name → {state, inc}}`

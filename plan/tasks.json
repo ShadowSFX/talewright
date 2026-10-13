@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "3.5.3 Review fixes: core layering, save robustness, determinism (specs 01, 03, 05, 06)",
+  "last_completed": "3.5.4 Review fixes: online page authority, localization keys, inconsistencies",
   "tasks": [
     {
       "id": "0",
@@ -722,7 +722,7 @@
         "plan/DECISIONS.md"
       ],
       "status": "done",
-      "commit": "pending",
+      "commit": "67d53aa4ac",
       "notes": ""
     },
     {
@@ -746,8 +746,8 @@
         "plan/specs/06_save_format.md",
         "plan/specs/07_mmo_protocol_topology.md"
       ],
-      "status": "pending",
-      "commit": "",
+      "status": "done",
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -2234,7 +2234,7 @@
     {
       "id": "9.5",
       "title": "Slice commands",
-      "description": "~20 commands (text, choices, switches, variables, self switch, branch, loop, label/jump, common event, transfer, gold, items, recover, battle, wait, move route basic, erase, menu/save, game over, title, script).",
+      "description": "~20 commands (text, choices, switches, variables, self switch, branch, loop, label/jump, common event, transfer, gold, items, recover, battle, wait, move route basic, erase, menu/save, game over, title, script). Text-bearing commands get a stable text_key on creation (D-026).",
       "parent": "9",
       "dependencies": [
         "9.4"
@@ -2463,7 +2463,7 @@
     {
       "id": "10.2",
       "title": "Message system",
-      "description": "Control-code parser, typewriter, waits, face, name box, choices, number input, gold window, translation lookup.",
+      "description": "Control-code parser, typewriter, waits, face, name box, choices, number input, gold window, translation lookup. Text is looked up by key (D-026) with the source text as fallback.",
       "parent": "10",
       "dependencies": [
         "10.1"
@@ -3034,7 +3034,7 @@
     {
       "id": "19",
       "title": "Server-side events and shops",
-      "description": "Interpreter on the zone server with network presentation port, NPC dialogs (timeouts, disconnect cleanup), server shops with two-phase transactions, variable scopes persistence. Subtasks are defined when the epic starts (rule: split before starting).",
+      "description": "Interpreter on the zone server with network presentation port, NPC dialogs (timeouts, disconnect cleanup), server shops with two-phase transactions, variable scopes persistence. Subtasks are defined when the epic starts (rule: split before starting). Scopes and per-player/shared events per D-025; dialogs carry keys + args (D-026).",
       "parent": null,
       "dependencies": [
         "18"
@@ -3324,7 +3324,7 @@
     {
       "id": "35",
       "title": "Localization",
-      "description": "String extraction from DB/messages (EditorTranslationParserPlugin), CSV/PO, runtime locale switch, CJK font fallback. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "description": "String extraction from DB/messages (EditorTranslationParserPlugin), CSV/PO, runtime locale switch, CJK font fallback. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts. Keys per D-026 (<Kind>_<id>.<field>, command text_key).",
       "parent": null,
       "dependencies": [
         "21"

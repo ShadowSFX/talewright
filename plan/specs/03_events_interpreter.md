@@ -77,15 +77,26 @@ Requests the interpreter needs from a presenter, all asynchronous with a request
 `show_balloon`, `open_scene(kind, params)` (battle/shop/name/menu/save/game over/title).
 - **Local port** (`JRPGLocalPort`, runtime): renders through the UI kit, replies when the player confirms.
 - **Network port** (MMO, epic 19): serializes requests to the client, suspends the server interpreter until the
-  reply arrives (rAthena dialog model, rathena_techniques D3), with timeouts (60 s menus/next, 180 s input; D4),
-  validation of replies (choice index in range, number within digits), and disconnect cleanup (interpreter
-  aborted, pending state discarded; D4).
+  reply arrives (rAthena dialog model, rathena_techniques D3), with idle timeouts (technique D4; Talewright values,
+  fields of the server config: 120 s for messages and choices, 300 s for text/number input, long enough for slow
+  readers on phones while still freeing abandoned dialogs), validation of replies (choice index in range, number
+  within digits), and disconnect cleanup (interpreter aborted, pending state discarded). Text crosses the network
+  as localization keys plus arguments (D-026), never as server-rendered strings.
 - `CLIENT`-authority commands on the server become presentation requests; `SERVER`-authority commands never run on
   online clients.
 
 ## Page selection and triggers (single source of truth in core)
 - Highest-numbered page whose conditions all hold is active (RM-EVT rule); refresh when switches/variables/self
-  switches/items/party change (dirty flag, refresh at most once per frame).
+  switches/items/party change (dirty flag, refresh at most once per step).
+- **Online (D-025):** every switch and variable has a scope (character, account, world, instance, temp) and every
+  self switch is per character unless its event is marked `shared`. An event whose page conditions read only
+  character-scoped data is a **per-player** event: each client evaluates its active page (graphic, priority) from
+  its own character state, and the zone evaluates the page for a player only when that player triggers it,
+  validating trigger type, distance and facing. Per-player events may only use fixed movement (their position must
+  be the same for everyone). An event whose conditions read only world/instance-scoped data is a **shared** event:
+  the zone evaluates it once and replicates page, graphic and movement through the area of interest. The editor
+  flags events that mix scopes. Cost: shared events are evaluated once per zone; per-player events cost the server
+  one evaluation per trigger, never players × events per refresh.
 - Autorun blocks player movement and other autoruns; parallel processes run each frame; an autorun that never
   ends is detected (no wait for N frames + no state change) and reported once (final-sweep edge case).
 

@@ -101,7 +101,7 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 
 ## D-007 — Events, commands and the interpreter
 - **Choice:** typed command Resources in a tree (branches own child lists), gated by a storage benchmark
-  (task 3.3/5.x: 10k commands load < ~30 ms and re-save byte-identically, otherwise packed storage behind
+  (task 9.2.1: 10k commands load < ~30 ms and re-save byte-identically, otherwise packed storage behind
   the same API). `JRPGInterpreter`: frame stack, waits, labels resolved to tree paths, instruction/jump
   budgets, serializable state (event/page/index-path) so saving mid-event works. Each command declares its
   **authority** (server/client/both). A **presentation port** abstracts messages, choices, number input,
@@ -332,3 +332,34 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Reversal:** none needed; the spikes are cheap insurance.
 - **Options:** build the MMO stack directly; prototype first with go/no-go gates.
 - **Why:** cheap measurements before large investment; failures change the design early.
+
+## D-025 — Online authority for event pages and variable scopes
+- **Context:** single-player page conditions read one global state; online, switches, variables and self switches
+  belong to someone, and evaluating every event for every player on every change would cost players × events
+  (epic 3 review, finding 6). rAthena maps variable scopes to storage by prefix (rathena_techniques D5).
+- **Options:** evaluate all pages on the server per player; make all event state world-global; scope each kind of
+  data and split events into per-player and shared.
+- **Choice:** every switch and variable declares a scope in System data — `character` (default), `account`,
+  `world`, `instance` (one map instance, not persisted) or `temp` (per character, not persisted); self switches are
+  per character unless the event is marked `shared`. Events whose conditions read only character-scoped data are
+  per-player: clients evaluate their own active page, the zone evaluates a page only when a player triggers it and
+  validates the trigger; such events may only use fixed movement. Events reading only world/instance data are
+  shared: evaluated once per zone and replicated. The editor flags mixed events. Details: spec 03, spec 07.
+- **Why:** quest-style NPCs need per-player state; crowds and doors need shared state; per-trigger evaluation keeps
+  server cost proportional to player actions.
+- **Reversal:** scopes are data; a project can mark everything `world` to get one shared state, at the cost of
+  per-player quests.
+
+## D-026 — Localization keys
+- **Context:** database names and event text were plain strings, so source text could not be a stable translation
+  key, servers would send rendered text, and saves stored resolved names (epic 3 review, finding 12). Godot provides
+  `TranslationServer` and `EditorTranslationParserPlugin` (`editor/translations/editor_translation_parser.h:37`).
+- **Options:** source text as key (Godot's default for UI); generated keys per text field; external string tables.
+- **Choice:** stable keys. Database fields use `<Kind>_<id>.<field>` (stable because ID = slot, D-005). Every
+  text-bearing event command gets a `text_key` when created — a short random id scoped by owner (`map3.ev7.k9f2c1`,
+  `ce12.k…`, `troop4.p2.k…`) that survives text edits and command moves. The source-language text stays in the
+  resource as the fallback; a Talewright `EditorTranslationParserPlugin` exports keys and source text to POT/CSV.
+  Online, messages carry keys plus arguments for control codes and clients expand and translate them. Saves store
+  only name overrides set by events.
+- **Why:** translations survive edits; one content pack serves every language; servers stay language-neutral.
+- **Reversal:** keys are data; a project could map them to source text at export time.

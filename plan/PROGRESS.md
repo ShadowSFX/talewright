@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 17:18 -0600
+- **Updated:** 2026-10-13 17:20 -0600
 - **Current task:** none
-- **Last completed:** 3.5.3 Review fixes: core layering, save robustness, determinism (specs 01, 03, 05, 06)
-- **Next task:** 3.5.4 Review fixes: online page authority, localization keys, inconsistencies
-- **Done leaf tasks:** 43
+- **Last completed:** 3.5.4 Review fixes: online page authority, localization keys, inconsistencies
+- **Next task:** 3.5.5 Review fixes: task tree order, slice gaps, criteria, core_diff_check; review record
+- **Done leaf tasks:** 44
 <!-- status:end -->
 
 ## Log
@@ -102,4 +102,7 @@
 | 2026-10-13 17:15 -0600 | 3.5.3 | started: Review fixes: core layering, save robustness, determinism (specs 01, 03, 05, 06) (containers: 3.5 pending->in_progress, 3 pending->in_progress) |  |
 | 2026-10-13 17:17 -0600 | - | imported 0 new / 5 updated tasks | |
 | 2026-10-13 17:17 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-13 17:18 -0600 | 3.5.3 | done: Review fixes: core layering, save robustness, determinism (specs 01, 03, 05, 06) — Core layering: assets as uid:// strings in core, JRPGMapData (built-in sub-resource of the map scene: per-map undo via editor_undo_redo_manager.cpp:81-94, node-free read via SceneState) with events as JRPGEventData data + internal JRPGEvent nodes + JRPGEventAnchor, JRPGMapList as id source with duplicate-map-id reassignment, JRPGEventState; save robustness: per-list content hashes (Merkle), map revisions, resume/drop rules with warning, duplicate event_id reassignment; spec 06: plain header, zstd raw size (compression.cpp:294), in-memory AES-CFB via CryptoCore, .tmp/.bak sequence for non-atomic Windows rename; fixed 60 Hz JRPGSimClock and RNG streams saved; D-006 amended; tasks 5.5, 8.1, 9.1, 9.3, 13.1 aligned (containers: 3.5 in_progress->pending, 3 in_progress->pending) | pending |
+| 2026-10-13 17:18 -0600 | 3.5.3 | done: Review fixes: core layering, save robustness, determinism (specs 01, 03, 05, 06) — Core layering: assets as uid:// strings in core, JRPGMapData (built-in sub-resource of the map scene: per-map undo via editor_undo_redo_manager.cpp:81-94, node-free read via SceneState) with events as JRPGEventData data + internal JRPGEvent nodes + JRPGEventAnchor, JRPGMapList as id source with duplicate-map-id reassignment, JRPGEventState; save robustness: per-list content hashes (Merkle), map revisions, resume/drop rules with warning, duplicate event_id reassignment; spec 06: plain header, zstd raw size (compression.cpp:294), in-memory AES-CFB via CryptoCore, .tmp/.bak sequence for non-atomic Windows rename; fixed 60 Hz JRPGSimClock and RNG streams saved; D-006 amended; tasks 5.5, 8.1, 9.1, 9.3, 13.1 aligned (containers: 3.5 in_progress->pending, 3 in_progress->pending) | 67d53aa4ac |
+| 2026-10-13 17:18 -0600 | 3.5.4 | started: Review fixes: online page authority, localization keys, inconsistencies (containers: 3.5 pending->in_progress, 3 pending->in_progress) |  |
+| 2026-10-13 17:19 -0600 | - | imported 0 new / 4 updated tasks | |
+| 2026-10-13 17:20 -0600 | 3.5.4 | done: Review fixes: online page authority, localization keys, inconsistencies — D-025 online page authority (switch/variable scopes character/account/world/instance/temp, per-character self switches unless shared, per-player events evaluated by clients and validated per trigger with fixed movement, shared events evaluated once per zone; editor flags mixed scopes); D-026 localization keys (<Kind>_<id>.<field>, random per-command text_key, keys+args over the network, saves store only name overrides, EditorTranslationParserPlugin export); game_id moved to JRPGSystemData; D-007 benchmark -> 9.2.1; spec 07 own direction order (clockwise from north), own path limits 24/64 with reasons, step-based movement messages, content hash in handshake; spec 03 dialog timeouts 120/300 s instead of rAthena's 60/180; tasks 9.5, 10.2, 19, 35 linked (containers: 3.5 in_progress->pending, 3 in_progress->pending) | pending |

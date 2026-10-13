@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 140, in_progress: 0, done: 48, blocked: 0, deferred: 3 (of 191)
+**Totals:** pending: 139, in_progress: 0, done: 49, blocked: 0, deferred: 3 (of 191)
 
 ## [x] 0 Bootstrap and task system
 
@@ -56,8 +56,8 @@ Decision log, upstream patch ledger, design specs, refined task tree.
 - [ ] **3.5** Epic review: decisions and specs (P1) _(deps: 3.4)_
   - [x] **3.5.1** Review fixes: battle math and formulas (spec 04) (P1) _(commit: 59b450e196)_
   - [x] **3.5.2** Review fixes: tiles, autotiles, passage bits, character sheets (spec 05) (P1) _(deps: 3.5.1; commit: 8eb312e55e)_
-  - [x] **3.5.3** Review fixes: core layering, save robustness, determinism (specs 01, 03, 05, 06) (P1) _(deps: 3.5.2; commit: pending)_
-  - [ ] **3.5.4** Review fixes: online page authority, localization keys, inconsistencies (P1) _(deps: 3.5.3)_
+  - [x] **3.5.3** Review fixes: core layering, save robustness, determinism (specs 01, 03, 05, 06) (P1) _(deps: 3.5.2; commit: 67d53aa4ac)_
+  - [x] **3.5.4** Review fixes: online page authority, localization keys, inconsistencies (P1) _(deps: 3.5.3; commit: pending)_
   - [ ] **3.5.5** Review fixes: task tree order, slice gaps, criteria, core_diff_check; review record (P1) _(deps: 3.5.4)_
 
 ## [x] 4 Claude bridge (MCP)
@@ -246,7 +246,7 @@ AoI 8x8 block grid with strip updates + hysteresis, authoritative movement (tile
 
 ## [ ] 19 Server-side events and shops
 
-Interpreter on the zone server with network presentation port, NPC dialogs (timeouts, disconnect cleanup), server shops with two-phase transactions, variable scopes persistence. Subtasks are defined when the epic starts (rule: split before starting).
+Interpreter on the zone server with network presentation port, NPC dialogs (timeouts, disconnect cleanup), server shops with two-phase transactions, variable scopes persistence. Subtasks are defined when the epic starts (rule: split before starting). Scopes and per-player/shared events per D-025; dialogs carry keys + args (D-026).
 
 
 ## [ ] 20 Online battles
@@ -326,7 +326,7 @@ Addon-based plugins with ordered enable list, parameters, plugin commands. Each 
 
 ## [ ] 35 Localization
 
-String extraction from DB/messages (EditorTranslationParserPlugin), CSV/PO, runtime locale switch, CJK font fallback. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.
+String extraction from DB/messages (EditorTranslationParserPlugin), CSV/PO, runtime locale switch, CJK font fallback. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts. Keys per D-026 (<Kind>_<id>.<field>, command text_key).
 
 
 ## [ ] 36 Deployment
