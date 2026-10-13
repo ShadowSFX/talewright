@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 117, in_progress: 0, done: 25, blocked: 0, deferred: 3 (of 145)
+**Totals:** pending: 116, in_progress: 0, done: 26, blocked: 0, deferred: 3 (of 145)
 
 ## [x] 0 Bootstrap and task system
 
@@ -39,10 +39,10 @@ Sourced RPG Maker inventory, Godot current state from the clone, MMO feasibility
   - [x] **2.1.6** Events: system, pages, conditions, triggers, priority, move routes, all commands (P1) _(commit: 0aec90fe28)_
   - [x] **2.1.7** Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug (P1) _(commit: ca16b51e19)_
   - [x] **2.1.8** Other versions' notable features (P2) _(commit: 3f1bff4314)_
-  - [x] **2.1.9** Inventory merge and TOC gate (P1) _(deps: 2.1.1, 2.1.2, 2.1.3, 2.1.4, 2.1.5, 2.1.6, 2.1.7, 2.1.8; commit: pending)_
+  - [x] **2.1.9** Inventory merge and TOC gate (P1) _(deps: 2.1.1, 2.1.2, 2.1.3, 2.1.4, 2.1.5, 2.1.6, 2.1.7, 2.1.8; commit: 8daa29608b)_
 - [x] **2.2** Godot current state (from the clone) (P1) _(deps: 0.4; commit: 23d0dcdf80)_
 - [x] **2.3** MMO feasibility and rAthena techniques (P1) _(deps: 0.4; commit: 0a33c6e7da)_
-- [ ] **2.4** Gap map (P1) _(deps: 2.1, 2.2, 2.3)_
+- [x] **2.4** Gap map (P1) _(deps: 2.1, 2.2, 2.3; commit: pending)_
 - [ ] **2.5** Epic review: research (P1) _(deps: 2.4)_
 
 ## [ ] 3 Architecture decisions and specs (Phases 2-3)

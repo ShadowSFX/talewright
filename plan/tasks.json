@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "2.1.9 Inventory merge and TOC gate",
+  "last_completed": "2.4 Gap map",
   "tasks": [
     {
       "id": "0",
@@ -460,7 +460,7 @@
       ],
       "test_strategy": "Script output saved to plan/evidence/research/toc_gate.txt.",
       "files": [],
-      "commit": "pending",
+      "commit": "8daa29608b",
       "notes": ""
     },
     {
@@ -509,7 +509,7 @@
         "2.2",
         "2.3"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Row count == inventory item count + MMO rows",
@@ -517,7 +517,7 @@
       ],
       "test_strategy": "Script compares IDs between inventory and gap map.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
