@@ -44,8 +44,14 @@ namespace ClaudeBridgeTools {
 Variant variant_to_json(const Variant &p_value, int p_depth = 0);
 // Converts a JSON argument into a value for a property of type p_target (accepts Godot literal strings).
 Variant json_to_value(const Variant &p_json, Variant::Type p_target, bool &r_ok);
+// True when p_text only contains numbers, punctuation and math/packed-array constructor names (safe for str_to_var).
+bool is_safe_literal(const String &p_text);
+// Loads a resource given as a res:// path for an Object property, checking the property's resource type hint.
+Variant json_to_resource(const Variant &p_json, const String &p_type_hint, bool &r_ok);
 // res:// path validation: inside the project, normalized, no traversal. Returns an empty string when invalid.
 String validate_res_path(const String &p_path);
+// Length of p_data without a trailing incomplete UTF-8 sequence (a read cut at a byte limit may split a character).
+int utf8_complete_length(const uint8_t *p_data, int p_size);
 
 // Downscales p_image to at most p_max_width, saves it as PNG under <project>/.godot/claude_bridge/screenshots/
 // (pruning old files) and completes p_call with {path, width, height} plus the PNG when p_include_image is true.

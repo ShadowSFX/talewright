@@ -1,0 +1,49 @@
+Task 4.13 re-verification after the epic 4 review fixes (editor built 2026-10-13 16:50, dev_mode=yes, 0 warnings).
+
+== bridge_stress.py --project talewright/samples/bridge_probe --calls 500
+[PASS] latency over 500 calls: median 6.9 ms, p95 8.1 ms, max 10.4 ms
+[PASS] concurrency 8x50 in 0.4s, errors: []
+[PASS] call while a slow client stalls: 6.1 ms
+[PASS] slow client receives 408/close after the request timeout
+[PASS] call while another client does not read a 3 MB response: 42.1 ms
+[PASS] stalled reader dropped by the server's write timeout (received 6291915 bytes before close)
+[PASS] connection flood: 8 of 24 extra sockets rejected with 503; service resumed
+ALL PASS
+
+== curl against http://127.0.0.1:47700/mcp
+no token                -> 401 Unauthorized, WWW-Authenticate: Bearer, Connection: close
+Origin: evil.example    -> 403 Forbidden, Connection: close
+Host: evil.example      -> 403 Forbidden, Connection: close
+"id": null              -> 400, JSON-RPC -32600 "Request id must not be null."
+client response (result)-> 202 Accepted
+body with byte 0xFF     -> 400 "Body is not valid UTF-8.", Connection: close
+POST /other, no token  -> 401 (auth runs before routing)
+POST /other, token     -> 404;  GET /mcp, token -> 405 with Allow: POST;  MCP-Protocol-Version: x;y -> 400
+401 responses carry WWW-Authenticate: Bearer and Content-Type: application/json (final binary)
+
+== bridge.py with a crafted connection.json {"url": "http://evil.example:80/mcp"}
+error: refusing non-loopback bridge URL 'http://evil.example:80/mcp'   (exit 2)
+
+== game tools (bridge_probe running)
+game_node_get instance=1                    -> "No connected game instance 1."
+game_input ui_right hold_frames=20 + wait   -> Square position 300 -> 320 (screenshot 4.13-game-after-input.png)
+game_node_set value="Object(Node)"          -> refused: "Cannot convert the value; use a Godot literal string ..."
+game_wait frames=1200, stop_project after 2s -> "The game stopped before replying." (immediately, exit 1)
+
+== editor tools scope (final binary)
+editor_node_set path=/root            -> "Node not found in the edited scene ..."
+editor_node_get path=../..            -> "Node not found in the edited scene ..."
+editor_select paths=["/root"]         -> "Node not found: /root"
+editor_node_set material=null         -> ok (undoable); material=res://missing.tres -> "Expected null or the res:// path of an existing resource of type CanvasItemMaterial,ShaderMaterial."
+editor_node_set position="Object(GDScript)" -> refused
+stress re-run on the final binary (300 calls): median 6.9 ms, p95 8.1 ms; all 7 checks PASS
+
+== project_read_file truncation (found during re-verification)
+"€€€" max_bytes=4 -> text "€" (cut character dropped, not reported as binary)
+"€€€" max_bytes=2 -> text ""; empty file -> text ""; probe.gd max_bytes=40 -> text, truncated=true
+
+== tests
+--test (full, final binary): 1402 cases passed, 0 failed, 3 skipped (419970 assertions)
+--test-case="*ClaudeBridge*": 22 cases, 207 assertions, all passed
+clang-format 21.1.7 --dry-run --Werror modules/claude_bridge: clean
+smoke_samples.py (final binary): plain_2d / plain_3d run + export: ALL PASS

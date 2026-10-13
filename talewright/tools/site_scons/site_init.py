@@ -13,6 +13,8 @@ if os.name == "nt":
     from SCons.Tool.MSCommon import vswhere_register_executable
 
     # SCons defines __file__ when importing site_init.py (SCons/Script/Main.py, _load_site_scons_dir).
-    _shim = os.environ.get("TALEWRIGHT_VSWHERE_SHIM") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "vswhere_vc.cmd")
+    _shim = os.environ.get("TALEWRIGHT_VSWHERE_SHIM") or os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "vswhere_vc.cmd"
+    )
     if os.path.isfile(_shim):
         vswhere_register_executable(_shim, priority="high", freeze=True)

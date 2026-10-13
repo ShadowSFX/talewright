@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 138, in_progress: 2, done: 43, blocked: 0, deferred: 3 (of 186)
+**Totals:** pending: 136, in_progress: 2, done: 45, blocked: 0, deferred: 3 (of 186)
 
 ## [x] 0 Bootstrap and task system
 
@@ -45,17 +45,17 @@ Sourced RPG Maker inventory, Godot current state from the clone, MMO feasibility
 - [x] **2.4** Gap map (P1) _(deps: 2.1, 2.2, 2.3; commit: 89239e392b)_
 - [x] **2.5** Epic review: research (P1) _(deps: 2.4; commit: 6eb6a76de9)_
 
-## [ ] 3 Architecture decisions and specs (Phases 2-3)
+## [~] 3 Architecture decisions and specs (Phases 2-3)
 
 Decision log, upstream patch ledger, design specs, refined task tree.
 
 - [x] **3.1** DECISIONS.md (P1) _(commit: 7d0964b4de)_
 - [x] **3.2** UPSTREAM_PATCHES.md ledger (P2) _(commit: 81bb919732)_
 - [x] **3.3** Specs (P1) _(deps: 3.1; commit: e5dbc43068)_
-- [x] **3.4** Refine task tree (P1) _(deps: 3.3; commit: pending)_
-- [ ] **3.5** Epic review: decisions and specs (P1) _(deps: 3.4)_
+- [x] **3.4** Refine task tree (P1) _(deps: 3.3; commit: 1bd824ac35)_
+- [~] **3.5** Epic review: decisions and specs (P1) _(deps: 3.4)_
 
-## [~] 4 Claude bridge (MCP)
+## [x] 4 Claude bridge (MCP)
 
 Editor-only C++ module: MCP Streamable HTTP server on 127.0.0.1 with token; editor + game inspection and driving; CLI.
 
@@ -71,7 +71,7 @@ Editor-only C++ module: MCP Streamable HTTP server on 127.0.0.1 with token; edit
 - [x] **4.10** Game-side capture (P1) _(deps: 4.9; commit: fea49bd11f)_
 - [x] **4.11** Hardening (P1) _(deps: 4.10; commit: 9c9ec40d5a)_
 - [x] **4.12** Docs, claude mcp add, template absence (P1) _(deps: 4.11; commit: 5302ccaedc)_
-- [~] **4.13** Epic review: Claude bridge (P1) _(deps: 4.12)_
+- [x] **4.13** Epic review: Claude bridge (P1) _(deps: 4.12; commit: pending)_
 
 ## [ ] 5 JRPG module foundation and data core
 

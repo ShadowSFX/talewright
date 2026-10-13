@@ -13,7 +13,15 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-OWNED = ("modules/jrpg/", "modules/mmo/", "modules/claude_bridge/", "talewright/", "plan/", "CLAUDE.md", "TALEWRIGHT.md")
+OWNED = (
+    "modules/jrpg/",
+    "modules/mmo/",
+    "modules/claude_bridge/",
+    "talewright/",
+    "plan/",
+    "CLAUDE.md",
+    "TALEWRIGHT.md",
+)
 
 
 def main() -> int:

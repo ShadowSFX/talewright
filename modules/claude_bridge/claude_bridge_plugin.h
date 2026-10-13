@@ -29,6 +29,7 @@ public:
 	static constexpr int PORT_ATTEMPTS = 10;
 	static constexpr const char *SETTING_ENABLED = "claude_bridge/enabled";
 	static constexpr const char *SETTING_PORT = "claude_bridge/port";
+	static constexpr const char *SETTING_PORT_FALLBACK = "claude_bridge/port_fallback";
 	static constexpr const char *MCP_PATH = "/mcp";
 
 private:
@@ -36,6 +37,7 @@ private:
 	public:
 		ClaudeBridgePlugin *plugin = nullptr;
 		virtual void handle_http_request(uint64_t p_connection_id, const ClaudeBridgeHTTPRequest &p_request) override;
+		virtual int precheck_http_request(const ClaudeBridgeHTTPRequest &p_request, ClaudeBridgeHTTPServer::Headers &r_headers, String &r_body) override;
 	};
 
 	struct PendingCall {
@@ -46,6 +48,9 @@ private:
 
 	bool enabled = false;
 	int configured_port = DEFAULT_PORT;
+	bool port_fallback = false;
+	bool restart_requested = false;
+	void _apply_settings();
 	ClaudeBridgeHTTPServer server;
 	RequestHandler request_handler;
 	ClaudeBridgeMCP mcp;
@@ -83,12 +88,14 @@ private:
 		String command;
 		int max_width = 1280;
 		bool include_image = true;
+		int session_index = -1; // Debugger session the request was sent to; replies from others are ignored.
+		ObjectID debugger_id;
 	};
 	HashMap<int, GameRequest> game_requests;
 	int next_game_request_id = 1000000; // Far from GameView's screenshot ids (editor/run/game_view_plugin.h:71).
 	Ref<ClaudeBridgeDebuggerPlugin> debugger_plugin;
 
-	void _send_to_game(const String &p_command, const Array &p_args, const Ref<ClaudeBridgeToolCall> &p_call, int p_max_width = 1280, bool p_include_image = true);
+	void _send_to_game(const String &p_command, const Array &p_args, const Ref<ClaudeBridgeToolCall> &p_call, const Dictionary &p_tool_args, int p_max_width = 1280, bool p_include_image = true);
 	static void _tool_game_screenshot(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata);
 	static void _tool_game_tree(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata);
 	static void _tool_game_node_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata);
@@ -100,7 +107,7 @@ private:
 	void _register_game_tools();
 
 public:
-	void on_game_reply(const Array &p_data);
+	void on_game_reply(const Array &p_data, int p_session);
 
 private:
 	void _on_frame_post_draw();
@@ -117,6 +124,7 @@ private:
 	void _stop_server();
 	void _write_connection_file();
 	void _remove_connection_file();
+	int _precheck(const ClaudeBridgeHTTPRequest &p_request, ClaudeBridgeHTTPServer::Headers &r_headers, String &r_body);
 	void _handle_request(uint64_t p_connection_id, const ClaudeBridgeHTTPRequest &p_request);
 	void _respond_json(uint64_t p_connection_id, int p_status, const String &p_json, const ClaudeBridgeHTTPServer::Headers &p_extra = ClaudeBridgeHTTPServer::Headers());
 

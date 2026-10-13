@@ -2,8 +2,9 @@
 """Command-line client for the Talewright Claude bridge (MCP over Streamable HTTP).
 
 The editor writes <project>/.godot/claude_bridge/connection.json (url, port, token_file, pid). This client
-reads it (or --url/--token-file), sends JSON-RPC requests, prints results and saves image results as PNG
-files so they can be opened (e.g. by Claude Code's Read tool).
+takes the URL from it (loopback only) or from --url, and the token from the per-user editor config path
+(or --token-file, e.g. for self-contained editors); it sends JSON-RPC requests, prints results and saves
+image results as PNG files so they can be opened (e.g. by Claude Code's Read tool).
 
 Usage (from the repository root):
     python talewright/tools/bridge.py [--project DIR] status
@@ -54,15 +55,36 @@ def find_connection(project: str | None) -> Path:
     raise BridgeError("connection.json not found; is the editor running with the bridge? (use --project DIR)")
 
 
+LOOPBACK_PREFIXES = ("http://127.0.0.1:", "http://localhost:", "http://[::1]:")
+
+
+def default_token_path() -> Path:
+    """The editor writes the token to <editor config dir>/claude_bridge/token (claude_bridge_plugin.cpp)."""
+    if os.name == "nt":
+        return Path(os.environ.get("APPDATA", "")) / "Godot" / "claude_bridge" / "token"
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / "Godot" / "claude_bridge" / "token"
+    return Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "godot" / "claude_bridge" / "token"
+
+
 def load_endpoint(args) -> tuple:
+    # A connection.json inside a project folder could be crafted by whoever shipped the project: only loopback URLs
+    # are accepted and the token is always read from the per-user editor config path (or an explicit --token-file).
+    token_file = Path(args.token_file) if args.token_file else default_token_path()
     if args.url:
-        token_file = Path(args.token_file) if args.token_file else None
-        if not token_file:
-            raise BridgeError("--url requires --token-file")
-        return args.url, token_file.read_text(encoding="utf-8").strip()
-    info = json.loads(find_connection(args.project).read_text(encoding="utf-8"))
-    token = Path(info["token_file"]).read_text(encoding="utf-8").strip()
-    return info["url"], token
+        url = args.url
+    else:
+        info = json.loads(find_connection(args.project).read_text(encoding="utf-8"))
+        url = str(info.get("url", ""))
+    if not url.startswith(LOOPBACK_PREFIXES):
+        raise BridgeError(f"refusing non-loopback bridge URL {url!r}")
+    if not token_file.is_file():
+        raise BridgeError(f"token file not found: {token_file} (start the editor once, or pass --token-file)")
+    return url, token_file.read_text(encoding="utf-8").strip()
+
+
+# Never route bridge traffic (which carries the token) through HTTP proxies from the environment or registry.
+_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
 _next_id = 1
@@ -87,7 +109,7 @@ def rpc(url: str, token: str, method: str, params: dict | None = None, timeout: 
         },
     )
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with _OPENER.open(req, timeout=timeout) as resp:
             payload = resp.read().decode("utf-8")
     except urllib.error.HTTPError as e:
         raise BridgeError(f"HTTP {e.code}: {e.read().decode('utf-8', 'replace')}") from e
@@ -164,12 +186,16 @@ def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     # Global options are accepted before or after the subcommand.
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--project", default=argparse.SUPPRESS, help="project dir with .godot/claude_bridge/connection.json")
+    common.add_argument(
+        "--project", default=argparse.SUPPRESS, help="project dir with .godot/claude_bridge/connection.json"
+    )
     common.add_argument("--url", default=argparse.SUPPRESS)
     common.add_argument("--token-file", default=argparse.SUPPRESS)
     common.add_argument("--out-dir", default=argparse.SUPPRESS)
     common.add_argument("--timeout", type=float, default=argparse.SUPPRESS)
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, parents=[common])
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, parents=[common]
+    )
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("status", parents=[common])
     sub.add_parser("list", parents=[common])
@@ -184,7 +210,13 @@ def main() -> int:
     la.add_argument("--wait", type=float, default=120.0)
     sub.add_parser("wait", parents=[common])
     args = ap.parse_args()
-    for name, default in (("project", None), ("url", None), ("token_file", None), ("out_dir", str(DEFAULT_OUT)), ("timeout", 60.0)):
+    for name, default in (
+        ("project", None),
+        ("url", None),
+        ("token_file", None),
+        ("out_dir", str(DEFAULT_OUT)),
+        ("timeout", 60.0),
+    ):
         if not hasattr(args, name):
             setattr(args, name, default)
 
@@ -195,7 +227,11 @@ def main() -> int:
             return cmd_wait(args)
         url, token = load_endpoint(args)
         if args.cmd == "status":
-            return print_result(rpc(url, token, "tools/call", {"name": "bridge_status", "arguments": {}}, args.timeout), Path(args.out_dir), "bridge_status")
+            return print_result(
+                rpc(url, token, "tools/call", {"name": "bridge_status", "arguments": {}}, args.timeout),
+                Path(args.out_dir),
+                "bridge_status",
+            )
         if args.cmd == "list":
             result = rpc(url, token, "tools/list", {}, args.timeout)
             for t in result.get("tools", []):

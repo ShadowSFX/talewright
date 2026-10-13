@@ -7,7 +7,8 @@ Checks:
   2. concurrency: 8 threads x 50 calls, all must succeed;
   3. slow client: a connection that sends half a request and stalls must not delay other clients and must get
      408 / be closed after the request timeout;
-  4. stalled reader: a client that never reads its response must not block other clients;
+  4. stalled reader: a client that never reads a ~3 MB response must not block other clients and must be dropped
+     after the server's write timeout;
   5. connection flood: more than max_connections sockets -> extra ones get 503, normal service resumes.
 Exit code 1 if any check fails.
 """
@@ -35,8 +36,15 @@ def make_conn(url: str) -> http.client.HTTPConnection:
 
 
 def call(conn: http.client.HTTPConnection, token: str, rid: int) -> dict:
-    body = json.dumps({"jsonrpc": "2.0", "id": rid, "method": "tools/call", "params": {"name": "bridge_status", "arguments": {}}})
-    conn.request("POST", "/mcp", body=body, headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"})
+    body = json.dumps({
+        "jsonrpc": "2.0",
+        "id": rid,
+        "method": "tools/call",
+        "params": {"name": "bridge_status", "arguments": {}},
+    })
+    conn.request(
+        "POST", "/mcp", body=body, headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
+    )
     resp = conn.getresponse()
     data = resp.read()
     if resp.status != 200:
@@ -66,7 +74,9 @@ def main() -> int:
         lat.append((time.perf_counter() - t) * 1000)
     conn.close()
     med, p95 = statistics.median(lat), sorted(lat)[int(len(lat) * 0.95) - 1]
-    print(f"[{'PASS' if med < 50 else 'FAIL'}] latency over {args.calls} calls: median {med:.1f} ms, p95 {p95:.1f} ms, max {max(lat):.1f} ms")
+    print(
+        f"[{'PASS' if med < 50 else 'FAIL'}] latency over {args.calls} calls: median {med:.1f} ms, p95 {p95:.1f} ms, max {max(lat):.1f} ms"
+    )
     ok &= med < 50
 
     # 2. Concurrency.
@@ -87,7 +97,9 @@ def main() -> int:
         th.start()
     for th in threads:
         th.join()
-    print(f"[{'PASS' if not errors else 'FAIL'}] concurrency 8x50 in {time.perf_counter() - t0:.1f}s, errors: {errors[:3]}")
+    print(
+        f"[{'PASS' if not errors else 'FAIL'}] concurrency 8x50 in {time.perf_counter() - t0:.1f}s, errors: {errors[:3]}"
+    )
     ok &= not errors
 
     # 3. Slow client (half a request) must not delay others.
@@ -110,22 +122,57 @@ def main() -> int:
     ok &= timed_out
     slow.close()
 
-    # 4. Stalled reader: send a full request but never read the response.
+    # 4. Stalled reader: request a ~3 MB response (larger than the socket buffers) and never read it.
+    big = Path(args.project) / ".godot" / "claude_bridge" / "stress_big.txt"
+    big.write_text("x" * (3 * 1024 * 1024), encoding="ascii")
     stalled = socket.create_connection((host, port))
     stalled.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1024)
-    body = json.dumps({"jsonrpc": "2.0", "id": 9, "method": "tools/list"}).encode()
+    body = json.dumps({
+        "jsonrpc": "2.0",
+        "id": 9,
+        "method": "tools/call",
+        "params": {
+            "name": "project_read_file",
+            "arguments": {"path": "res://.godot/claude_bridge/stress_big.txt", "max_bytes": 4194304},
+        },
+    }).encode()
     stalled.sendall(
-        b"POST /mcp HTTP/1.1\r\nHost: 127.0.0.1:" + str(port).encode() + b"\r\nContent-Type: application/json\r\nAuthorization: Bearer "
-        + token.encode() + b"\r\nContent-Length: " + str(len(body)).encode() + b"\r\n\r\n" + body
+        b"POST /mcp HTTP/1.1\r\nHost: 127.0.0.1:"
+        + str(port).encode()
+        + b"\r\nContent-Type: application/json\r\nAuthorization: Bearer "
+        + token.encode()
+        + b"\r\nContent-Length: "
+        + str(len(body)).encode()
+        + b"\r\n\r\n"
+        + body
     )
     t = time.perf_counter()
     c = make_conn(url)
     call(c, token, 2)
     c.close()
     d = (time.perf_counter() - t) * 1000
-    print(f"[{'PASS' if d < 1000 else 'FAIL'}] call while another client does not read: {d:.1f} ms")
+    print(f"[{'PASS' if d < 1000 else 'FAIL'}] call while another client does not read a 3 MB response: {d:.1f} ms")
     ok &= d < 1000
+    # The server must drop the stalled connection after its write timeout (30 s): drain and expect EOF.
+    stalled.settimeout(60)
+    received, closed = 0, False
+    deadline = time.time() + 60
+    time.sleep(35)
+    try:
+        while time.time() < deadline:
+            chunk = stalled.recv(65536)
+            if not chunk:
+                closed = True
+                break
+            received += len(chunk)
+    except (ConnectionResetError, ConnectionAbortedError):
+        closed = True
+    print(
+        f"[{'PASS' if closed else 'FAIL'}] stalled reader dropped by the server's write timeout (received {received} bytes before close)"
+    )
+    ok &= closed
     stalled.close()
+    big.unlink(missing_ok=True)
 
     # 5. Connection flood.
     socks = []
@@ -147,7 +194,9 @@ def main() -> int:
     c = make_conn(url)
     call(c, token, 3)
     c.close()
-    print(f"[{'PASS' if rejected >= 1 else 'FAIL'}] connection flood: {rejected} of 24 extra sockets rejected with 503; service resumed")
+    print(
+        f"[{'PASS' if rejected >= 1 else 'FAIL'}] connection flood: {rejected} of 24 extra sockets rejected with 503; service resumed"
+    )
     ok &= rejected >= 1
 
     print("ALL PASS" if ok else "FAILURES")

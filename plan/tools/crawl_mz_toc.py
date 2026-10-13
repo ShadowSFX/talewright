@@ -9,6 +9,7 @@ Usage:
     python plan/tools/crawl_mz_toc.py > plan/research/mz_help_toc.md
     python plan/tools/crawl_mz_toc.py --json > toc.json
 """
+from __future__ import annotations
 
 import argparse
 import json

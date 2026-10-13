@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 16:27 -0600
-- **Current task:** 4.13 Epic review: Claude bridge
-- **Last completed:** 3.4 Refine task tree
-- **Next task:** 3.5 Epic review: decisions and specs
-- **Done leaf tasks:** 39
+- **Updated:** 2026-10-13 17:04 -0600
+- **Current task:** 3.5 Epic review: decisions and specs
+- **Last completed:** 4.13 Epic review: Claude bridge
+- **Next task:** none ready (see `tasks.py next`)
+- **Done leaf tasks:** 40
 <!-- status:end -->
 
 ## Log
@@ -89,4 +89,6 @@
 | 2026-10-13 16:26 -0600 | 3.3 | done: Specs — Specs 01-07: module layout, database model, events/interpreter/presentation port/authority (+storage benchmark gate), formulas/RNG/battle math (Talewright-defined numbers per D-022), maps/tiles/autotile template/cell cache/movement, save format, MMO protocol IDL + topology (containers: 3 in_progress->pending) | e5dbc43068 |
 | 2026-10-13 16:27 -0600 | 3.4 | started: Refine task tree (containers: 3 pending->in_progress) |  |
 | 2026-10-13 16:27 -0600 | - | imported 41 new / 0 updated tasks | |
-| 2026-10-13 16:27 -0600 | 3.4 | done: Refine task tree — Task tree refined: 41 subtasks split from slice tasks (5.x-12.x) so each fits one sitting, incl. the command-storage benchmark gate (9.2.1); later epics split when started (tracker enforces) (containers: 3 in_progress->pending) | pending |
+| 2026-10-13 16:27 -0600 | 3.4 | done: Refine task tree — Task tree refined: 41 subtasks split from slice tasks (5.x-12.x) so each fits one sitting, incl. the command-storage benchmark gate (9.2.1); later epics split when started (tracker enforces) (containers: 3 in_progress->pending) | 1bd824ac35 |
+| 2026-10-13 16:27 -0600 | 3.5 | started: Epic review: decisions and specs (containers: 3 pending->in_progress) |  |
+| 2026-10-13 17:04 -0600 | 4.13 | done: Epic review: Claude bridge — Epic 4 review: all 15 findings fixed (literal allow-list + resource-only objects, ASCII header check + silent UTF-8, precheck before body + back-pressure + close on reject, -- before game args, 0600 token + opt-in port fallback, loopback-only/no-proxy CLI, scene-only editor tools, destructive hints, list Content-Length, null ids/client responses/protocol header, game instance + session-checked replies + game-stopped failure, deferred restart, bounded logs/values, no server in cmdline runs + pid-checked file removal); 22 doctests; stress incl. 3 MB stalled reader; record in plan/evidence/reviews/epic_4.md (containers: 4 in_progress->done) | pending |

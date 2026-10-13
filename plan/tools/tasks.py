@@ -249,7 +249,11 @@ def ready(data: dict) -> list:
 
 
 def unsplit_epics(data: dict) -> list:
-    return [t for t in children(data, None) if not children(data, t["id"]) and t["status"] == "pending" and deps_done(data, t)]
+    return [
+        t
+        for t in children(data, None)
+        if not children(data, t["id"]) and t["status"] == "pending" and deps_done(data, t)
+    ]
 
 
 def sync_containers(data: dict) -> list:
@@ -295,11 +299,7 @@ def render(data: dict) -> None:
     counts = {s: 0 for s in STATUSES}
     for t in data["tasks"]:
         counts[t["status"]] += 1
-    lines.append(
-        "**Totals:** "
-        + ", ".join(f"{k}: {v}" for k, v in counts.items())
-        + f" (of {len(data['tasks'])})"
-    )
+    lines.append("**Totals:** " + ", ".join(f"{k}: {v}" for k, v in counts.items()) + f" (of {len(data['tasks'])})")
     lines.append("")
 
     def emit(task: dict, depth: int) -> None:
@@ -318,7 +318,9 @@ def render(data: dict) -> None:
             if task["status"] in ("blocked", "deferred") and task["notes"]:
                 extra.append(task["status"] + ": " + task["notes"].splitlines()[0])
             suffix = f" _({'; '.join(extra)})_" if extra else ""
-            lines.append(f"{indent}- {BOX[task['status']]} **{task['id']}** {task['title']} (P{task['priority']}){suffix}")
+            lines.append(
+                f"{indent}- {BOX[task['status']]} **{task['id']}** {task['title']} (P{task['priority']}){suffix}"
+            )
         for k in children(data, task["id"]):
             emit(k, depth + 1)
         if depth == 0:
@@ -338,22 +340,24 @@ def progress_text(data: dict, log_line: str | None) -> str:
     done = [t for t in data["tasks"] if t["status"] == "done" and not children(data, t["id"])]
     last = data.get("last_completed")
     nxt = ready(data)
-    block = "\n".join(
-        [
-            "<!-- status:begin -->",
-            f"- **Updated:** {now()}",
-            "- **Current task:** "
-            + (", ".join(f"{t['id']} {t['title']}" for t in current) if current else "none"),
-            "- **Last completed:** " + (last if last else "none"),
-            "- **Next task:** " + (f"{nxt[0]['id']} {nxt[0]['title']}" if nxt else "none ready (see `tasks.py next`)"),
-            f"- **Done leaf tasks:** {len(done)}",
-            "<!-- status:end -->",
-        ]
-    )
+    block = "\n".join([
+        "<!-- status:begin -->",
+        f"- **Updated:** {now()}",
+        "- **Current task:** " + (", ".join(f"{t['id']} {t['title']}" for t in current) if current else "none"),
+        "- **Last completed:** " + (last if last else "none"),
+        "- **Next task:** " + (f"{nxt[0]['id']} {nxt[0]['title']}" if nxt else "none ready (see `tasks.py next`)"),
+        f"- **Done leaf tasks:** {len(done)}",
+        "<!-- status:end -->",
+    ])
     if HEADER_RE.search(text):
         text = HEADER_RE.sub(lambda _m: block, text)
     else:
-        text = "# Talewright Progress\n\n" + block + "\n\n## Log\n\n| Time | Task | What | Commit |\n|---|---|---|---|\n" + text
+        text = (
+            "# Talewright Progress\n\n"
+            + block
+            + "\n\n## Log\n\n| Time | Task | What | Commit |\n|---|---|---|---|\n"
+            + text
+        )
     if log_line:
         text = text.rstrip("\n") + "\n" + log_line + "\n"
     return text
@@ -386,7 +390,10 @@ def cmd_set_status(args, status: str) -> None:
         if t["parent"] is None:
             sys.exit("error: this epic has no subtasks; split it first (tasks.py import)")
         if not deps_done(data, t) or not ancestors_ok(data, t):
-            sys.exit("error: dependencies are not done: " + ", ".join(t["dependencies"] + [a for a in ancestors(data, t["id"])]))
+            sys.exit(
+                "error: dependencies are not done: "
+                + ", ".join(t["dependencies"] + [a for a in ancestors(data, t["id"])])
+            )
     t["status"] = status
     if status == "done":
         t["commit"] = "pending"
@@ -396,7 +403,13 @@ def cmd_set_status(args, status: str) -> None:
     if msg and status in ("blocked", "deferred", "pending"):
         t["notes"] = (msg + ("\n" + t["notes"] if t["notes"] else "")).strip()
     changed = sync_containers(data)
-    verb = {"in_progress": "started", "done": "done", "blocked": "BLOCKED", "deferred": "deferred", "pending": "reopened"}[status]
+    verb = {
+        "in_progress": "started",
+        "done": "done",
+        "blocked": "BLOCKED",
+        "deferred": "deferred",
+        "pending": "reopened",
+    }[status]
     what = f"{verb}: {t['title']}" + (f" — {msg}" if msg else "")
     if changed:
         what += " (containers: " + ", ".join(f"{i} {a}->{b}" for i, a, b in changed) + ")"
@@ -492,7 +505,9 @@ def cmd_doctor(_args) -> None:
     for t in data["tasks"]:
         if t["commit"] == "pending":
             exists = bool(git_lines("log", "-n", "1", "--format=%h", "--grep", f"^{re.escape(t['id'])}: "))
-            print(f"  {t['id']}: {'commit exists -> run tasks.py stamp' if exists else 'NO COMMIT YET -> commit its files now'}")
+            print(
+                f"  {t['id']}: {'commit exists -> run tasks.py stamp' if exists else 'NO COMMIT YET -> commit its files now'}"
+            )
     print("== uncommitted paths (git status --porcelain) ==")
     for ln in git_lines("status", "--porcelain"):
         print("  " + ln)
@@ -517,7 +532,11 @@ def cmd_next(args) -> None:
         print(f"{t['id']}\tP{t['priority']}\t{t['title']}\t[EPIC: split into subtasks first]")
     if not nxt and not current:
         blocked = [t for t in data["tasks"] if t["status"] == "blocked"]
-        print("nothing ready: " + (f"{len(blocked)} blocked task(s); " if blocked else "") + "check dependencies with `tasks.py doctor`")
+        print(
+            "nothing ready: "
+            + (f"{len(blocked)} blocked task(s); " if blocked else "")
+            + "check dependencies with `tasks.py doctor`"
+        )
 
 
 def main() -> None:
@@ -580,7 +599,9 @@ def main() -> None:
         cmd_import(args)
     elif args.cmd == "log":
         data = load()
-        PROGRESS.write_text(progress_text(data, f"| {now()} | {args.id} | {md_cell(args.message)} | |"), encoding="utf-8", newline="\n")
+        PROGRESS.write_text(
+            progress_text(data, f"| {now()} | {args.id} | {md_cell(args.message)} | |"), encoding="utf-8", newline="\n"
+        )
         print("logged")
 
 

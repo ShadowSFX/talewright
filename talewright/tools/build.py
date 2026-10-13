@@ -43,7 +43,9 @@ PROFILES = {
     "template_debug": [*COMMON, "target=template_debug"],
 }
 
-ERROR_RE = re.compile(r"(\berror [A-Z]+\d+\b|fatal error|\berror LNK\d+|: error:|^scons: \*\*\*|Error \d+$|^ERROR\b)", re.I)
+ERROR_RE = re.compile(
+    r"(\berror [A-Z]+\d+\b|fatal error|\berror LNK\d+|: error:|^scons: \*\*\*|Error \d+$|^ERROR\b)", re.I
+)
 WARNING_RE = re.compile(r"\bwarning [A-Z]+\d+\b|: warning:", re.I)
 
 
@@ -148,7 +150,7 @@ def main() -> int:
 
     print(f"profile: {args.profile}  exit: {code}  time: {elapsed / 60:.1f} min  log: {log_path.relative_to(ROOT)}")
     print(f"errors: {len(errors)}  warnings: {len(warnings)}")
-    for line in (errors[:40] if errors else warnings[:20]):
+    for line in errors[:40] if errors else warnings[:20]:
         print("  " + line[:400])
     if code != 0 and not errors:
         # Failures that are not compiler errors (e.g. a Python traceback in SConstruct): show the log tail.

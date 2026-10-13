@@ -47,7 +47,7 @@ void ClaudeBridgeLogs::add(const String &p_source, const String &p_level, const 
 	e.time_msec = OS::get_singleton() ? OS::get_singleton()->get_ticks_msec() : 0;
 	e.source = p_source;
 	e.level = p_level;
-	e.text = p_text.length() > 8192 ? p_text.substr(0, 8192) + "...<truncated>" : p_text;
+	e.text = p_text.length() > 2048 ? p_text.substr(0, 2048) + "...<truncated>" : p_text;
 	e.file = p_file;
 	e.function = p_function;
 	e.line = p_line;

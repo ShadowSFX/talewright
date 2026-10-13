@@ -56,7 +56,12 @@ struct ClaudeBridgeHTTPRequest {
 	String get_header(const String &p_lower_name, const String &p_default = String()) const;
 	bool has_header(const String &p_lower_name) const { return headers.has(p_lower_name); }
 	String get_body_as_utf8() const;
+	// Body is well-formed UTF-8 without NUL bytes (checked silently; decoding invalid UTF-8 would print errors).
+	bool is_body_valid_utf8() const;
 };
+
+// Silent UTF-8 well-formedness check (RFC 3629: no overlongs, surrogates or code points above U+10FFFF).
+bool claude_bridge_is_valid_utf8(const uint8_t *p_data, int p_size, bool p_allow_nul = false);
 
 // Incremental request parser. Feed bytes as they arrive; it consumes at most one request.
 class ClaudeBridgeHTTPParser {
@@ -70,7 +75,7 @@ public:
 	struct Limits {
 		int max_header_bytes = 16 * 1024;
 		int max_headers = 64;
-		int max_body_bytes = 8 * 1024 * 1024;
+		int max_body_bytes = 1024 * 1024; // MCP requests are small JSON documents.
 	};
 
 private:
@@ -94,6 +99,8 @@ public:
 	State feed(const uint8_t *p_data, int p_size, int &r_consumed);
 	State get_state() const { return state; }
 	bool is_idle() const { return state == STATE_NEED_MORE && header_buf.is_empty() && !headers_done; }
+	// True once the request line and headers are parsed (the body may still be arriving).
+	bool is_headers_done() const { return headers_done && state != STATE_ERROR; }
 	const ClaudeBridgeHTTPRequest &get_request() const { return request; }
 	int get_error_status() const { return error_status; }
 	String get_error_message() const { return error_message; }
@@ -108,6 +115,10 @@ public:
 	public:
 		// Called once per complete request. Respond now or later with ClaudeBridgeHTTPServer::respond().
 		virtual void handle_http_request(uint64_t p_connection_id, const ClaudeBridgeHTTPRequest &p_request) = 0;
+		// Called as soon as the headers are parsed, before the body is read. Return 0 to continue, or an HTTP status
+		// (e.g. 401/403) to reject: the server answers with r_headers + r_body (JSON) and closes the connection
+		// without reading the body.
+		virtual int precheck_http_request(const ClaudeBridgeHTTPRequest &p_request, Headers &r_headers, String &r_body) { return 0; }
 		virtual ~Handler() {}
 	};
 
@@ -132,6 +143,7 @@ private:
 		uint64_t request_started = 0;
 		uint64_t last_write_progress = 0;
 		bool awaiting_response = false;
+		bool prechecked = false;
 		bool close_after_write = false;
 		bool keep_alive = true;
 	};

@@ -61,8 +61,11 @@ Variant variant_to_json(const Variant &p_value, int p_depth) {
 		case Variant::NIL:
 		case Variant::BOOL:
 		case Variant::INT:
-		case Variant::STRING:
 			return p_value;
+		case Variant::STRING: {
+			const String s = p_value;
+			return s.length() > 65536 ? s.substr(0, 65536) + "...<truncated>" : s;
+		}
 		case Variant::FLOAT: {
 			const double d = p_value;
 			return Math::is_finite(d) ? p_value : Variant(VariantUtilityFunctions::var_to_str(p_value));
@@ -115,7 +118,15 @@ Variant variant_to_json(const Variant &p_value, int p_depth) {
 			return d;
 		}
 		default: {
-			// Packed arrays and math types: Godot literal text, truncated when large.
+			// Packed arrays and math types: Godot literal text. Large packed arrays are summarized without
+			// serializing them first (var_to_str of a huge array would stall the editor).
+			if (p_value.get_type() >= Variant::PACKED_BYTE_ARRAY && p_value.get_type() <= Variant::PACKED_VECTOR4_ARRAY) {
+				Variant packed = p_value;
+				const int size = packed.call("size");
+				if (size > 1024) {
+					return vformat("<%s of %d>", Variant::get_type_name(p_value.get_type()), size);
+				}
+			}
 			String text = VariantUtilityFunctions::var_to_str(p_value);
 			if (text.length() > 4096) {
 				text = text.substr(0, 4096) + "...<truncated>";
@@ -125,12 +136,76 @@ Variant variant_to_json(const Variant &p_value, int p_depth) {
 	}
 }
 
+// Lexical allow-list for Godot literal strings coming from clients. VariantParser (used by str_to_var) can build
+// arbitrary objects and load resources (`Object(...)`, `Resource(...)`, core/variant/variant_parser.cpp), which would
+// let a client execute code, so only numbers, punctuation and math/packed-array constructor names are accepted.
+bool is_safe_literal(const String &p_text) {
+	static const char *allowed[] = { "Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i", "Rect2", "Rect2i",
+		"Transform2D", "Transform3D", "Basis", "Quaternion", "Plane", "AABB", "Projection", "Color", "PackedByteArray",
+		"PackedInt32Array", "PackedInt64Array", "PackedFloat32Array", "PackedFloat64Array", "PackedVector2Array",
+		"PackedVector3Array", "PackedVector4Array", "PackedColorArray", "true", "false", "null", "inf", "inf_neg", "nan" };
+	const int len = p_text.length();
+	if (len == 0 || len > 65536) {
+		return false;
+	}
+	int i = 0;
+	while (i < len) {
+		const char32_t c = p_text[i];
+		if (is_ascii_alphabet_char(c) || c == '_') {
+			int j = i;
+			while (j < len && (is_ascii_alphanumeric_char(p_text[j]) || p_text[j] == '_')) {
+				j++;
+			}
+			const String ident = p_text.substr(i, j - i);
+			bool ok = false;
+			for (const char *a : allowed) {
+				if (ident == a) {
+					ok = true;
+					break;
+				}
+			}
+			if (!ok) {
+				return false;
+			}
+			i = j;
+		} else if (is_digit(c) || c == '.') {
+			// Number with optional fraction and exponent.
+			i++;
+			while (i < len && (is_digit(p_text[i]) || p_text[i] == '.')) {
+				i++;
+			}
+			if (i < len && (p_text[i] == 'e' || p_text[i] == 'E')) {
+				i++;
+				if (i < len && (p_text[i] == '+' || p_text[i] == '-')) {
+					i++;
+				}
+				while (i < len && is_digit(p_text[i])) {
+					i++;
+				}
+			}
+		} else if (c == ' ' || c == '\t' || c == '(' || c == ')' || c == '[' || c == ']' || c == ',' || c == '-' || c == '+') {
+			i++;
+		} else {
+			return false;
+		}
+	}
+	return true;
+}
+
 Variant json_to_value(const Variant &p_json, Variant::Type p_target, bool &r_ok) {
 	r_ok = true;
 	if (p_target == Variant::NIL || p_json.get_type() == p_target) {
 		return p_json;
 	}
+	if (p_target == Variant::OBJECT) {
+		r_ok = false; // Objects are set through json_to_resource with the property's type hint.
+		return Variant();
+	}
 	if (p_json.get_type() == Variant::STRING && p_target != Variant::STRING && p_target != Variant::STRING_NAME && p_target != Variant::NODE_PATH) {
+		if (!is_safe_literal(p_json)) {
+			r_ok = false;
+			return Variant();
+		}
 		const Variant parsed = VariantUtilityFunctions::str_to_var(p_json);
 		if (parsed.get_type() == p_target) {
 			return parsed;
@@ -149,6 +224,33 @@ Variant json_to_value(const Variant &p_json, Variant::Type p_target, bool &r_ok)
 	return Variant();
 }
 
+Variant json_to_resource(const Variant &p_json, const String &p_type_hint, bool &r_ok) {
+	r_ok = false;
+	if (p_json.get_type() == Variant::NIL) {
+		r_ok = true;
+		return Variant(); // Clears the property.
+	}
+	const String path = validate_res_path(p_json);
+	if (path.is_empty() || !ResourceLoader::exists(path)) {
+		return Variant();
+	}
+	Ref<Resource> res = ResourceLoader::load(path);
+	if (res.is_null()) {
+		return Variant();
+	}
+	if (!p_type_hint.is_empty()) {
+		bool matches = false;
+		for (const String &type : p_type_hint.split(",")) {
+			matches = matches || res->is_class(type.strip_edges());
+		}
+		if (!matches) {
+			return Variant();
+		}
+	}
+	r_ok = true;
+	return res;
+}
+
 String validate_res_path(const String &p_path) {
 	String path = p_path.strip_edges();
 	if (path.is_empty()) {
@@ -157,11 +259,38 @@ String validate_res_path(const String &p_path) {
 	if (!path.begins_with("res://")) {
 		path = "res://" + path.trim_prefix("/");
 	}
+	if (path.contains_char('\\')) {
+		return String(); // Godot resource paths use '/'; backslashes (UNC paths, "..\") are never valid here.
+	}
 	const String rel = path.substr(6).simplify_path();
 	if (rel.begins_with("..") || rel.contains("/../") || rel.contains(":")) {
 		return String();
 	}
 	return "res://" + rel;
+}
+
+int utf8_complete_length(const uint8_t *p_data, int p_size) {
+	int i = p_size;
+	int continuation = 0;
+	while (i > 0 && continuation < 3 && (p_data[i - 1] & 0xC0) == 0x80) {
+		i--;
+		continuation++;
+	}
+	if (i == 0) {
+		return p_size;
+	}
+	const uint8_t lead = p_data[i - 1];
+	int needed = 1;
+	if ((lead & 0xE0) == 0xC0) {
+		needed = 2;
+	} else if ((lead & 0xF0) == 0xE0) {
+		needed = 3;
+	} else if ((lead & 0xF8) == 0xF0) {
+		needed = 4;
+	}
+	// Drop the lead byte and its continuation bytes only when the sequence is cut short; anything else is left for
+	// the validator to judge.
+	return (needed > 1 && continuation + 1 < needed) ? i - 1 : p_size;
 }
 
 void complete_with_image(const Ref<ClaudeBridgeToolCall> &p_call, Ref<Image> p_image, const String &p_label, int p_max_width, bool p_include_image) {
@@ -228,9 +357,11 @@ static Node *_resolve_node(const Dictionary &p_args, const Ref<ClaudeBridgeToolC
 	if (path.is_empty() || path == "." || path == "/") {
 		return root;
 	}
-	Node *node = root->get_node_or_null(NodePath(path));
-	if (!node) {
-		p_call->fail("Node not found (paths are relative to the edited scene root): " + path);
+	// Only nodes of the edited scene: absolute paths or "../" could otherwise reach editor GUI nodes.
+	Node *node = path.begins_with("/") ? nullptr : root->get_node_or_null(NodePath(path));
+	if (!node || (node != root && !root->is_ancestor_of(node))) {
+		p_call->fail("Node not found in the edited scene (paths are relative to its root): " + path);
+		return nullptr;
 	}
 	return node;
 }
@@ -343,10 +474,18 @@ static void _tool_node_set(const Dictionary &p_args, const Ref<ClaudeBridgeToolC
 		p_call->fail("Unknown or non-editable property: " + String(property));
 		return;
 	}
+	if (info->type == Variant::OBJECT && info->hint != PROPERTY_HINT_RESOURCE_TYPE) {
+		p_call->fail("Only resource-typed object properties can be set (with a res:// path or null).");
+		return;
+	}
 	bool ok = false;
-	const Variant value = json_to_value(p_args.get("value", Variant()), info->type, ok);
+	const Variant value = info->type == Variant::OBJECT ? json_to_resource(p_args.get("value", Variant()), info->hint_string, ok) : json_to_value(p_args.get("value", Variant()), info->type, ok);
 	if (!ok) {
-		p_call->fail(vformat("Cannot convert the value to %s; use a Godot literal string such as \"Vector2(1, 2)\".", Variant::get_type_name(info->type)));
+		if (info->type == Variant::OBJECT) {
+			p_call->fail(vformat("Expected null or the res:// path of an existing resource of type %s.", info->hint_string));
+		} else {
+			p_call->fail(vformat("Cannot convert the value to %s; use a Godot literal string such as \"Vector2(1, 2)\".", Variant::get_type_name(info->type)));
+		}
 		return;
 	}
 	const Variant old = node->get(property);
@@ -406,8 +545,8 @@ static void _tool_select(const Dictionary &p_args, const Ref<ClaudeBridgeToolCal
 	Node *first = nullptr;
 	for (int i = 0; i < paths.size(); i++) {
 		const String p = String(paths[i]).strip_edges();
-		Node *n = (p.is_empty() || p == ".") ? root : root->get_node_or_null(NodePath(p));
-		if (!n) {
+		Node *n = (p.is_empty() || p == ".") ? root : (p.begins_with("/") ? nullptr : root->get_node_or_null(NodePath(p)));
+		if (!n || (n != root && !root->is_ancestor_of(n))) {
 			p_call->fail("Node not found: " + p);
 			return;
 		}
@@ -521,12 +660,18 @@ static void _tool_read_file(const Dictionary &p_args, const Ref<ClaudeBridgeTool
 	const int64_t max_bytes = CLAMP(int64_t(p_args.get("max_bytes", 262144)), 1, 4 * 1024 * 1024);
 	const uint64_t size = f->get_length();
 	Vector<uint8_t> data = f->get_buffer(MIN((int64_t)size, max_bytes));
+	if ((int64_t)size > max_bytes) {
+		data.resize(utf8_complete_length(data.ptr(), data.size())); // Don't report text cut mid-character as binary.
+	}
 	String text;
 	Dictionary out;
 	out["path"] = path;
 	out["size"] = (int64_t)size;
 	out["truncated"] = (int64_t)size > max_bytes;
-	if (text.append_utf8((const char *)data.ptr(), data.size()) == OK) {
+	// Validate silently first: decoding invalid UTF-8 prints one error per bad byte (core/string/ustring.cpp).
+	if (data.is_empty()) {
+		out["text"] = String(); // Empty file, or a limit smaller than the first character.
+	} else if (claude_bridge_is_valid_utf8(data.ptr(), data.size()) && text.append_utf8((const char *)data.ptr(), data.size()) == OK) {
 		out["text"] = text;
 	} else {
 		out["binary"] = true;
@@ -621,8 +766,13 @@ static Dictionary _run_status() {
 
 static void _tool_run_project(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *) {
 	EditorRunBar *bar = EditorRunBar::get_singleton();
+	// User arguments go after "--" so they reach the game (OS.get_cmdline_user_args()) and can never be parsed as
+	// engine options such as --path, --script or --write-movie (editor/run/editor_run.cpp:155-158 appends them as-is).
 	Vector<String> args;
 	const Array a = p_args.get("args", Array());
+	if (!a.is_empty()) {
+		args.push_back("--");
+	}
 	for (int i = 0; i < a.size(); i++) {
 		args.push_back(String(a[i]));
 	}

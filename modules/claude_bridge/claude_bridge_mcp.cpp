@@ -142,6 +142,12 @@ Dictionary ClaudeBridgeMCP::object_schema(const Dictionary &p_properties, const 
 	return schema;
 }
 
+void ClaudeBridgeMCP::set_tool_destructive(const String &p_name, bool p_destructive) {
+	Tool *t = tools.getptr(p_name);
+	ERR_FAIL_NULL_MSG(t, "Claude bridge: unknown tool " + p_name);
+	t->destructive = p_destructive;
+}
+
 void ClaudeBridgeMCP::register_tool(const Tool &p_tool) {
 	ERR_FAIL_COND_MSG(p_tool.name.is_empty() || p_tool.func == nullptr, "Claude bridge: invalid tool.");
 	if (!tools.has(p_tool.name)) {
@@ -187,7 +193,9 @@ Dictionary ClaudeBridgeMCP::_tools_list() const {
 		d["inputSchema"] = t.input_schema.is_empty() ? object_schema(Dictionary()) : t.input_schema;
 		Dictionary annotations;
 		annotations["readOnlyHint"] = t.read_only;
-		annotations["destructiveHint"] = t.destructive;
+		if (!t.read_only) {
+			annotations["destructiveHint"] = t.destructive; // Only meaningful for tools that modify state.
+		}
 		annotations["openWorldHint"] = false;
 		d["annotations"] = annotations;
 		list.push_back(d);
@@ -224,11 +232,16 @@ ClaudeBridgeMCP::Reply ClaudeBridgeMCP::handle(const String &p_body, uint64_t p_
 		reply.body = make_error(Variant(), ERR_INVALID_REQUEST, "Invalid id.");
 		return reply;
 	}
+	if (!msg.has("method") && (msg.has("result") || msg.has("error"))) {
+		reply.http_status = 202; // A JSON-RPC response from the client (it always carries an id): acknowledge.
+		return reply;
+	}
+	if (msg.has("id") && msg["id"].get_type() == Variant::NIL) {
+		reply.http_status = 400; // MCP forbids null request ids.
+		reply.body = make_error(Variant(), ERR_INVALID_REQUEST, "Request id must not be null.");
+		return reply;
+	}
 	if (String(msg.get("jsonrpc", "")) != "2.0" || msg.get("method", Variant()).get_type() != Variant::STRING) {
-		if (!has_id && (msg.has("result") || msg.has("error"))) {
-			reply.http_status = 202; // A response from the client (e.g. to a ping we never send): acknowledge.
-			return reply;
-		}
 		reply.http_status = 400;
 		reply.body = make_error(id, ERR_INVALID_REQUEST, "Invalid JSON-RPC 2.0 request.");
 		return reply;

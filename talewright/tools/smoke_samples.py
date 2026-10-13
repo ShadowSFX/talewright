@@ -113,7 +113,9 @@ def main() -> int:
                 exported.unlink()
             project = SAMPLES / "plain_2d"
             (project / "export_presets.cfg").write_text(
-                PRESET.format(export_path=exported.as_posix(), template=TEMPLATE.as_posix()), encoding="utf-8", newline="\n"
+                PRESET.format(export_path=exported.as_posix(), template=TEMPLATE.as_posix()),
+                encoding="utf-8",
+                newline="\n",
             )
             code, out = run(
                 [exe, "--headless", "--path", str(project), "--export-release", "Windows Desktop", str(exported)], 300

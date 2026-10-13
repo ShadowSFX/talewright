@@ -38,6 +38,53 @@ String ClaudeBridgeHTTPRequest::get_header(const String &p_lower_name, const Str
 	return v ? *v : p_default;
 }
 
+bool claude_bridge_is_valid_utf8(const uint8_t *p_data, int p_size, bool p_allow_nul) {
+	int i = 0;
+	while (i < p_size) {
+		const uint8_t c = p_data[i];
+		if (c < 0x80) {
+			if (c == 0 && !p_allow_nul) {
+				return false;
+			}
+			i++;
+			continue;
+		}
+		int len = 0;
+		uint32_t cp = 0;
+		if ((c & 0xE0) == 0xC0) {
+			len = 2;
+			cp = c & 0x1F;
+		} else if ((c & 0xF0) == 0xE0) {
+			len = 3;
+			cp = c & 0x0F;
+		} else if ((c & 0xF8) == 0xF0) {
+			len = 4;
+			cp = c & 0x07;
+		} else {
+			return false;
+		}
+		if (i + len > p_size) {
+			return false;
+		}
+		for (int k = 1; k < len; k++) {
+			if ((p_data[i + k] & 0xC0) != 0x80) {
+				return false;
+			}
+			cp = (cp << 6) | (p_data[i + k] & 0x3F);
+		}
+		const bool overlong = (len == 2 && cp < 0x80) || (len == 3 && cp < 0x800) || (len == 4 && cp < 0x10000);
+		if (overlong || cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) {
+			return false;
+		}
+		i += len;
+	}
+	return true;
+}
+
+bool ClaudeBridgeHTTPRequest::is_body_valid_utf8() const {
+	return claude_bridge_is_valid_utf8(body.ptr(), body.size());
+}
+
 String ClaudeBridgeHTTPRequest::get_body_as_utf8() const {
 	String s;
 	s.append_utf8((const char *)body.ptr(), body.size());
@@ -135,8 +182,9 @@ bool ClaudeBridgeHTTPParser::_parse_head(const String &p_head) {
 		return false;
 	}
 	if (request.has_header("content-length")) {
-		const String cl = request.get_header("content-length").get_slicec(',', 0).strip_edges();
-		if (cl.is_empty() || !cl.is_valid_int() || cl.length() > 12) {
+		// A list or repeated Content-Length is rejected (RFC 9110 §8.6 allows only identical values; we accept none).
+		const String cl = request.get_header("content-length").strip_edges();
+		if (cl.is_empty() || cl.contains_char(',') || !cl.is_valid_int() || cl.length() > 12) {
 			_fail(400, "Invalid Content-Length.");
 			return false;
 		}
@@ -180,12 +228,18 @@ ClaudeBridgeHTTPParser::State ClaudeBridgeHTTPParser::feed(const uint8_t *p_data
 			r_consumed = pos;
 			return state;
 		}
-		String head;
-		if (head.append_utf8((const char *)header_buf.ptr(), header_buf.size() - 4) != OK) {
-			r_consumed = pos;
-			_fail(400, "Header is not valid UTF-8.");
-			return state;
+		// Headers must be visible ASCII, space or HTAB (plus the CRLF separators). Rejecting anything else before
+		// decoding matters: String::append_utf8 prints one error per invalid byte (core/string/ustring.cpp), which
+		// an unauthenticated client could use to flood the editor's Output panel.
+		for (uint32_t i = 0; i < header_buf.size(); i++) {
+			const uint8_t c = header_buf[i];
+			if (!((c >= 0x20 && c <= 0x7E) || c == '\t' || c == '\r' || c == '\n')) {
+				r_consumed = pos;
+				_fail(400, "Invalid characters in request headers.");
+				return state;
+			}
 		}
+		String head = String::ascii(Span<char>((const char *)header_buf.ptr(), header_buf.size() - 4));
 		header_buf.clear();
 		if (!_parse_head(head)) {
 			r_consumed = pos;
@@ -349,9 +403,11 @@ bool ClaudeBridgeHTTPServer::respond(uint64_t p_connection_id, int p_status, con
 }
 
 void ClaudeBridgeHTTPServer::_process_inbox(Connection *p_conn, uint64_t p_now) {
-	while (!p_conn->awaiting_response && !p_conn->close_after_write && !p_conn->inbox.is_empty()) {
+	// Back-pressure: one request in flight, and the next one is not parsed while the previous response is unsent.
+	while (!p_conn->awaiting_response && !p_conn->close_after_write && p_conn->out_offset >= p_conn->out.size() && !p_conn->inbox.is_empty()) {
 		if (p_conn->parser.is_idle()) {
 			p_conn->request_started = p_now;
+			p_conn->prechecked = false;
 		}
 		int consumed = 0;
 		const ClaudeBridgeHTTPParser::State st = p_conn->parser.feed(p_conn->inbox.ptr(), p_conn->inbox.size(), consumed);
@@ -368,6 +424,19 @@ void ClaudeBridgeHTTPServer::_process_inbox(Connection *p_conn, uint64_t p_now) 
 			_queue(p_conn, build_response(p_conn->parser.get_error_status(), Headers(), msg.to_utf8_buffer(), false), true);
 			p_conn->inbox.clear();
 			return;
+		}
+		if (p_conn->parser.is_headers_done() && !p_conn->prechecked && handler) {
+			// Authorize before buffering the body, and close on rejection (no keep-alive for failed requests).
+			p_conn->prechecked = true;
+			Headers headers;
+			String body;
+			const int status = handler->precheck_http_request(p_conn->parser.get_request(), headers, body);
+			if (status != 0) {
+				headers.push_back(Pair<String, String>("Content-Type", "application/json"));
+				_queue(p_conn, build_response(status, headers, body.to_utf8_buffer(), false), true);
+				p_conn->inbox.clear();
+				return;
+			}
 		}
 		if (st != ClaudeBridgeHTTPParser::STATE_COMPLETE) {
 			return; // Need more bytes.
@@ -431,9 +500,11 @@ void ClaudeBridgeHTTPServer::poll(uint64_t p_now_msec) {
 			continue;
 		}
 
-		// Read (bounded per poll); stop reading while a request is in flight or the inbox is large.
+		// Read (bounded per poll). Nothing is read while a request is in flight or a response is still being sent,
+		// so a client that pipelines requests and reads slowly cannot make the editor buffer without bound.
 		int read_budget = config.max_read_per_poll;
-		while (read_budget > 0 && !c->close_after_write && (int)c->inbox.size() < config.parser_limits.max_body_bytes + config.parser_limits.max_header_bytes) {
+		const bool can_read = !c->awaiting_response && !c->close_after_write && c->out_offset >= c->out.size();
+		while (can_read && read_budget > 0 && (int)c->inbox.size() < config.parser_limits.max_body_bytes + config.parser_limits.max_header_bytes) {
 			const int avail = c->peer->get_available_bytes();
 			if (avail <= 0) {
 				break;

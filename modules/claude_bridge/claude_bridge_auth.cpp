@@ -121,6 +121,9 @@ String ClaudeBridgeAuth::load_or_create_token(const String &p_path, bool *r_crea
 	Ref<FileAccess> f = FileAccess::open(p_path, FileAccess::WRITE);
 	ERR_FAIL_COND_V_MSG(f.is_null(), String(), "Claude bridge: cannot write the token file " + p_path);
 	f->store_string(token + "\n");
+	f.unref();
+	// Owner-only on Unix-like systems (Windows keeps the per-user ACL of the editor config directory).
+	FileAccess::set_unix_permissions(p_path, FileAccess::UNIX_READ_OWNER | FileAccess::UNIX_WRITE_OWNER);
 	if (r_created) {
 		*r_created = true;
 	}

@@ -78,7 +78,7 @@ public:
 		String description;
 		Dictionary input_schema;
 		bool read_only = true;
-		bool destructive = false;
+		bool destructive = true; // MCP default for non-read-only tools; cleared explicitly for undoable/benign tools.
 		uint64_t timeout_msec = 10000;
 		ToolFunc func = nullptr;
 		void *userdata = nullptr;
@@ -123,6 +123,7 @@ public:
 
 	void set_instructions(const String &p_text) { instructions = p_text; }
 	void register_tool(const Tool &p_tool);
+	void set_tool_destructive(const String &p_name, bool p_destructive);
 	bool has_tool(const String &p_name) const { return tools.has(p_name); }
 	int get_tool_count() const { return tools.size(); }
 

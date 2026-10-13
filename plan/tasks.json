@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "3.4 Refine task tree",
+  "last_completed": "4.13 Epic review: Claude bridge",
   "tasks": [
     {
       "id": "0",
@@ -546,7 +546,7 @@
       "dependencies": [
         "2"
       ],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "DECISIONS.md covers the 6 required decisions + MMO decisions",
@@ -628,7 +628,7 @@
       ],
       "test_strategy": "validate + review.",
       "files": [],
-      "commit": "pending",
+      "commit": "1bd824ac35",
       "notes": ""
     },
     {
@@ -643,7 +643,7 @@
         "Findings fixed and logged in PROGRESS.md"
       ],
       "test_strategy": "Reviewer report + fixes.",
-      "status": "pending",
+      "status": "in_progress",
       "files": [],
       "commit": "",
       "notes": "",
@@ -657,7 +657,7 @@
       "dependencies": [
         "1"
       ],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "All minimum capabilities work via bridge.py",
@@ -667,7 +667,7 @@
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
       "files": [],
-      "commit": "",
+      "commit": "children",
       "notes": "Dependencies changed by D-021 (was 1, 3)."
     },
     {
@@ -910,14 +910,14 @@
       "dependencies": [
         "4.12"
       ],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Findings fixed and logged"
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

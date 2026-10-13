@@ -21,7 +21,21 @@ CITE = re.compile(
     r":(\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*)"
     r'(?:~"([^"]+)")?'
 )
-SKIP_PREFIXES = ("http", "ro server", "server/rathena", "rathena/", "src/", "conf/", "db/", "sql-files/", "npc/", "doc/re", "game/", "tools/", "docs/")
+SKIP_PREFIXES = (
+    "http",
+    "ro server",
+    "server/rathena",
+    "rathena/",
+    "src/",
+    "conf/",
+    "db/",
+    "sql-files/",
+    "npc/",
+    "doc/re",
+    "game/",
+    "tools/",
+    "docs/",
+)
 
 
 def main() -> int:
@@ -56,7 +70,9 @@ def main() -> int:
             total += 1
             target = base / path
             if key not in cache:
-                cache[key] = target.read_text(encoding="utf-8", errors="replace").split(chr(10)) if target.is_file() else None
+                cache[key] = (
+                    target.read_text(encoding="utf-8", errors="replace").split(chr(10)) if target.is_file() else None
+                )
             lines = cache[key]
             if lines is None:
                 failures += 1

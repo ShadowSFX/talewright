@@ -38,18 +38,31 @@ String ClaudeBridgePlugin::get_connection_file_path() {
 void ClaudeBridgePlugin::_define_settings() {
 	EDITOR_DEF(SETTING_ENABLED, true);
 	EDITOR_DEF(SETTING_PORT, DEFAULT_PORT);
+	EDITOR_DEF(SETTING_PORT_FALLBACK, false);
 	EditorSettings::get_singleton()->add_property_hint(PropertyInfo(Variant::INT, SETTING_PORT, PROPERTY_HINT_RANGE, "1024,65535,1"));
 }
 
 void ClaudeBridgePlugin::_read_settings() {
 	enabled = EDITOR_GET(SETTING_ENABLED);
 	configured_port = CLAMP(int(EDITOR_GET(SETTING_PORT)), 1024, 65535 - PORT_ATTEMPTS);
+	port_fallback = EDITOR_GET(SETTING_PORT_FALLBACK);
 }
 
 void ClaudeBridgePlugin::_on_settings_changed() {
 	if (!EditorSettings::get_singleton()->check_changed_settings_in_group("claude_bridge")) {
 		return;
 	}
+	if (in_process) {
+		// A nested Main::iteration (progress dialog inside a tool) delivered this; stopping the server now would
+		// free connections still referenced up the stack. Apply after the current poll.
+		restart_requested = true;
+		return;
+	}
+	_apply_settings();
+}
+
+void ClaudeBridgePlugin::_apply_settings() {
+	restart_requested = false;
 	_read_settings();
 	_stop_server();
 	if (enabled) {
@@ -61,14 +74,20 @@ void ClaudeBridgePlugin::_start_server() {
 	if (server.is_listening()) {
 		return;
 	}
+	if (EditorNode::is_cmdline_mode()) {
+		return; // --headless --import/--export/--doctool runs: no server, no connection file.
+	}
 	token = ClaudeBridgeAuth::load_or_create_token(get_token_path());
 	ERR_FAIL_COND_MSG(token.is_empty(), "Claude bridge: no token, server not started.");
+	// Without fallback (default) a busy port fails loudly instead of moving silently: a registered MCP client would
+	// otherwise send its token to whatever process holds the configured port, or drive another editor.
+	const int attempts = port_fallback ? PORT_ATTEMPTS : 1;
 	Error err = FAILED;
-	for (int i = 0; i < PORT_ATTEMPTS && err != OK; i++) {
+	for (int i = 0; i < attempts && err != OK; i++) {
 		err = server.start(IPAddress("127.0.0.1"), configured_port + i);
 	}
 	if (err != OK) {
-		ERR_PRINT(vformat("Claude bridge: could not listen on 127.0.0.1:%d-%d.", configured_port, configured_port + PORT_ATTEMPTS - 1));
+		ERR_PRINT(vformat("Claude bridge: could not listen on 127.0.0.1:%d%s (port in use?). Set claude_bridge/port or enable claude_bridge/port_fallback.", configured_port, attempts > 1 ? vformat("-%d", configured_port + attempts - 1) : String()));
 		return;
 	}
 	_write_connection_file();
@@ -115,7 +134,12 @@ void ClaudeBridgePlugin::_write_connection_file() {
 
 void ClaudeBridgePlugin::_remove_connection_file() {
 	const String path = get_connection_file_path();
-	if (FileAccess::exists(path)) {
+	if (!FileAccess::exists(path)) {
+		return;
+	}
+	// Only remove the file this editor wrote (another editor may have the same project open).
+	const Variant info = JSON::parse_string(FileAccess::get_file_as_string(path));
+	if (info.get_type() == Variant::DICTIONARY && int64_t(Dictionary(info).get("pid", -1)) == int64_t(OS::get_singleton()->get_process_id())) {
 		DirAccess::remove_absolute(path);
 	}
 }
@@ -153,34 +177,60 @@ void ClaudeBridgePlugin::_update_boost(uint64_t p_now) {
 	}
 }
 
-void ClaudeBridgePlugin::_handle_request(uint64_t p_connection_id, const ClaudeBridgeHTTPRequest &p_request) {
+int ClaudeBridgePlugin::_precheck(const ClaudeBridgeHTTPRequest &p_request, ClaudeBridgeHTTPServer::Headers &r_headers, String &r_body) {
+	// Runs as soon as the headers are parsed, before the body is read; any rejection closes the connection.
 	// Authorization first: unauthenticated clients learn nothing about routes.
 	String reason;
 	const int auth = ClaudeBridgeAuth::check(p_request, token, server.get_port(), reason);
 	if (auth != ClaudeBridgeAuth::AUTH_OK) {
-		ClaudeBridgeHTTPServer::Headers extra;
 		if (auth == ClaudeBridgeAuth::AUTH_UNAUTHORIZED) {
-			extra.push_back(Pair<String, String>("WWW-Authenticate", "Bearer"));
+			r_headers.push_back(Pair<String, String>("WWW-Authenticate", "Bearer"));
 		}
-		_respond_json(p_connection_id, auth, _error_json(reason), extra);
-		return;
+		r_body = _error_json(reason);
+		return auth;
 	}
-	_boost_on_request(OS::get_singleton()->get_ticks_msec());
 	if (p_request.path != MCP_PATH) {
-		_respond_json(p_connection_id, 404, _error_json("Unknown path; the MCP endpoint is " + String(MCP_PATH) + "."));
-		return;
+		r_body = _error_json("Unknown path; the MCP endpoint is " + String(MCP_PATH) + ".");
+		return 404;
 	}
 	if (p_request.method != "POST") {
 		// Streamable HTTP: no server-initiated SSE stream and no session deletion.
-		ClaudeBridgeHTTPServer::Headers extra;
-		extra.push_back(Pair<String, String>("Allow", "POST"));
-		_respond_json(p_connection_id, 405, _error_json("Only POST is supported."), extra);
-		return;
+		r_headers.push_back(Pair<String, String>("Allow", "POST"));
+		r_body = _error_json("Only POST is supported.");
+		return 405;
 	}
 	if (!p_request.get_header("content-type").to_lower().contains("application/json")) {
-		_respond_json(p_connection_id, 415, _error_json("Content-Type must be application/json."));
+		r_body = _error_json("Content-Type must be application/json.");
+		return 415;
+	}
+	const String version = p_request.get_header("mcp-protocol-version");
+	if (!version.is_empty() && !(version.length() == 10 && version[4] == '-' && version[7] == '-' && version.remove_char('-').is_valid_int())) {
+		r_body = _error_json("Malformed MCP-Protocol-Version header.");
+		return 400;
+	}
+	return 0;
+}
+
+int ClaudeBridgePlugin::RequestHandler::precheck_http_request(const ClaudeBridgeHTTPRequest &p_request, ClaudeBridgeHTTPServer::Headers &r_headers, String &r_body) {
+	return plugin->_precheck(p_request, r_headers, r_body);
+}
+
+void ClaudeBridgePlugin::_handle_request(uint64_t p_connection_id, const ClaudeBridgeHTTPRequest &p_request) {
+	ClaudeBridgeHTTPServer::Headers error_headers;
+	String error_body;
+	const int status = _precheck(p_request, error_headers, error_body); // Defensive: the server already prechecked.
+	if (status != 0) {
+		error_headers.push_back(Pair<String, String>("Content-Type", "application/json"));
+		server.respond(p_connection_id, status, error_headers, error_body.to_utf8_buffer(), true);
 		return;
 	}
+	if (!p_request.is_body_valid_utf8()) {
+		ClaudeBridgeHTTPServer::Headers headers;
+		headers.push_back(Pair<String, String>("Content-Type", "application/json"));
+		server.respond(p_connection_id, 400, headers, _error_json("Body is not valid UTF-8.").to_utf8_buffer(), true);
+		return;
+	}
+	_boost_on_request(OS::get_singleton()->get_ticks_msec());
 	const ClaudeBridgeMCP::Reply reply = mcp.handle(p_request.get_body_as_utf8(), OS::get_singleton()->get_ticks_msec());
 	if (reply.pending) {
 		PendingCall pc;
@@ -298,23 +348,31 @@ void ClaudeBridgePlugin::_on_frame_post_draw() {
 
 bool ClaudeBridgeDebuggerPlugin::capture(const String &p_message, const Array &p_data, int p_session) {
 	if (p_message == "claude_bridge:reply" && bridge) {
-		bridge->on_game_reply(p_data);
+		bridge->on_game_reply(p_data, p_session);
 		return true;
 	}
 	return false;
 }
 
-void ClaudeBridgePlugin::_send_to_game(const String &p_command, const Array &p_args, const Ref<ClaudeBridgeToolCall> &p_call, int p_max_width, bool p_include_image) {
+void ClaudeBridgePlugin::_send_to_game(const String &p_command, const Array &p_args, const Ref<ClaudeBridgeToolCall> &p_call, const Dictionary &p_tool_args, int p_max_width, bool p_include_image) {
+	// Several game instances can run at once (one debugger session each); "instance" picks the Nth connected one.
+	const int wanted = MAX(0, int(p_tool_args.get("instance", 0)));
 	ScriptEditorDebugger *target = nullptr;
+	int target_index = -1;
+	int active = 0;
 	EditorDebuggerNode *edn = EditorDebuggerNode::get_singleton();
 	for (int i = 0; edn && edn->get_debugger(i); i++) {
 		if (edn->get_debugger(i)->is_session_active()) {
-			target = edn->get_debugger(i);
-			break;
+			if (active == wanted) {
+				target = edn->get_debugger(i);
+				target_index = i;
+				break;
+			}
+			active++;
 		}
 	}
 	if (!target) {
-		p_call->fail("The game is not running or not connected yet (run_project, then poll run_status for debugger_connected).");
+		p_call->fail(wanted == 0 ? String("The game is not running or not connected yet (run_project, then poll run_status for debugger_connected).") : vformat("No connected game instance %d.", wanted));
 		return;
 	}
 	const int id = next_game_request_id++;
@@ -326,18 +384,20 @@ void ClaudeBridgePlugin::_send_to_game(const String &p_command, const Array &p_a
 	req.command = p_command;
 	req.max_width = p_max_width;
 	req.include_image = p_include_image;
+	req.session_index = target_index;
+	req.debugger_id = target->get_instance_id();
 	game_requests[id] = req;
 	target->send_message("claude_bridge:" + p_command, args);
 }
 
-void ClaudeBridgePlugin::on_game_reply(const Array &p_data) {
+void ClaudeBridgePlugin::on_game_reply(const Array &p_data, int p_session) {
 	if (p_data.size() < 4) {
 		return;
 	}
 	const int id = p_data[0];
 	GameRequest *req = game_requests.getptr(id);
-	if (!req) {
-		return; // Timed out and dropped earlier.
+	if (!req || req->session_index != p_session) {
+		return; // Timed out and dropped earlier, or a reply from a different game instance.
 	}
 	const GameRequest r = *req;
 	game_requests.erase(id);
@@ -367,21 +427,21 @@ void ClaudeBridgePlugin::_tool_game_screenshot(const Dictionary &p_args, const R
 	const int max_width = p_args.get("max_width", 1280);
 	Array args;
 	args.push_back(max_width);
-	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("screenshot", args, p_call, max_width, p_args.get("include_image", true));
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("screenshot", args, p_call, p_args, max_width, p_args.get("include_image", true));
 }
 
 void ClaudeBridgePlugin::_tool_game_tree(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
 	Array args;
 	args.push_back(String(p_args.get("path", "/root")));
 	args.push_back(int(p_args.get("depth", 8)));
-	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("tree", args, p_call);
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("tree", args, p_call, p_args);
 }
 
 void ClaudeBridgePlugin::_tool_game_node_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
 	Array args;
 	args.push_back(String(p_args.get("path", "")));
 	args.push_back(Array(p_args.get("properties", Array())));
-	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("node_get", args, p_call);
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("node_get", args, p_call, p_args);
 }
 
 void ClaudeBridgePlugin::_tool_game_node_set(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
@@ -389,7 +449,7 @@ void ClaudeBridgePlugin::_tool_game_node_set(const Dictionary &p_args, const Ref
 	args.push_back(String(p_args.get("path", "")));
 	args.push_back(String(p_args.get("property", "")));
 	args.push_back(p_args.get("value", Variant()));
-	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("node_set", args, p_call);
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("node_set", args, p_call, p_args);
 }
 
 void ClaudeBridgePlugin::_tool_game_input(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
@@ -410,13 +470,13 @@ void ClaudeBridgePlugin::_tool_game_input(const Dictionary &p_args, const Ref<Cl
 	}
 	Array args;
 	args.push_back(events);
-	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("input", args, p_call);
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("input", args, p_call, p_args);
 }
 
 void ClaudeBridgePlugin::_tool_game_wait(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
 	Array args;
 	args.push_back(CLAMP(int(p_args.get("frames", 1)), 1, 3600));
-	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("wait", args, p_call);
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("wait", args, p_call, p_args);
 }
 
 void ClaudeBridgePlugin::_tool_game_call(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
@@ -424,7 +484,7 @@ void ClaudeBridgePlugin::_tool_game_call(const Dictionary &p_args, const Ref<Cla
 	args.push_back(String(p_args.get("path", "")));
 	args.push_back(String(p_args.get("method", "")));
 	args.push_back(Array(p_args.get("args", Array())));
-	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("call", args, p_call);
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("call", args, p_call, p_args);
 }
 
 void ClaudeBridgePlugin::_tool_game_logs(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
@@ -432,7 +492,7 @@ void ClaudeBridgePlugin::_tool_game_logs(const Dictionary &p_args, const Ref<Cla
 	args.push_back(int64_t(p_args.get("since_seq", 0)));
 	args.push_back(int(p_args.get("limit", 200)));
 	args.push_back(bool(p_args.get("errors_only", false)));
-	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("logs", args, p_call);
+	static_cast<ClaudeBridgePlugin *>(p_userdata)->_send_to_game("logs", args, p_call, p_args);
 }
 
 static Dictionary _schema_prop(const String &p_type, const String &p_description) {
@@ -471,6 +531,7 @@ void ClaudeBridgePlugin::_register_game_tools() {
 		t.read_only = d.read_only;
 		t.timeout_msec = d.timeout;
 		Dictionary props;
+		props["instance"] = _schema_prop("integer", "Which running game instance (0 = first connected, default).");
 		const String name = d.name;
 		if (name == "game_screenshot") {
 			props["max_width"] = _schema_prop("integer", "Downscale to at most this width (default 1280).");
@@ -520,6 +581,10 @@ void ClaudeBridgePlugin::_register_game_tools() {
 
 void ClaudeBridgePlugin::_process_pending(uint64_t p_now) {
 	for (KeyValue<int, GameRequest> &kv : game_requests) {
+		ScriptEditorDebugger *dbg = ObjectDB::get_instance<ScriptEditorDebugger>(kv.value.debugger_id);
+		if (!kv.value.call->is_done() && !kv.value.call->is_cancelled() && (!dbg || !dbg->is_session_active())) {
+			kv.value.call->fail("The game stopped before replying.");
+		}
 		if (kv.value.call->is_cancelled() || kv.value.call->is_done()) {
 			kv.value.command = String(); // Marked for removal below.
 		}
@@ -578,6 +643,11 @@ void ClaudeBridgePlugin::_register_tools() {
 	mcp.register_tool(status);
 	ClaudeBridgeTools::register_editor_tools(mcp, this);
 	_register_game_tools();
+	// Write tools default to destructiveHint=true; these are undoable or only affect transient state.
+	for (const char *name : { "editor_node_set", "editor_open_scene", "editor_select", "editor_rescan", "editor_undo_redo",
+				 "editor_set_main_screen", "run_project", "stop_project", "game_input" }) {
+		mcp.set_tool_destructive(name, false);
+	}
 
 	ClaudeBridgeMCP::Tool shot;
 	shot.name = "editor_screenshot";
@@ -652,6 +722,9 @@ void ClaudeBridgePlugin::_notification(int p_what) {
 			_process_pending(now);
 			_update_boost(now);
 			in_process = false;
+			if (restart_requested) {
+				_apply_settings();
+			}
 		} break;
 		case NOTIFICATION_APPLICATION_FOCUS_IN: {
 			app_focused = true;

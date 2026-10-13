@@ -66,7 +66,7 @@ private:
 	mutable Mutex mutex;
 	LocalVector<Entry> entries; // Ring buffer storage.
 	uint32_t head = 0; // Index of the oldest entry when full.
-	uint32_t capacity = 5000;
+	uint32_t capacity = 2000; // With 2048-char entries: at most ~16 MB of UTF-32 text.
 	uint64_t next_seq = 1;
 	uint64_t dropped = 0;
 

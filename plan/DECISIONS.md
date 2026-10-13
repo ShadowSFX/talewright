@@ -167,8 +167,14 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Options:** reuse an existing addon; external stdio server + addon; native C++ module.
 - **Choice:** native editor-only C++ module `modules/claude_bridge`: MCP Streamable HTTP with JSON
   responses (accepts the 2025-06-18 `initialize` flow and the 2026-07-28 stateless shape; GET/DELETE ⇒ 405),
-  bound explicitly to 127.0.0.1, persistent 256-bit Bearer token (constant-time compare) + fixed port with
-  fallback, written to `.godot/claude_bridge/connection.json`; Origin ⇒ 403, Host check, size/connection/
+  bound explicitly to 127.0.0.1, persistent 256-bit Bearer token (constant-time compare) + fixed port
+  (fallback to the next ports only with `claude_bridge/port_fallback`, default off — amended in 4.13 after
+  the epic 4 review: a silent fallback would let a squatter on 47700 receive the token, or a second editor
+  be driven by mistake), written to `.godot/claude_bridge/connection.json`; the token is per user (0600),
+  not per editor, so a `claude mcp add` registration stays valid across editor restarts — with the
+  no-fallback default, a second editor fails loudly instead of taking another port; client-supplied
+  values never reach `str_to_var` unless they pass a lexical literal allow-list (no `Object(...)`/
+  `Resource(...)`, which would construct objects and run code); Origin ⇒ 403, Host check, size/connection/
   timeout limits; non-blocking partial I/O polled on the main thread; pending requests with deadlines;
   re-entrancy "busy" guard; unfocused throttle disabled while a client is active
   (`EditorNode::set_unfocused_low_processor_usage_mode_enabled`, `editor/editor_node.cpp:7996`); editor

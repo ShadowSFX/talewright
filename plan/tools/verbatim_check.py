@@ -75,7 +75,7 @@ def main() -> int:
                 continue
             if shared:
                 hits += 1
-                print(f"{f.name}: {title}\n    e.g. \"{sorted(shared)[0]}\" ({len(shared)} shared {args.n}-word runs)")
+                print(f'{f.name}: {title}\n    e.g. "{sorted(shared)[0]}" ({len(shared)} shared {args.n}-word runs)')
     print(f"official {args.n}-grams: {len(official)}; blocks with shared runs: {hits}")
     return 1 if hits else 0
 

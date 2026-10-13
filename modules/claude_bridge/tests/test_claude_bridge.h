@@ -371,6 +371,21 @@ TEST_CASE("[ClaudeBridge][MCP] tools/list and tools/call (sync, error, unknown, 
 	CHECK(tools.size() == 3);
 	CHECK(String(Dictionary(tools[0])["name"]) == "sync");
 	CHECK(Dictionary(Dictionary(tools[0])["inputSchema"]).has("type"));
+	// destructiveHint is only emitted for tools that are not read-only (MCP: meaningful only when readOnlyHint is false).
+	CHECK_FALSE(Dictionary(Dictionary(tools[0])["annotations"]).has("destructiveHint"));
+	{
+		ClaudeBridgeMCP writer = make_mcp();
+		ClaudeBridgeMCP::Tool w;
+		w.name = "write";
+		w.read_only = false;
+		w.func = &tool_sync;
+		writer.register_tool(w);
+		Array listed = Dictionary(parse_obj(writer.handle(R"({"jsonrpc":"2.0","id":1,"method":"tools/list"})", 0).body)["result"])["tools"];
+		CHECK(bool(Dictionary(Dictionary(listed[3])["annotations"])["destructiveHint"]));
+		writer.set_tool_destructive("write", false);
+		listed = Dictionary(parse_obj(writer.handle(R"({"jsonrpc":"2.0","id":2,"method":"tools/list"})", 0).body)["result"])["tools"];
+		CHECK_FALSE(bool(Dictionary(Dictionary(listed[3])["annotations"])["destructiveHint"]));
+	}
 
 	r = mcp.handle(R"({"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"sync","arguments":{"value":"hi"}}})", 0);
 	Dictionary res = parse_obj(r.body)["result"];
@@ -472,6 +487,199 @@ TEST_CASE("[ClaudeBridge][Logs] Ring buffer, filters and game messages") {
 
 	logs.clear();
 	CHECK(logs.query(ClaudeBridgeLogs::Query(), last).is_empty());
+}
+
+TEST_CASE("[ClaudeBridge][HTTP] Rejects control and non-ASCII header bytes and list Content-Length") {
+	int consumed = 0;
+	{
+		ClaudeBridgeHTTPParser parser;
+		const uint8_t raw[] = { 'G', 'E', 'T', ' ', '/', ' ', 'H', 'T', 'T', 'P', '/', '1', '.', '1', '\r', '\n', 'X', ':', ' ', 0xFF, 0xFE, '\r', '\n', '\r', '\n' };
+		CHECK(parser.feed(raw, sizeof(raw), consumed) == ClaudeBridgeHTTPParser::STATE_ERROR);
+		CHECK(parser.get_error_status() == 400);
+	}
+	{
+		ClaudeBridgeHTTPParser parser;
+		const uint8_t raw[] = { 'G', 'E', 'T', ' ', '/', ' ', 'H', 'T', 'T', 'P', '/', '1', '.', '1', '\r', '\n', 'X', ':', 0, 'y', '\r', '\n', '\r', '\n' };
+		CHECK(parser.feed(raw, sizeof(raw), consumed) == ClaudeBridgeHTTPParser::STATE_ERROR);
+	}
+	{
+		ClaudeBridgeHTTPParser parser;
+		CHECK(feed_str(parser, "POST / HTTP/1.1\r\nContent-Length: 5, 6\r\n\r\n", consumed) == ClaudeBridgeHTTPParser::STATE_ERROR);
+		CHECK(parser.get_error_status() == 400);
+	}
+	{
+		ClaudeBridgeHTTPParser parser;
+		CHECK(feed_str(parser, "POST / HTTP/1.1\r\nContent-Length: 5\r\nContent-Length: 5\r\n\r\n", consumed) == ClaudeBridgeHTTPParser::STATE_ERROR);
+	}
+}
+
+TEST_CASE("[ClaudeBridge][HTTP] Silent UTF-8 validation") {
+	const uint8_t ok[] = { 'h', 0xC3, 0xA9, 0xE2, 0x82, 0xAC, 0xF0, 0x9F, 0x98, 0x80 };
+	CHECK(claude_bridge_is_valid_utf8(ok, sizeof(ok)));
+	const uint8_t overlong[] = { 0xC0, 0xAF };
+	CHECK_FALSE(claude_bridge_is_valid_utf8(overlong, sizeof(overlong)));
+	const uint8_t surrogate[] = { 0xED, 0xA0, 0x80 };
+	CHECK_FALSE(claude_bridge_is_valid_utf8(surrogate, sizeof(surrogate)));
+	const uint8_t truncated[] = { 0xE2, 0x82 };
+	CHECK_FALSE(claude_bridge_is_valid_utf8(truncated, sizeof(truncated)));
+	const uint8_t nul[] = { 'a', 0, 'b' };
+	CHECK_FALSE(claude_bridge_is_valid_utf8(nul, sizeof(nul)));
+	CHECK(claude_bridge_is_valid_utf8(nul, sizeof(nul), true));
+}
+
+TEST_CASE("[ClaudeBridge][Tools] Literal allow-list blocks object construction") {
+	CHECK(ClaudeBridgeTools::is_safe_literal("Vector2(1, 2)"));
+	CHECK(ClaudeBridgeTools::is_safe_literal("Color(0.2, 0.9, 0.4, 1)"));
+	CHECK(ClaudeBridgeTools::is_safe_literal("-1.5e3"));
+	CHECK(ClaudeBridgeTools::is_safe_literal("PackedInt32Array(1, 2, 3)"));
+	CHECK_FALSE(ClaudeBridgeTools::is_safe_literal("Object(GDScript, \"script/source\": \"x\")"));
+	CHECK_FALSE(ClaudeBridgeTools::is_safe_literal("Resource(\"C:/x.tres\")"));
+	CHECK_FALSE(ClaudeBridgeTools::is_safe_literal("ExtResource(\"1\")"));
+	CHECK_FALSE(ClaudeBridgeTools::is_safe_literal("\"text\""));
+	CHECK_FALSE(ClaudeBridgeTools::is_safe_literal("{\"a\": 1}"));
+	bool ok = true;
+	ClaudeBridgeTools::json_to_value("Object(Node)", Variant::VECTOR2, ok);
+	CHECK_FALSE(ok);
+	ClaudeBridgeTools::json_to_value("res://x.tres", Variant::OBJECT, ok);
+	CHECK_FALSE(ok); // Objects only through json_to_resource with a type hint.
+	CHECK(ClaudeBridgeTools::json_to_resource(Variant(), "Material", ok).get_type() == Variant::NIL);
+	CHECK(ok); // null clears a resource property.
+	ClaudeBridgeTools::json_to_resource("res://../outside.tres", "Material", ok);
+	CHECK_FALSE(ok);
+	ClaudeBridgeTools::json_to_resource("C:/outside.tres", "Material", ok);
+	CHECK_FALSE(ok);
+	ClaudeBridgeTools::json_to_resource("res://does_not_exist.tres", "Material", ok);
+	CHECK_FALSE(ok);
+	CHECK(ClaudeBridgeTools::validate_res_path("res://..\\x").is_empty());
+	CHECK(ClaudeBridgeTools::validate_res_path("\\\\server\\share\\x").is_empty());
+}
+
+TEST_CASE("[ClaudeBridge][Tools] Truncated reads keep whole UTF-8 characters") {
+	const uint8_t euro[] = { 'a', 0xE2, 0x82, 0xAC }; // "a€"
+	CHECK(ClaudeBridgeTools::utf8_complete_length(euro, 4) == 4);
+	CHECK(ClaudeBridgeTools::utf8_complete_length(euro, 3) == 1); // Cut after two of three bytes.
+	CHECK(ClaudeBridgeTools::utf8_complete_length(euro, 2) == 1);
+	CHECK(ClaudeBridgeTools::utf8_complete_length(euro, 1) == 1);
+	const uint8_t emoji[] = { 0xF0, 0x9F, 0x98, 0x80 }; // U+1F600
+	CHECK(ClaudeBridgeTools::utf8_complete_length(emoji, 4) == 4);
+	CHECK(ClaudeBridgeTools::utf8_complete_length(emoji, 3) == 0);
+	const uint8_t stray[] = { 'a', 0x80 }; // Invalid: left for the validator to reject.
+	CHECK(ClaudeBridgeTools::utf8_complete_length(stray, 2) == 2);
+	CHECK(ClaudeBridgeTools::utf8_complete_length(stray, 0) == 0);
+}
+
+TEST_CASE("[ClaudeBridge][MCP] Null ids and client responses") {
+	ClaudeBridgeMCP mcp = make_mcp();
+	ClaudeBridgeMCP::Reply r = mcp.handle(R"({"jsonrpc":"2.0","id":null,"method":"ping"})", 0);
+	CHECK(r.http_status == 400);
+	r = mcp.handle(R"({"jsonrpc":"2.0","id":5,"result":{}})", 0);
+	CHECK(r.http_status == 202);
+	r = mcp.handle(R"({"jsonrpc":"2.0","id":6,"error":{"code":1,"message":"x"}})", 0);
+	CHECK(r.http_status == 202);
+}
+
+class PrecheckHandler : public ClaudeBridgeHTTPServer::Handler {
+public:
+	ClaudeBridgeHTTPServer *server = nullptr;
+	int handled = 0;
+	bool deferred = false;
+	uint64_t deferred_id = 0;
+	virtual int precheck_http_request(const ClaudeBridgeHTTPRequest &p_request, ClaudeBridgeHTTPServer::Headers &r_headers, String &r_body) override {
+		r_headers.push_back(Pair<String, String>("WWW-Authenticate", "Bearer"));
+		r_body = "{}";
+		return p_request.get_header("authorization") == "ok" ? 0 : 401;
+	}
+	virtual void handle_http_request(uint64_t p_connection_id, const ClaudeBridgeHTTPRequest &p_request) override {
+		handled++;
+		if (p_request.path == "/slow") {
+			deferred = true;
+			deferred_id = p_connection_id;
+			return;
+		}
+		server->respond(p_connection_id, 200, ClaudeBridgeHTTPServer::Headers(), String("done").to_utf8_buffer());
+	}
+};
+
+static Ref<StreamPeerTCP> connect_client(ClaudeBridgeHTTPServer &p_server) {
+	Ref<StreamPeerTCP> client;
+	client.instantiate();
+	client->connect_to_host(IPAddress("127.0.0.1"), p_server.get_port());
+	const uint64_t start = OS::get_singleton()->get_ticks_msec();
+	while (client->get_status() == StreamPeerSocket::STATUS_CONNECTING && OS::get_singleton()->get_ticks_msec() - start < 3000) {
+		client->poll();
+		p_server.poll(OS::get_singleton()->get_ticks_msec());
+		OS::get_singleton()->delay_usec(1000);
+	}
+	return client;
+}
+
+static String pump(ClaudeBridgeHTTPServer &p_server, Ref<StreamPeerTCP> p_client, int p_frames) {
+	String got;
+	for (int i = 0; i < p_frames; i++) {
+		p_server.poll(OS::get_singleton()->get_ticks_msec());
+		p_client->poll();
+		if (p_client->get_status() != StreamPeerSocket::STATUS_CONNECTED) {
+			break; // The server closed the connection (expected after a rejection).
+		}
+		const int avail = p_client->get_available_bytes();
+		if (avail > 0) {
+			Vector<uint8_t> data;
+			data.resize(avail);
+			int n = 0;
+			p_client->get_partial_data(data.ptrw(), avail, n);
+			got.append_utf8((const char *)data.ptr(), n);
+		}
+		OS::get_singleton()->delay_usec(1000);
+	}
+	return got;
+}
+
+TEST_CASE("[ClaudeBridge][HTTP] Precheck rejects before the body and pipelined requests wait") {
+	ClaudeBridgeHTTPServer server;
+	PrecheckHandler handler;
+	handler.server = &server;
+	server.set_handler(&handler);
+	REQUIRE(server.start(IPAddress("127.0.0.1"), 0) == OK);
+
+	// Rejected at the headers: the declared body never arrives, the reply comes anyway and the socket closes.
+	Ref<StreamPeerTCP> a = connect_client(server);
+	const CharString req1 = String("POST /mcp HTTP/1.1\r\nContent-Length: 1000\r\n\r\n").utf8();
+	a->put_data((const uint8_t *)req1.get_data(), req1.length());
+	const String r1 = pump(server, a, 100);
+	CHECK(r1.begins_with("HTTP/1.1 401"));
+	CHECK(r1.contains("Connection: close"));
+	CHECK(r1.contains("WWW-Authenticate: Bearer"));
+	CHECK(r1.contains("Content-Type: application/json"));
+	CHECK(handler.handled == 0);
+
+	// Back-pressure: two pipelined requests; the second is not handled while the first is pending.
+	Ref<StreamPeerTCP> b = connect_client(server);
+	const CharString req2 = String("GET /slow HTTP/1.1\r\nAuthorization: ok\r\n\r\nGET /fast HTTP/1.1\r\nAuthorization: ok\r\n\r\n").utf8();
+	b->put_data((const uint8_t *)req2.get_data(), req2.length());
+	const String before = pump(server, b, 50);
+	CHECK(before.is_empty()); // First request still pending, second not handled.
+	CHECK(handler.handled == 1);
+	REQUIRE(handler.deferred);
+	server.respond(handler.deferred_id, 200, ClaudeBridgeHTTPServer::Headers(), String("slow").to_utf8_buffer());
+	const String r2 = pump(server, b, 100);
+	CHECK(handler.handled == 2);
+	CHECK(r2.contains("slow"));
+	CHECK(r2.contains("done"));
+
+	// Stopping with a deferred response pending frees the connection; the late respond() is refused safely.
+	handler.deferred = false;
+	Ref<StreamPeerTCP> c = connect_client(server);
+	const CharString req3 = String("GET /slow HTTP/1.1\r\nAuthorization: ok\r\n\r\n").utf8();
+	c->put_data((const uint8_t *)req3.get_data(), req3.length());
+	const String r3 = pump(server, c, 50);
+	CHECK(r3.is_empty());
+	REQUIRE(handler.deferred);
+	server.stop();
+	CHECK(server.get_connection_count() == 0);
+	CHECK_FALSE(server.respond(handler.deferred_id, 200, ClaudeBridgeHTTPServer::Headers(), String("late").to_utf8_buffer()));
+	REQUIRE(server.start(IPAddress("127.0.0.1"), 0) == OK);
+	CHECK(server.is_listening());
+	server.stop();
 }
 
 } // namespace TestClaudeBridge
