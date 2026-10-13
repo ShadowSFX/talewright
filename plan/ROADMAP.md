@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 102, in_progress: 0, done: 40, blocked: 0, deferred: 3 (of 145)
+**Totals:** pending: 101, in_progress: 0, done: 41, blocked: 0, deferred: 3 (of 145)
 
 ## [x] 0 Bootstrap and task system
 
@@ -69,8 +69,8 @@ Editor-only C++ module: MCP Streamable HTTP server on 127.0.0.1 with token; edit
 - [x] **4.8** Run/stop (P1) _(deps: 4.7; commit: a2a9c2529f)_
 - [x] **4.9** Editor screenshots (P1) _(deps: 4.8; commit: 12773911ae)_
 - [x] **4.10** Game-side capture (P1) _(deps: 4.9; commit: fea49bd11f)_
-- [x] **4.11** Hardening (P1) _(deps: 4.10; commit: pending)_
-- [ ] **4.12** Docs, claude mcp add, template absence (P1) _(deps: 4.11)_
+- [x] **4.11** Hardening (P1) _(deps: 4.10; commit: 9c9ec40d5a)_
+- [x] **4.12** Docs, claude mcp add, template absence (P1) _(deps: 4.11; commit: pending)_
 - [ ] **4.13** Epic review: Claude bridge (P1) _(deps: 4.12)_
 
 ## [ ] 5 JRPG module foundation and data core

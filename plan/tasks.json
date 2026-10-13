@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "4.11 Hardening",
+  "last_completed": "4.12 Docs, claude mcp add, template absence",
   "tasks": [
     {
       "id": "0",
@@ -880,7 +880,7 @@
       ],
       "test_strategy": "Stress script + slow-client script.",
       "files": [],
-      "commit": "pending",
+      "commit": "9c9ec40d5a",
       "notes": ""
     },
     {
@@ -891,7 +891,7 @@
       "dependencies": [
         "4.11"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Docs written",
@@ -899,7 +899,7 @@
       ],
       "test_strategy": "Binary scan script.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
