@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 17:11 -0600
+- **Updated:** 2026-10-13 17:15 -0600
 - **Current task:** none
-- **Last completed:** 3.5.1 Review fixes: battle math and formulas (spec 04)
-- **Next task:** 3.5.2 Review fixes: tiles, autotiles, passage bits, character sheets (spec 05)
-- **Done leaf tasks:** 41
+- **Last completed:** 3.5.2 Review fixes: tiles, autotiles, passage bits, character sheets (spec 05)
+- **Next task:** 3.5.3 Review fixes: core layering, save robustness, determinism (specs 01, 03, 05, 06)
+- **Done leaf tasks:** 42
 <!-- status:end -->
 
 ## Log
@@ -95,4 +95,7 @@
 | 2026-10-13 17:07 -0600 | - | imported 5 new / 0 updated tasks (containers: 3.5 in_progress->pending, 3 in_progress->pending) | |
 | 2026-10-13 17:07 -0600 | 3.5.1 | started: Review fixes: battle math and formulas (spec 04) (containers: 3.5 pending->in_progress, 3 pending->in_progress) |  |
 | 2026-10-13 17:11 -0600 | - | imported 0 new / 4 updated tasks | |
-| 2026-10-13 17:11 -0600 | 3.5.1 | done: Review fixes: battle math and formulas (spec 04) — Spec 04 rebuilt: documented behaviour kept with inventory citations (variance range, cri x (1-cev), buffs 25%/2 levels, TP start 0-24, TPB sqrt(agi), hit/evasion rates, guard qualitative), undocumented gaps given Talewright rules chosen on design grounds (formula->variance->element->crit->rate->guard order, x2 crit, average of attack elements, additive one-roll hit, agi +-10% with per-battle tie shuffle, -40% guard, TP on damage) with reasons in talewright/docs/battle_defaults.md; basis points + int64; JRPGRandom over vendored PCG32 with named streams; Expression facts (v as Array, utility precedence :485, const_calls_only :1451) + allow-list; param minimum 0; spec 02 integer trait/effect values; D-009/D-010/D-022 amended; tasks 5.4.x aligned (containers: 3.5 in_progress->pending, 3 in_progress->pending) | pending |
+| 2026-10-13 17:11 -0600 | 3.5.1 | done: Review fixes: battle math and formulas (spec 04) — Spec 04 rebuilt: documented behaviour kept with inventory citations (variance range, cri x (1-cev), buffs 25%/2 levels, TP start 0-24, TPB sqrt(agi), hit/evasion rates, guard qualitative), undocumented gaps given Talewright rules chosen on design grounds (formula->variance->element->crit->rate->guard order, x2 crit, average of attack elements, additive one-roll hit, agi +-10% with per-battle tie shuffle, -40% guard, TP on damage) with reasons in talewright/docs/battle_defaults.md; basis points + int64; JRPGRandom over vendored PCG32 with named streams; Expression facts (v as Array, utility precedence :485, const_calls_only :1451) + allow-list; param minimum 0; spec 02 integer trait/effect values; D-009/D-010/D-022 amended; tasks 5.4.x aligned (containers: 3.5 in_progress->pending, 3 in_progress->pending) | 59b450e196 |
+| 2026-10-13 17:12 -0600 | 3.5.2 | started: Review fixes: tiles, autotiles, passage bits, character sheets (spec 05) (containers: 3.5 pending->in_progress, 3 pending->in_progress) |  |
+| 2026-10-13 17:14 -0600 | - | imported 0 new / 6 updated tasks | |
+| 2026-10-13 17:15 -0600 | 3.5.2 | done: Review fixes: tiles, autotiles, passage bits, character sheets (spec 05) — Spec 05: tile palette indices in map cells (transform flags kept in Godot's alternative id, no shape byte; D-006 amended), Talewright flag layout (jrpg_pass open/blocked/transparent, no-entry/no-exit masks N/E/S/W, overhead...) baked into JRPGTilesetData.flags with staleness hash, 47-tile blob autotile sheet (8x6, rank of reduced clockwise mask) + 4x4 wall sheet, explicit edge_mode extend/border and loop wrap, one-character sheets with clockwise rows and import settings instead of filename prefixes, speed/frequency tables in 60 Hz steps; D-020 amended; tasks 5.3.3, 7.1-7.4, 8.7 aligned with testable criteria (containers: 3.5 in_progress->pending, 3 in_progress->pending) | pending |

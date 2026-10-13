@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 142, in_progress: 0, done: 46, blocked: 0, deferred: 3 (of 191)
+**Totals:** pending: 141, in_progress: 0, done: 47, blocked: 0, deferred: 3 (of 191)
 
 ## [x] 0 Bootstrap and task system
 
@@ -54,8 +54,8 @@ Decision log, upstream patch ledger, design specs, refined task tree.
 - [x] **3.3** Specs (P1) _(deps: 3.1; commit: e5dbc43068)_
 - [x] **3.4** Refine task tree (P1) _(deps: 3.3; commit: 1bd824ac35)_
 - [ ] **3.5** Epic review: decisions and specs (P1) _(deps: 3.4)_
-  - [x] **3.5.1** Review fixes: battle math and formulas (spec 04) (P1) _(commit: pending)_
-  - [ ] **3.5.2** Review fixes: tiles, autotiles, passage bits, character sheets (spec 05) (P1) _(deps: 3.5.1)_
+  - [x] **3.5.1** Review fixes: battle math and formulas (spec 04) (P1) _(commit: 59b450e196)_
+  - [x] **3.5.2** Review fixes: tiles, autotiles, passage bits, character sheets (spec 05) (P1) _(deps: 3.5.1; commit: pending)_
   - [ ] **3.5.3** Review fixes: core layering, save robustness, determinism (specs 01, 03, 05, 06) (P1) _(deps: 3.5.2)_
   - [ ] **3.5.4** Review fixes: online page authority, localization keys, inconsistencies (P1) _(deps: 3.5.3)_
   - [ ] **3.5.5** Review fixes: task tree order, slice gaps, criteria, core_diff_check; review record (P1) _(deps: 3.5.4)_

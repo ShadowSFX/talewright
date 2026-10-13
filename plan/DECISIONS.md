@@ -87,7 +87,8 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   `INTERNAL_MODE_FRONT` (`scene/2d/tile_map.cpp:272`).
 - **Options:** map as standalone Resource + own canvas; `.tscn` + stock 2D editor plugins; `.tscn` + own canvas.
 - **Choice:** each map is a `.tscn` whose root `JRPGMap` node stores layer data (tile layers in
-  tile_map_data format, shadow, region, properties, next event id) and builds internal TileMapLayers;
+  Talewright palette-index format — spec 05, amended in 3.5.2 instead of Godot's tile_map_data bytes, so atlas
+  re-layouts never rewrite maps — shadow, region, properties, next event id) and builds internal TileMapLayers;
   events are `JRPGEvent` child nodes; any other Godot node can be added. The JRPG workspace has its own
   map canvas sharing the edited scene's World2D through a `MapEditSession` adapter; a brush stroke is one
   undo action with a compact patch; own autotile resolver over a baked atlas; a map cell cache compiler
@@ -270,7 +271,10 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Choice:** RPG Maker behaviour reimplemented from public documentation only (paraphrased inventory,
   no verbatim text, no RTP, no file formats); the RPG Maker project importer is task 45 (`deferred`). No
   Gravity/Nintendo data or protocols. GPL/AGPL projects are design references only; FishNet code is not
-  read (its license forbids competing implementations).
+  read (its license forbids competing implementations). Asset and data layouts are Talewright's own (47-tile
+  blob autotile sheets, one-character sheets with clockwise rows, own tile-flag bits, own direction and speed
+  encodings; spec 05); other layouts can be imported only through explicit import settings, never through a
+  built-in reader of another engine's format (amended in 3.5.2 after the epic 3 review).
 - **Context:** RPG Maker is proprietary; Pokémon/Ragnarok are third-party IP; GPL code cannot enter the MIT fork.
 - **Options:** allow importing/copying RPG Maker data and assets; reimplement from documentation only.
 - **Why:** avoids copyright, trademark and license contamination while still reaching functional parity.

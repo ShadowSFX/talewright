@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "3.5.1 Review fixes: battle math and formulas (spec 04)",
+  "last_completed": "3.5.2 Review fixes: tiles, autotiles, passage bits, character sheets (spec 05)",
   "tasks": [
     {
       "id": "0",
@@ -670,7 +670,7 @@
         "plan/DECISIONS.md"
       ],
       "status": "done",
-      "commit": "pending",
+      "commit": "59b450e196",
       "notes": ""
     },
     {
@@ -694,8 +694,8 @@
         "plan/specs/05_maps_tiles.md",
         "plan/DECISIONS.md"
       ],
-      "status": "pending",
-      "commit": "",
+      "status": "done",
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -1236,7 +1236,7 @@
       "id": "5.3.3",
       "parent": "5.3",
       "title": "Enemies, troops, states, animations stub, tilesets data, common events",
-      "description": "Actions/drops/rewards; troop members + battle event page model; state restriction/removal; tileset data wraps TileSet.",
+      "description": "Actions/drops/rewards; troop members + battle event page model; state restriction/removal; JRPGTilesetData with tile palette (spec 05) and baked flag table (no TileSet dependency in core); common events.",
       "dependencies": [
         "5.3.2"
       ],
@@ -1668,7 +1668,7 @@
     {
       "id": "7.1",
       "title": "Original asset generator",
-      "description": "talewright/tools/asset_gen: tiles + autotile templates, characters, faces, enemies, battlebacks, icons, window skin, SFX/BGM; LICENSES.md.",
+      "description": "talewright/tools/asset_gen: tiles, 47-tile blob autotile sheets and 4x4 wall sheets (spec 05), character sheets (one character per image, rows up/right/down/left), faces, enemies, battlebacks, icons, window skin, SFX/BGM; LICENSES.md.",
       "parent": "7",
       "dependencies": [],
       "status": "pending",
@@ -1738,7 +1738,7 @@
     {
       "id": "7.2",
       "title": "Autotile template + importer",
-      "description": "Own documented quarter-tile template; importer bakes all shapes into an atlas with terrain metadata.",
+      "description": "Talewright 47-tile blob template (8x6 sheet, shape index = rank of the reduced 8-neighbour mask) and 4x4 wall template; importer adds the sheet as an atlas source, creates palette entries and Godot terrain peering bits; talewright/docs/autotile_template.md with the index table and an example sheet.",
       "parent": "7",
       "dependencies": [
         "7.1"
@@ -1746,7 +1746,9 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Pixel-compare all shapes"
+        "The 47 reduced masks enumerated by brute force over all 256 masks in the test equal the importer's index table, in ascending order",
+        "Importing a generated sheet yields one palette entry per kind whose shape atlas coords are (index mod 8, index div 8); a 2-frame animated sheet sets 2 animation columns",
+        "Docs table generated from the same enumeration and checked into talewright/docs/autotile_template.md"
       ],
       "test_strategy": "Doctests.",
       "files": [],
@@ -1756,7 +1758,7 @@
     {
       "id": "7.3",
       "title": "JRPGTileset + flags + tileset tab",
-      "description": "Passage (4-dir, star), ladder, bush, counter, damage, terrain tag as TileSet custom data; tileset DB tab with overlay editing.",
+      "description": "Tile flags as TileSet custom data layers (jrpg_pass, jrpg_no_entry, jrpg_no_exit, jrpg_overhead, ladder, bush, counter, damage, terrain tag; spec 05) baked into JRPGTilesetData.flags on save with a staleness hash; tileset DB tab with overlay editing.",
       "parent": "7",
       "dependencies": [
         "7.2"
@@ -1764,8 +1766,9 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Flags round-trip",
-        "Overlay editing works"
+        "Every flag round-trips TileSet custom data -> baked word -> decoded flags, with the bit layout of spec 05",
+        "Editing a flag marks the bake stale and the next save rebuilds it",
+        "Overlay editing toggles a flag on a tile through the bridge and the change is visible in a screenshot"
       ],
       "test_strategy": "Doctests + bridge.",
       "files": [],
@@ -1775,7 +1778,7 @@
     {
       "id": "7.4",
       "title": "Autotile resolver",
-      "description": "Same-kind 8-neighbour rule over baked atlas; edges; mixed layers.",
+      "description": "Core resolver: same-kind 8-neighbour rule, blob reduction, edge_mode extend/border, looping axes, 3x3 re-resolve on edit; layers independent.",
       "parent": "7",
       "dependencies": [
         "7.2"
@@ -1783,7 +1786,8 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Matches reference on random maps"
+        "Matches a separate brute-force reference written in the test (direct neighbour counting, no lookup tables) on 100 seeded random maps",
+        "Hand-made cases: single cell, full block, map corners with extend and border, horizontal loop wrap, two kinds side by side, same kind on two layers"
       ],
       "test_strategy": "Doctests.",
       "files": [],
@@ -2043,7 +2047,7 @@
     {
       "id": "8.7",
       "title": "Character sprites",
-      "description": "Sheet format, direction/pattern/walk anim, priority, through.",
+      "description": "Character sheets in the Talewright format (spec 05: one character per image, rows up/right/down/left, frames per row, optional 8 directions, y_offset/object import settings) imported to SpriteFrames; direction/pattern/walk animation, priority, through.",
       "parent": "8",
       "dependencies": [
         "8.6"
@@ -2051,7 +2055,8 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Walking frames visible"
+        "Import of a generated 4x4 sheet gives 4 animations with 4 frames each and the right frame rectangles",
+        "Through the bridge: after a held right input the player's animation is the right-facing one and its frame index advances (game_node_get), with a screenshot as evidence"
       ],
       "test_strategy": "Bridge screenshots.",
       "files": [],
