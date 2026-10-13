@@ -204,7 +204,18 @@ void ClaudeBridgeLogs::add_game_debug_message(const String &p_message, const Arr
 		if (!oe.error_descr.is_empty()) {
 			text += ": " + oe.error_descr;
 		}
-		add("game", oe.warning ? "warning" : "error", text, oe.source_file, oe.source_func, oe.source_line);
+		// For script errors the C++ location is the engine function (e.g. push_error); the script frame is in the
+		// call stack, which is what a user needs to locate the problem.
+		String file = oe.source_file;
+		String func = oe.source_func;
+		int line = oe.source_line;
+		if (!oe.callstack.is_empty()) {
+			text += vformat(" (script: %s:%d in %s; engine: %s:%d)", oe.callstack[0].file, oe.callstack[0].line, oe.callstack[0].func, oe.source_file, oe.source_line);
+			file = oe.callstack[0].file;
+			func = oe.callstack[0].func;
+			line = oe.callstack[0].line;
+		}
+		add("game", oe.warning ? "warning" : "error", text, file, func, line);
 	}
 }
 

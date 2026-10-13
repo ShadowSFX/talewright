@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 16:09 -0600
+- **Updated:** 2026-10-13 16:11 -0600
 - **Current task:** none
-- **Last completed:** 4.7 Logs and errors
+- **Last completed:** 4.8 Run/stop
 - **Next task:** 3.3 Specs
-- **Done leaf tasks:** 32
+- **Done leaf tasks:** 33
 <!-- status:end -->
 
 ## Log
@@ -73,4 +73,6 @@
 | 2026-10-13 16:03 -0600 | 4.6 | started: Editor tools: tree, nodes, project (containers: 4 pending->in_progress) |  |
 | 2026-10-13 16:06 -0600 | 4.6 | done: Editor tools: tree, nodes, project — Editor tools: editor_scene_tree, editor_node_get/set (undoable), editor_open_scene, editor_save_scene, editor_select, project_info, project_settings_get, project_list_files, project_read_file (res:// only, traversal rejected), editor_rescan, editor_undo_redo; variant<->JSON helpers; 2 new doctests; e2e verified on plain_2d (set+undo) (containers: 4 in_progress->pending) | 3c278a7942 |
 | 2026-10-13 16:06 -0600 | 4.7 | started: Logs and errors (containers: 4 pending->in_progress) |  |
-| 2026-10-13 16:09 -0600 | 4.7 | done: Logs and errors — Logs: thread-safe ring buffer; editor print/error handlers (verified e2e: startup output retrievable); game output/errors parsed from ScriptEditorDebugger debug_data (unit-tested with the real message format; live game e2e moved to 4.8 because running the game needs the 4.8 tools); get_logs (since_seq/source/errors_only/contains/limit) and clear_logs (containers: 4 in_progress->pending) | pending |
+| 2026-10-13 16:09 -0600 | 4.7 | done: Logs and errors — Logs: thread-safe ring buffer; editor print/error handlers (verified e2e: startup output retrievable); game output/errors parsed from ScriptEditorDebugger debug_data (unit-tested with the real message format; live game e2e moved to 4.8 because running the game needs the 4.8 tools); get_logs (since_seq/source/errors_only/contains/limit) and clear_logs (containers: 4 in_progress->pending) | 601c674fea |
+| 2026-10-13 16:09 -0600 | 4.8 | started: Run/stop (containers: 4 pending->in_progress) |  |
+| 2026-10-13 16:11 -0600 | 4.8 | done: Run/stop — run_project (main/current/custom + args, pre-checks avoid blocking dialogs), stop_project, run_status (pid, debugger_connected); bridge_probe sample; live: game print + deliberate error captured with source=game and script location res://probe.gd:10 (moved 4.7 criterion) (containers: 4 in_progress->pending) | pending |

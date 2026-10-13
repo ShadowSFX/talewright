@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "4.7 Logs and errors",
+  "last_completed": "4.8 Run/stop",
   "tasks": [
     {
       "id": "0",
@@ -803,7 +803,7 @@
       ],
       "test_strategy": "Run plain_2d with a print + push_error.",
       "files": [],
-      "commit": "pending",
+      "commit": "601c674fea",
       "notes": ""
     },
     {
@@ -814,14 +814,15 @@
       "dependencies": [
         "4.7"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
-        "Run and stop work; status reflects state"
+        "Run and stop work; status reflects state",
+        "Live check: a game print and a game error appear in get_logs with source=game (moved from 4.7)"
       ],
       "test_strategy": "Bridge calls.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

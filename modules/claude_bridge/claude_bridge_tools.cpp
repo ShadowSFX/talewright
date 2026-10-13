@@ -39,10 +39,13 @@
 #include "core/io/resource_loader.h"
 #include "core/variant/variant_utility.h"
 #include "core/version.h"
+#include "editor/debugger/editor_debugger_node.h"
+#include "editor/debugger/script_editor_debugger.h"
 #include "editor/editor_data.h"
 #include "editor/editor_interface.h"
 #include "editor/editor_undo_redo_manager.h"
 #include "editor/file_system/editor_file_system.h"
+#include "editor/run/editor_run_bar.h"
 #include "scene/main/node.h"
 
 namespace ClaudeBridgeTools {
@@ -538,6 +541,70 @@ static void _tool_clear_logs(const Dictionary &p_args, const Ref<ClaudeBridgeToo
 	p_call->complete_data(out);
 }
 
+static Dictionary _run_status() {
+	EditorRunBar *bar = EditorRunBar::get_singleton();
+	Dictionary d;
+	d["playing"] = bar->is_playing();
+	d["scene"] = bar->get_playing_scene();
+	d["pid"] = (int64_t)bar->get_current_process();
+	bool connected = false;
+	EditorDebuggerNode *edn = EditorDebuggerNode::get_singleton();
+	for (int i = 0; edn && edn->get_debugger(i); i++) {
+		connected = connected || edn->get_debugger(i)->is_session_active();
+	}
+	d["debugger_connected"] = connected;
+	return d;
+}
+
+static void _tool_run_project(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *) {
+	EditorRunBar *bar = EditorRunBar::get_singleton();
+	Vector<String> args;
+	const Array a = p_args.get("args", Array());
+	for (int i = 0; i < a.size(); i++) {
+		args.push_back(String(a[i]));
+	}
+	const String scene = String(p_args.get("scene", "main")).strip_edges();
+	// Pre-checks avoid modal dialogs that would block automation (EditorNode::ensure_main_scene, save prompts).
+	if (scene == "main" || scene.is_empty()) {
+		const String main = GLOBAL_GET("application/run/main_scene");
+		if (main.is_empty() || !ResourceLoader::exists(main)) {
+			p_call->fail("The project has no valid main scene (application/run/main_scene); pass scene=\"res://...\" instead.");
+			return;
+		}
+		bar->play_main_scene(false, args);
+	} else if (scene == "current") {
+		Node *root = _edited_root();
+		if (!root || root->get_scene_file_path().is_empty()) {
+			p_call->fail("No saved scene is being edited.");
+			return;
+		}
+		bar->play_current_scene(false, args);
+	} else {
+		const String path = validate_res_path(scene);
+		if (path.is_empty() || !ResourceLoader::exists(path)) {
+			p_call->fail("Scene not found: " + scene);
+			return;
+		}
+		bar->play_custom_scene(path, args);
+	}
+	Dictionary out = _run_status();
+	out["note"] = "The game starts asynchronously; poll run_status until debugger_connected is true. The editor may save modified scenes before running (run/auto_save/save_before_running).";
+	p_call->complete_data(out);
+}
+
+static void _tool_stop_project(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *) {
+	EditorRunBar *bar = EditorRunBar::get_singleton();
+	const bool was_playing = bar->is_playing();
+	bar->stop_playing();
+	Dictionary out = _run_status();
+	out["was_playing"] = was_playing;
+	p_call->complete_data(out);
+}
+
+static void _tool_run_status(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *) {
+	p_call->complete_data(_run_status());
+}
+
 // --- registration --------------------------------------------------------------------------------------
 
 static Dictionary _prop(const String &p_type, const String &p_description) {
@@ -627,6 +694,13 @@ void register_editor_tools(ClaudeBridgeMCP &r_mcp, ClaudeBridgePlugin *p_plugin)
 	_add(r_mcp, "project_read_file", "Read project file", "Reads a project file as UTF-8 text (binary files report only their size).", p, req, &_tool_read_file, true, p_plugin);
 
 	_add(r_mcp, "editor_rescan", "Rescan filesystem", "Asks the editor to rescan the project files (the editor otherwise rescans only when it regains focus).", Dictionary(), PackedStringArray(), &_tool_rescan, false, p_plugin);
+
+	p.clear();
+	p["scene"] = _prop("string", "\"main\" (default, the project's main scene), \"current\" (the edited scene) or a res:// scene path.");
+	p["args"] = _array_prop("string", "Extra command-line arguments for the game (after `--`, readable with OS.get_cmdline_user_args()).");
+	_add(r_mcp, "run_project", "Run game", "Starts the game from the editor (like F5/F6). Returns immediately; poll run_status.", p, PackedStringArray(), &_tool_run_project, false, p_plugin);
+	_add(r_mcp, "stop_project", "Stop game", "Stops the running game.", Dictionary(), PackedStringArray(), &_tool_stop_project, false, p_plugin);
+	_add(r_mcp, "run_status", "Run status", "Whether the game is running, which scene, its process id and whether the debugger is connected.", Dictionary(), PackedStringArray(), &_tool_run_status, true, p_plugin);
 
 	p.clear();
 	p["since_seq"] = _prop("integer", "Only entries newer than this sequence number (use last_seq from a previous call).");
