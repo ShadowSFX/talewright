@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "3.1 DECISIONS.md",
+  "last_completed": "3.2 UPSTREAM_PATCHES.md ledger",
   "tasks": [
     {
       "id": "0",
@@ -573,7 +573,7 @@
       "files": [
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "7d0964b4de",
       "notes": ""
     },
     {
@@ -582,7 +582,7 @@
       "description": "Ledger format + current list (expected empty) + candidate notes (ENet DTLS precedence, ENetMultiplayerPeer create_server args).",
       "parent": "3",
       "dependencies": [],
-      "status": "pending",
+      "status": "done",
       "priority": 2,
       "acceptance_criteria": [
         "File exists with format and entries"
@@ -591,7 +591,7 @@
       "files": [
         "plan/UPSTREAM_PATCHES.md"
       ],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

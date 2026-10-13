@@ -3,9 +3,9 @@
 <!-- status:begin -->
 - **Updated:** 2026-10-13 16:02 -0600
 - **Current task:** none
-- **Last completed:** 3.1 DECISIONS.md
+- **Last completed:** 3.2 UPSTREAM_PATCHES.md ledger
 - **Next task:** 3.3 Specs
-- **Done leaf tasks:** 29
+- **Done leaf tasks:** 30
 <!-- status:end -->
 
 ## Log
@@ -67,4 +67,6 @@
 | 2026-10-13 16:01 -0600 | - | imported 0 new / 1 updated tasks | |
 | 2026-10-13 16:01 -0600 | 2.5 | done: Epic review: research — Epic 2 review: all 15 findings fixed (gap map rules/overrides/duplicates, research corrections, media gaps, MMO conditional verdict + go/no-go spikes + risk table + legal, rAthena citation checking, label gate, 9-word verbatim); record in plan/evidence/reviews/epic_2.md (containers: 2 in_progress->done) | 6eb6a76de9 |
 | 2026-10-13 16:01 -0600 | 3.1 | started: DECISIONS.md (containers: 3 pending->in_progress) |  |
-| 2026-10-13 16:02 -0600 | 3.1 | done: DECISIONS.md — DECISIONS.md: 25 decisions (D-001..D-024 + D-015a), all with context/options/choice/why/reversal (containers: 3 in_progress->pending) | pending |
+| 2026-10-13 16:02 -0600 | 3.1 | done: DECISIONS.md — DECISIONS.md: 25 decisions (D-001..D-024 + D-015a), all with context/options/choice/why/reversal (containers: 3 in_progress->pending) | 7d0964b4de |
+| 2026-10-13 16:02 -0600 | 3.2 | started: UPSTREAM_PATCHES.md ledger (containers: 3 pending->in_progress) |  |
+| 2026-10-13 16:02 -0600 | 3.2 | done: UPSTREAM_PATCHES.md ledger — UPSTREAM_PATCHES.md ledger with format, candidates (ENet notes) and enforcement script core_diff_check.py; core diff currently empty (containers: 3 in_progress->pending) | pending |

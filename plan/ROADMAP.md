@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 109, in_progress: 0, done: 33, blocked: 0, deferred: 3 (of 145)
+**Totals:** pending: 108, in_progress: 0, done: 34, blocked: 0, deferred: 3 (of 145)
 
 ## [x] 0 Bootstrap and task system
 
@@ -49,8 +49,8 @@ Sourced RPG Maker inventory, Godot current state from the clone, MMO feasibility
 
 Decision log, upstream patch ledger, design specs, refined task tree.
 
-- [x] **3.1** DECISIONS.md (P1) _(commit: pending)_
-- [ ] **3.2** UPSTREAM_PATCHES.md ledger (P2)
+- [x] **3.1** DECISIONS.md (P1) _(commit: 7d0964b4de)_
+- [x] **3.2** UPSTREAM_PATCHES.md ledger (P2) _(commit: pending)_
 - [ ] **3.3** Specs (P1) _(deps: 3.1)_
 - [ ] **3.4** Refine task tree (P1) _(deps: 3.3)_
 - [ ] **3.5** Epic review: decisions and specs (P1) _(deps: 3.4)_

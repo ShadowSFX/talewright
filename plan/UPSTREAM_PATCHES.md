@@ -5,7 +5,7 @@ upstream (`git diff 4.7.2-stable -- <path>` non-empty outside `modules/jrpg`, `m
 `modules/claude_bridge`, `talewright/`, `plan/`, `CLAUDE.md`, `TALEWRIGHT.md`) must be listed here so
 merging later upstream releases stays easy.
 
-Check: `git diff --stat 4.7.2-stable -- . ':!modules/jrpg' ':!modules/mmo' ':!modules/claude_bridge' ':!talewright' ':!plan' ':!CLAUDE.md' ':!TALEWRIGHT.md'`
+Check: `python plan/tools/core_diff_check.py` (fails on any changed upstream path not listed in the table below).
 must list exactly the files below.
 
 | # | File(s) | Change | Reason (why unavoidable) | Task | Upstreamable? |
