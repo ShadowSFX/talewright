@@ -34,6 +34,7 @@ the engine stores them as basis points (100 % = 10 000).
 | TP maximum | implied by documented ranges (RM-FRM-016) | 100 | `tp_max` | As implied |
 | TP from taking damage | Talewright | 2 + 30 × damage / max HP, × TP Charge Rate | `tp_on_damage_*` | Every hit gives a little TP, so chip damage still builds toward a TP skill, and a heavy hit gives a meaningful boost |
 | EXP curve | Talewright | `base · (L−1)^(1.5 + growth/100) + extra · (L−1)`, defaults 25 / 30 / 10 | class fields | A smooth power curve with one "growth" knob; the editor stores the resulting table, which projects can edit freely |
+| Steps between random encounters | average documented (RM-MPR-008: the map's encounter steps are an average) | uniform between half and one and a half times the map value | per map | Keeps the documented average while avoiding encounters on consecutive steps; a flat distribution is easy to reason about |
 | Drops | documented (`08_runtime_systems.md:879`: 1/N per drop, doubled by the drop-doubling party ability) | as documented | per enemy | As documented |
 
 Values were chosen from first principles for readability and balance, not tuned to match any other engine; the

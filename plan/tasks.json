@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "3.5.4 Review fixes: online page authority, localization keys, inconsistencies",
+  "last_completed": "3.5.5 Review fixes: task tree order, slice gaps, criteria, core_diff_check; review record",
   "tasks": [
     {
       "id": "0",
@@ -16,7 +16,7 @@
         "plan/ tracker validates",
         "CLAUDE.md resume protocol present"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "children",
       "notes": ""
@@ -121,7 +121,7 @@
         "Full upstream test baseline recorded",
         "Plain 2D/3D samples run and export"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "children",
       "notes": "Closed automatically when all children closed."
@@ -546,17 +546,17 @@
       "dependencies": [
         "2"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "DECISIONS.md covers the 6 required decisions + MMO decisions",
         "Specs exist",
         "Epics 5-13 split into subtasks"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "3.1",
@@ -643,10 +643,10 @@
         "Findings fixed and logged in PROGRESS.md"
       ],
       "test_strategy": "Reviewer report + fixes.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
-      "notes": "",
+      "commit": "children",
+      "notes": "Closed automatically when all children closed.",
       "parent": "3"
     },
     {
@@ -747,7 +747,7 @@
         "plan/specs/07_mmo_protocol_topology.md"
       ],
       "status": "done",
-      "commit": "pending",
+      "commit": "d25927e933",
       "notes": ""
     },
     {
@@ -773,8 +773,8 @@
         "plan/evidence/reviews/epic_3.md",
         "CLAUDE.md"
       ],
-      "status": "pending",
-      "commit": "",
+      "status": "done",
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -793,7 +793,7 @@
         "Absent from templates",
         "No editor freeze with slow clients"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "children",
       "notes": "Dependencies changed by D-021 (was 1, 3)."
@@ -1043,7 +1043,7 @@
       "acceptance_criteria": [
         "Findings fixed and logged"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "c0673d2898",
       "notes": ""
@@ -1064,7 +1064,7 @@
         "Byte-identical save/load",
         "State round-trips"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -1191,7 +1191,7 @@
       "priority": 1,
       "acceptance_criteria": [
         "All tables load/save",
-        "Fields match inventory rows for the slice"
+        "Every field of the spec 02 slice field set exists and round-trips"
       ],
       "test_strategy": "Doctests.",
       "files": [],
@@ -1206,7 +1206,8 @@
       "dependencies": [],
       "priority": 1,
       "acceptance_criteria": [
-        "All fields serialize; defaults sane"
+        "Every slice field of actors, classes, types, terms and system round-trips",
+        "Defaults equal the values written in specs 02/04 (EXP 25/30/10, tp_max 100, tp_start_max 24, buff 25 %/2 levels, crit x2, guard 40 %) and a new System has a start-position slot that validation reports as missing until set"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
@@ -1224,7 +1225,7 @@
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "All fields serialize"
+        "Every slice field of skills, items, weapons and armors round-trips"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
@@ -1242,7 +1243,7 @@
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "All fields serialize"
+        "Every slice field of enemies, troops, states, tilesets and common events round-trips"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
@@ -1383,7 +1384,7 @@
     {
       "id": "5.6",
       "title": "Reference scanner",
-      "description": "Find references to DB entries across DB, maps, events; dangling detection; truncate warnings.",
+      "description": "Reference scanner over tables, events, common events, maps and system data. Fixtures are built in test code: a database with one planted dangling reference of each kind (trait, effect, learning, drop, enemy action, troop member, equipment, event command parameter, map encounter, system start map).",
       "parent": "5",
       "dependencies": [
         "5.5"
@@ -1391,7 +1392,8 @@
       "status": "pending",
       "priority": 2,
       "acceptance_criteria": [
-        "Detects dangling refs in fixtures"
+        "Each planted dangling reference kind is reported with its location",
+        "No reports on a clean fixture"
       ],
       "test_strategy": "Doctests.",
       "files": [],
@@ -1411,7 +1413,7 @@
       "acceptance_criteria": [
         "Findings fixed"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -1430,7 +1432,7 @@
         "Setup idempotent",
         "Database editable with undo, minimal diffs"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -1446,7 +1448,7 @@
       "acceptance_criteria": [
         "Upgrade overwrites untouched files only"
       ],
-      "test_strategy": "Doctests + manual.",
+      "test_strategy": "Doctests + scripted upgrade check on a temporary project (modified file kept, untouched file replaced, version stamp updated).",
       "files": [],
       "commit": "",
       "notes": ""
@@ -1454,7 +1456,7 @@
     {
       "id": "6.2",
       "title": "Set up JRPG Project tool",
-      "description": "Project > Tools: folders, manifest + default DB, input actions with gamepad, settings, managed addon.",
+      "description": "Project > Tools: folders, manifest + default DB, input actions with gamepad, settings, managed addon. Also adds the jrpg_* input actions of spec 01 when missing and generates System game_id.",
       "parent": "6",
       "dependencies": [
         "6.1"
@@ -1462,8 +1464,9 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Idempotent on empty project",
-        "JRPG tab appears"
+        "Idempotent on an empty project (second run changes nothing)",
+        "JRPG tab appears",
+        "jrpg_* actions exist with the spec 01 defaults; an existing user remap is kept"
       ],
       "test_strategy": "Bridge on a temp project.",
       "files": [],
@@ -1481,8 +1484,8 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Screenshot reviewed",
-        "No errors switching tabs"
+        "Bridge screenshot shows the JRPG main screen with its tabs",
+        "Switching every tab via the bridge leaves get_logs(errors_only) empty"
       ],
       "test_strategy": "Bridge screenshots.",
       "files": [],
@@ -1552,7 +1555,7 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "All slice fields editable"
+        "Every field of the spec 02 slice field set is editable through the forms"
       ],
       "test_strategy": "Bridge screenshots + data checks.",
       "files": [],
@@ -1585,7 +1588,7 @@
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "All slice fields editable"
+        "Every slice field of actors, classes, skills and items is editable through the form and through the bridge, with undo"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
@@ -1603,7 +1606,8 @@
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "All slice fields editable"
+        "Every slice field of weapons, armors, enemies, troops, states, system, types and terms is editable through the form and through the bridge, with undo",
+        "System start position can be set from a map picker"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
@@ -1642,7 +1646,7 @@
       "acceptance_criteria": [
         "Findings fixed"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -1659,9 +1663,9 @@
       "priority": 1,
       "acceptance_criteria": [
         "Assets deterministic",
-        "Autotiles match reference"
+        "Autotile resolver matches the brute-force reference (7.4)"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -1827,7 +1831,7 @@
       "acceptance_criteria": [
         "Findings fixed"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -1846,7 +1850,7 @@
         "Paint/undo/save/run via bridge",
         "Player walks with passability"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -1872,7 +1876,7 @@
     {
       "id": "8.2",
       "title": "Map cell cache compiler",
-      "description": "Compile passability/flags/regions into a compact grid used by movement, pathfinding and servers.",
+      "description": "Compile the baked tile flags, layers and regions into the cell cache used by movement, pathfinding and servers. Fixture maps are built in test code: every pass mode, entry/exit masks, overhead over blocked, ladder/bush/counter/damage, regions, map edges.",
       "parent": "8",
       "dependencies": [
         "8.1"
@@ -1880,7 +1884,7 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Doctests vs fixtures"
+        "For every fixture cell the cached flags and the allowed steps in 4 directions equal a hand-written expected table"
       ],
       "test_strategy": "Doctests.",
       "files": [],
@@ -1944,13 +1948,14 @@
       "id": "8.4.2",
       "parent": "8.4",
       "title": "Drawing tools with undo patches",
-      "description": "Pencil, rectangle, ellipse, flood fill, eraser, eyedropper; one stroke = one undo patch.",
+      "description": "Pencil, rectangle, ellipse, flood fill, eraser, eyedropper; one stroke = one undo patch. Adds talewright/tools/img_compare.py.",
       "dependencies": [
         "8.4.1"
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "Golden screenshot; undo restores layer hash"
+        "Painting a scripted pattern matches the golden screenshot compared with talewright/tools/img_compare.py (NEW, written in 8.4.2): same window size and renderer, per-channel tolerance 2/255, at most 0.1 % of pixels differing; goldens are regenerated only on purpose",
+        "Undo restores the layer hash; redo re-applies it"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
@@ -2017,11 +2022,12 @@
       "id": "8.6.1",
       "parent": "8.6",
       "title": "Scene manager, map loading and transfer",
-      "description": "JRPGSceneManager: load map scenes, transfer player (fade), missing map / out-of-bounds handling.",
+      "description": "JRPGSceneManager: load map scenes, transfer player (fade), missing map / out-of-bounds handling. Map BGM/BGS autoplay from map data.",
       "dependencies": [],
       "priority": 1,
       "acceptance_criteria": [
-        "Transfer works; missing map handled"
+        "Transfer to an existing map works; a missing map or out-of-bounds cell leaves the player in place with one warning",
+        "After a transfer the map's BGM is playing (game_node_get on the audio player)"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
@@ -2069,7 +2075,7 @@
     {
       "id": "8.8",
       "title": "Map authoring tools",
-      "description": "Bridge tools: create map, paint tiles/regions, set properties.",
+      "description": "Bridge tools: create map, paint tiles/regions, set properties. Includes setting the System start position.",
       "parent": "8",
       "dependencies": [
         "8.5"
@@ -2077,7 +2083,8 @@
       "status": "pending",
       "priority": 2,
       "acceptance_criteria": [
-        "Claude builds a small map via bridge"
+        "Claude builds a small map via bridge",
+        "Claude sets the start position via bridge and New Game (13.2) starts there"
       ],
       "test_strategy": "Bridge.",
       "files": [],
@@ -2098,7 +2105,7 @@
       "acceptance_criteria": [
         "Findings fixed"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -2109,7 +2116,8 @@
       "description": "Pages, conditions, triggers, command model with authority, interpreter with presentation port, slice commands, event editor.",
       "parent": null,
       "dependencies": [
-        "8"
+        "8",
+        "10"
       ],
       "status": "pending",
       "priority": 1,
@@ -2118,7 +2126,7 @@
         "Interpreter deterministic and serializable",
         "Quick event works in playtest"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -2205,8 +2213,7 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Deterministic step doctests",
-        "Save mid-event round-trip"
+        "All children done"
       ],
       "test_strategy": "Doctests.",
       "files": [],
@@ -2214,9 +2221,62 @@
       "notes": ""
     },
     {
+      "id": "9.3.1",
+      "title": "Interpreter frames, waits, labels, budgets",
+      "parent": "9.3",
+      "dependencies": [],
+      "description": "Frame stack over command-list trees, waits in 60 Hz steps, labels as tree paths, instruction/jump budgets.",
+      "acceptance_criteria": [
+        "Deterministic step doctests incl. nested branches, label jumps to enclosing lists, budget exhaustion yields and resumes next step"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.3.2",
+      "title": "Common events and map processes",
+      "parent": "9.3",
+      "dependencies": [
+        "9.3.1"
+      ],
+      "description": "Common event calls, autorun and parallel processes (one interpreter each), autorun blocking, stuck-autorun detection.",
+      "acceptance_criteria": [
+        "Doctests: common event call/return, two parallel processes interleave deterministically, autorun blocks player input, a never-ending autorun is reported once"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.3.3",
+      "title": "Interpreter serialization and resume rules",
+      "parent": "9.3",
+      "dependencies": [
+        "9.3.2"
+      ],
+      "description": "Serializable state with list_ref + list_hash per frame; resume/restart/drop rules of spec 03.",
+      "acceptance_criteria": [
+        "Save mid-event and load: identical continuation",
+        "Edit the page after saving: autorun restarts from the top / triggered interpreter dropped, one warning each"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
       "id": "9.4",
       "title": "Presentation port + local port",
-      "description": "Port interface for message/choice/number/etc.; local implementation.",
+      "description": "Port interface for message/choice/number/etc.; local implementation rendering through the epic 10 message system.",
       "parent": "9",
       "dependencies": [
         "9.3"
@@ -2224,7 +2284,8 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Interpreter suspends/resumes via port"
+        "Interpreter suspends on show_message and resumes when the local port replies (doctest with a fake presenter)",
+        "With the real message window: a test scene runs a 2-message event and advances it via bridge input"
       ],
       "test_strategy": "Doctests.",
       "files": [],
@@ -2313,9 +2374,45 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "NPC interaction via bridge"
+        "All children done"
       ],
       "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.6.1",
+      "title": "Autonomous movement",
+      "parent": "9.6",
+      "dependencies": [],
+      "description": "Fixed, random, approach and custom-route movement with the speed/frequency tables of spec 05 and the map_ai stream; blocked moves.",
+      "acceptance_criteria": [
+        "Doctest: a random walker with a fixed seed visits the expected cells",
+        "Bridge: an approaching NPC reaches the player (positions via game_node_get)"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.6.2",
+      "title": "Triggers and map event processes",
+      "parent": "9.6",
+      "dependencies": [
+        "9.6.1"
+      ],
+      "description": "Action and touch triggers (facing, counter tiles), event touch, autorun/parallel on the map, NPC dialog through the local port.",
+      "acceptance_criteria": [
+        "Bridge: walk to an NPC, press jrpg_ok, the message window shows its text (screenshot), advancing closes it and the player can move again",
+        "Doctest: touch trigger fires once per step onto the event; counter tile extends action reach"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "priority": 1,
+      "status": "pending",
       "files": [],
       "commit": "",
       "notes": ""
@@ -2421,7 +2518,7 @@
       "acceptance_criteria": [
         "Findings fixed"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -2429,17 +2526,17 @@
     {
       "id": "10",
       "title": "Messages and UI kit",
-      "description": "Window frame, selectable list, message system, screen stack.",
+      "description": "Window frame, selectable list, message system, screen stack. Built before epic 9 so the local presentation port and NPC dialogs have a message window (epic 3 review).",
       "parent": null,
       "dependencies": [
-        "9"
+        "8"
       ],
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
         "Message advance end-to-end"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -2447,13 +2544,15 @@
     {
       "id": "10.1",
       "title": "Window frame + selectable list (C++)",
-      "description": "Skin, open/close animation, cursor, paging, key repeat, mouse.",
+      "description": "Skin, open/close animation, cursor, paging, key repeat, mouse. UI sound set (cursor, ok, cancel, buzzer) from System data.",
       "parent": "10",
       "dependencies": [],
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Navigation doctest + golden screenshot"
+        "Navigation doctest (wrap, page up/down, disabled items)",
+        "Window and list match the golden screenshot compared with talewright/tools/img_compare.py (NEW, written in 8.4.2): same window size and renderer, per-channel tolerance 2/255, at most 0.1 % of pixels differing; goldens are regenerated only on purpose",
+        "Cursor/ok/cancel/buzzer sounds play on the matching actions (audio player state via bridge)"
       ],
       "test_strategy": "Doctests + bridge.",
       "files": [],
@@ -2504,7 +2603,7 @@
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "E2E message advance via bridge"
+        "A test scene shows a message with a face and then a 3-way choice; bridge input advances, picks choice 2 and the returned index is 1; screenshot as evidence"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
@@ -2543,7 +2642,7 @@
       "acceptance_criteria": [
         "Findings fixed"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -2554,14 +2653,14 @@
       "description": "Main menu, item, skill, equip, status, save, game end.",
       "parent": null,
       "dependencies": [
-        "10"
+        "9"
       ],
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
         "Potion use raises HP (state query)"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -2575,7 +2674,7 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Each screen navigable via bridge input"
+        "All children done"
       ],
       "test_strategy": "Bridge.",
       "files": [],
@@ -2585,12 +2684,12 @@
     {
       "id": "11.1.1",
       "parent": "11.1",
-      "title": "Main menu, item and skill screens",
-      "description": "Managed GDScript screens over the UI kit.",
+      "title": "Main menu and item screen",
+      "description": "Main menu window and the item screen (use and target selection).",
       "dependencies": [],
       "priority": 1,
       "acceptance_criteria": [
-        "Navigate and use a potion via bridge"
+        "Via bridge: open the menu, use a potion on a hurt actor, HP rises by the item's formula (state query)"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
@@ -2601,20 +2700,56 @@
     {
       "id": "11.1.2",
       "parent": "11.1",
-      "title": "Equip, status, save and game end screens",
-      "description": "Equipment changes with stat preview; save slots UI.",
+      "title": "Skill screen",
+      "description": "Skill types, list, MP/TP cost, use on targets outside battle.",
       "dependencies": [
         "11.1.1"
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "Equip changes stats; save from menu"
+        "Via bridge: use a healing skill from the menu; MP falls by its cost and HP rises (state query)"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
       "commit": "",
       "notes": "",
       "status": "pending"
+    },
+    {
+      "id": "11.1.3",
+      "title": "Equip screen",
+      "parent": "11.1",
+      "dependencies": [
+        "11.1.2"
+      ],
+      "description": "Equipment slots, item list filtered by type, parameter preview, optimize/clear later.",
+      "acceptance_criteria": [
+        "Via bridge: equipping a weapon raises attack by its bonus (state query) and the preview showed the new value first"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "11.1.4",
+      "title": "Status screen",
+      "parent": "11.1",
+      "dependencies": [
+        "11.1.3"
+      ],
+      "description": "Actor status page (parameters, equipment, EXP to next level). Save and Game End menu commands are added by 13.1.3/13.2.",
+      "acceptance_criteria": [
+        "Via bridge: status screen shows the state's values (screenshot + node text checks)"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "11.2",
@@ -2629,7 +2764,7 @@
       "acceptance_criteria": [
         "Findings fixed"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -2648,7 +2783,7 @@
         "Bridge-driven battle won",
         "Golden log for fixed seed"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -2677,13 +2812,65 @@
       "dependencies": [],
       "priority": 1,
       "acceptance_criteria": [
-        "Golden damage cases"
+        "All children done"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
       "commit": "",
       "notes": "",
       "status": "pending"
+    },
+    {
+      "id": "12.1.1.1",
+      "title": "Battlers and action resolution",
+      "parent": "12.1.1",
+      "dependencies": [],
+      "description": "Battler views over actor/enemy state, action objects, targets (scope), repeats.",
+      "acceptance_criteria": [
+        "Doctests: targets for every slice scope, dead targets skipped/retargeted"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "12.1.1.2",
+      "title": "Damage pipeline, hit, critical, elements",
+      "parent": "12.1.1",
+      "dependencies": [
+        "12.1.1.1"
+      ],
+      "description": "Spec 04 pipeline in basis points, single-roll hit/evade/miss, critical, element averaging, guard, drain, clamps.",
+      "acceptance_criteria": [
+        "Golden damage cases computed by hand in the test file from spec 04 (incl. zero, negative base, overflow clamp, guard at GRD 250 %)"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "12.1.1.3",
+      "title": "Basic states in battle",
+      "parent": "12.1.1",
+      "dependencies": [
+        "12.1.1.2"
+      ],
+      "description": "Add/remove states, restriction, turn counts with random duration, removal by damage, death and revive.",
+      "acceptance_criteria": [
+        "Doctests: stacking refreshes turns, expiry at the right turn for a fixed seed, revive clears death"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "12.1.2",
@@ -2695,7 +2882,8 @@
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "Golden battle log for a fixed seed"
+        "Golden battle log for a fixed seed whose expected values (turn order with tie shuffle, damage, rewards) are derived by hand in the test file for the first two turns",
+        "Escape chance and outcome match spec 04 for a fixed seed"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
@@ -2729,7 +2917,7 @@
       "dependencies": [],
       "priority": 1,
       "acceptance_criteria": [
-        "Battle navigable via bridge input"
+        "All children done"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
@@ -2738,16 +2926,52 @@
       "status": "pending"
     },
     {
+      "id": "12.2.1.1",
+      "title": "Battle layout and status window",
+      "parent": "12.2.1",
+      "dependencies": [],
+      "description": "Front-view layout, party status window with gauges.",
+      "acceptance_criteria": [
+        "Bridge screenshot shows the layout; status values equal the battle state"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "12.2.1.2",
+      "title": "Command windows and targeting",
+      "parent": "12.2.1",
+      "dependencies": [
+        "12.2.1.1"
+      ],
+      "description": "Party/actor command windows, skill/item selection, target selection.",
+      "acceptance_criteria": [
+        "Via bridge input: choose Attack on enemy 2 and the action queued targets enemy 2 (state query)"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
       "id": "12.2.2",
       "parent": "12.2",
       "title": "Battle log, popups, battleback and enemy sprites",
-      "description": "Feedback layer: damage popups, log window, sprite flashes, simple animations.",
+      "description": "Feedback layer: damage popups, log window, sprite flashes, simple animations. Battle BGM and victory ME; return to the map.",
       "dependencies": [
         "12.2.1"
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "Battle won via bridge with screenshots"
+        "Battle won via bridge with screenshots",
+        "Battle BGM plays during battle and the victory ME after it",
+        "After victory the map, player position, event states and the calling event resume and its win branch runs (state query)"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
@@ -2766,7 +2990,9 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Seeded encounter within N steps"
+        "With a fixed encounter seed the first encounter happens at the step predicted by the spec 05 rule computed in the test",
+        "Troop chosen by weight among entries matching the region; battle return resumes the map",
+        "Troop event page with a turn condition runs at that turn"
       ],
       "test_strategy": "Doctests + bridge.",
       "files": [],
@@ -2804,7 +3030,7 @@
       "acceptance_criteria": [
         "Findings fixed"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -2836,9 +3062,7 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Canonical state hash (saved_at and playtime excluded) is identical after save -> continue",
-        "Corrupt, truncated, wrong-magic and newer-version files are rejected without a crash; the loader falls back to .tmp then .bak",
-        "Save mid-event, edit the page, load: the interpreter restarts per spec 03 with one warning"
+        "All children done"
       ],
       "test_strategy": "Doctests + bridge.",
       "files": [],
@@ -2846,9 +3070,63 @@
       "notes": ""
     },
     {
+      "id": "13.1.1",
+      "title": "Save file format",
+      "parent": "13.1",
+      "dependencies": [],
+      "description": "Spec 06 file layout: plain header, zstd body with raw size cap, optional AES-CFB body, SHA-256, .tmp/.bak replace sequence, versions and migrations.",
+      "acceptance_criteria": [
+        "Corrupt, truncated, wrong-magic, oversized-raw-size and newer-version files are rejected without a crash",
+        "Loader falls back to .tmp then .bak after simulated crashes at each step of the replace sequence"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "13.1.2",
+      "title": "Game state save and continue",
+      "parent": "13.1",
+      "dependencies": [
+        "13.1.1"
+      ],
+      "description": "Assemble/restore the full state: interpreters with list hashes, event states with map revision, RNG streams, clock.",
+      "acceptance_criteria": [
+        "Canonical state hash (saved_at and playtime excluded) identical after save -> continue",
+        "Save mid-event, edit the page, load: restart per spec 03 with one warning; changed map revision resets moved events"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "13.1.3",
+      "title": "Save and load screens",
+      "parent": "13.1",
+      "dependencies": [
+        "13.1.2"
+      ],
+      "description": "Slot list from headers only, save from the menu (Save command), load screen, autosave slot.",
+      "acceptance_criteria": [
+        "Via bridge: save from the menu into slot 1, quit to title, load slot 1, state hash equal"
+      ],
+      "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
       "id": "13.2",
       "title": "Title, game over, boot flow",
-      "description": "Fresh build boots to title.",
+      "description": "Title screen (New Game, Continue, Options), game over, Game End menu command, boot flow.",
       "parent": "13",
       "dependencies": [
         "13.1"
@@ -2856,7 +3134,10 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Boot to title; game over returns to title"
+        "Boot shows the title",
+        "New Game places the player at the System start position with the initial party (state query)",
+        "Continue opens the newest slot",
+        "Game over and Game End return to the title"
       ],
       "test_strategy": "Bridge.",
       "files": [],
@@ -2865,8 +3146,8 @@
     },
     {
       "id": "13.3",
-      "title": "Slice export",
-      "description": "Export jrpg_demo with Windows template.",
+      "title": "Demo content and slice export",
+      "description": "jrpg_demo built with the bridge authoring tools, then exported with templates that contain modules/jrpg.",
       "parent": "13",
       "dependencies": [
         "13.2"
@@ -2874,7 +3155,7 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Exported exe boots without errors"
+        "All children done"
       ],
       "test_strategy": "Run exported exe.",
       "files": [],
@@ -2882,9 +3163,45 @@
       "notes": ""
     },
     {
+      "id": "13.3.1",
+      "title": "jrpg_demo content via bridge authoring tools",
+      "parent": "13.3",
+      "dependencies": [],
+      "description": "talewright/tools/build_demo.py drives the bridge authoring tools to create the demo from an empty project: database entries, a map with an NPC, a chest, an encounter region, a troop, the start position and music.",
+      "acceptance_criteria": [
+        "Running build_demo.py on an empty project produces talewright/samples/jrpg_demo with no dangling references (5.6 scanner)",
+        "A second run changes nothing"
+      ],
+      "test_strategy": "Bridge script on a temporary copy; reference scanner.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "13.3.2",
+      "title": "Slice export",
+      "parent": "13.3",
+      "dependencies": [
+        "13.3.1"
+      ],
+      "description": "Rebuild template_release from the current tree (the 1.4 templates are vanilla) and export jrpg_demo.",
+      "acceptance_criteria": [
+        "template_release built with modules/jrpg via build.py",
+        "Exported exe run with --quit-after 600 --log-file <file> exits 0 and the log has no ERROR or SCRIPT ERROR lines"
+      ],
+      "test_strategy": "Run the exported exe headless-free with logging.",
+      "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
       "id": "13.4",
-      "title": "jrpg_demo + scripted playthrough",
-      "description": "Walk, NPC, menu, battle, save/load via bridge x3.",
+      "title": "Scripted M1 playthrough",
+      "description": "Bridge script that plays jrpg_demo: walk to the NPC, read the dialog, open the menu and use a potion, win a battle, save, reload.",
       "parent": "13",
       "dependencies": [
         "13.3"
@@ -2892,8 +3209,9 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
+        "A pass = every checkpoint (dialog shown, HP raised by the potion, battle won, save written, reload state hash equal) reached within its timeout with no errors in game_logs",
         "3 consecutive passes",
-        "Evidence saved"
+        "Evidence (screenshots, logs) saved in plan/evidence/M1/"
       ],
       "test_strategy": "Bridge script.",
       "files": [],
@@ -2911,7 +3229,10 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "All equal to baseline"
+        "Upstream --test results equal the baseline",
+        "plain_2d/plain_3d smoke passes",
+        "Vanilla build (modules off) behaves as baseline",
+        "core_diff_check.py reports no unlisted core paths"
       ],
       "test_strategy": "Scripts.",
       "files": [],
@@ -2931,7 +3252,7 @@
       "acceptance_criteria": [
         "Findings fixed"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -2950,7 +3271,7 @@
         "Fuzzed decoder never crashes",
         "Loopback client/server exchange typed messages"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": "D-024: spikes gate the MMO epics; record results in plan/evidence/mmo_spikes/."
@@ -2969,7 +3290,7 @@
         "Headless server roles start/stop cleanly",
         "Server data compiled deterministically"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -2988,7 +3309,7 @@
         "Crash-consistency test: kill -9 during saves leaves consistent DB",
         "Migrations idempotent"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3007,7 +3328,7 @@
         "Double login kicks older session",
         "Zone handoff without item loss"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3026,7 +3347,7 @@
         "2 clients see each other move",
         "Speed hack rejected"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3045,7 +3366,7 @@
         "NPC dialog round-trip online",
         "Disconnect mid-dialog cleans up"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3064,7 +3385,7 @@
         "Online turn-based battle won",
         "ARPG mob kill grants exp/drop"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3082,7 +3403,7 @@
       "acceptance_criteria": [
         "M2: 2+ clients chat, NPC, shop, trade, battle, relog, zone restart recovery — evidence"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3100,7 +3421,7 @@
       "acceptance_criteria": [
         "Every gap-map row of this area implemented and tested, or deferred with reason"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3118,7 +3439,7 @@
       "acceptance_criteria": [
         "Every gap-map row of this area implemented and tested, or deferred with reason"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3136,7 +3457,7 @@
       "acceptance_criteria": [
         "Every gap-map row of this area implemented and tested, or deferred with reason"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3154,7 +3475,7 @@
       "acceptance_criteria": [
         "Every gap-map row of this area implemented and tested, or deferred with reason"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3172,7 +3493,7 @@
       "acceptance_criteria": [
         "Every gap-map row of this area implemented and tested, or deferred with reason"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3190,7 +3511,7 @@
       "acceptance_criteria": [
         "Every gap-map row of this area implemented and tested, or deferred with reason"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3208,7 +3529,7 @@
       "acceptance_criteria": [
         "Every gap-map row of this area implemented and tested, or deferred with reason"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3226,7 +3547,7 @@
       "acceptance_criteria": [
         "Every gap-map row of this area implemented and tested, or deferred with reason"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3244,7 +3565,7 @@
       "acceptance_criteria": [
         "Every gap-map row of this area implemented and tested, or deferred with reason"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3262,7 +3583,7 @@
       "acceptance_criteria": [
         "Every gap-map row of this area implemented and tested, or deferred with reason"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3280,7 +3601,7 @@
       "acceptance_criteria": [
         "Every gap-map row of this area implemented and tested, or deferred with reason"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3298,7 +3619,7 @@
       "acceptance_criteria": [
         "Every gap-map row of this area implemented and tested, or deferred with reason"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3316,7 +3637,7 @@
       "acceptance_criteria": [
         "Every gap-map row of this area implemented and tested, or deferred with reason"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3334,7 +3655,7 @@
       "acceptance_criteria": [
         "Every gap-map row of this area implemented and tested, or deferred with reason"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3352,7 +3673,7 @@
       "acceptance_criteria": [
         "Every gap-map row of this area implemented and tested, or deferred with reason"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3370,7 +3691,7 @@
       "acceptance_criteria": [
         "Feature set implemented with tests, evidence via bridge/bots"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3388,7 +3709,7 @@
       "acceptance_criteria": [
         "Feature set implemented with tests, evidence via bridge/bots"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3406,7 +3727,7 @@
       "acceptance_criteria": [
         "Feature set implemented with tests, evidence via bridge/bots"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3424,7 +3745,7 @@
       "acceptance_criteria": [
         "Feature set implemented with tests, evidence via bridge/bots"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3442,7 +3763,7 @@
       "acceptance_criteria": [
         "Feature set implemented with tests, evidence via bridge/bots"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3460,7 +3781,7 @@
       "acceptance_criteria": [
         "Feature set implemented with tests, evidence via bridge/bots"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""
@@ -3478,7 +3799,7 @@
       "acceptance_criteria": [
         "Adapter works against a local Nakama"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": "Deferred by D-MMO decision: own login/world services are the default; Nakama OSS has no clustering and adds Go+Postgres."
@@ -3494,7 +3815,7 @@
       "acceptance_criteria": [
         "Branding replaced; UPSTREAM_PATCHES updated"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": "Deferred: personal non-distributed fork; minimal upstream diff preferred."
@@ -3510,7 +3831,7 @@
       "acceptance_criteria": [
         "Importer converts a sample project"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": "Deferred (legal): requires RPG Maker data formats that are not publicly documented; rule: reimplement only from public documentation."
@@ -3548,7 +3869,7 @@
       "acceptance_criteria": [
         "Playthrough scripts pass; evidence saved"
       ],
-      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
       "notes": ""

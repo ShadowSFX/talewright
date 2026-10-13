@@ -47,6 +47,23 @@ modules/jrpg/
 | `JRPGWindow`, `JRPGSelectableList`, `JRPGMessageView`, `JRPGGauge` | runtime | UI building blocks |
 | `JRPGWorkspacePlugin`, `JRPGBootstrapPlugin`, `JRPGDatabaseEditor`, `JRPGMapCanvas`, `JRPGEventEditor`, `JRPGSetupTool`, importers | editor | editor-only |
 
+## Input actions
+Godot's built-in `ui_accept`/`ui_cancel` have no gamepad face-button defaults (`core/input/input_map.cpp:462-475`) and
+belong to editor-style UI navigation, so JRPG games use their own actions, added to the project's InputMap by the
+setup tool (only when missing; user remaps are kept) and listed in the docs:
+
+| Action | Keyboard | Gamepad |
+|---|---|---|
+| `jrpg_up` / `jrpg_down` / `jrpg_left` / `jrpg_right` | arrows, W/S/A/D | D-pad, left stick |
+| `jrpg_ok` | Enter, Space, Z | bottom face button |
+| `jrpg_cancel` | Escape, X, Backspace | right face button |
+| `jrpg_menu` | Tab, M | top face button, Start |
+| `jrpg_dash` | Shift | left face button |
+| `jrpg_page_prev` / `jrpg_page_next` | Q / E, Page Up / Page Down | left / right shoulder |
+
+On the map, `jrpg_cancel` also opens the menu when the system option `cancel_opens_menu` is on (default). The
+bridge's `game_input` drives these actions in tests.
+
 ## Naming and conventions
 - Classes `JRPG*`; files `snake_case`; tests `TEST_CASE("[JRPG][Area] ...")`.
 - Every public class registered with `GDREGISTER_CLASS` has class docs in `doc_classes/` (CI-style doctool check:

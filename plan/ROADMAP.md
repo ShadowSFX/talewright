@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 139, in_progress: 0, done: 49, blocked: 0, deferred: 3 (of 191)
+**Totals:** pending: 153, in_progress: 0, done: 52, blocked: 0, deferred: 3 (of 208)
 
 ## [x] 0 Bootstrap and task system
 
@@ -45,7 +45,7 @@ Sourced RPG Maker inventory, Godot current state from the clone, MMO feasibility
 - [x] **2.4** Gap map (P1) _(deps: 2.1, 2.2, 2.3; commit: 89239e392b)_
 - [x] **2.5** Epic review: research (P1) _(deps: 2.4; commit: 6eb6a76de9)_
 
-## [ ] 3 Architecture decisions and specs (Phases 2-3)
+## [x] 3 Architecture decisions and specs (Phases 2-3)
 
 Decision log, upstream patch ledger, design specs, refined task tree.
 
@@ -53,12 +53,12 @@ Decision log, upstream patch ledger, design specs, refined task tree.
 - [x] **3.2** UPSTREAM_PATCHES.md ledger (P2) _(commit: 81bb919732)_
 - [x] **3.3** Specs (P1) _(deps: 3.1; commit: e5dbc43068)_
 - [x] **3.4** Refine task tree (P1) _(deps: 3.3; commit: 1bd824ac35)_
-- [ ] **3.5** Epic review: decisions and specs (P1) _(deps: 3.4)_
+- [x] **3.5** Epic review: decisions and specs (P1) _(deps: 3.4)_
   - [x] **3.5.1** Review fixes: battle math and formulas (spec 04) (P1) _(commit: 59b450e196)_
   - [x] **3.5.2** Review fixes: tiles, autotiles, passage bits, character sheets (spec 05) (P1) _(deps: 3.5.1; commit: 8eb312e55e)_
   - [x] **3.5.3** Review fixes: core layering, save robustness, determinism (specs 01, 03, 05, 06) (P1) _(deps: 3.5.2; commit: 67d53aa4ac)_
-  - [x] **3.5.4** Review fixes: online page authority, localization keys, inconsistencies (P1) _(deps: 3.5.3; commit: pending)_
-  - [ ] **3.5.5** Review fixes: task tree order, slice gaps, criteria, core_diff_check; review record (P1) _(deps: 3.5.4)_
+  - [x] **3.5.4** Review fixes: online page authority, localization keys, inconsistencies (P1) _(deps: 3.5.3; commit: d25927e933)_
+  - [x] **3.5.5** Review fixes: task tree order, slice gaps, criteria, core_diff_check; review record (P1) _(deps: 3.5.4; commit: pending)_
 
 ## [x] 4 Claude bridge (MCP)
 
@@ -161,12 +161,17 @@ Pages, conditions, triggers, command model with authority, interpreter with pres
   - [ ] **9.2.1** Command storage benchmark (P1)
   - [ ] **9.2.2** Command model, registry, authority, script commands (P1) _(deps: 9.2.1)_
 - [ ] **9.3** Interpreter (P1) _(deps: 9.2)_
+  - [ ] **9.3.1** Interpreter frames, waits, labels, budgets (P1)
+  - [ ] **9.3.2** Common events and map processes (P1) _(deps: 9.3.1)_
+  - [ ] **9.3.3** Interpreter serialization and resume rules (P1) _(deps: 9.3.2)_
 - [ ] **9.4** Presentation port + local port (P1) _(deps: 9.3)_
 - [ ] **9.5** Slice commands (P1) _(deps: 9.4)_
   - [ ] **9.5.1** Message and flow commands (P1)
   - [ ] **9.5.2** State commands (P1) _(deps: 9.5.1)_
   - [ ] **9.5.3** Scene and movement commands (P1) _(deps: 9.5.2)_
 - [ ] **9.6** Event characters runtime (P1) _(deps: 9.5, 8.7)_
+  - [ ] **9.6.1** Autonomous movement (P1)
+  - [ ] **9.6.2** Triggers and map event processes (P1) _(deps: 9.6.1)_
 - [ ] **9.7** Event editor UI (P1) _(deps: 9.6)_
   - [ ] **9.7.1** Event properties, pages and conditions UI (P1)
   - [ ] **9.7.2** Command list, picker and forms (P1) _(deps: 9.7.1)_
@@ -176,7 +181,7 @@ Pages, conditions, triggers, command model with authority, interpreter with pres
 
 ## [ ] 10 Messages and UI kit
 
-Window frame, selectable list, message system, screen stack.
+Window frame, selectable list, message system, screen stack. Built before epic 9 so the local presentation port and NPC dialogs have a message window (epic 3 review).
 
 - [ ] **10.1** Window frame + selectable list (C++) (P1)
 - [ ] **10.2** Message system (P1) _(deps: 10.1)_
@@ -190,8 +195,10 @@ Window frame, selectable list, message system, screen stack.
 Main menu, item, skill, equip, status, save, game end.
 
 - [ ] **11.1** Menu screens (P1)
-  - [ ] **11.1.1** Main menu, item and skill screens (P1)
-  - [ ] **11.1.2** Equip, status, save and game end screens (P1) _(deps: 11.1.1)_
+  - [ ] **11.1.1** Main menu and item screen (P1)
+  - [ ] **11.1.2** Skill screen (P1) _(deps: 11.1.1)_
+  - [ ] **11.1.3** Equip screen (P1) _(deps: 11.1.2)_
+  - [ ] **11.1.4** Status screen (P1) _(deps: 11.1.3)_
 - [ ] **11.2** Epic review: menu (P1) _(deps: 11.1)_
 
 ## [ ] 12 Battle (slice)
@@ -200,9 +207,14 @@ Turn-based core, scene, encounters, troop events, battle test.
 
 - [ ] **12.1** Battle core (P1)
   - [ ] **12.1.1** Battlers, actions and damage pipeline (P1)
+    - [ ] **12.1.1.1** Battlers and action resolution (P1)
+    - [ ] **12.1.1.2** Damage pipeline, hit, critical, elements (P1) _(deps: 12.1.1.1)_
+    - [ ] **12.1.1.3** Basic states in battle (P1) _(deps: 12.1.1.2)_
   - [ ] **12.1.2** Turn order, enemy AI, victory/defeat/escape, rewards (P1) _(deps: 12.1.1)_
 - [ ] **12.2** Battle scene (front view) (P1) _(deps: 12.1)_
   - [ ] **12.2.1** Battle layout, status and command windows, targeting (P1)
+    - [ ] **12.2.1.1** Battle layout and status window (P1)
+    - [ ] **12.2.1.2** Command windows and targeting (P1) _(deps: 12.2.1.1)_
   - [ ] **12.2.2** Battle log, popups, battleback and enemy sprites (P1) _(deps: 12.2.1)_
 - [ ] **12.3** Encounters + troop events (P1) _(deps: 12.2)_
 - [ ] **12.4** Battle test + test from here (P2) _(deps: 12.3)_
@@ -213,9 +225,14 @@ Turn-based core, scene, encounters, troop events, battle test.
 Save format, title/game over, slice export, demo playthrough.
 
 - [ ] **13.1** Save format + slots (P1)
+  - [ ] **13.1.1** Save file format (P1)
+  - [ ] **13.1.2** Game state save and continue (P1) _(deps: 13.1.1)_
+  - [ ] **13.1.3** Save and load screens (P1) _(deps: 13.1.2)_
 - [ ] **13.2** Title, game over, boot flow (P1) _(deps: 13.1)_
-- [ ] **13.3** Slice export (P1) _(deps: 13.2)_
-- [ ] **13.4** jrpg_demo + scripted playthrough (P1) _(deps: 13.3)_
+- [ ] **13.3** Demo content and slice export (P1) _(deps: 13.2)_
+  - [ ] **13.3.1** jrpg_demo content via bridge authoring tools (P1)
+  - [ ] **13.3.2** Slice export (P1) _(deps: 13.3.1)_
+- [ ] **13.4** Scripted M1 playthrough (P1) _(deps: 13.3)_
 - [ ] **13.5** Vanilla regression rerun (P1) _(deps: 13.4)_
 - [ ] **13.6** Milestone review M1 (P1) _(deps: 13.5)_
 

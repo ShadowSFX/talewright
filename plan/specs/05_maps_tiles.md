@@ -29,9 +29,17 @@ Each map is a scene `res://jrpg/maps/map_NNNN.tscn` whose root is a `JRPGMap` no
 | `regions` | PackedByteArray | region id 0..255 per cell |
 | `scroll_type` | enum | none / loop vertical / loop horizontal / loop both |
 | `bgm`, `bgs`, `battleback1/2`, `parallax` | dictionaries | autoplay + parameters |
-| `encounters` | Array[Dictionary] | `{troop_id, weight, regions:PackedInt32Array}` + `encounter_steps` |
+| `encounters` | Array[Dictionary] | `{troop_id, weight, regions:PackedInt32Array}` + `encounter_steps` (see below) |
 | `disable_dash`, `next_event_id` | | |
 | `events` | Array[JRPGEventData] | spec 03 |
+
+### Random encounters
+`encounter_steps` is the documented *average* number of steps between encounters (RM-MPR-008; the distribution is
+not documented). Talewright's rule: after each encounter (and on entering the map) the countdown is drawn uniformly
+from `[ceil(n/2), n + floor(n/2)]` with the `encounter` stream, so the mean is n and no two encounters come
+back-to-back unless n is 1. Each step on a cell that allows encounters decrements it; at 0 a troop is picked by
+weight among the entries whose region list is empty or contains the cell's region. Bush tiles and other step
+modifiers are later data fields (epic 22).
 
 ### `JRPGMap` (runtime node)
 Builds **internal** TileMapLayer children (`INTERNAL_MODE_FRONT`, like `scene/2d/tile_map.cpp:272`) from

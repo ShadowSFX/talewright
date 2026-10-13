@@ -41,7 +41,8 @@ and move on to the next ready task.
 - **Never add a `Co-Authored-By` trailer** (owner's global rule overrides the harness default).
 - Per epic: last child is an "Epic review" task: launch a fresh-context reviewer subagent with the epic's
   plan, the matching inventory/feasibility rows and the diff; fix every finding; log the result in
-  PROGRESS.md; re-verify `talewright/samples/plain_2d` and `plain_3d`; push `talewright` to `origin`.
+  PROGRESS.md; re-verify `talewright/samples/plain_2d` and `plain_3d`; run
+  `python plan/tools/core_diff_check.py` (must report 0 unlisted core paths); push `talewright` to `origin`.
 - Per milestone (M1 slice, M2 online slice, M3 parity): play through the sample via the bridge and save
   evidence (screenshots, logs) under `plan/evidence/<milestone>/`.
 

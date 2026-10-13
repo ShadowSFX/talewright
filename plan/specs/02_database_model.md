@@ -43,7 +43,25 @@ small dictionaries or packed ints so tables stay compact:
   **Enemy action**: `{skill_id:int, condition_type:int, param1:int, param2:int, rating:int}` (HP/MP conditions in basis points);
   **Troop member**: `{enemy_id:int, x:int, y:int, hidden:bool}`.
 - Parameter curves: `PackedInt32Array` of 8 params × (max_level+1) values.
-Exact field lists per table follow the inventory slices (03/04/05) and are implemented in task 5.3.
+Full field lists per table follow the inventory slices (03/04/05). The vertical slice (M1) implements the
+**slice field set** below first (tasks 5.3, 6.5); the rest arrives with the parity epics.
+
+## Slice field set (M1)
+| Table | Fields |
+|---|---|
+| Actors | name, nickname, class, initial level, max level, face (`uid://`), character sheet (`uid://`), battler image, initial equipment, traits, note |
+| Classes | name, EXP curve (base, growth, extra → baked table), parameter curves, learnings, traits |
+| Skills | name, icon, description, skill type, MP cost, TP cost, scope, occasion, speed, success, repeats, TP gain, hit type, animation, use messages, damage (type, element, formula, variance, critical), effects |
+| Items | name, icon, description, item type, price, consumable, scope, occasion, speed, success, repeats, TP gain, hit type, animation, damage, effects |
+| Weapons / Armors | name, icon, description, weapon or armor type, equipment type, price, parameter bonuses, traits |
+| Enemies | name, battler image, parameters, EXP, gold, drops, action patterns, traits |
+| Troops | name, members (enemy, position, hidden), battle event pages |
+| States | name, icon, restriction, priority, removal (battle end, restriction, turns min/max, damage chance, steps), messages, traits |
+| System | game title, `game_id`, currency unit, initial party, **start position** (map, cell, direction; required, RM-SYS-007), title image, title/battle/victory/defeat music, UI sound set (cursor, ok, cancel, buzzer), window color, battle rules (spec 04) |
+| Types | elements, skill types, weapon types, armor types, equipment types |
+| Terms | basic statuses, parameters, menu and battle commands, battle messages |
+| Tilesets | spec 05 (palette, baked flags, `tileset_uid`) |
+| Common events | name, trigger, condition switch, commands |
 
 ## Versioning and migration
 - `JRPGDatabase.schema_version` and `JRPGTable.schema_version` (int). The loader runs `_migrate(from, to)` steps;
