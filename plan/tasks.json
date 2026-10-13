@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "1.6 Epic 0+1 review fixes",
+  "last_completed": "2.1.1 Lineup, baseline, project structure, editor basics",
   "tasks": [
     {
       "id": "0",
@@ -251,7 +251,7 @@
         "CLAUDE.md"
       ],
       "status": "done",
-      "commit": "pending",
+      "commit": "a6fbf412ba",
       "notes": "",
       "parent": "1"
     },
@@ -298,7 +298,7 @@
       "description": "Lineup (MZ, MV, VX Ace, XP, 2003, Unite, U2U), baseline choice, project structure, menu bar, aid tools, playing the game, test play, deployment, plugins, official plugins, output formats, asset standards.",
       "parent": "2.1",
       "dependencies": [],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Sections written with sources"
@@ -307,7 +307,7 @@
       "files": [
         "plan/research/rpgmaker/01_project_editor_tools.md"
       ],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
