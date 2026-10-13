@@ -89,7 +89,9 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Choice:** each map is a `.tscn` whose root `JRPGMap` node stores layer data (tile layers in
   Talewright palette-index format — spec 05, amended in 3.5.2 instead of Godot's tile_map_data bytes, so atlas
   re-layouts never rewrite maps — shadow, region, properties, next event id) and builds internal TileMapLayers;
-  events are `JRPGEvent` child nodes; any other Godot node can be added. The JRPG workspace has its own
+  events are data (`JRPGEventData` inside a core `JRPGMapData` built-in resource, amended in 3.5.3 so core and
+  servers need no scene nodes and Scene-dock duplication cannot clone event ids; the runtime builds internal
+  `JRPGEvent` nodes and users attach nodes with `JRPGEventAnchor`); any other Godot node can be added. The JRPG workspace has its own
   map canvas sharing the edited scene's World2D through a `MapEditSession` adapter; a brush stroke is one
   undo action with a compact patch; own autotile resolver over a baked atlas; a map cell cache compiler
   (passability/flags/regions) feeds movement, pathfinding and servers. Task 8.1 is a spike; if it fails,

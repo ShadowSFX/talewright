@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "3.5.2 Review fixes: tiles, autotiles, passage bits, character sheets (spec 05)",
+  "last_completed": "3.5.3 Review fixes: core layering, save robustness, determinism (specs 01, 03, 05, 06)",
   "tasks": [
     {
       "id": "0",
@@ -695,7 +695,7 @@
         "plan/DECISIONS.md"
       ],
       "status": "done",
-      "commit": "pending",
+      "commit": "8eb312e55e",
       "notes": ""
     },
     {
@@ -721,8 +721,8 @@
         "plan/specs/06_save_format.md",
         "plan/DECISIONS.md"
       ],
-      "status": "pending",
-      "commit": "",
+      "status": "done",
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -1330,7 +1330,7 @@
     {
       "id": "5.5",
       "title": "Game state core",
-      "description": "Switches, variables, self switches, party, runtime actors, inventory, gold; serialization.",
+      "description": "Switches, variables (Array, index = id), self switches, party, runtime actors, inventory, gold, JRPGRandom streams, JRPGSimClock steps, JRPGEventState; serialization (spec 06).",
       "parent": "5",
       "dependencies": [
         "5.4"
@@ -1338,7 +1338,8 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Round-trip equality doctest"
+        "serialize -> deserialize -> serialize gives an identical Dictionary (canonical form, saved_at excluded)",
+        "RNG streams and the step clock round-trip"
       ],
       "test_strategy": "Doctests.",
       "files": [],
@@ -1853,13 +1854,15 @@
     {
       "id": "8.1",
       "title": "JRPGMap node + spike",
-      "description": "Layer data in root, internal TileMapLayers, properties; spike: open/paint/undo/save/reopen/run via bridge.",
+      "description": "JRPGMapData (core: layers, regions, shadow, events, revision) as a built-in sub-resource of the map scene; JRPGMap node builds internal TileMapLayers and event nodes; JRPGMapList; spike: open/paint/undo/save/reopen/run via bridge, plus reading JRPGMapData from the PackedScene's SceneState without instancing.",
       "parent": "8",
       "dependencies": [],
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Spike passes or fallback decided in DECISIONS.md"
+        "Spike passes (paint, undo in the map scene's own history, save, reopen, run) or the fallback is decided in DECISIONS.md",
+        "A doctest loads JRPGMapData from a saved map scene through SceneState without creating nodes",
+        "Two scenes claiming one map_id: the scan reassigns the newer and warns"
       ],
       "test_strategy": "Bridge.",
       "files": [],
@@ -2123,13 +2126,15 @@
     {
       "id": "9.1",
       "title": "JRPGEvent + pages + conditions + triggers",
-      "description": "Event node, page selection/refresh, priority, triggers.",
+      "description": "JRPGEventData + JRPGEventPage as core data inside JRPGMapData (graphic as uid string); internal JRPGEvent nodes and JRPGEventAnchor; page selection/refresh, priority, triggers; duplicate event_id reassignment on save.",
       "parent": "9",
       "dependencies": [],
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Page-selection doctest matrix"
+        "Page-selection doctest matrix (several pages qualify -> highest; each condition kind; refresh after switch change)",
+        "Duplicate event_id in saved data is reassigned on save with a warning",
+        "A JRPGEventAnchor follows its event when the event moves"
       ],
       "test_strategy": "Doctests.",
       "files": [],
@@ -2192,7 +2197,7 @@
     {
       "id": "9.3",
       "title": "Interpreter",
-      "description": "Frames, waits, labels as paths, budgets, common events, autorun/parallel, serializable state.",
+      "description": "Frames, waits in 60 Hz steps, labels as paths, budgets, common events, autorun/parallel, serializable state with per-frame list hashes and the resume rules of spec 03.",
       "parent": "9",
       "dependencies": [
         "9.2"
@@ -2825,14 +2830,15 @@
     {
       "id": "13.1",
       "title": "Save format + slots",
-      "description": "Versioned save of game + interpreter state; corrupt/old handling.",
+      "description": "Save file format of spec 06 (plain header, zstd body with raw size, optional in-memory AES-256-CFB body encryption with CryptoCore, SHA-256, .tmp/.bak replace sequence), slots, versioning, list-hash and map-revision checks.",
       "parent": "13",
       "dependencies": [],
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Identical state hash after continue",
-        "Corrupt save rejected gracefully"
+        "Canonical state hash (saved_at and playtime excluded) is identical after save -> continue",
+        "Corrupt, truncated, wrong-magic and newer-version files are rejected without a crash; the loader falls back to .tmp then .bak",
+        "Save mid-event, edit the page, load: the interpreter restarts per spec 03 with one warning"
       ],
       "test_strategy": "Doctests + bridge.",
       "files": [],

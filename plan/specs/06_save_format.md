@@ -10,18 +10,34 @@ direction, vehicle, followers}`, `switches: PackedByteArray (bitset)`, `variable
 `actors: [{id, name, nickname, class_id, level, exp, hp, mp, tp, equips, skills, states with turns, buffs}]`,
 `system: {save/menu/encounter/formation access, window tone, battle/victory/defeat/vehicle BGM overrides, timer}`,
 `screen: {tint, pictures, weather}`, `audio: {bgm, bgs, saved bgm}`, `interpreters: [spec 03 serialized state for
-the map autorun/parallel processes and the current event]`, `rng: {state, inc}`, `events_state: per map moved events
-(positions, directions, erased flags) for the current map only (others reset like RPG Maker)`.
+the map autorun/parallel processes and the current event, with list hashes]`, `rng: {stream name → {state, inc}}`
+(spec 04 streams), `clock: simulation steps`, `events_state: {map_id, map_revision, events: [JRPGEventState]}` for the
+current map (other maps start from their data when entered).
+`JRPGEventState` (core): `event_id`, cell, direction, pattern, move-route index and wait, erased flag, transparency,
+"through" override. On load, states whose `event_id` no longer exists are dropped; if `map_revision` differs, events
+whose data changed are reset to their data position (one warning).
 Header (`slot_info`): title, playtime, party faces/characters, map name — readable without loading the full state.
 
 ## Encoding and files
 - `user://saves/<game_id>/slot_<n>.save` (`n` 0 = autosave, 1..N manual; N from System data).
-- File = 8-byte magic `TWSAVE01` + `uint32 header_len` + header (`var_to_bytes`, objects disabled) + body
-  (`var_to_bytes`, objects disabled, compressed with `FileAccess::COMPRESSION_ZSTD`) + SHA-256 of header+body.
-- Writes go to `slot_n.save.tmp` then rename over the old file (atomic replace); the previous file is kept as
-  `slot_n.save.bak` once.
-- Optional encryption: `FileAccess::open_encrypted_with_pass` (`core/io/file_access.h:246`) when the project sets a
-  save key (off by default; documented as obfuscation, not security).
+- File = 8-byte magic `TWSAVE01` + `u32 header_len` + header (`var_to_bytes`, objects disabled; **never encrypted**,
+  so slot lists read it cheaply) + `u8 flags` (bit 0 compressed, bit 1 encrypted) + `u32 raw_body_size` +
+  `u32 stored_body_size` + 16-byte IV (zeros when not encrypted) + body + SHA-256 of everything before it. The whole
+  file is built in memory and the hash is checked before anything is decoded.
+- Body = `var_to_bytes` of the state (objects disabled), compressed with `Compression::compress(MODE_ZSTD)`. zstd has
+  no dynamic decompression in Godot (only gzip/deflate/brotli do, `core/io/compression.cpp:294`), so the raw size is
+  stored and capped at 64 MiB before allocating.
+- Optional encryption (off by default; documented as obfuscation, not security): the compressed body is encrypted in
+  memory with `CryptoCore::AESContext::encrypt_cfb` (AES-256-CFB, key = SHA-256 of the project's save key, random IV
+  from `CryptoCore::RandomGenerator`; `core/crypto/crypto_core.h:42-52,102-118`) — the same primitives
+  `FileAccessEncrypted` uses. Godot's file-level helpers do not fit: `FileAccess::open_encrypted_pass`
+  (`core/io/file_access.h:245`) encrypts the header too and decrypts the whole file on open
+  (`core/io/file_access_encrypted.cpp:94-110`), and `FileAccessEncrypted` writes only when closed
+  (`core/io/file_access_encrypted.cpp:137-162`), so no hash could follow it.
+- Replacing a slot is not atomic on Windows: `DirAccessWindows::rename` deletes an existing target and then moves
+  (`drivers/windows/dir_access_windows.cpp:339-345`). Sequence: write and close `slot_n.save.tmp`; rename the current
+  `slot_n.save` to `slot_n.save.bak` (replacing an older `.bak`); rename `.tmp` to `slot_n.save`. The loader tries
+  `slot_n.save`, then a complete and valid `.tmp`, then `.bak`, so a crash at any point leaves a loadable slot.
 
 ## Loading and versioning
 - Reject: wrong magic, hash mismatch, header/body decode errors (`decode_variant` with objects disallowed,

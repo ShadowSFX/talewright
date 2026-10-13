@@ -4,10 +4,23 @@ Decisions: D-006 (maps are scenes), D-018 (movement), D-011 (original assets). I
 RM-AST-*, RM-AID-012..015. Godot: `TileMapLayer` (`scene/2d/tile_map_layer.h:332`), `TileSet` custom data
 (`scene/resources/2d/tile_set.h:500-507`), animated atlas tiles (`scene/resources/2d/tile_set.h:754-766`).
 
-## JRPGMap (runtime node, root of each map scene `res://jrpg/maps/map_NNNN.tscn`)
+## Map data and map scenes
+Each map is a scene `res://jrpg/maps/map_NNNN.tscn` whose root is a `JRPGMap` node (runtime) holding a
+`JRPGMapData` resource (core) as a **built-in sub-resource** of the scene:
+- Undo: edits of a built-in resource are routed to its scene's undo history
+  (`editor/editor_undo_redo_manager.cpp:81-94`), so map edits keep per-map undo (D-006).
+- Node-free access: tools and the server data compiler load the scene as a `PackedScene` and read the resource from
+  `get_state()` / `SceneState::get_node_property_value` (`scene/resources/packed_scene.h:191-193,291`) without
+  instancing nodes; the server data pack stores the extracted `JRPGMapData` (spec 07).
+- `JRPGMapList` (core, `res://jrpg/map_list.tres`): the source of truth for map ids, names, tree order and scene
+  paths. A project scan that finds two scenes claiming one `map_id` (a copied file) gives the newer one a fresh id
+  and logs a warning.
+
+### `JRPGMapData` (core Resource)
 | Property | Type | Notes |
 |---|---|---|
-| `map_id` | int | stable, from the map list |
+| `map_id` | int | stable, assigned by the map list |
+| `revision` | int | +1 on every save that changes layers or events (saves compare it, spec 06) |
 | `display_name`, `note` | String | |
 | `tileset_id` | int | JRPGTilesetData |
 | `size` | Vector2i | cells (1..256 per axis default, 512 max) |
@@ -18,12 +31,17 @@ RM-AST-*, RM-AID-012..015. Godot: `TileMapLayer` (`scene/2d/tile_map_layer.h:332
 | `bgm`, `bgs`, `battleback1/2`, `parallax` | dictionaries | autoplay + parameters |
 | `encounters` | Array[Dictionary] | `{troop_id, weight, regions:PackedInt32Array}` + `encounter_steps` |
 | `disable_dash`, `next_event_id` | | |
-The node builds **internal** TileMapLayer children (`INTERNAL_MODE_FRONT`, like `scene/2d/tile_map.cpp:272`) from
-`layers` — split into below/above-characters by the per-tile overhead flag — so the stored data is the single source of
-truth and users can add any other nodes as children (D-006). Events are `JRPGEvent` children.
+| `events` | Array[JRPGEventData] | spec 03 |
+
+### `JRPGMap` (runtime node)
+Builds **internal** TileMapLayer children (`INTERNAL_MODE_FRONT`, like `scene/2d/tile_map.cpp:272`) from
+`map_data.layers` — split into below/above-characters by the per-tile overhead flag — and one internal `JRPGEvent`
+node per event, so the data stays the single source of truth and users can add any other nodes as children (D-006),
+including `JRPGEventAnchor` nodes that follow an event.
 
 ## Tilesets and tile ids
-- `JRPGTilesetData` (database entry) owns an ordered **tile palette**. Palette index 0 is "empty"; each other entry
+- `JRPGTilesetData` (database entry) references its Godot `TileSet` by `uid://` string (`tileset_uid`) and owns an
+  ordered **tile palette**. Palette index 0 is "empty"; each other entry
   is `{kind: plain|autotile|wall, source_id, atlas_coords, alternative, flags}` where `alternative` is Godot's full
   alternative id including the transform bits (`TRANSFORM_FLIP_H/V/TRANSPOSE` = bits 12–14,
   `scene/resources/2d/tile_set.h:632-634`), so flipped/rotated tiles are ordinary palette entries.

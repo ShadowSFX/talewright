@@ -19,6 +19,13 @@ modules/jrpg/
 ## Layering rules
 - `core/` may include `core/` of the engine (Variant, Resource, RefCounted, math) and `modules/jrpg/core/` only.
   It never touches Nodes, SceneTree, rendering, input or editor code. This is what MMO zone servers reuse (D-015).
+- **Assets in core are `uid://` strings.** Faces, character sheets, battlers, pictures, audio and a tileset's
+  `TileSet` are referenced by their ResourceUID text (`uid://…`, falling back to a `res://` path for files without a
+  uid). Core never holds `Texture2D` (`scene/resources/texture.h`), `AudioStream` (`servers/audio/audio_stream.h`) or
+  `TileSet` (`scene/resources/2d/tile_set.h`); the runtime resolves the strings with `ResourceLoader`.
+- **Everything the simulation needs is core data:** map layers, regions and events (`JRPGMapData`, spec 05), the
+  baked tile-flag table (`JRPGTilesetData.flags`, spec 05) and runtime event state (`JRPGEventState`, spec 06). Scene
+  nodes only present that data.
 - `runtime/` may include `scene/` and `core/`; never `editor/`.
 - `editor/` may include everything; compiled only into editor builds.
 - Online authority (D-007): every runtime feature states whether it runs on the server, the client or both; the
@@ -33,8 +40,10 @@ modules/jrpg/
 | `JRPGGameState` (switches, variables, self switches, party, actors, inventory, gold, timers, system flags) | core | serializable (spec 06) |
 | `JRPGBattler`, `JRPGActorState`, `JRPGEnemyState`, `JRPGBattleModel` | core | battle math (spec 04) |
 | `JRPGEventCommand` + typed commands, `JRPGCommandList`, `JRPGInterpreter`, `JRPGPresentationPort` | core | spec 03 |
+| `JRPGMapData`, `JRPGEventData`, `JRPGEventPage`, `JRPGMapList` | core | map and event data, spec 03/05 |
+| `JRPGEventState`, `JRPGSimClock` | core | runtime event state (spec 06), fixed 60 Hz step counter (spec 03) |
 | `JRPGMapCellCache`, `JRPGPathfinder`, `JRPGMover` | core | spec 05 |
-| `JRPGMap`, `JRPGEvent`, `JRPGCharacterSprite`, `JRPGPlayer`, `JRPGSceneManager`, `JRPGLocalPort` | runtime | nodes |
+| `JRPGMap`, `JRPGEvent` (internal, built from data), `JRPGEventAnchor`, `JRPGCharacterSprite`, `JRPGPlayer`, `JRPGSceneManager`, `JRPGLocalPort` | runtime | nodes presenting core data |
 | `JRPGWindow`, `JRPGSelectableList`, `JRPGMessageView`, `JRPGGauge` | runtime | UI building blocks |
 | `JRPGWorkspacePlugin`, `JRPGBootstrapPlugin`, `JRPGDatabaseEditor`, `JRPGMapCanvas`, `JRPGEventEditor`, `JRPGSetupTool`, importers | editor | editor-only |
 
