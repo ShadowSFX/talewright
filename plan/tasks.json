@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "4.10 Game-side capture",
+  "last_completed": "4.11 Hardening",
   "tasks": [
     {
       "id": "0",
@@ -860,7 +860,7 @@
       ],
       "test_strategy": "Bridge calls on plain_2d.",
       "files": [],
-      "commit": "pending",
+      "commit": "fea49bd11f",
       "notes": ""
     },
     {
@@ -871,7 +871,7 @@
       "dependencies": [
         "4.10"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Median latency < 50 ms unfocused",
@@ -880,7 +880,7 @@
       ],
       "test_strategy": "Stress script + slow-client script.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

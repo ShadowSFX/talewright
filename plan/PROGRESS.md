@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 16:18 -0600
+- **Updated:** 2026-10-13 16:21 -0600
 - **Current task:** none
-- **Last completed:** 4.10 Game-side capture
+- **Last completed:** 4.11 Hardening
 - **Next task:** 3.3 Specs
-- **Done leaf tasks:** 35
+- **Done leaf tasks:** 36
 <!-- status:end -->
 
 ## Log
@@ -79,4 +79,6 @@
 | 2026-10-13 16:11 -0600 | 4.9 | started: Editor screenshots (containers: 4 pending->in_progress) |  |
 | 2026-10-13 16:14 -0600 | 4.9 | done: Editor screenshots — editor_screenshot (window/main_screen/viewport_2d/viewport_3d) after Main::force_redraw + frame_post_draw, HDR->sRGB as EditorNode, downscale, PNG saved under .godot/claude_bridge/screenshots (pruned) + inline image; editor_set_main_screen; hidden-viewport guidance; verified visually (evidence in plan/evidence/bridge/) (containers: 4 in_progress->pending) | 12773911ae |
 | 2026-10-13 16:14 -0600 | 4.10 | started: Game-side capture (containers: 4 pending->in_progress) |  |
-| 2026-10-13 16:18 -0600 | 4.10 | done: Game-side capture — Game-side capture (ClaudeBridgeGame, registered only when !editor_hint && EngineDebugger active) + editor EditorDebuggerPlugin: game_screenshot, game_scene_tree, game_node_get/set, game_input (actions/keys/mouse, timed holds), game_wait, game_call, game_logs (game-side buffer); live: square moved by injected ui_right hold, recolored, ui_accept counted, screenshot evidence; not-running case fails gracefully (containers: 4 in_progress->pending) | pending |
+| 2026-10-13 16:18 -0600 | 4.10 | done: Game-side capture — Game-side capture (ClaudeBridgeGame, registered only when !editor_hint && EngineDebugger active) + editor EditorDebuggerPlugin: game_screenshot, game_scene_tree, game_node_get/set, game_input (actions/keys/mouse, timed holds), game_wait, game_call, game_logs (game-side buffer); live: square moved by injected ui_right hold, recolored, ui_accept counted, screenshot evidence; not-running case fails gracefully (containers: 4 in_progress->pending) | fea49bd11f |
+| 2026-10-13 16:19 -0600 | 4.11 | started: Hardening (containers: 4 pending->in_progress) |  |
+| 2026-10-13 16:21 -0600 | 4.11 | done: Hardening — Hardening: throttle boost while a client is active (unfocused sleep restored after 10 s idle), re-entrancy guard, bridge_stress.py: median 6.9 ms/p95 8.1 ms over 1000 calls, 8x50 concurrent, slow/stalled clients isolated (408), flood -> 503, port fallback 47700->47701 (containers: 4 in_progress->pending) | pending |

@@ -55,6 +55,16 @@ private:
 	ClaudeBridgeLogs logs;
 	uint64_t last_debugger_scan_msec = 0;
 
+	// Responsiveness: while a client is active the editor must not sleep 100 ms per frame when unfocused
+	// (editor/editor_node.cpp:1071-1073); restored after BOOST_IDLE_MSEC without requests.
+	static constexpr uint64_t BOOST_IDLE_MSEC = 10000;
+	bool boost_active = false;
+	bool app_focused = true;
+	uint64_t last_request_msec = 0;
+	bool in_process = false; // Re-entrancy guard (ProgressDialog can call Main::iteration from inside a tool).
+	void _boost_on_request(uint64_t p_now);
+	void _update_boost(uint64_t p_now);
+
 	void _connect_debuggers();
 	void _on_debug_data(const String &p_message, const Array &p_data);
 

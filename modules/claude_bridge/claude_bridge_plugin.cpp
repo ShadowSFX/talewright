@@ -132,6 +132,27 @@ static String _error_json(const String &p_message) {
 	return JSON::stringify(d);
 }
 
+void ClaudeBridgePlugin::_boost_on_request(uint64_t p_now) {
+	last_request_msec = p_now;
+	if (boost_active) {
+		return;
+	}
+	boost_active = true;
+	EditorNode::get_singleton()->set_unfocused_low_processor_usage_mode_enabled(false);
+	OS::get_singleton()->set_low_processor_usage_mode_sleep_usec(int(EDITOR_GET("interface/editor/timers/low_processor_mode_sleep_usec")));
+}
+
+void ClaudeBridgePlugin::_update_boost(uint64_t p_now) {
+	if (!boost_active || p_now - last_request_msec < BOOST_IDLE_MSEC || !pending_calls.is_empty()) {
+		return;
+	}
+	boost_active = false;
+	EditorNode::get_singleton()->set_unfocused_low_processor_usage_mode_enabled(true);
+	if (!app_focused) {
+		OS::get_singleton()->set_low_processor_usage_mode_sleep_usec(int(EDITOR_GET("interface/editor/timers/unfocused_low_processor_mode_sleep_usec")));
+	}
+}
+
 void ClaudeBridgePlugin::_handle_request(uint64_t p_connection_id, const ClaudeBridgeHTTPRequest &p_request) {
 	// Authorization first: unauthenticated clients learn nothing about routes.
 	String reason;
@@ -144,6 +165,7 @@ void ClaudeBridgePlugin::_handle_request(uint64_t p_connection_id, const ClaudeB
 		_respond_json(p_connection_id, auth, _error_json(reason), extra);
 		return;
 	}
+	_boost_on_request(OS::get_singleton()->get_ticks_msec());
 	if (p_request.path != MCP_PATH) {
 		_respond_json(p_connection_id, 404, _error_json("Unknown path; the MCP endpoint is " + String(MCP_PATH) + "."));
 		return;
@@ -617,6 +639,10 @@ void ClaudeBridgePlugin::_notification(int p_what) {
 			EditorSettings::get_singleton()->disconnect("settings_changed", callable_mp(this, &ClaudeBridgePlugin::_on_settings_changed));
 		} break;
 		case NOTIFICATION_PROCESS: {
+			if (in_process) {
+				return; // Re-entered through Main::iteration (e.g. a progress dialog inside a tool): skip.
+			}
+			in_process = true;
 			const uint64_t now = OS::get_singleton()->get_ticks_msec();
 			if (now - last_debugger_scan_msec > 500) {
 				last_debugger_scan_msec = now;
@@ -624,6 +650,19 @@ void ClaudeBridgePlugin::_notification(int p_what) {
 			}
 			server.poll(now);
 			_process_pending(now);
+			_update_boost(now);
+			in_process = false;
+		} break;
+		case NOTIFICATION_APPLICATION_FOCUS_IN: {
+			app_focused = true;
+		} break;
+		case NOTIFICATION_APPLICATION_FOCUS_OUT: {
+			app_focused = false;
+			if (boost_active) {
+				// EditorNode applies the unfocused sleep on focus-out only when its flag is set; we cleared it,
+				// but re-apply the focused value in case another node changed it.
+				OS::get_singleton()->set_low_processor_usage_mode_sleep_usec(int(EDITOR_GET("interface/editor/timers/low_processor_mode_sleep_usec")));
+			}
 		} break;
 	}
 }

@@ -1,0 +1,10 @@
+Task 4.11 — bridge hardening evidence (2026-10-13), editor = bin/godot.windows.editor.x86_64.exe (GUI) on talewright/samples/bridge_probe
+$ python talewright/tools/bridge_stress.py --project talewright/samples/bridge_probe --calls 1000
+[PASS] latency over 1000 calls: median 6.9 ms, p95 8.1 ms, max 36.9 ms
+[PASS] concurrency 8x50 in 0.3s, errors: []
+[PASS] call while a slow client stalls: 19.6 ms
+[PASS] slow client receives 408/close after the request timeout
+[PASS] call while another client does not read: 28.1 ms
+[PASS] connection flood: 8 of 24 extra sockets rejected with 503; service resumed
+ALL PASS
+Port in use: with 127.0.0.1:47700 held by another process, the bridge listened on 47701 (connection.json "port": 47701) and served requests.
