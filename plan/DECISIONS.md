@@ -175,7 +175,7 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 ## D-014 — Godot multiplayer stack is not the MMO stack
 - **Context:** SceneMultiplayer encodes per peer × per synchronizer each frame, has no spatial AoI, drops
   states above MTU (`modules/multiplayer/scene_replication_interface.cpp:809,832`), and its protocol "may
-  change without notice" (`doc/classes/SceneMultiplayer.xml:10`); a Godot team reported mass disconnects at
+  change without notice" (`modules/multiplayer/doc_classes/SceneMultiplayer.xml:10`); a Godot team reported mass disconnects at
   ~80–100 clients (https://forum.godotengine.org/t/our-experience-building-an-mmo-tech-demo-with-godot-4-4-1-net-c/134348).
 - **Choice:** own schema-generated protocol over `ENetConnection`/`ENetPacketPeer`
   (`modules/enet/enet_connection.h:112-133`; 4095 peers/host, DTLS, zstd) and WebSocket+TLS for web
