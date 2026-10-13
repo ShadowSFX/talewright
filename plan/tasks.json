@@ -1,0 +1,2643 @@
+{
+  "schema": 1,
+  "project": "Talewright",
+  "last_completed": "0.2 Task system: plan/ files and tasks.py",
+  "tasks": [
+    {
+      "id": "0",
+      "title": "Bootstrap and task system",
+      "description": "Fork, local clone, working branch, persistent tracker, resume protocol, persisted planning research.",
+      "parent": null,
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Fork + clone + branch exist",
+        "plan/ tracker validates",
+        "CLAUDE.md resume protocol present"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "0.1",
+      "title": "Fork, clone, upstream remote, branch talewright @ 4.7.2-stable",
+      "description": "GitHub fork ShadowSFX/talewright; local clone in the working dir; upstream = godotengine/godot with push disabled; branch talewright from tag 4.7.2-stable.",
+      "parent": "0",
+      "dependencies": [],
+      "status": "done",
+      "priority": 1,
+      "acceptance_criteria": [
+        "git describe --tags shows 4.7.2-stable at branch base",
+        "upstream push URL disabled",
+        "origin = ShadowSFX/talewright"
+      ],
+      "test_strategy": "git remote -v; git log -1; git describe",
+      "files": [],
+      "commit": "ed1daf0bf0",
+      "notes": "Done before the tracker existed; base commit is upstream ed1daf0bf0."
+    },
+    {
+      "id": "0.2",
+      "title": "Task system: plan/ files and tasks.py",
+      "description": "plan/tasks.json, ROADMAP.md (rendered), PROGRESS.md, DECISIONS.md, UPSTREAM_PATCHES.md, research/, evidence/, specs/; plan/tools/tasks.py CLI.",
+      "parent": "0",
+      "dependencies": [
+        "0.1"
+      ],
+      "status": "done",
+      "priority": 1,
+      "acceptance_criteria": [
+        "tasks.py validate prints ok",
+        "ROADMAP.md rendered from tasks.json",
+        "PROGRESS.md has status header + log"
+      ],
+      "test_strategy": "Run tasks.py validate/render/next; inspect files.",
+      "files": [
+        "plan/tasks.json",
+        "plan/ROADMAP.md",
+        "plan/PROGRESS.md",
+        "plan/DECISIONS.md",
+        "plan/UPSTREAM_PATCHES.md",
+        "plan/tools/tasks.py"
+      ],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "0.3",
+      "title": "CLAUDE.md resume protocol, NOTICE and fork README",
+      "description": "Root CLAUDE.md with resume protocol, build/test commands, per-task loop, commit rules; TALEWRIGHT.md overview with trademark disclaimer.",
+      "parent": "0",
+      "dependencies": [
+        "0.2"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "CLAUDE.md contains the 3-step resume protocol verbatim from the request plus commands",
+        "Disclaimer per Godot trademark policy present"
+      ],
+      "test_strategy": "Read files; a fresh session can resume from them alone.",
+      "files": [
+        "CLAUDE.md",
+        "TALEWRIGHT.md"
+      ],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "0.4",
+      "title": "Persist planning research reports",
+      "description": "Write the verified planning-phase findings (Godot 4.7.2 architecture, runtime reuse, debugger/bridge, networking, rAthena techniques, MMO prior art) into plan/research/ as drafts to be re-verified in E2.",
+      "parent": "0",
+      "dependencies": [
+        "0.2"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "plan/research/planning_notes/*.md exist with file:line and URL citations"
+      ],
+      "test_strategy": "Read files.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "1",
+      "title": "Toolchain baseline",
+      "description": "Reproducible builds and a recorded vanilla baseline before any engine change.",
+      "parent": null,
+      "dependencies": [
+        "0"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Vanilla editor + templates build",
+        "Full upstream test baseline recorded",
+        "Plain 2D/3D samples run and export"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "1.1",
+      "title": "Build wrapper talewright/tools/build.py",
+      "description": "Wraps scons (python -m SCons) with the project's standard flags, kills processes locking bin/*.exe, logs to talewright/build_logs/, extracts errors/warnings, prints timing.",
+      "parent": "1",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "`python talewright/tools/build.py editor` builds",
+        "Locked exe is killed and build proceeds",
+        "Error summary printed on failure"
+      ],
+      "test_strategy": "Run with a running editor holding the exe; run with an injected compile error.",
+      "files": [
+        "talewright/tools/build.py"
+      ],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "1.2",
+      "title": "Vanilla editor dev_mode build",
+      "description": "Build the vanilla editor with dev_mode=yes (werror, tests). Record exact flags, duration, binary names in plan/research/godot_current_state.md.",
+      "parent": "1",
+      "dependencies": [
+        "1.1"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "bin/godot.windows.editor.dev?.x86_64*.exe exists",
+        "0 warnings (werror)",
+        "Flags + time recorded"
+      ],
+      "test_strategy": "Build log review.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "1.3",
+      "title": "Upstream test baseline",
+      "description": "Run the full doctest suite; store pass/fail counts and any failing cases in plan/research/baseline_tests.md as the regression reference.",
+      "parent": "1",
+      "dependencies": [
+        "1.2"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Baseline file lists totals and failing test names (expected 0)"
+      ],
+      "test_strategy": "Run --test twice; diff must be empty.",
+      "files": [
+        "plan/research/baseline_tests.md"
+      ],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "1.4",
+      "title": "Export template builds (template_release, template_debug)",
+      "description": "Build Windows export templates from the vanilla tree for baseline exports and later absence checks.",
+      "parent": "1",
+      "dependencies": [
+        "1.2"
+      ],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "Both template binaries built",
+        "Sizes recorded"
+      ],
+      "test_strategy": "Build log review.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "1.5",
+      "title": "Plain general-purpose samples",
+      "description": "talewright/samples/plain_2d (sprite, input, physics) and plain_3d (mesh, light, camera) + smoke script that runs each headless for N frames and exports plain_2d with the custom template.",
+      "parent": "1",
+      "dependencies": [
+        "1.2",
+        "1.4"
+      ],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "Both samples run headless with exit 0 and no errors",
+        "plain_2d export runs"
+      ],
+      "test_strategy": "talewright/tools/smoke_samples.py; rerun after every epic.",
+      "files": [
+        "talewright/samples/plain_2d",
+        "talewright/samples/plain_3d",
+        "talewright/tools/smoke_samples.py"
+      ],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "2",
+      "title": "Research (Phase 1)",
+      "description": "Sourced RPG Maker inventory, Godot current state from the clone, MMO feasibility, gap map.",
+      "parent": null,
+      "dependencies": [
+        "0"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Inventory covers the full official MZ help TOC with a source per row",
+        "Gap map has one row per inventory item"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified. Plus TOC comparison gate.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "2.1",
+      "title": "RPG Maker inventory",
+      "description": "plan/research/rpgmaker_inventory.md: baseline determination + exhaustive sourced inventory with item IDs (RM-<AREA>-<n>), paraphrased (no verbatim text).",
+      "parent": "2",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Every TOC page of the MZ help is covered",
+        "Every row has an official source URL",
+        "Other versions' notable features listed"
+      ],
+      "test_strategy": "TOC diff script compares crawled TOC vs inventory sections.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "2.1.1",
+      "title": "Lineup, baseline, project structure, editor basics",
+      "description": "Lineup (MZ, MV, VX Ace, XP, 2003, Unite, U2U), baseline choice, project structure, menu bar, aid tools, playing the game, test play, deployment, plugins, official plugins, output formats, asset standards.",
+      "parent": "2.1",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Sections written with sources"
+      ],
+      "test_strategy": "Reviewer spot-checks 10 random rows against sources.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "2.1.2",
+      "title": "Map editor, map properties, tilesets",
+      "description": "Tile layers, autotile kinds, passability/flags, regions, shadows, map properties, encounters, map data controls, tileset settings.",
+      "parent": "2.1",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Sections written with sources"
+      ],
+      "test_strategy": "Spot-check.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "2.1.3",
+      "title": "Database A: actors, classes, skills, items, weapons/armors",
+      "description": "Every field of each tab.",
+      "parent": "2.1",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Sections written with sources"
+      ],
+      "test_strategy": "Spot-check.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "2.1.4",
+      "title": "Database B: enemies, troops, states, animations, common events",
+      "description": "Every field incl. troop battle event pages and conditions.",
+      "parent": "2.1",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Sections written with sources"
+      ],
+      "test_strategy": "Spot-check.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "2.1.5",
+      "title": "Database C: system 1/2, types, terms, traits, effects",
+      "description": "Every option; full trait and effect lists.",
+      "parent": "2.1",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Sections written with sources"
+      ],
+      "test_strategy": "Spot-check.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "2.1.6",
+      "title": "Events: system, pages, conditions, triggers, priority, move routes, all commands",
+      "description": "Map event system/creation/settings; every event command in all 16 categories one by one; every movement route command.",
+      "parent": "2.1",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Every command listed with parameters and behaviour"
+      ],
+      "test_strategy": "Count commands per category vs help pages.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "2.1.7",
+      "title": "Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug",
+      "description": "Message window behaviour and control characters; menu screens; turn-based and TPB; damage formula semantics; save/load; audio types; generator; debug tools.",
+      "parent": "2.1",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Sections written with sources"
+      ],
+      "test_strategy": "Spot-check.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "2.1.8",
+      "title": "Other versions' notable features",
+      "description": "MV, VX Ace, XP, 2003, Unite features absent from MZ (e.g. XP 3-layer priority, 2003 side-view ATB, Unite features), sourced.",
+      "parent": "2.1",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "Section written with sources"
+      ],
+      "test_strategy": "Spot-check.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "2.1.9",
+      "title": "Inventory merge and TOC gate",
+      "description": "Merge sections, assign IDs, run TOC comparison, fix gaps.",
+      "parent": "2.1",
+      "dependencies": [
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "2.1.5",
+        "2.1.6",
+        "2.1.7",
+        "2.1.8"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "TOC comparison shows 0 uncovered pages",
+        "0 rows without source"
+      ],
+      "test_strategy": "Script output saved to plan/evidence/research/toc_gate.txt.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "2.2",
+      "title": "Godot current state (from the clone)",
+      "description": "plan/research/godot_current_state.md: version/branch, build+test commands found in repo, module/editor plugin arch, GDExtension, TileMap/TileSet, Resources, docks/inspector/undo, debugger/remote tree, headless, tests, networking; every claim file:line re-verified in the clone.",
+      "parent": "2",
+      "dependencies": [
+        "0.4"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Every claim cites file:line valid at HEAD"
+      ],
+      "test_strategy": "Script greps each cited line exists.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "2.3",
+      "title": "MMO feasibility and rAthena techniques",
+      "description": "plan/research/mmo_feasibility.md and rathena_techniques.md from planning reports, re-verified; prior art table with licenses.",
+      "parent": "2",
+      "dependencies": [
+        "0.4"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Verdict, topology, techniques, weaknesses, licenses, capacity targets documented with sources"
+      ],
+      "test_strategy": "Spot-check citations.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "2.4",
+      "title": "Gap map",
+      "description": "plan/research/gap_map.md: one row per inventory item (+ MMO rows): Godot equivalent file:line, reuse/extend/NEW, approach, deps, size.",
+      "parent": "2",
+      "dependencies": [
+        "2.1",
+        "2.2",
+        "2.3"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Row count == inventory item count + MMO rows",
+        "Every row has a Godot ref or NEW"
+      ],
+      "test_strategy": "Script compares IDs between inventory and gap map.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "3",
+      "title": "Architecture decisions and specs (Phases 2-3)",
+      "description": "Decision log, upstream patch ledger, design specs, refined task tree.",
+      "parent": null,
+      "dependencies": [
+        "2"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "DECISIONS.md covers the 6 required decisions + MMO decisions",
+        "Specs exist",
+        "Epics 5-13 split into subtasks"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "3.1",
+      "title": "DECISIONS.md",
+      "description": "Record D-001.. with context, options, choice, why, reversal: layer location, data model, events, coexistence, bridge, naming, maps, presentation split, formulas, MMO topology/persistence/protocol/security, git policy, assets.",
+      "parent": "3",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Each decision has the 5 fields"
+      ],
+      "test_strategy": "Reviewer reads for completeness.",
+      "files": [
+        "plan/DECISIONS.md"
+      ],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "3.2",
+      "title": "UPSTREAM_PATCHES.md ledger",
+      "description": "Ledger format + current list (expected empty) + candidate notes (ENet DTLS precedence, ENetMultiplayerPeer create_server args).",
+      "parent": "3",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "File exists with format and entries"
+      ],
+      "test_strategy": "Read.",
+      "files": [
+        "plan/UPSTREAM_PATCHES.md"
+      ],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "3.3",
+      "title": "Specs",
+      "description": "plan/specs/: presentation port + authority model; event command storage benchmark plan; save format; formula evaluator; map data format; autotile template format; protocol IDL draft; server topology.",
+      "parent": "3",
+      "dependencies": [
+        "3.1"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Each spec has interfaces, data formats, edge cases"
+      ],
+      "test_strategy": "Reviewer subagent critiques specs.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "3.4",
+      "title": "Refine task tree",
+      "description": "Split epics 5-13 into implementable subtasks with acceptance criteria and test strategy; adjust later epics from the gap map.",
+      "parent": "3",
+      "dependencies": [
+        "3.3"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "tasks.py validate ok",
+        "No slice task larger than one sitting"
+      ],
+      "test_strategy": "validate + review.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "4",
+      "title": "Claude bridge (MCP)",
+      "description": "Editor-only C++ module: MCP Streamable HTTP server on 127.0.0.1 with token; editor + game inspection and driving; CLI.",
+      "parent": null,
+      "dependencies": [
+        "1",
+        "3"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "All minimum capabilities work via bridge.py",
+        "401/403/non-loopback enforced",
+        "Absent from templates",
+        "No editor freeze with slow clients"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "4.1",
+      "title": "Module skeleton modules/claude_bridge",
+      "description": "config.py (can_build => env.editor_build), SCsub, register_types, EditorPlugin bootstrap, editor settings (enabled, port), doc_classes, tests dir.",
+      "parent": "4",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Editor builds with module; builds with module_claude_bridge_enabled=no",
+        "Plugin instantiated in editor only"
+      ],
+      "test_strategy": "Build both ways; doctest smoke.",
+      "files": [
+        "modules/claude_bridge/*"
+      ],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "4.2",
+      "title": "HTTP/1.1 server component",
+      "description": "Non-blocking TCPServer on 127.0.0.1, per-connection state machine, request parsing (content-length, header limits), partial I/O, size/connection/idle limits, keep-alive.",
+      "parent": "4",
+      "dependencies": [
+        "4.1"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Parser doctests: partial reads, pipelining off, oversize 413, bad request 400",
+        "Never blocks the main loop"
+      ],
+      "test_strategy": "Doctests + curl.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "4.3",
+      "title": "Auth, Origin/Host checks, connection file",
+      "description": "Persistent 256-bit token (editor data dir) + fixed port with fallback; .godot/claude_bridge/connection.json; Bearer check with constant-time compare; Origin => 403; Host must be loopback.",
+      "parent": "4",
+      "dependencies": [
+        "4.2"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "No token => 401",
+        "Wrong token => 401",
+        "Foreign Origin => 403",
+        "Bad Host => 403"
+      ],
+      "test_strategy": "Doctests + curl.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "4.4",
+      "title": "MCP JSON-RPC layer",
+      "description": "initialize/initialized/ping/tools.list/tools.call; 2025-06-18 and 2026-07-28 shapes; JSON id type preserved; errors per JSON-RPC; GET/DELETE 405; tool registry with JSON schemas.",
+      "parent": "4",
+      "dependencies": [
+        "4.3"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Doctests for both shapes",
+        "tools/list returns schemas"
+      ],
+      "test_strategy": "Doctests + curl.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "4.5",
+      "title": "bridge.py CLI",
+      "description": "talewright/tools/bridge.py: reads connection.json, status, list, call <tool> --args JSON, saves image results to files and prints paths.",
+      "parent": "4",
+      "dependencies": [
+        "4.4"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "`bridge.py status` and `bridge.py list` work against a running editor"
+      ],
+      "test_strategy": "Manual run.",
+      "files": [
+        "talewright/tools/bridge.py"
+      ],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "4.6",
+      "title": "Editor tools: tree, nodes, project",
+      "description": "editor_scene_tree, editor_node_get/set (undoable), editor_open_scene, editor_save_scene, editor_select, project_info, project_settings_get, project_list_files, project_read_file, editor_rescan.",
+      "parent": "4",
+      "dependencies": [
+        "4.5"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Each tool returns correct data on plain_2d",
+        "Set property is undoable"
+      ],
+      "test_strategy": "Bridge calls on plain_2d.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "4.7",
+      "title": "Logs and errors",
+      "description": "Ring buffers: editor print/error handlers (thread-safe, deferred), game output/errors via debugger plugin/session signals; get_logs tool with since/type filters.",
+      "parent": "4",
+      "dependencies": [
+        "4.6"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Editor print and game print both retrievable",
+        "Errors include file:line"
+      ],
+      "test_strategy": "Run plain_2d with a print + push_error.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "4.8",
+      "title": "Run/stop",
+      "description": "run_project (main/current/custom scene, args), stop_project, run_status; no blocking dialogs (pre-checks main scene).",
+      "parent": "4",
+      "dependencies": [
+        "4.7"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Run and stop work; status reflects state"
+      ],
+      "test_strategy": "Bridge calls.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "4.9",
+      "title": "Editor screenshots",
+      "description": "Capture window/main screen/2D/3D viewports; force redraw and await frame_post_draw; PNG file path + optional downscaled base64.",
+      "parent": "4",
+      "dependencies": [
+        "4.8"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Screenshot PNG matches the visible editor"
+      ],
+      "test_strategy": "Read PNG.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "4.10",
+      "title": "Game-side capture",
+      "description": "Debugger capture `claude_bridge` (guarded) in the play process: screenshot, scene tree, node props get/set, input injection (action/key/mouse with hold frames), wait frames, game log ring buffer.",
+      "parent": "4",
+      "dependencies": [
+        "4.9"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Game screenshot works embedded and floating",
+        "Injected input moves the plain_2d player",
+        "Timeouts return errors"
+      ],
+      "test_strategy": "Bridge calls on plain_2d.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "4.11",
+      "title": "Hardening",
+      "description": "Throttle off while active; busy/re-entrancy guard; pending-request deadlines; port in use; slow/stalled client; 1000-call stress.",
+      "parent": "4",
+      "dependencies": [
+        "4.10"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Median latency < 50 ms unfocused",
+        "Slow client does not stall editor",
+        "Stress: no crash/leak"
+      ],
+      "test_strategy": "Stress script + slow-client script.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "4.12",
+      "title": "Docs, claude mcp add, template absence",
+      "description": "talewright/docs/claude_bridge.md; `claude mcp add` instructions; template_release build + binary scan shows no bridge symbols.",
+      "parent": "4",
+      "dependencies": [
+        "4.11"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Docs written",
+        "Scan finds no claude_bridge strings in template"
+      ],
+      "test_strategy": "Binary scan script.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "4.13",
+      "title": "Epic review: Claude bridge",
+      "description": "Fresh-context reviewer subagent on the epic diff; fix all findings.",
+      "parent": "4",
+      "dependencies": [
+        "4.12"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Findings fixed and logged"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "5",
+      "title": "JRPG module foundation and data core",
+      "description": "modules/jrpg with pure-logic core (no Node dependency), database, game state, RNG, formulas.",
+      "parent": null,
+      "dependencies": [
+        "4"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Core compiles without scene/ includes",
+        "Byte-identical save/load",
+        "State round-trips"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "5.1",
+      "title": "Module skeleton and dynamic workspace",
+      "description": "modules/jrpg/{core,runtime,editor}; jrpg/enabled project setting; bootstrap plugin adds/removes the JRPG main screen dynamically.",
+      "parent": "5",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Setting off => no JRPG tab",
+        "Module off build identical behaviour",
+        "Test baseline unchanged"
+      ],
+      "test_strategy": "Bridge screenshot of tabs; doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "5.2",
+      "title": "Database core",
+      "description": "Entry/table/manifest resources, ID = slot, deterministic sub-resource ids, schema_version + migrations.",
+      "parent": "5",
+      "dependencies": [
+        "5.1"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Save -> load -> save byte-identical",
+        "Migration test passes"
+      ],
+      "test_strategy": "Doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "5.3",
+      "title": "Database tables (slice fields)",
+      "description": "Actors, classes, skills, items, weapons, armors, enemies, troops, states, system, terms, types, animations stub; traits/effects as packed values.",
+      "parent": "5",
+      "dependencies": [
+        "5.2",
+        "2.1"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "All tables load/save",
+        "Fields match inventory rows for the slice"
+      ],
+      "test_strategy": "Doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "5.4",
+      "title": "RNG, parameters, traits, formulas",
+      "description": "Own PCG32 integer RNG; parameter curves; trait aggregation; Expression-based formula evaluator with proxies, iff(), deny-list.",
+      "parent": "5",
+      "dependencies": [
+        "5.3"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Hand-computed cases pass",
+        "Invalid formula => 0 + warning",
+        "Deny-listed calls rejected"
+      ],
+      "test_strategy": "Doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "5.5",
+      "title": "Game state core",
+      "description": "Switches, variables, self switches, party, runtime actors, inventory, gold; serialization.",
+      "parent": "5",
+      "dependencies": [
+        "5.4"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Round-trip equality doctest"
+      ],
+      "test_strategy": "Doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "5.6",
+      "title": "Reference scanner",
+      "description": "Find references to DB entries across DB, maps, events; dangling detection; truncate warnings.",
+      "parent": "5",
+      "dependencies": [
+        "5.5"
+      ],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "Detects dangling refs in fixtures"
+      ],
+      "test_strategy": "Doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "5.7",
+      "title": "Epic review: JRPG core",
+      "description": "Reviewer subagent.",
+      "parent": "5",
+      "dependencies": [
+        "5.6"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Findings fixed"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "6",
+      "title": "JRPG workspace and database editor",
+      "description": "Setup tool, managed addon, main-screen workspace, database editor, authoring API.",
+      "parent": null,
+      "dependencies": [
+        "5"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Setup idempotent",
+        "Database editable with undo, minimal diffs"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "6.1",
+      "title": "Managed addon embedding",
+      "description": "Embed res://addons/talewright sources in the binary; version+hash stamps; upgrade tool.",
+      "parent": "6",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Upgrade overwrites untouched files only"
+      ],
+      "test_strategy": "Doctests + manual.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "6.2",
+      "title": "Set up JRPG Project tool",
+      "description": "Project > Tools: folders, manifest + default DB, input actions with gamepad, settings, managed addon.",
+      "parent": "6",
+      "dependencies": [
+        "6.1"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Idempotent on empty project",
+        "JRPG tab appears"
+      ],
+      "test_strategy": "Bridge on a temp project.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "6.3",
+      "title": "Workspace shell",
+      "description": "Main screen layout: map tree, palette, canvas area, mode toolbar, playtest buttons. frontend-design skill after citing Godot UI patterns.",
+      "parent": "6",
+      "dependencies": [
+        "6.2"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Screenshot reviewed",
+        "No errors switching tabs"
+      ],
+      "test_strategy": "Bridge screenshots.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "6.4",
+      "title": "Database editor framework",
+      "description": "Database window: tabs, ID-slot list, Change Maximum, entry form via EditorInspector, undo, save.",
+      "parent": "6",
+      "dependencies": [
+        "6.3"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Create/rename/undo/save via UI and bridge"
+      ],
+      "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "6.5",
+      "title": "Database tab forms (slice)",
+      "description": "Forms for slice tables incl. trait/effect editors, ID pickers.",
+      "parent": "6",
+      "dependencies": [
+        "6.4"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "All slice fields editable"
+      ],
+      "test_strategy": "Bridge screenshots + data checks.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "6.6",
+      "title": "Database authoring API + bridge tools",
+      "description": "jrpg_db_get/list/set/create/clear tools with undo.",
+      "parent": "6",
+      "dependencies": [
+        "6.5"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Claude can create an item via bridge"
+      ],
+      "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "6.7",
+      "title": "Epic review: workspace",
+      "description": "Reviewer subagent.",
+      "parent": "6",
+      "dependencies": [
+        "6.6"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Findings fixed"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "7",
+      "title": "Assets and tilesets",
+      "description": "Original generated assets, autotile importer and resolver, tileset flags.",
+      "parent": null,
+      "dependencies": [
+        "6"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Assets deterministic",
+        "Autotiles match reference"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "7.1",
+      "title": "Original asset generator",
+      "description": "talewright/tools/asset_gen: tiles + autotile templates, characters, faces, enemies, battlebacks, icons, window skin, SFX/BGM; LICENSES.md.",
+      "parent": "7",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Deterministic hashes",
+        "Licenses recorded"
+      ],
+      "test_strategy": "Run twice, compare hashes.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "7.2",
+      "title": "Autotile template + importer",
+      "description": "Own documented quarter-tile template; importer bakes all shapes into an atlas with terrain metadata.",
+      "parent": "7",
+      "dependencies": [
+        "7.1"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Pixel-compare all shapes"
+      ],
+      "test_strategy": "Doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "7.3",
+      "title": "JRPGTileset + flags + tileset tab",
+      "description": "Passage (4-dir, star), ladder, bush, counter, damage, terrain tag as TileSet custom data; tileset DB tab with overlay editing.",
+      "parent": "7",
+      "dependencies": [
+        "7.2"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Flags round-trip",
+        "Overlay editing works"
+      ],
+      "test_strategy": "Doctests + bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "7.4",
+      "title": "Autotile resolver",
+      "description": "Same-kind 8-neighbour rule over baked atlas; edges; mixed layers.",
+      "parent": "7",
+      "dependencies": [
+        "7.2"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Matches reference on random maps"
+      ],
+      "test_strategy": "Doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "7.5",
+      "title": "Import authoring tools",
+      "description": "Bridge tools: import tileset/character/face/enemy images.",
+      "parent": "7",
+      "dependencies": [
+        "7.3"
+      ],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "Claude imports a tileset via bridge"
+      ],
+      "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "7.6",
+      "title": "Epic review: assets",
+      "description": "Reviewer subagent.",
+      "parent": "7",
+      "dependencies": [
+        "7.5",
+        "7.4"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Findings fixed"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8",
+      "title": "Maps",
+      "description": "JRPGMap scenes, map editor canvas, cell cache, runtime map and movement.",
+      "parent": null,
+      "dependencies": [
+        "7"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Paint/undo/save/run via bridge",
+        "Player walks with passability"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8.1",
+      "title": "JRPGMap node + spike",
+      "description": "Layer data in root, internal TileMapLayers, properties; spike: open/paint/undo/save/reopen/run via bridge.",
+      "parent": "8",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Spike passes or fallback decided in DECISIONS.md"
+      ],
+      "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8.2",
+      "title": "Map cell cache compiler",
+      "description": "Compile passability/flags/regions into a compact grid used by movement, pathfinding and servers.",
+      "parent": "8",
+      "dependencies": [
+        "8.1"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Doctests vs fixtures"
+      ],
+      "test_strategy": "Doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8.3",
+      "title": "Map list and properties",
+      "description": "Map tree (create/delete/rename/order), map properties dialog.",
+      "parent": "8",
+      "dependencies": [
+        "8.1"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Bridge-driven create/rename"
+      ],
+      "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8.4",
+      "title": "Map canvas tools",
+      "description": "Pencil/rect/ellipse/fill/eraser/shadow/region, auto-layer, zoom/grid, undo patches.",
+      "parent": "8",
+      "dependencies": [
+        "8.3",
+        "7.4"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Golden screenshot; undo restores hash"
+      ],
+      "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8.5",
+      "title": "Tile palette",
+      "description": "Tabs, multi-tile stamps, eyedropper.",
+      "parent": "8",
+      "dependencies": [
+        "8.4"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "2x2 stamp paints correctly"
+      ],
+      "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8.6",
+      "title": "Runtime map, cell-step movement, camera, transfer",
+      "description": "Scene manager, map load, player cell steps with speed timers, 4-dir + star passability, dash, camera, transfer.",
+      "parent": "8",
+      "dependencies": [
+        "8.2"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Passability matrix doctest",
+        "Bridge walk blocked by wall"
+      ],
+      "test_strategy": "Doctests + bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8.7",
+      "title": "Character sprites",
+      "description": "Sheet format, direction/pattern/walk anim, priority, through.",
+      "parent": "8",
+      "dependencies": [
+        "8.6"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Walking frames visible"
+      ],
+      "test_strategy": "Bridge screenshots.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8.8",
+      "title": "Map authoring tools",
+      "description": "Bridge tools: create map, paint tiles/regions, set properties.",
+      "parent": "8",
+      "dependencies": [
+        "8.5"
+      ],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "Claude builds a small map via bridge"
+      ],
+      "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8.9",
+      "title": "Epic review: maps",
+      "description": "Reviewer subagent.",
+      "parent": "8",
+      "dependencies": [
+        "8.7",
+        "8.8"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Findings fixed"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9",
+      "title": "Events and interpreter",
+      "description": "Pages, conditions, triggers, command model with authority, interpreter with presentation port, slice commands, event editor.",
+      "parent": null,
+      "dependencies": [
+        "8"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Page selection matrix passes",
+        "Interpreter deterministic and serializable",
+        "Quick event works in playtest"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.1",
+      "title": "JRPGEvent + pages + conditions + triggers",
+      "description": "Event node, page selection/refresh, priority, triggers.",
+      "parent": "9",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Page-selection doctest matrix"
+      ],
+      "test_strategy": "Doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.2",
+      "title": "Command model + registry + authority + script commands",
+      "description": "Typed command resources, categories, authority metadata, script subclass discovery.",
+      "parent": "9",
+      "dependencies": [
+        "9.1",
+        "3.3"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Script subclass discovered and executed"
+      ],
+      "test_strategy": "Doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.3",
+      "title": "Interpreter",
+      "description": "Frames, waits, labels as paths, budgets, common events, autorun/parallel, serializable state.",
+      "parent": "9",
+      "dependencies": [
+        "9.2"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Deterministic step doctests",
+        "Save mid-event round-trip"
+      ],
+      "test_strategy": "Doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.4",
+      "title": "Presentation port + local port",
+      "description": "Port interface for message/choice/number/etc.; local implementation.",
+      "parent": "9",
+      "dependencies": [
+        "9.3"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Interpreter suspends/resumes via port"
+      ],
+      "test_strategy": "Doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.5",
+      "title": "Slice commands",
+      "description": "~20 commands (text, choices, switches, variables, self switch, branch, loop, label/jump, common event, transfer, gold, items, recover, battle, wait, move route basic, erase, menu/save, game over, title, script).",
+      "parent": "9",
+      "dependencies": [
+        "9.4"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "One doctest per command"
+      ],
+      "test_strategy": "Doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.6",
+      "title": "Event characters runtime",
+      "description": "Movement types, action/touch triggers, autorun/parallel on map.",
+      "parent": "9",
+      "dependencies": [
+        "9.5",
+        "8.7"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "NPC interaction via bridge"
+      ],
+      "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.7",
+      "title": "Event editor UI",
+      "description": "Pages, conditions, command list, forms (inspector-based + custom), quick events.",
+      "parent": "9",
+      "dependencies": [
+        "9.6"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Quick treasure chest works in playtest"
+      ],
+      "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.8",
+      "title": "Event authoring tools",
+      "description": "Bridge tools to create events/pages/commands.",
+      "parent": "9",
+      "dependencies": [
+        "9.7"
+      ],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "Claude creates an NPC via bridge"
+      ],
+      "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.9",
+      "title": "Epic review: events",
+      "description": "Reviewer subagent.",
+      "parent": "9",
+      "dependencies": [
+        "9.8"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Findings fixed"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "10",
+      "title": "Messages and UI kit",
+      "description": "Window frame, selectable list, message system, screen stack.",
+      "parent": null,
+      "dependencies": [
+        "9"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Message advance end-to-end"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "10.1",
+      "title": "Window frame + selectable list (C++)",
+      "description": "Skin, open/close animation, cursor, paging, key repeat, mouse.",
+      "parent": "10",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Navigation doctest + golden screenshot"
+      ],
+      "test_strategy": "Doctests + bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "10.2",
+      "title": "Message system",
+      "description": "Control-code parser, typewriter, waits, face, name box, choices, number input, gold window, translation lookup.",
+      "parent": "10",
+      "dependencies": [
+        "10.1"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Parser doctest; e2e advance"
+      ],
+      "test_strategy": "Doctests + bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "10.3",
+      "title": "Screen stack (GDScript managed addon)",
+      "description": "Scene stack + transitions; embedded-script compile doctest.",
+      "parent": "10",
+      "dependencies": [
+        "10.2"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "All embedded scripts parse"
+      ],
+      "test_strategy": "Doctest.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "10.4",
+      "title": "Epic review: messages/UI",
+      "description": "Reviewer subagent.",
+      "parent": "10",
+      "dependencies": [
+        "10.3"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Findings fixed"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "11",
+      "title": "Menu (slice)",
+      "description": "Main menu, item, skill, equip, status, save, game end.",
+      "parent": null,
+      "dependencies": [
+        "10"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Potion use raises HP (state query)"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "11.1",
+      "title": "Menu screens",
+      "description": "Screens listed above.",
+      "parent": "11",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Each screen navigable via bridge input"
+      ],
+      "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "11.2",
+      "title": "Epic review: menu",
+      "description": "Reviewer subagent.",
+      "parent": "11",
+      "dependencies": [
+        "11.1"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Findings fixed"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "12",
+      "title": "Battle (slice)",
+      "description": "Turn-based core, scene, encounters, troop events, battle test.",
+      "parent": null,
+      "dependencies": [
+        "11"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Bridge-driven battle won",
+        "Golden log for fixed seed"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "12.1",
+      "title": "Battle core",
+      "description": "Turn order, actions, damage (formula/hit/eva/crit/elements/variance/guard), basic states, AI, rewards, level-up.",
+      "parent": "12",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Golden battle log for fixed seed"
+      ],
+      "test_strategy": "Doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "12.2",
+      "title": "Battle scene (front view)",
+      "description": "Status, commands, targets, log, popups, battleback, enemy sprites.",
+      "parent": "12",
+      "dependencies": [
+        "12.1"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Battle won via bridge"
+      ],
+      "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "12.3",
+      "title": "Encounters + troop events",
+      "description": "Encounter list/steps/regions; troop event pages (basic).",
+      "parent": "12",
+      "dependencies": [
+        "12.2"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Seeded encounter within N steps"
+      ],
+      "test_strategy": "Doctests + bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "12.4",
+      "title": "Battle test + test from here",
+      "description": "Editor actions.",
+      "parent": "12",
+      "dependencies": [
+        "12.3"
+      ],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "Battle test opens directly"
+      ],
+      "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "12.5",
+      "title": "Epic review: battle",
+      "description": "Reviewer subagent.",
+      "parent": "12",
+      "dependencies": [
+        "12.4"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Findings fixed"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "13",
+      "title": "Save/load, title and vertical slice milestone (M1)",
+      "description": "Save format, title/game over, slice export, demo playthrough.",
+      "parent": null,
+      "dependencies": [
+        "12"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "M1 playthrough passes 3x with evidence"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified. Milestone evidence in plan/evidence/M1/.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "13.1",
+      "title": "Save format + slots",
+      "description": "Versioned save of game + interpreter state; corrupt/old handling.",
+      "parent": "13",
+      "dependencies": [],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Identical state hash after continue",
+        "Corrupt save rejected gracefully"
+      ],
+      "test_strategy": "Doctests + bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "13.2",
+      "title": "Title, game over, boot flow",
+      "description": "Fresh build boots to title.",
+      "parent": "13",
+      "dependencies": [
+        "13.1"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Boot to title; game over returns to title"
+      ],
+      "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "13.3",
+      "title": "Slice export",
+      "description": "Export jrpg_demo with Windows template.",
+      "parent": "13",
+      "dependencies": [
+        "13.2"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Exported exe boots without errors"
+      ],
+      "test_strategy": "Run exported exe.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "13.4",
+      "title": "jrpg_demo + scripted playthrough",
+      "description": "Walk, NPC, menu, battle, save/load via bridge x3.",
+      "parent": "13",
+      "dependencies": [
+        "13.3"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "3 consecutive passes",
+        "Evidence saved"
+      ],
+      "test_strategy": "Bridge script.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "13.5",
+      "title": "Vanilla regression rerun",
+      "description": "Module-off build, plain samples, test baseline diff.",
+      "parent": "13",
+      "dependencies": [
+        "13.4"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "All equal to baseline"
+      ],
+      "test_strategy": "Scripts.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "13.6",
+      "title": "Milestone review M1",
+      "description": "Reviewer subagent over the slice.",
+      "parent": "13",
+      "dependencies": [
+        "13.5"
+      ],
+      "status": "pending",
+      "priority": 1,
+      "acceptance_criteria": [
+        "Findings fixed"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "14",
+      "title": "MMO protocol and transport",
+      "description": "IDL + codegen, framing/reassembly, ENet (DTLS) and WebSocket (TLS) transports, per-opcode token buckets, session-state gating, fuzz tests. Subtasks are defined when the epic starts (rule: split before starting).",
+      "parent": null,
+      "dependencies": [
+        "13"
+      ],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "Fuzzed decoder never crashes",
+        "Loopback client/server exchange typed messages"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "15",
+      "title": "Server runtime",
+      "description": "Role processes (login/world/zone), timer heap with entity-ID ownership, config descriptor tables, logging, graceful shutdown, server data compiler (map cache + DB snapshot + content hash), server build profile (mmo_server=yes). Subtasks are defined when the epic starts (rule: split before starting).",
+      "parent": null,
+      "dependencies": [
+        "14"
+      ],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "Headless server roles start/stop cleanly",
+        "Server data compiled deterministically"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "16",
+      "title": "Persistence",
+      "description": "DB abstraction, SQLite vendored, async worker, migrations ledger, atomic versioned character saves, dirty diffs, unique item IDs, audit logs, PostgreSQL backend flag. Subtasks are defined when the epic starts (rule: split before starting).",
+      "parent": null,
+      "dependencies": [
+        "15"
+      ],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "Crash-consistency test: kill -9 during saves leaves consistent DB",
+        "Migrations idempotent"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "17",
+      "title": "Accounts, login and handoff",
+      "description": "Argon2id accounts, brute-force bans, HMAC tickets, online registry (kick older), per-player state machine with final-save ack, reconnect/resync, login/char-select/create screens. Subtasks are defined when the epic starts (rule: split before starting).",
+      "parent": null,
+      "dependencies": [
+        "16"
+      ],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "Double login kicks older session",
+        "Zone handoff without item loss"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "18",
+      "title": "Zone simulation",
+      "description": "AoI 8x8 block grid with strip updates + hysteresis, authoritative movement (tile prediction mode and click-to-move mode), replication + interpolation, chat, warps and zone handoff, channels, instances. Subtasks are defined when the epic starts (rule: split before starting).",
+      "parent": null,
+      "dependencies": [
+        "17"
+      ],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "2 clients see each other move",
+        "Speed hack rejected"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "19",
+      "title": "Server-side events and shops",
+      "description": "Interpreter on the zone server with network presentation port, NPC dialogs (timeouts, disconnect cleanup), server shops with two-phase transactions, variable scopes persistence. Subtasks are defined when the epic starts (rule: split before starting).",
+      "parent": null,
+      "dependencies": [
+        "18"
+      ],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "NPC dialog round-trip online",
+        "Disconnect mid-dialog cleans up"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "20",
+      "title": "Online battles",
+      "description": "Instanced turn-based battles (PokeMMO-style) and ARPG core (spawns, two-speed AI, skill timers, drops, exp sharing, damage logs). Subtasks are defined when the epic starts (rule: split before starting).",
+      "parent": null,
+      "dependencies": [
+        "19"
+      ],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "Online turn-based battle won",
+        "ARPG mob kill grants exp/drop"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "21",
+      "title": "Editor and bridge integration, online slice (M2)",
+      "description": "Online project mode, Server workspace (Run Local Cluster, N clients, logs, entity inspector, packet inspector, GM console, bots), bridge cluster tools; M2 online slice evidence. Subtasks are defined when the epic starts (rule: split before starting).",
+      "parent": null,
+      "dependencies": [
+        "20"
+      ],
+      "status": "pending",
+      "priority": 2,
+      "acceptance_criteria": [
+        "M2: 2+ clients chat, NPC, shop, trade, battle, relog, zone restart recovery — evidence"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "22",
+      "title": "Database completion",
+      "description": "Every field of every MZ database tab, full traits and effects, types, terms, system 1/2, animations tab. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Every gap-map row of this area implemented and tested, or deferred with reason"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "23",
+      "title": "Map editor completion",
+      "description": "All tools, map loops, parallax, encounters/regions UI, quick events, copy/paste/shift, map search. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Every gap-map row of this area implemented and tested, or deferred with reason"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "24",
+      "title": "All event commands and move routes",
+      "description": "Every command in the 16 MZ categories and every movement route command, offline and online authority. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Every gap-map row of this area implemented and tested, or deferred with reason"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "25",
+      "title": "Characters, vehicles, followers, balloons",
+      "description": "Vehicles (boat/ship/airship), followers, balloon icons, character animations on map. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Every gap-map row of this area implemented and tested, or deferred with reason"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "26",
+      "title": "Pictures, screen effects, weather, timers",
+      "description": "Show/move/rotate/tint/erase picture, fade/tint/flash/shake, weather, timer. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Every gap-map row of this area implemented and tested, or deferred with reason"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "27",
+      "title": "Battle completion and ARPG action system",
+      "description": "TPB active/wait, side-view battlers and motions, enemy action patterns, full states, battle events; real-time action battle system for single-player. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Every gap-map row of this area implemented and tested, or deferred with reason"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "28",
+      "title": "Menus completion",
+      "description": "Formation, options, shop, name input, item/key-item choice, status variants. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Every gap-map row of this area implemented and tested, or deferred with reason"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "29",
+      "title": "Audio system",
+      "description": "BGM/BGS/ME/SE, fades, memorize/replay, buses, editor preview. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Every gap-map row of this area implemented and tested, or deferred with reason"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "30",
+      "title": "Animations",
+      "description": "Particle/sprite-based animation resources with SE/flash timings and editor preview (replacing Effekseer). Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Every gap-map row of this area implemented and tested, or deferred with reason"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "31",
+      "title": "Debug and test-play tools",
+      "description": "Playtest options, in-game debug panel (switches/variables), event test, battle test variants. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Every gap-map row of this area implemented and tested, or deferred with reason"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "32",
+      "title": "Character generator",
+      "description": "Part-based generator with original parts producing walk/face/battler sheets. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Every gap-map row of this area implemented and tested, or deferred with reason"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "33",
+      "title": "Resource manager and asset import pipelines",
+      "description": "Browse/import/preview/delete assets; importers for characters, tilesets, animations, audio; bridge authoring tools. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Every gap-map row of this area implemented and tested, or deferred with reason"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "34",
+      "title": "Plugin manager and plugin commands",
+      "description": "Addon-based plugins with ordered enable list, parameters, plugin commands. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Every gap-map row of this area implemented and tested, or deferred with reason"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "35",
+      "title": "Localization",
+      "description": "String extraction from DB/messages (EditorTranslationParserPlugin), CSV/PO, runtime locale switch, CJK font fallback. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Every gap-map row of this area implemented and tested, or deferred with reason"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "36",
+      "title": "Deployment",
+      "description": "Export presets with JRPG checks; Windows templates locally; other platforms via fork CI; PCK encryption. Each feature works offline and declares online authority. Subtasks from gap map rows when the epic starts.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Every gap-map row of this area implemented and tested, or deferred with reason"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "37",
+      "title": "Social systems",
+      "description": "Party, guild, friends, mail (RODEX-like) with persistence and cross-zone sync.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Feature set implemented with tests, evidence via bridge/bots"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "38",
+      "title": "Economy",
+      "description": "Trade (two-phase), market/GTL, vending, storage, item audit trail.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Feature set implemented with tests, evidence via bridge/bots"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "39",
+      "title": "GM and ops",
+      "description": "Permission groups, GM commands with audit, admin HTTP API + game-op queue, staged content apply with verify/rollback, metrics, restart countdown.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Feature set implemented with tests, evidence via bridge/bots"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "40",
+      "title": "Security hardening",
+      "description": "DTLS/TLS everywhere, inter-server auth, DDoS/per-IP limits, login bans, protocol fuzzing in CI.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Feature set implemented with tests, evidence via bridge/bots"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "41",
+      "title": "Production persistence, packaging, Linux builds",
+      "description": "PostgreSQL backend, server packaging, service units, backups, Linux builds via fork CI or WSL.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Feature set implemented with tests, evidence via bridge/bots"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "42",
+      "title": "Load and chaos testing",
+      "description": "Bot swarm, latency/loss injection, kill -9 recovery, dupe attempts; capacity measured and recorded.",
+      "parent": null,
+      "dependencies": [
+        "21"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Feature set implemented with tests, evidence via bridge/bots"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "43",
+      "title": "Optional Nakama adapter",
+      "description": "Backend adapter allowing Nakama for accounts/social.",
+      "parent": null,
+      "dependencies": [
+        "37"
+      ],
+      "status": "deferred",
+      "priority": 4,
+      "acceptance_criteria": [
+        "Adapter works against a local Nakama"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": "Deferred by D-MMO decision: own login/world services are the default; Nakama OSS has no clustering and adds Go+Postgres."
+    },
+    {
+      "id": "44",
+      "title": "Branding patch for distribution",
+      "description": "Replace window title/icons/binary names if the fork is ever distributed (trademark policy).",
+      "parent": null,
+      "dependencies": [],
+      "status": "deferred",
+      "priority": 4,
+      "acceptance_criteria": [
+        "Branding replaced; UPSTREAM_PATCHES updated"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": "Deferred: personal non-distributed fork; minimal upstream diff preferred."
+    },
+    {
+      "id": "45",
+      "title": "RPG Maker project importer",
+      "description": "One-way importer of user-owned RPG Maker projects.",
+      "parent": null,
+      "dependencies": [],
+      "status": "deferred",
+      "priority": 4,
+      "acceptance_criteria": [
+        "Importer converts a sample project"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": "Deferred (legal): requires RPG Maker data formats that are not publicly documented; rule: reimplement only from public documentation."
+    },
+    {
+      "id": "46",
+      "title": "Full parity and MMO maturity milestone (M3)",
+      "description": "Offline and online playthroughs covering every implemented feature; evidence in plan/evidence/M3/.",
+      "parent": null,
+      "dependencies": [
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "35",
+        "36",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Playthrough scripts pass; evidence saved"
+      ],
+      "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "47",
+      "title": "Phase 5 final bug and edge-case sweep",
+      "description": "Re-read every touched file; all checklist items of the request + MMO checks; findings table; not-verified list; blocked/deferred list.",
+      "parent": null,
+      "dependencies": [
+        "46"
+      ],
+      "status": "pending",
+      "priority": 3,
+      "acceptance_criteria": [
+        "Findings table finding -> file:line -> fix",
+        "Lists of not-verified and blocked/deferred with reasons"
+      ],
+      "test_strategy": "Manual + scripted checks.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    }
+  ]
+}
