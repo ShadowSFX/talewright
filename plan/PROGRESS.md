@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 15:13 -0600
-- **Current task:** 1.1 Build wrapper talewright/tools/build.py, 2.1.1 Lineup, baseline, project structure, editor basics, 2.1.2 Map editor, map properties, tilesets, 2.1.3 Database A: actors, classes, skills, items, weapons/armors, 2.1.4 Database B: enemies, troops, states, animations, common events, 2.1.5 Database C: system 1/2, types, terms, traits, effects, 2.1.6 Events: system, pages, conditions, triggers, priority, move routes, all commands, 2.1.7 Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug, 2.1.8 Other versions' notable features
-- **Last completed:** 2.2 Godot current state (from the clone)
-- **Next task:** 2.3 MMO feasibility and rAthena techniques
-- **Done leaf tasks:** 5
+- **Updated:** 2026-10-13 15:14 -0600
+- **Current task:** 2.1.1 Lineup, baseline, project structure, editor basics, 2.1.2 Map editor, map properties, tilesets, 2.1.3 Database A: actors, classes, skills, items, weapons/armors, 2.1.4 Database B: enemies, troops, states, animations, common events, 2.1.5 Database C: system 1/2, types, terms, traits, effects, 2.1.6 Events: system, pages, conditions, triggers, priority, move routes, all commands, 2.1.7 Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug, 2.1.8 Other versions' notable features, 2.3 MMO feasibility and rAthena techniques
+- **Last completed:** 1.1 Build wrapper talewright/tools/build.py
+- **Next task:** 1.2 Vanilla editor dev_mode build
+- **Done leaf tasks:** 6
 <!-- status:end -->
 
 ## Log
@@ -29,4 +29,6 @@
 | 2026-10-13 15:10 -0600 | 2.1.7 | started: Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug |  |
 | 2026-10-13 15:10 -0600 | 2.1.8 | started: Other versions' notable features |  |
 | 2026-10-13 15:10 -0600 | 2.2 | started: Godot current state (from the clone) |  |
-| 2026-10-13 15:13 -0600 | 2.2 | done: Godot current state (from the clone) — godot_current_state.md written from the clone; 79 citations range-checked + 21 content anchors verified (check_citations.py) | pending |
+| 2026-10-13 15:13 -0600 | 2.2 | done: Godot current state (from the clone) — godot_current_state.md written from the clone; 79 citations range-checked + 21 content anchors verified (check_citations.py) | 23d0dcdf80 |
+| 2026-10-13 15:13 -0600 | 2.3 | started: MMO feasibility and rAthena techniques |  |
+| 2026-10-13 15:14 -0600 | 1.1 | done: Build wrapper talewright/tools/build.py — Build wrapper: profiles, vswhere shim via --site-dir (no Godot changes), d3d12=no, accesskit path pin, lock-kill verified (stopped PID), error summary verified | pending |
