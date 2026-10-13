@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 113, in_progress: 2, done: 27, blocked: 0, deferred: 3 (of 145)
+**Totals:** pending: 112, in_progress: 2, done: 28, blocked: 0, deferred: 3 (of 145)
 
 ## [x] 0 Bootstrap and task system
 
@@ -60,8 +60,8 @@ Decision log, upstream patch ledger, design specs, refined task tree.
 Editor-only C++ module: MCP Streamable HTTP server on 127.0.0.1 with token; editor + game inspection and driving; CLI.
 
 - [x] **4.1** Module skeleton modules/claude_bridge (P1) _(commit: 00c95dc78e)_
-- [x] **4.2** HTTP/1.1 server component (P1) _(deps: 4.1; commit: pending)_
-- [ ] **4.3** Auth, Origin/Host checks, connection file (P1) _(deps: 4.2)_
+- [x] **4.2** HTTP/1.1 server component (P1) _(deps: 4.1; commit: 4eac8ec916)_
+- [x] **4.3** Auth, Origin/Host checks, connection file (P1) _(deps: 4.2; commit: pending)_
 - [ ] **4.4** MCP JSON-RPC layer (P1) _(deps: 4.3)_
 - [ ] **4.5** bridge.py CLI (P1) _(deps: 4.4)_
 - [ ] **4.6** Editor tools: tree, nodes, project (P1) _(deps: 4.5)_

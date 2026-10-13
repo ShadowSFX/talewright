@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "4.2 HTTP/1.1 server component",
+  "last_completed": "4.3 Auth, Origin/Host checks, connection file",
   "tasks": [
     {
       "id": "0",
@@ -705,7 +705,7 @@
       ],
       "test_strategy": "Doctests + curl.",
       "files": [],
-      "commit": "pending",
+      "commit": "4eac8ec916",
       "notes": ""
     },
     {
@@ -716,7 +716,7 @@
       "dependencies": [
         "4.2"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "No token => 401",
@@ -726,7 +726,7 @@
       ],
       "test_strategy": "Doctests + curl.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 15:45 -0600
+- **Updated:** 2026-10-13 15:48 -0600
 - **Current task:** 2.5 Epic review: research
-- **Last completed:** 4.2 HTTP/1.1 server component
-- **Next task:** 4.3 Auth, Origin/Host checks, connection file
-- **Done leaf tasks:** 24
+- **Last completed:** 4.3 Auth, Origin/Host checks, connection file
+- **Next task:** 4.4 MCP JSON-RPC layer
+- **Done leaf tasks:** 25
 <!-- status:end -->
 
 ## Log
@@ -58,4 +58,6 @@
 | 2026-10-13 15:42 -0600 | 2.4 | done: Gap map — gap_map.md generated: 1023 inventory rows (ID parity verified) + 16 MMO rows; 1873 Godot citations verified (anchors checked at generation); reuse 86 / extend 488 / NEW 465 (containers: 2 in_progress->pending) | 89239e392b |
 | 2026-10-13 15:42 -0600 | 2.5 | started: Epic review: research (containers: 2 pending->in_progress) |  |
 | 2026-10-13 15:42 -0600 | 4.2 | started: HTTP/1.1 server component (containers: 4 pending->in_progress) |  |
-| 2026-10-13 15:45 -0600 | 4.2 | done: HTTP/1.1 server component — HTTP/1.1 component: incremental parser (411/413/431/501/505/400), non-blocking server with bounded buffers, deferred responses, keep-alive, idle/request/write timeouts, header-injection-safe responses; 6 new doctests incl. loopback; full suite 1387/1387 (containers: 4 in_progress->pending) | pending |
+| 2026-10-13 15:45 -0600 | 4.2 | done: HTTP/1.1 server component — HTTP/1.1 component: incremental parser (411/413/431/501/505/400), non-blocking server with bounded buffers, deferred responses, keep-alive, idle/request/write timeouts, header-injection-safe responses; 6 new doctests incl. loopback; full suite 1387/1387 (containers: 4 in_progress->pending) | 4eac8ec916 |
+| 2026-10-13 15:45 -0600 | 4.3 | started: Auth, Origin/Host checks, connection file (containers: 4 pending->in_progress) |  |
+| 2026-10-13 15:48 -0600 | 4.3 | done: Auth, Origin/Host checks, connection file — Auth: persistent 256-bit token in editor config dir, Host/Origin/Bearer checks (constant-time), port fallback 47700-47709, .godot/claude_bridge/connection.json; e2e curl: 401/401/403/403/405/415/404, non-loopback refused; 3 new doctests (containers: 4 in_progress->pending) | pending |

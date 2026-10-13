@@ -1,9 +1,12 @@
 #pragma once
 
+#include "core/io/dir_access.h"
+#include "core/io/file_access.h"
 #include "core/object/class_db.h"
 #include "core/os/os.h"
 #include "tests/test_macros.h"
 
+#include "modules/claude_bridge/claude_bridge_auth.h"
 #include "modules/claude_bridge/claude_bridge_http.h"
 #include "modules/claude_bridge/claude_bridge_plugin.h"
 
@@ -202,6 +205,81 @@ TEST_CASE("[ClaudeBridge][HTTP] Serves loopback requests, keep-alive and deferre
 	CHECK(r3.begins_with("HTTP/1.1 400"));
 	server.stop();
 	CHECK_FALSE(server.is_listening());
+}
+
+static ClaudeBridgeHTTPRequest make_request(const String &p_host, const String &p_origin, const String &p_auth) {
+	ClaudeBridgeHTTPRequest req;
+	req.method = "POST";
+	req.path = "/mcp";
+	if (!p_host.is_empty()) {
+		req.headers["host"] = p_host;
+	}
+	if (!p_origin.is_empty()) {
+		req.headers["origin"] = p_origin;
+	}
+	if (!p_auth.is_empty()) {
+		req.headers["authorization"] = p_auth;
+	}
+	return req;
+}
+
+TEST_CASE("[ClaudeBridge][Auth] Enforces host, origin and bearer token") {
+	const String token = ClaudeBridgeAuth::generate_token();
+	REQUIRE(token.length() == 64);
+	CHECK(ClaudeBridgeAuth::generate_token() != token);
+	String reason;
+	const String bearer = "Bearer " + token;
+
+	CHECK(ClaudeBridgeAuth::check(make_request("127.0.0.1:47700", "", bearer), token, 47700, reason) == ClaudeBridgeAuth::AUTH_OK);
+	CHECK(ClaudeBridgeAuth::check(make_request("localhost:47700", "http://localhost:47700", bearer), token, 47700, reason) == ClaudeBridgeAuth::AUTH_OK);
+	CHECK(ClaudeBridgeAuth::check(make_request("LOCALHOST:47700", "", "bearer " + token), token, 47700, reason) == ClaudeBridgeAuth::AUTH_OK);
+
+	// No token, wrong token, token prefix.
+	CHECK(ClaudeBridgeAuth::check(make_request("127.0.0.1:47700", "", ""), token, 47700, reason) == ClaudeBridgeAuth::AUTH_UNAUTHORIZED);
+	CHECK(ClaudeBridgeAuth::check(make_request("127.0.0.1:47700", "", "Bearer x" + token.substr(1)), token, 47700, reason) == ClaudeBridgeAuth::AUTH_UNAUTHORIZED);
+	CHECK(ClaudeBridgeAuth::check(make_request("127.0.0.1:47700", "", "Bearer " + token.substr(0, 63)), token, 47700, reason) == ClaudeBridgeAuth::AUTH_UNAUTHORIZED);
+	CHECK(ClaudeBridgeAuth::check(make_request("127.0.0.1:47700", "", "Basic " + token), token, 47700, reason) == ClaudeBridgeAuth::AUTH_UNAUTHORIZED);
+	// An empty configured token never authorizes.
+	CHECK(ClaudeBridgeAuth::check(make_request("127.0.0.1:47700", "", "Bearer "), String(), 47700, reason) == ClaudeBridgeAuth::AUTH_UNAUTHORIZED);
+
+	// DNS rebinding / wrong port / missing Host.
+	CHECK(ClaudeBridgeAuth::check(make_request("evil.example:47700", "", bearer), token, 47700, reason) == ClaudeBridgeAuth::AUTH_FORBIDDEN);
+	CHECK(ClaudeBridgeAuth::check(make_request("127.0.0.1:80", "", bearer), token, 47700, reason) == ClaudeBridgeAuth::AUTH_FORBIDDEN);
+	CHECK(ClaudeBridgeAuth::check(make_request("", "", bearer), token, 47700, reason) == ClaudeBridgeAuth::AUTH_FORBIDDEN);
+	// Browser origins.
+	CHECK(ClaudeBridgeAuth::check(make_request("127.0.0.1:47700", "https://evil.example", bearer), token, 47700, reason) == ClaudeBridgeAuth::AUTH_FORBIDDEN);
+	CHECK(ClaudeBridgeAuth::check(make_request("127.0.0.1:47700", "null", bearer), token, 47700, reason) == ClaudeBridgeAuth::AUTH_FORBIDDEN);
+}
+
+TEST_CASE("[ClaudeBridge][Auth] Constant-time comparison semantics") {
+	CHECK(ClaudeBridgeAuth::constant_time_equals("abc", "abc"));
+	CHECK_FALSE(ClaudeBridgeAuth::constant_time_equals("abc", "abd"));
+	CHECK_FALSE(ClaudeBridgeAuth::constant_time_equals("abc", "abcd"));
+	CHECK_FALSE(ClaudeBridgeAuth::constant_time_equals("", "a"));
+	CHECK(ClaudeBridgeAuth::constant_time_equals("", ""));
+}
+
+TEST_CASE("[ClaudeBridge][Auth] Token file is created once and reused") {
+	const String dir = OS::get_singleton()->get_cache_path().path_join("talewright_bridge_test_" + itos(OS::get_singleton()->get_ticks_usec()));
+	const String path = dir.path_join("sub").path_join("token");
+	bool created = false;
+	const String first = ClaudeBridgeAuth::load_or_create_token(path, &created);
+	CHECK(created);
+	CHECK(first.length() == 64);
+	const String second = ClaudeBridgeAuth::load_or_create_token(path, &created);
+	CHECK_FALSE(created);
+	CHECK(second == first);
+	// A corrupted file is replaced.
+	{
+		Ref<FileAccess> f = FileAccess::open(path, FileAccess::WRITE);
+		f->store_string("garbage");
+	}
+	const String third = ClaudeBridgeAuth::load_or_create_token(path, &created);
+	CHECK(created);
+	CHECK(third != first);
+	DirAccess::remove_absolute(path);
+	DirAccess::remove_absolute(path.get_base_dir());
+	DirAccess::remove_absolute(dir);
 }
 
 } // namespace TestClaudeBridge
