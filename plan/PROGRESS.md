@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 15:23 -0600
+- **Updated:** 2026-10-13 15:32 -0600
 - **Current task:** 2.1.1 Lineup, baseline, project structure, editor basics, 2.1.2 Map editor, map properties, tilesets, 2.1.3 Database A: actors, classes, skills, items, weapons/armors, 2.1.4 Database B: enemies, troops, states, animations, common events, 2.1.5 Database C: system 1/2, types, terms, traits, effects, 2.1.6 Events: system, pages, conditions, triggers, priority, move routes, all commands, 2.1.7 Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug, 2.1.8 Other versions' notable features
-- **Last completed:** 1.5 Plain general-purpose samples
-- **Next task:** 4.1 Module skeleton modules/claude_bridge
-- **Done leaf tasks:** 11
+- **Last completed:** 4.1 Module skeleton modules/claude_bridge
+- **Next task:** 4.2 HTTP/1.1 server component
+- **Done leaf tasks:** 12
 <!-- status:end -->
 
 ## Log
@@ -39,4 +39,6 @@
 | 2026-10-13 15:18 -0600 | 2.3 | done: MMO feasibility and rAthena techniques — mmo_feasibility.md (verdict, reuse table, NEW list, topology, modes, persistence, prior art, legal, capacity targets) + rathena_techniques.md (40 techniques + 14 weaknesses, rAthena d4b8e7b8 refs). Note: an earlier draft of rathena_techniques.md was swept into commit 1.2. | 0a33c6e7da |
 | 2026-10-13 15:23 -0600 | 1.4 | done: Export template builds (template_release, template_debug) — template_release 3.7 min (68.6 MB), template_debug 3.9 min (83.0 MB), 0 errors/0 warnings | b96aeaeae0 |
 | 2026-10-13 15:23 -0600 | 1.5 | started: Plain general-purpose samples |  |
-| 2026-10-13 15:23 -0600 | 1.5 | done: Plain general-purpose samples — plain_2d (CharacterBody2D vs wall) + plain_3d (RigidBody3D on floor) samples with --smoke self-checks; smoke_samples.py: editor open/import, run, export with custom template + run exported exe: ALL PASS (closed containers: 1) | pending |
+| 2026-10-13 15:23 -0600 | 1.5 | done: Plain general-purpose samples — plain_2d (CharacterBody2D vs wall) + plain_3d (RigidBody3D on floor) samples with --smoke self-checks; smoke_samples.py: editor open/import, run, export with custom template + run exported exe: ALL PASS (closed containers: 1) | 51255adeae |
+| 2026-10-13 15:24 -0600 | 4.1 | started: Module skeleton modules/claude_bridge |  |
+| 2026-10-13 15:32 -0600 | 4.1 | done: Module skeleton modules/claude_bridge — claude_bridge module skeleton: editor-only config.py, internal EditorPlugin with settings (enabled, port), doctest; builds with and without the module (vanilla: 1380/1380 tests, smoke pass); build.py gains SCons cache + UTF-8-safe output; add_header.py | pending |

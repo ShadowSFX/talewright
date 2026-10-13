@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "1.5 Plain general-purpose samples",
+  "last_completed": "4.1 Module skeleton modules/claude_bridge",
   "tasks": [
     {
       "id": "0",
@@ -226,7 +226,7 @@
         "talewright/samples/plain_3d",
         "talewright/tools/smoke_samples.py"
       ],
-      "commit": "pending",
+      "commit": "51255adeae",
       "notes": ""
     },
     {
@@ -597,7 +597,7 @@
       "description": "config.py (can_build => env.editor_build), SCsub, register_types, EditorPlugin bootstrap, editor settings (enabled, port), doc_classes, tests dir.",
       "parent": "4",
       "dependencies": [],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Editor builds with module; builds with module_claude_bridge_enabled=no",
@@ -607,7 +607,7 @@
       "files": [
         "modules/claude_bridge/*"
       ],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

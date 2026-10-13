@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 118, in_progress: 8, done: 13, blocked: 0, deferred: 3 (of 142)
+**Totals:** pending: 117, in_progress: 8, done: 14, blocked: 0, deferred: 3 (of 142)
 
 ## [x] 0 Bootstrap and task system
 
@@ -23,7 +23,7 @@ Reproducible builds and a recorded vanilla baseline before any engine change.
 - [x] **1.2** Vanilla editor dev_mode build (P1) _(deps: 1.1; commit: ed36cad7e0)_
 - [x] **1.3** Upstream test baseline (P1) _(deps: 1.2; commit: 499d506b7c)_
 - [x] **1.4** Export template builds (template_release, template_debug) (P2) _(deps: 1.2; commit: b96aeaeae0)_
-- [x] **1.5** Plain general-purpose samples (P2) _(deps: 1.2, 1.4; commit: pending)_
+- [x] **1.5** Plain general-purpose samples (P2) _(deps: 1.2, 1.4; commit: 51255adeae)_
 
 ## [ ] 2 Research (Phase 1)
 
@@ -56,7 +56,7 @@ Decision log, upstream patch ledger, design specs, refined task tree.
 
 Editor-only C++ module: MCP Streamable HTTP server on 127.0.0.1 with token; editor + game inspection and driving; CLI.
 
-- [ ] **4.1** Module skeleton modules/claude_bridge (P1)
+- [x] **4.1** Module skeleton modules/claude_bridge (P1) _(commit: pending)_
 - [ ] **4.2** HTTP/1.1 server component (P1) _(deps: 4.1)_
 - [ ] **4.3** Auth, Origin/Host checks, connection file (P1) _(deps: 4.2)_
 - [ ] **4.4** MCP JSON-RPC layer (P1) _(deps: 4.3)_

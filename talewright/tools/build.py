@@ -75,6 +75,8 @@ def stop_locking_processes() -> list:
 
 
 def main() -> int:
+    # MSVC output can contain characters the Windows console code page cannot encode.
+    sys.stdout.reconfigure(errors="replace")
     argv = sys.argv[1:]
     extra = []
     if "--" in argv:
@@ -94,6 +96,8 @@ def main() -> int:
     # misc/scripts/install_accesskit.py installs into bin/build_deps when run from Git Bash (MSYSTEM set) and
     # platform/windows/detect.py:206-209 only looks there under the same condition; pin the path so builds
     # behave the same from Git Bash and PowerShell.
+    # SCons cache (SConstruct:300-301) so switching between vanilla and full builds reuses objects.
+    cmd += [f"cache_path={(ROOT / 'bin' / 'scons_cache').as_posix()}", "cache_limit=40"]
     accesskit = ROOT / "bin" / "build_deps" / "accesskit"
     if accesskit.is_dir():
         cmd.append(f"accesskit_sdk_path={accesskit.as_posix()}")
