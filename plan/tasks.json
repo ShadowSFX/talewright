@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "0.4 Persist planning research reports",
+  "last_completed": "2.2 Godot current state (from the clone)",
   "tasks": [
     {
       "id": "0",
@@ -103,7 +103,7 @@
       ],
       "test_strategy": "Read files.",
       "files": [],
-      "commit": "pending",
+      "commit": "d611bf476c",
       "notes": ""
     },
     {
@@ -132,7 +132,7 @@
       "description": "Wraps scons (python -m SCons) with the project's standard flags, kills processes locking bin/*.exe, logs to talewright/build_logs/, extracts errors/warnings, prints timing.",
       "parent": "1",
       "dependencies": [],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "`python talewright/tools/build.py editor` builds",
@@ -272,7 +272,7 @@
       "description": "Lineup (MZ, MV, VX Ace, XP, 2003, Unite, U2U), baseline choice, project structure, menu bar, aid tools, playing the game, test play, deployment, plugins, official plugins, output formats, asset standards.",
       "parent": "2.1",
       "dependencies": [],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Sections written with sources"
@@ -288,7 +288,7 @@
       "description": "Tile layers, autotile kinds, passability/flags, regions, shadows, map properties, encounters, map data controls, tileset settings.",
       "parent": "2.1",
       "dependencies": [],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Sections written with sources"
@@ -304,7 +304,7 @@
       "description": "Every field of each tab.",
       "parent": "2.1",
       "dependencies": [],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Sections written with sources"
@@ -320,7 +320,7 @@
       "description": "Every field incl. troop battle event pages and conditions.",
       "parent": "2.1",
       "dependencies": [],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Sections written with sources"
@@ -336,7 +336,7 @@
       "description": "Every option; full trait and effect lists.",
       "parent": "2.1",
       "dependencies": [],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Sections written with sources"
@@ -352,7 +352,7 @@
       "description": "Map event system/creation/settings; every event command in all 16 categories one by one; every movement route command.",
       "parent": "2.1",
       "dependencies": [],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Every command listed with parameters and behaviour"
@@ -368,7 +368,7 @@
       "description": "Message window behaviour and control characters; menu screens; turn-based and TPB; damage formula semantics; save/load; audio types; generator; debug tools.",
       "parent": "2.1",
       "dependencies": [],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Sections written with sources"
@@ -384,7 +384,7 @@
       "description": "MV, VX Ace, XP, 2003, Unite features absent from MZ (e.g. XP 3-layer priority, 2003 side-view ATB, Unite features), sourced.",
       "parent": "2.1",
       "dependencies": [],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 2,
       "acceptance_criteria": [
         "Section written with sources"
@@ -428,14 +428,14 @@
       "dependencies": [
         "0.4"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Every claim cites file:line valid at HEAD"
       ],
       "test_strategy": "Script greps each cited line exists.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

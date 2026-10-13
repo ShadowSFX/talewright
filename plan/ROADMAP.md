@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 134, in_progress: 0, done: 5, blocked: 0, deferred: 3 (of 142)
+**Totals:** pending: 124, in_progress: 9, done: 6, blocked: 0, deferred: 3 (of 142)
 
 ## [x] 0 Bootstrap and task system
 
@@ -13,13 +13,13 @@ Fork, local clone, working branch, persistent tracker, resume protocol, persiste
 - [x] **0.1** Fork, clone, upstream remote, branch talewright @ 4.7.2-stable (P1) _(commit: ed1daf0bf0)_
 - [x] **0.2** Task system: plan/ files and tasks.py (P1) _(deps: 0.1; commit: e0717a6727)_
 - [x] **0.3** CLAUDE.md resume protocol, NOTICE and fork README (P1) _(deps: 0.2; commit: 12253dd0a5)_
-- [x] **0.4** Persist planning research reports (P1) _(deps: 0.2; commit: pending)_
+- [x] **0.4** Persist planning research reports (P1) _(deps: 0.2; commit: d611bf476c)_
 
 ## [ ] 1 Toolchain baseline
 
 Reproducible builds and a recorded vanilla baseline before any engine change.
 
-- [ ] **1.1** Build wrapper talewright/tools/build.py (P1)
+- [~] **1.1** Build wrapper talewright/tools/build.py (P1)
 - [ ] **1.2** Vanilla editor dev_mode build (P1) _(deps: 1.1)_
 - [ ] **1.3** Upstream test baseline (P1) _(deps: 1.2)_
 - [ ] **1.4** Export template builds (template_release, template_debug) (P2) _(deps: 1.2)_
@@ -30,16 +30,16 @@ Reproducible builds and a recorded vanilla baseline before any engine change.
 Sourced RPG Maker inventory, Godot current state from the clone, MMO feasibility, gap map.
 
 - [ ] **2.1** RPG Maker inventory (P1)
-  - [ ] **2.1.1** Lineup, baseline, project structure, editor basics (P1)
-  - [ ] **2.1.2** Map editor, map properties, tilesets (P1)
-  - [ ] **2.1.3** Database A: actors, classes, skills, items, weapons/armors (P1)
-  - [ ] **2.1.4** Database B: enemies, troops, states, animations, common events (P1)
-  - [ ] **2.1.5** Database C: system 1/2, types, terms, traits, effects (P1)
-  - [ ] **2.1.6** Events: system, pages, conditions, triggers, priority, move routes, all commands (P1)
-  - [ ] **2.1.7** Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug (P1)
-  - [ ] **2.1.8** Other versions' notable features (P2)
+  - [~] **2.1.1** Lineup, baseline, project structure, editor basics (P1)
+  - [~] **2.1.2** Map editor, map properties, tilesets (P1)
+  - [~] **2.1.3** Database A: actors, classes, skills, items, weapons/armors (P1)
+  - [~] **2.1.4** Database B: enemies, troops, states, animations, common events (P1)
+  - [~] **2.1.5** Database C: system 1/2, types, terms, traits, effects (P1)
+  - [~] **2.1.6** Events: system, pages, conditions, triggers, priority, move routes, all commands (P1)
+  - [~] **2.1.7** Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug (P1)
+  - [~] **2.1.8** Other versions' notable features (P2)
   - [ ] **2.1.9** Inventory merge and TOC gate (P1) _(deps: 2.1.1, 2.1.2, 2.1.3, 2.1.4, 2.1.5, 2.1.6, 2.1.7, 2.1.8)_
-- [ ] **2.2** Godot current state (from the clone) (P1) _(deps: 0.4)_
+- [x] **2.2** Godot current state (from the clone) (P1) _(deps: 0.4; commit: pending)_
 - [ ] **2.3** MMO feasibility and rAthena techniques (P1) _(deps: 0.4)_
 - [ ] **2.4** Gap map (P1) _(deps: 2.1, 2.2, 2.3)_
 
