@@ -34,6 +34,7 @@
 #include "claude_bridge_mcp.h"
 
 class ClaudeBridgePlugin;
+class Image;
 
 // Shared helpers and tool registration for the Claude bridge.
 namespace ClaudeBridgeTools {
@@ -45,6 +46,10 @@ Variant variant_to_json(const Variant &p_value, int p_depth = 0);
 Variant json_to_value(const Variant &p_json, Variant::Type p_target, bool &r_ok);
 // res:// path validation: inside the project, normalized, no traversal. Returns an empty string when invalid.
 String validate_res_path(const String &p_path);
+
+// Downscales p_image to at most p_max_width, saves it as PNG under <project>/.godot/claude_bridge/screenshots/
+// (pruning old files) and completes p_call with {path, width, height} plus the PNG when p_include_image is true.
+void complete_with_image(const Ref<ClaudeBridgeToolCall> &p_call, Ref<Image> p_image, const String &p_label, int p_max_width, bool p_include_image);
 
 void register_editor_tools(ClaudeBridgeMCP &r_mcp, ClaudeBridgePlugin *p_plugin);
 

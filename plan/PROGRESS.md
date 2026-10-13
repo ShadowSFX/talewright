@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 16:11 -0600
+- **Updated:** 2026-10-13 16:14 -0600
 - **Current task:** none
-- **Last completed:** 4.8 Run/stop
+- **Last completed:** 4.9 Editor screenshots
 - **Next task:** 3.3 Specs
-- **Done leaf tasks:** 33
+- **Done leaf tasks:** 34
 <!-- status:end -->
 
 ## Log
@@ -75,4 +75,6 @@
 | 2026-10-13 16:06 -0600 | 4.7 | started: Logs and errors (containers: 4 pending->in_progress) |  |
 | 2026-10-13 16:09 -0600 | 4.7 | done: Logs and errors — Logs: thread-safe ring buffer; editor print/error handlers (verified e2e: startup output retrievable); game output/errors parsed from ScriptEditorDebugger debug_data (unit-tested with the real message format; live game e2e moved to 4.8 because running the game needs the 4.8 tools); get_logs (since_seq/source/errors_only/contains/limit) and clear_logs (containers: 4 in_progress->pending) | 601c674fea |
 | 2026-10-13 16:09 -0600 | 4.8 | started: Run/stop (containers: 4 pending->in_progress) |  |
-| 2026-10-13 16:11 -0600 | 4.8 | done: Run/stop — run_project (main/current/custom + args, pre-checks avoid blocking dialogs), stop_project, run_status (pid, debugger_connected); bridge_probe sample; live: game print + deliberate error captured with source=game and script location res://probe.gd:10 (moved 4.7 criterion) (containers: 4 in_progress->pending) | pending |
+| 2026-10-13 16:11 -0600 | 4.8 | done: Run/stop — run_project (main/current/custom + args, pre-checks avoid blocking dialogs), stop_project, run_status (pid, debugger_connected); bridge_probe sample; live: game print + deliberate error captured with source=game and script location res://probe.gd:10 (moved 4.7 criterion) (containers: 4 in_progress->pending) | a2a9c2529f |
+| 2026-10-13 16:11 -0600 | 4.9 | started: Editor screenshots (containers: 4 pending->in_progress) |  |
+| 2026-10-13 16:14 -0600 | 4.9 | done: Editor screenshots — editor_screenshot (window/main_screen/viewport_2d/viewport_3d) after Main::force_redraw + frame_post_draw, HDR->sRGB as EditorNode, downscale, PNG saved under .godot/claude_bridge/screenshots (pruned) + inline image; editor_set_main_screen; hidden-viewport guidance; verified visually (evidence in plan/evidence/bridge/) (containers: 4 in_progress->pending) | pending |

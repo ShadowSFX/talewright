@@ -36,7 +36,10 @@
 #include "core/config/project_settings.h"
 #include "core/io/dir_access.h"
 #include "core/io/file_access.h"
+#include "core/io/image.h"
+#include "core/io/json.h"
 #include "core/io/resource_loader.h"
+#include "core/os/time.h"
 #include "core/variant/variant_utility.h"
 #include "core/version.h"
 #include "editor/debugger/editor_debugger_node.h"
@@ -159,6 +162,54 @@ String validate_res_path(const String &p_path) {
 		return String();
 	}
 	return "res://" + rel;
+}
+
+void complete_with_image(const Ref<ClaudeBridgeToolCall> &p_call, Ref<Image> p_image, const String &p_label, int p_max_width, bool p_include_image) {
+	if (p_image.is_null() || p_image->is_empty()) {
+		p_call->fail("No image available (headless editors and minimized windows cannot render).");
+		return;
+	}
+	if (p_image->get_width() < 16 || p_image->get_height() < 16) {
+		p_call->fail("The viewport is not being rendered (it is hidden). Switch to it first, e.g. editor_set_main_screen name=2D.");
+		return;
+	}
+	p_image->clear_mipmaps();
+	if (p_image->get_format() != Image::FORMAT_RGBA8) {
+		p_image->convert(Image::FORMAT_RGBA8);
+	}
+	const int max_w = CLAMP(p_max_width, 64, 8192);
+	if (p_image->get_width() > max_w) {
+		const int h = MAX(1, (int)Math::round((double)p_image->get_height() * max_w / p_image->get_width()));
+		p_image->resize(max_w, h, Image::INTERPOLATE_BILINEAR);
+	}
+	const String dir = ProjectSettings::get_singleton()->globalize_path(ProjectSettings::get_singleton()->get_project_data_path()).path_join("claude_bridge").path_join("screenshots");
+	if (!DirAccess::exists(dir)) {
+		DirAccess::make_dir_recursive_absolute(dir);
+	}
+	// Keep the folder bounded: delete the oldest files beyond 60.
+	Ref<DirAccess> da = DirAccess::open(dir);
+	if (da.is_valid()) {
+		PackedStringArray files = da->get_files();
+		files.sort();
+		for (int i = 0; i + 60 < files.size(); i++) {
+			da->remove(files[i]);
+		}
+	}
+	const String file = dir.path_join(vformat("%s-%s.png", Time::get_singleton()->get_datetime_string_from_system().remove_chars("-:T"), p_label.validate_filename()));
+	const Vector<uint8_t> png = p_image->save_png_to_buffer();
+	Ref<FileAccess> f = FileAccess::open(file, FileAccess::WRITE);
+	if (f.is_valid()) {
+		f->store_buffer(png);
+	}
+	Dictionary info;
+	info["path"] = file;
+	info["width"] = p_image->get_width();
+	info["height"] = p_image->get_height();
+	p_call->add_text(JSON::stringify(info, "  ", false));
+	if (p_include_image) {
+		p_call->add_image_png(png);
+	}
+	p_call->finish();
 }
 
 // --- helpers -------------------------------------------------------------------------------------------
@@ -491,6 +542,18 @@ static void _tool_rescan(const Dictionary &p_args, const Ref<ClaudeBridgeToolCal
 	p_call->complete_data(out);
 }
 
+static void _tool_set_main_screen(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *) {
+	const String name = p_args.get("name", "");
+	if (name.is_empty()) {
+		p_call->fail("name is required (e.g. \"2D\", \"3D\", \"Script\", \"Game\").");
+		return;
+	}
+	EditorInterface::get_singleton()->set_main_screen_editor(name);
+	Dictionary out;
+	out["requested"] = name;
+	p_call->complete_data(out);
+}
+
 static void _tool_undo_redo(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *) {
 	const String action = p_args.get("action", "undo");
 	EditorUndoRedoManager *ur = EditorUndoRedoManager::get_singleton();
@@ -710,6 +773,12 @@ void register_editor_tools(ClaudeBridgeMCP &r_mcp, ClaudeBridgePlugin *p_plugin)
 	p["limit"] = _prop("integer", "Maximum entries, newest kept (default 200).");
 	_add(r_mcp, "get_logs", "Output and errors", "Returns editor and game output/errors (with file:line for errors) from a ring buffer, plus counts.", p, PackedStringArray(), &_tool_get_logs, true, p_plugin);
 	_add(r_mcp, "clear_logs", "Clear logs", "Clears the bridge log buffer.", Dictionary(), PackedStringArray(), &_tool_clear_logs, false, p_plugin);
+
+	p.clear();
+	p["name"] = _prop("string", "Main screen to show: \"2D\", \"3D\", \"Script\", \"Game\", \"Asset Store\" or a plugin's main screen name.");
+	req.clear();
+	req.push_back("name");
+	_add(r_mcp, "editor_set_main_screen", "Switch main screen", "Switches the editor's main screen (needed before capturing viewport_2d/viewport_3d, which only render while visible).", p, req, &_tool_set_main_screen, false, p_plugin);
 
 	p.clear();
 	p["action"] = _prop("string", "\"undo\" or \"redo\".");

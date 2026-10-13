@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "4.8 Run/stop",
+  "last_completed": "4.9 Editor screenshots",
   "tasks": [
     {
       "id": "0",
@@ -822,7 +822,7 @@
       ],
       "test_strategy": "Bridge calls.",
       "files": [],
-      "commit": "pending",
+      "commit": "a2a9c2529f",
       "notes": ""
     },
     {
@@ -833,14 +833,14 @@
       "dependencies": [
         "4.8"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Screenshot PNG matches the visible editor"
       ],
       "test_strategy": "Read PNG.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

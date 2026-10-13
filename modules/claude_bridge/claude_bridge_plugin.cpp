@@ -6,14 +6,24 @@
 #include "core/config/project_settings.h"
 #include "core/io/dir_access.h"
 #include "core/io/file_access.h"
+#include "core/io/image.h"
 #include "core/io/json.h"
 #include "core/object/callable_mp.h"
 #include "core/os/os.h"
 #include "core/version.h"
 #include "editor/debugger/editor_debugger_node.h"
 #include "editor/debugger/script_editor_debugger.h"
+#include "editor/editor_interface.h"
+#include "editor/editor_main_screen.h"
+#include "editor/editor_node.h"
 #include "editor/file_system/editor_paths.h"
 #include "editor/settings/editor_settings.h"
+#include "main/main.h"
+#include "scene/main/scene_tree.h"
+#include "scene/main/viewport.h"
+#include "scene/main/window.h"
+#include "servers/rendering/rendering_device.h"
+#include "servers/rendering/rendering_server.h"
 
 String ClaudeBridgePlugin::get_token_path() {
 	// Per-user and outside any project, so the token never ends up in version control or project archives.
@@ -186,6 +196,82 @@ void ClaudeBridgePlugin::_on_debug_data(const String &p_message, const Array &p_
 	logs.add_game_debug_message(p_message, p_data);
 }
 
+static Ref<Image> _capture_viewport(Viewport *p_viewport) {
+	if (!p_viewport) {
+		return Ref<Image>();
+	}
+	Ref<ViewportTexture> texture = p_viewport->get_texture();
+	if (texture.is_null()) {
+		return Ref<Image>();
+	}
+	Ref<Image> img = texture->get_image();
+	if (img.is_null() || img->is_empty()) {
+		return Ref<Image>();
+	}
+	img->convert(Image::FORMAT_RGBA8);
+#ifdef RD_ENABLED
+	// Same conversion as EditorNode's own screenshot path (editor/editor_node.cpp:4018-4023).
+	if (RD::get_singleton() && RenderingServer::get_singleton()->viewport_is_using_hdr_2d(p_viewport->get_viewport_rid())) {
+		img->linear_to_srgb();
+	}
+#endif
+	return img;
+}
+
+void ClaudeBridgePlugin::_tool_editor_screenshot(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	ClaudeBridgePlugin *self = static_cast<ClaudeBridgePlugin *>(p_userdata);
+	ScreenshotRequest req;
+	req.call = p_call;
+	req.target = p_args.get("target", "window");
+	if (req.target != "window" && req.target != "main_screen" && req.target != "viewport_2d" && req.target != "viewport_3d") {
+		p_call->fail("target must be window, main_screen, viewport_2d or viewport_3d.");
+		return;
+	}
+	req.viewport_index = CLAMP(int(p_args.get("viewport", 0)), 0, 3);
+	req.max_width = p_args.get("max_width", 1280);
+	req.include_image = p_args.get("include_image", true);
+	self->screenshot_requests.push_back(req);
+	if (!self->screenshot_frame_requested) {
+		self->screenshot_frame_requested = true;
+		RenderingServer::get_singleton()->connect("frame_post_draw", callable_mp(self, &ClaudeBridgePlugin::_on_frame_post_draw), CONNECT_ONE_SHOT);
+	}
+	// In low-processor mode the editor only draws when something changes (main/main.cpp, Main::iteration);
+	// force a frame so the capture reflects the current state.
+	Main::force_redraw();
+}
+
+void ClaudeBridgePlugin::_on_frame_post_draw() {
+	screenshot_frame_requested = false;
+	LocalVector<ScreenshotRequest> requests;
+	for (const ScreenshotRequest &r : screenshot_requests) {
+		requests.push_back(r);
+	}
+	screenshot_requests.clear();
+	for (ScreenshotRequest &req : requests) {
+		if (req.call->is_cancelled() || req.call->is_done()) {
+			continue;
+		}
+		Ref<Image> img;
+		if (req.target == "viewport_2d") {
+			img = _capture_viewport(EditorInterface::get_singleton()->get_editor_viewport_2d());
+		} else if (req.target == "viewport_3d") {
+			img = _capture_viewport(EditorInterface::get_singleton()->get_editor_viewport_3d(req.viewport_index));
+		} else {
+			img = _capture_viewport(get_tree()->get_root());
+			if (img.is_valid() && req.target == "main_screen") {
+				Control *main_control = EditorNode::get_editor_main_screen()->get_control();
+				if (main_control) {
+					const Rect2i rect = Rect2i(main_control->get_global_rect()).intersection(Rect2i(Point2i(), img->get_size()));
+					if (rect.has_area()) {
+						img = img->get_region(rect);
+					}
+				}
+			}
+		}
+		ClaudeBridgeTools::complete_with_image(req.call, img, "editor-" + req.target, req.max_width, req.include_image);
+	}
+}
+
 void ClaudeBridgePlugin::_process_pending(uint64_t p_now) {
 	for (uint32_t i = 0; i < pending_calls.size();) {
 		PendingCall &pc = pending_calls[i];
@@ -231,6 +317,38 @@ void ClaudeBridgePlugin::_register_tools() {
 	status.userdata = this;
 	mcp.register_tool(status);
 	ClaudeBridgeTools::register_editor_tools(mcp, this);
+
+	ClaudeBridgeMCP::Tool shot;
+	shot.name = "editor_screenshot";
+	shot.title = "Editor screenshot";
+	shot.description = "Captures the editor after forcing a redraw: the whole window (default), the main screen area, or the 2D/3D editor viewport. Saves a PNG under .godot/claude_bridge/screenshots and returns its path (and the image unless include_image=false). Needs a non-headless, non-minimized editor.";
+	Dictionary props;
+	Dictionary target;
+	target["type"] = "string";
+	Array target_enum;
+	target_enum.push_back("window");
+	target_enum.push_back("main_screen");
+	target_enum.push_back("viewport_2d");
+	target_enum.push_back("viewport_3d");
+	target["enum"] = target_enum;
+	props["target"] = target;
+	Dictionary vp;
+	vp["type"] = "integer";
+	vp["description"] = "3D viewport index (0-3) for target viewport_3d.";
+	props["viewport"] = vp;
+	Dictionary mw;
+	mw["type"] = "integer";
+	mw["description"] = "Downscale to at most this width (default 1280).";
+	props["max_width"] = mw;
+	Dictionary inc;
+	inc["type"] = "boolean";
+	inc["description"] = "Return the PNG inline (default true); false returns only the saved file path.";
+	props["include_image"] = inc;
+	shot.input_schema = ClaudeBridgeMCP::object_schema(props);
+	shot.timeout_msec = 15000;
+	shot.func = &ClaudeBridgePlugin::_tool_editor_screenshot;
+	shot.userdata = this;
+	mcp.register_tool(shot);
 }
 
 void ClaudeBridgePlugin::RequestHandler::handle_http_request(uint64_t p_connection_id, const ClaudeBridgeHTTPRequest &p_request) {

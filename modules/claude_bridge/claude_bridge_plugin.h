@@ -45,6 +45,18 @@ private:
 	void _connect_debuggers();
 	void _on_debug_data(const String &p_message, const Array &p_data);
 
+	struct ScreenshotRequest {
+		Ref<ClaudeBridgeToolCall> call;
+		String target;
+		int viewport_index = 0;
+		int max_width = 1280;
+		bool include_image = true;
+	};
+	LocalVector<ScreenshotRequest> screenshot_requests;
+	bool screenshot_frame_requested = false;
+	void _on_frame_post_draw();
+	static void _tool_editor_screenshot(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata);
+
 	void _register_tools();
 	void _process_pending(uint64_t p_now);
 	static void _tool_bridge_status(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata);
