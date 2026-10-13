@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 123, in_progress: 9, done: 7, blocked: 0, deferred: 3 (of 142)
+**Totals:** pending: 122, in_progress: 9, done: 8, blocked: 0, deferred: 3 (of 142)
 
 ## [x] 0 Bootstrap and task system
 
@@ -19,8 +19,8 @@ Fork, local clone, working branch, persistent tracker, resume protocol, persiste
 
 Reproducible builds and a recorded vanilla baseline before any engine change.
 
-- [x] **1.1** Build wrapper talewright/tools/build.py (P1) _(commit: pending)_
-- [ ] **1.2** Vanilla editor dev_mode build (P1) _(deps: 1.1)_
+- [x] **1.1** Build wrapper talewright/tools/build.py (P1) _(commit: 2c1f389019)_
+- [x] **1.2** Vanilla editor dev_mode build (P1) _(deps: 1.1; commit: pending)_
 - [ ] **1.3** Upstream test baseline (P1) _(deps: 1.2)_
 - [ ] **1.4** Export template builds (template_release, template_debug) (P2) _(deps: 1.2)_
 - [ ] **1.5** Plain general-purpose samples (P2) _(deps: 1.2, 1.4)_

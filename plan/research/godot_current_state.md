@@ -31,6 +31,10 @@ reports (with more citations) are in `plan/research/planning_notes/01..05`.
   - D3D12 driver needs extra SDKs (`misc/scripts/install_d3d12_sdk_windows.py`) ⇒ `d3d12=no` (Vulkan + OpenGL kept).
   - AccessKit installed by `misc/scripts/install_accesskit.py` (v0.22.3); from Git Bash (`MSYSTEM` set) both the
     script and `platform/windows/detect.py:206-209` use `bin/build_deps`, so the wrapper pins the path.
+  - Result (task 1.2, 2026-10-13): vanilla editor `dev_mode=yes` full build **5.8 min on 32 cores, 0 errors,
+    0 warnings** (werror on), toolchain "Visual Studio 14.3 with Windows SDK 10.0.22621.0"; no-op rebuild 0.4 min.
+    Outputs: `bin/godot.windows.editor.x86_64.exe` (178 MB) and the console wrapper
+    `bin/godot.windows.editor.x86_64.console.exe`. Logs in `talewright/build_logs/` (git-ignored).
 - Tests: built when `tests=yes` (`SConstruct:1238-1239`); `--test` handled by `Main::test_entrypoint`
   (`main/main.cpp:982-997`) → doctest (`tests/test_main.cpp:75-147`). Windows CI runs
   `bin/godot.windows.editor.x86_64.exe --test --force-colors` (`.github/workflows/windows_builds.yml:137-141`).
