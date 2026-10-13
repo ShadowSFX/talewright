@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 120, in_progress: 8, done: 11, blocked: 0, deferred: 3 (of 142)
+**Totals:** pending: 118, in_progress: 8, done: 13, blocked: 0, deferred: 3 (of 142)
 
 ## [x] 0 Bootstrap and task system
 
@@ -15,15 +15,15 @@ Fork, local clone, working branch, persistent tracker, resume protocol, persiste
 - [x] **0.3** CLAUDE.md resume protocol, NOTICE and fork README (P1) _(deps: 0.2; commit: 12253dd0a5)_
 - [x] **0.4** Persist planning research reports (P1) _(deps: 0.2; commit: d611bf476c)_
 
-## [ ] 1 Toolchain baseline
+## [x] 1 Toolchain baseline
 
 Reproducible builds and a recorded vanilla baseline before any engine change.
 
 - [x] **1.1** Build wrapper talewright/tools/build.py (P1) _(commit: 2c1f389019)_
 - [x] **1.2** Vanilla editor dev_mode build (P1) _(deps: 1.1; commit: ed36cad7e0)_
 - [x] **1.3** Upstream test baseline (P1) _(deps: 1.2; commit: 499d506b7c)_
-- [x] **1.4** Export template builds (template_release, template_debug) (P2) _(deps: 1.2; commit: pending)_
-- [ ] **1.5** Plain general-purpose samples (P2) _(deps: 1.2, 1.4)_
+- [x] **1.4** Export template builds (template_release, template_debug) (P2) _(deps: 1.2; commit: b96aeaeae0)_
+- [x] **1.5** Plain general-purpose samples (P2) _(deps: 1.2, 1.4; commit: pending)_
 
 ## [ ] 2 Research (Phase 1)
 

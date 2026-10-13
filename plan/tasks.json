@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "1.4 Export template builds (template_release, template_debug)",
+  "last_completed": "1.5 Plain general-purpose samples",
   "tasks": [
     {
       "id": "0",
@@ -114,7 +114,7 @@
       "dependencies": [
         "0"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Vanilla editor + templates build",
@@ -123,7 +123,7 @@
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
       "files": [],
-      "commit": "",
+      "commit": "children",
       "notes": ""
     },
     {
@@ -202,7 +202,7 @@
       ],
       "test_strategy": "Build log review.",
       "files": [],
-      "commit": "pending",
+      "commit": "b96aeaeae0",
       "notes": ""
     },
     {
@@ -214,7 +214,7 @@
         "1.2",
         "1.4"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 2,
       "acceptance_criteria": [
         "Both samples run headless with exit 0 and no errors",
@@ -226,7 +226,7 @@
         "talewright/samples/plain_3d",
         "talewright/tools/smoke_samples.py"
       ],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

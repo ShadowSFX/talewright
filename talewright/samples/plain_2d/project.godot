@@ -1,0 +1,8 @@
+; Talewright regression sample: a plain (non-JRPG) 2D project.
+config_version=5
+
+[application]
+
+config/name="Plain 2D"
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.7")
