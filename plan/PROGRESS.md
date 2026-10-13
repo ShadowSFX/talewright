@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 16:01 -0600
+- **Updated:** 2026-10-13 16:02 -0600
 - **Current task:** none
-- **Last completed:** 2.5 Epic review: research
-- **Next task:** 3.1 DECISIONS.md
-- **Done leaf tasks:** 28
+- **Last completed:** 3.1 DECISIONS.md
+- **Next task:** 3.3 Specs
+- **Done leaf tasks:** 29
 <!-- status:end -->
 
 ## Log
@@ -65,4 +65,6 @@
 | 2026-10-13 15:51 -0600 | 4.5 | started: bridge.py CLI (containers: 4 pending->in_progress) |  |
 | 2026-10-13 15:52 -0600 | 4.5 | done: bridge.py CLI — bridge.py CLI: connection discovery, status/list/call/raw/launch/wait, images saved as PNG files, exit codes; verified against a live headless editor (containers: 4 in_progress->pending) | 6f08aa1d78 |
 | 2026-10-13 16:01 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-13 16:01 -0600 | 2.5 | done: Epic review: research — Epic 2 review: all 15 findings fixed (gap map rules/overrides/duplicates, research corrections, media gaps, MMO conditional verdict + go/no-go spikes + risk table + legal, rAthena citation checking, label gate, 9-word verbatim); record in plan/evidence/reviews/epic_2.md (containers: 2 in_progress->done) | pending |
+| 2026-10-13 16:01 -0600 | 2.5 | done: Epic review: research — Epic 2 review: all 15 findings fixed (gap map rules/overrides/duplicates, research corrections, media gaps, MMO conditional verdict + go/no-go spikes + risk table + legal, rAthena citation checking, label gate, 9-word verbatim); record in plan/evidence/reviews/epic_2.md (containers: 2 in_progress->done) | 6eb6a76de9 |
+| 2026-10-13 16:01 -0600 | 3.1 | started: DECISIONS.md (containers: 3 pending->in_progress) |  |
+| 2026-10-13 16:02 -0600 | 3.1 | done: DECISIONS.md — DECISIONS.md: 25 decisions (D-001..D-024 + D-015a), all with context/options/choice/why/reversal (containers: 3 in_progress->pending) | pending |

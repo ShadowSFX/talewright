@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "2.5 Epic review: research",
+  "last_completed": "3.1 DECISIONS.md",
   "tasks": [
     {
       "id": "0",
@@ -534,7 +534,7 @@
       "test_strategy": "Reviewer report + fixes.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "6eb6a76de9",
       "notes": "",
       "parent": "2"
     },
@@ -564,7 +564,7 @@
       "description": "Record D-001.. with context, options, choice, why, reversal: layer location, data model, events, coexistence, bridge, naming, maps, presentation split, formulas, MMO topology/persistence/protocol/security, git policy, assets.",
       "parent": "3",
       "dependencies": [],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Each decision has the 5 fields"
@@ -573,7 +573,7 @@
       "files": [
         "plan/DECISIONS.md"
       ],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
