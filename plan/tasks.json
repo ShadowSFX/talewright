@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "4.13 Epic review: Claude bridge",
+  "last_completed": "3.5.1 Review fixes: battle math and formulas (spec 04)",
   "tasks": [
     {
       "id": "0",
@@ -546,7 +546,7 @@
       "dependencies": [
         "2"
       ],
-      "status": "in_progress",
+      "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
         "DECISIONS.md covers the 6 required decisions + MMO decisions",
@@ -643,11 +643,139 @@
         "Findings fixed and logged in PROGRESS.md"
       ],
       "test_strategy": "Reviewer report + fixes.",
-      "status": "in_progress",
+      "status": "pending",
       "files": [],
       "commit": "",
       "notes": "",
       "parent": "3"
+    },
+    {
+      "id": "3.5.1",
+      "title": "Review fixes: battle math and formulas (spec 04)",
+      "description": "Epic 3 review findings 1, 7, 8, 14 and the D-009/spec 04 deny/allow-list inconsistency of 15: re-derive the undocumented battle defaults deliberately and differently (documented behaviour kept), record the reasoning in talewright/docs/battle_defaults.md, fixed-point basis points, Expression facts (v as Array, utility precedence, const_calls_only), parameter minimum 0, TP rules.",
+      "parent": "3.5",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Every Talewright-defined number in spec 04 cites either an inventory row (documented behaviour) or a reasoned entry in talewright/docs/battle_defaults.md; none matches the review's list of RPG Maker internals (order, x3 crit, max element, two-roll hit, agi + rand(agi/4))",
+        "Critical chance uses the documented cri x (1 - cev)",
+        "Expression section matches core/math/expression.cpp (v[5] on an Array, utility functions shadow helpers at :485, const_calls_only) with an explicit utility allow-list",
+        "Rates are basis points; RNG API has chance(bp, 10000); int/float rules for formulas documented; FP contraction facts cited (platform/*/detect.py)",
+        "D-009, D-010 and spec 04 agree (allow-list)"
+      ],
+      "test_strategy": "Re-read spec 04 against the inventory rows RM-FRM-*, RM-BTL-006 and the review list; grep the spec for the reviewed constants.",
+      "files": [
+        "plan/specs/04_formulas_battle.md",
+        "talewright/docs/battle_defaults.md",
+        "plan/DECISIONS.md"
+      ],
+      "status": "done",
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "3.5.2",
+      "title": "Review fixes: tiles, autotiles, passage bits, character sheets (spec 05)",
+      "description": "Epic 3 review findings 2 and 13: an original autotile template (47-tile blob sheet), Talewright's own passage/flag bit layout, a specified character sheet layout, and spec 05 internals (tile_map_data alignment with D-006, transform flags, shape byte vs atlas rows, edge rule, speed table).",
+      "parent": "3.5",
+      "dependencies": [
+        "3.5.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Autotile template is a full baked sheet layout that is not the 2x3 quarter-tile block, documented with its index table",
+        "Passage flags use a Talewright layout that differs from the reviewed bit order, with the reason recorded",
+        "Character sheet layout fully specified (frames, directions, order) for task 8.7",
+        "Tile id encoding holds Godot's alternative id with transform flags (scene/resources/2d/tile_set.h:632-634) and the edge rule is unambiguous; speed 1-6 table present",
+        "D-006 and spec 05 agree on the stored layer format"
+      ],
+      "test_strategy": "Re-read spec 05 against the review items and the cited Godot lines.",
+      "files": [
+        "plan/specs/05_maps_tiles.md",
+        "plan/DECISIONS.md"
+      ],
+      "status": "pending",
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "3.5.3",
+      "title": "Review fixes: core layering, save robustness, determinism (specs 01, 03, 05, 06)",
+      "description": "Epic 3 review findings 3, 4, 9, 10: uid:// strings for assets in core, baked core tile-flag table, core JRPGMapData + JRPGEventState, per-list content hashes and map revisions with resume rules, duplicate event/map id reassignment, spec 06 FileAccess facts (open_encrypted_pass, plain header, raw size for zstd, non-atomic Windows rename), fixed 60 Hz step and separate RNG streams.",
+      "parent": "3.5",
+      "dependencies": [
+        "3.5.2"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Spec 01 lists no core class that needs scene/ or servers/ types; JRPGMapData and JRPGEventState specified",
+        "Spec 03/06 define content hashes per command list, map revisions and the mismatch rule (restart page / drop interpreter with a warning)",
+        "Spec 06 encoding matches core/io/file_access.h:246, file_access_encrypted.cpp:96-108, compression.cpp:294 and dir_access_windows.cpp:339-345",
+        "Fixed 60 Hz simulation step and named RNG streams specified and saved"
+      ],
+      "test_strategy": "Re-read specs against the cited engine lines; check every layering claim against spec 01's rule.",
+      "files": [
+        "plan/specs/01_module_layout.md",
+        "plan/specs/03_events_interpreter.md",
+        "plan/specs/05_maps_tiles.md",
+        "plan/specs/06_save_format.md",
+        "plan/DECISIONS.md"
+      ],
+      "status": "pending",
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "3.5.4",
+      "title": "Review fixes: online page authority, localization keys, inconsistencies",
+      "description": "Epic 3 review findings 6, 12, 15: decide online page-condition authority and switch scopes, a stable localization key strategy (keys + args over the network, saves store overrides only), game_id vs jrpg/enabled, benchmark task id, rAthena/RPG Maker constants in spec 07.",
+      "parent": "3.5",
+      "dependencies": [
+        "3.5.3"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "A decision records who evaluates page conditions online and the scope of every switch/variable kind",
+        "Localization key scheme specified for database text, event text and network messages",
+        "Spec 06 game_id no longer a second project setting; D-007 points at 9.2.1; spec 07 uses Talewright constants (own direction encoding, own path limits with reasoning)"
+      ],
+      "test_strategy": "Re-read DECISIONS/specs for the listed inconsistencies; grep for 'open_encrypted_with_pass', 'task 3.3/5.x', 'down = 2'.",
+      "files": [
+        "plan/DECISIONS.md",
+        "plan/specs/03_events_interpreter.md",
+        "plan/specs/06_save_format.md",
+        "plan/specs/07_mmo_protocol_topology.md"
+      ],
+      "status": "pending",
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "3.5.5",
+      "title": "Review fixes: task tree order, slice gaps, criteria, core_diff_check; review record",
+      "description": "Epic 3 review findings 5, 11, 16, 17: fix dependency order (10.1-10.2 before 9.6/9.7.3, 13.1 before 11.1.2, demo-content task before 13.3), add the missing slice tasks/criteria (New Game + start position, encounter distribution, battle return, templates rebuilt with jrpg, slice audio, input actions, fixtures), sharpen vague criteria, split 9.3, 9.6, 12.1.1, 12.2.1, 11.1.1, 11.1.2, 13.1; core_diff_check.py --no-renames -z + table-row parsing + gate; write plan/evidence/reviews/epic_3.md.",
+      "parent": "3.5",
+      "dependencies": [
+        "3.5.4"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "tasks.py validate passes; the four ordering problems are gone (checked by reading the dependency chains)",
+        "Every slice gap in finding 11 has a task or criterion",
+        "Every vague criterion in finding 17 rewritten; listed tasks split",
+        "core_diff_check.py detects a git mv out of upstream paths (tested on a scratch branch or with a fixture), parses only ledger table rows, and is part of the epic gate text and 13.5",
+        "plan/evidence/reviews/epic_3.md lists all 17 findings with their fixes"
+      ],
+      "test_strategy": "tasks.py validate/next; core_diff_check.py against a temporary rename in a scratch worktree; read the review record.",
+      "files": [
+        "plan/tasks.json",
+        "plan/tools/core_diff_check.py",
+        "plan/evidence/reviews/epic_3.md",
+        "CLAUDE.md"
+      ],
+      "status": "pending",
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "4",
@@ -917,7 +1045,7 @@
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified.",
       "files": [],
-      "commit": "pending",
+      "commit": "c0673d2898",
       "notes": ""
     },
     {
@@ -1125,7 +1253,7 @@
     {
       "id": "5.4",
       "title": "RNG, parameters, traits, formulas",
-      "description": "Own PCG32 integer RNG; parameter curves; trait aggregation; Expression-based formula evaluator with proxies, iff(), deny-list.",
+      "description": "JRPGRandom over the vendored PCG32 with saved per-purpose streams; parameter curves; trait aggregation in basis points; Expression-based formula evaluator with proxies, v as Array, iff()/roll(), lexical allow-list (spec 04).",
       "parent": "5",
       "dependencies": [
         "5.3"
@@ -1133,9 +1261,9 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Hand-computed cases pass",
+        "Hand-computed cases from spec 04 pass",
         "Invalid formula => 0 + warning",
-        "Deny-listed calls rejected"
+        "Identifiers outside the allow-list rejected at parse time"
       ],
       "test_strategy": "Doctests.",
       "files": [],
@@ -1146,12 +1274,13 @@
       "id": "5.4.1",
       "parent": "5.4",
       "title": "JRPGRandom (PCG32)",
-      "description": "Integer-only RNG with range/chance/pick and serializable state.",
+      "description": "JRPGRandom wrapping thirdparty/misc/pcg.h (pcg32_random_r / pcg32_boundedrand_r): next_u32, range, chance_bp, pick_weighted, shuffle; named streams (battle, map_ai, encounter, loot, misc) each with serializable state.",
       "dependencies": [],
       "priority": 1,
       "acceptance_criteria": [
-        "Known-sequence test vectors",
-        "No modulo bias test"
+        "Known-sequence test vectors from the PCG32 reference seeds",
+        "range() and chance_bp() boundary cases (0, 10000, lo == hi) and a chi-square check on 100k draws for range(0, 5)",
+        "Streams are independent: drawing from map_ai does not change the next battle draw; state round-trips through serialize/deserialize"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
@@ -1163,13 +1292,15 @@
       "id": "5.4.2",
       "parent": "5.4",
       "title": "Traits, effects, parameters, stat cache, EXP curve",
-      "description": "Packed trait/effect model, aggregation (rate/sum/set), 8 params + ex/sp-params, buffs, limits, dirty-flag cache, Talewright EXP curve.",
+      "description": "Packed trait/effect model with integer values (basis points), aggregation (rates multiply, ex-params sum, sp-params multiply), 8 params + ex/sp-params, documented buffs (25 %/level, 2 levels, cancel), limits (HP >= 1, others >= 0), dirty-flag cache, Talewright EXP curve baked to a table.",
       "dependencies": [
         "5.4.1"
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "Hand-computed parameter cases pass"
+        "Hand-computed parameter cases (curve + equipment + two Param traits + buff level 2 + clamp) match values worked out by hand in the test file",
+        "Buff/debuff cancel and cap cases; parameter never below its lower limit",
+        "EXP table for defaults (25/30/10) matches a hand-computed level 2..5 table"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
@@ -1181,14 +1312,14 @@
       "id": "5.4.3",
       "parent": "5.4",
       "title": "JRPGFormula",
-      "description": "Expression wrapper with a/b/v proxies, helpers (iff/min/max/clamp/rand), lexical allow-list, error handling.",
+      "description": "Expression wrapper (const_calls_only) with a/b proxies, v as the variables Array, helpers iff()/roll(), lexical allow-list of identifiers (spec 04), conversion of the result to int64 (round half away from zero; NaN/inf -> 0 + warning).",
       "dependencies": [
         "5.4.2"
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "Formula cases incl. invalid input -> 0 + warning",
-        "Deny-listed identifiers rejected"
+        "Formula cases incl. v[n], integer division, iff(), roll() from the battle stream, and invalid input -> 0 + one warning",
+        "Identifiers outside the allow-list (randi, instance_from_id, str_to_var, pow, a method not on the proxy) rejected at parse time"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],

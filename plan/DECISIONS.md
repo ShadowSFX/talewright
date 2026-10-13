@@ -128,22 +128,32 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Options:** always-visible JRPG tab; tab shown only when a project setting is on; editor feature profile; separate editor binary.
 
 ## D-009 — Formulas
-- **Context:** `Expression` parses `a.atk * 4 - b.def * 2` with inputs (`core/math/expression.h:253-256`),
-  has no ternary/assignment, and is not sandboxed (script methods callable even with const_calls_only,
+- **Context:** `Expression` parses `a.atk * 4 - b.def * 2` with inputs (`core/math/expression.h:253-254`), supports
+  `[]` indexing (`core/math/expression.cpp:866-884`), resolves Godot utility functions before identifiers
+  (`:485`), has no ternary/assignment, and is not sandboxed (script methods callable even with const_calls_only,
   `core/object/script_instance.cpp:57-58`).
-- **Choice:** evaluate with `Expression` against whitelisted proxy objects (`a`, `b`, `v`) exposing read-only
-  values, plus helper methods on the base instance (`iff(c,x,y)`, `rand`, clamp); a deny-list rejects
-  dangerous utility calls at parse time; parse errors shown in the editor; runtime failure ⇒ 0 + logged
-  warning. Formulas are trusted project content.
-- **Reversal:** small custom formula parser behind the same evaluator interface.
 - **Options:** Godot `Expression`; a custom formula parser; GDScript snippets per formula.
-- **Why:** reuses a tested evaluator, keeps formulas data-driven and editable; proxies and the deny-list limit what a formula can reach without writing a parser up front.
+- **Choice:** evaluate with `Expression` (`const_calls_only = true`) against read-only proxy objects `a`, `b` and the
+  variables Array `v` (so the documented `v[n]` works), plus helpers on the base instance (`iff`, `roll`). An
+  **allow-list** of identifiers (inputs, proxy members, the deterministic utilities `abs/min/max/clamp/floor/ceil/
+  round/sqrt/sign`, the helpers, `true/false`) is checked lexically before parsing; anything else is a parse error.
+  Runtime failure ⇒ 0 + logged warning. Formulas are trusted project content. Details: spec 04.
+  (Amended in 3.5.1: was a deny-list; an allow-list also excludes non-deterministic utilities such as `randi`.)
+- **Why:** reuses a tested evaluator and keeps formulas data-driven and editable; the allow-list keeps results
+  deterministic across platforms and away from engine calls without writing a parser up front.
+- **Reversal:** small custom formula parser behind the same evaluator interface.
 
 ## D-010 — Determinism and RNG
-- **Context:** `RandomPCG` integer ops are exact but float ops vary (`core/math/random_pcg.h:75-135`).
-- **Choice:** own PCG32 integer RNG in `jrpg/core`, integer battle math; float only for presentation.
-- **Why:** golden-log tests and identical results on client and server.
-- **Options:** `RandomNumberGenerator` (PCG32); own integer PCG32; float math everywhere.
+- **Context:** `RandomPCG` integer ops are exact but float ops vary (`core/math/random_pcg.h:75-135`); Godot vendors
+  the PCG32 minimal C implementation (`thirdparty/misc/pcg.h:12-14`, Apache-2.0); the engine already compiles with
+  `-ffp-contract=off` / `/fp:strict` (`platform/*/detect.py`), so IEEE basic operations are reproducible but libm
+  transcendental functions are not.
+- **Options:** `RandomNumberGenerator`; own RNG over the vendored PCG32; float math everywhere.
+- **Choice:** `JRPGRandom` in `jrpg/core` wrapping the vendored PCG32 with an integer-only API, one saved stream per
+  purpose (battle, map AI, encounters, loot, misc); battle math in `int64` with rates in basis points; floats only
+  inside formula evaluation (converted once) and for presentation; fixed 60 Hz simulation steps (spec 03/04).
+- **Why:** golden-log tests and identical results on client and server; separate streams keep a battle's results
+  independent of unrelated map activity.
 - **Reversal:** swap the RNG implementation behind the jrpg/core RNG interface; golden logs would be regenerated.
 
 ## D-011 — Default assets
@@ -282,7 +292,9 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Options:** copy community-reverse-engineered values; leave unimplemented; define our own documented behaviour.
 - **Choice:** Talewright defines its own behaviour for each gap, documents it in `talewright/docs/` and in the
   relevant spec, makes it data-driven/overridable (system settings or formula fields), and marks the gap-map row
-  "parity: functional, exact numbers not verified".
+  "parity: functional, exact numbers not verified". Each own rule is chosen deliberately on stated design grounds
+  and must not reproduce community-known engine internals (amended in 3.5.1 after the epic 3 review found spec 04
+  mirroring them); battle rules and their reasons are listed in `talewright/docs/battle_defaults.md`.
 - **Why:** functional parity without copying or guessing; users can tune values to taste.
 - **Reversal:** change the documented defaults; the values are data, not code.
 

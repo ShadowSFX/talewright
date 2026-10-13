@@ -33,14 +33,14 @@ Text `.tres` keeps diffs readable; exports convert to binary automatically.
 ## Packed nested lists (values, not sub-resources)
 Traits, effects, learnings, enemy actions, drops, troop members, parameter curves are stored as packed arrays of
 small dictionaries or packed ints so tables stay compact:
-- **Trait**: `{code:int, data_id:int, value:float}` — codes enumerate RM-TRT-002..026 (element rate, debuff rate,
+- **Trait**: `{code:int, data_id:int, value:int}` (rates in basis points, 10 000 = 100 %; flat amounts as integers; spec 04) — codes enumerate RM-TRT-002..026 (element rate, debuff rate,
   state rate, state resist, param, xparam, sparam, attack element, attack state, attack speed, attack times, attack
   skill, add/seal skill type, add/seal skill, equip weapon/armor type, lock/seal equip, slot type, action times,
   special flag, collapse effect, party ability).
-- **Effect**: `{code:int, data_id:int, value1:float, value2:float}` — codes for RM-EFF-002..014 (recover HP/MP, gain
+- **Effect**: `{code:int, data_id:int, value1:int, value2:int}` (percentages in basis points) — codes for RM-EFF-002..014 (recover HP/MP, gain
   TP, add/remove state, add/remove buff/debuff, special effect, grow, learn skill, common event).
 - **Learning**: `{level:int, skill_id:int, note:String}`; **Drop**: `{kind:int, data_id:int, denominator:int}`;
-  **Enemy action**: `{skill_id:int, condition_type:int, param1:float, param2:float, rating:int}`;
+  **Enemy action**: `{skill_id:int, condition_type:int, param1:int, param2:int, rating:int}` (HP/MP conditions in basis points);
   **Troop member**: `{enemy_id:int, x:int, y:int, hidden:bool}`.
 - Parameter curves: `PackedInt32Array` of 8 params × (max_level+1) values.
 Exact field lists per table follow the inventory slices (03/04/05) and are implemented in task 5.3.

@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 17:04 -0600
-- **Current task:** 3.5 Epic review: decisions and specs
-- **Last completed:** 4.13 Epic review: Claude bridge
-- **Next task:** none ready (see `tasks.py next`)
-- **Done leaf tasks:** 40
+- **Updated:** 2026-10-13 17:11 -0600
+- **Current task:** none
+- **Last completed:** 3.5.1 Review fixes: battle math and formulas (spec 04)
+- **Next task:** 3.5.2 Review fixes: tiles, autotiles, passage bits, character sheets (spec 05)
+- **Done leaf tasks:** 41
 <!-- status:end -->
 
 ## Log
@@ -91,4 +91,8 @@
 | 2026-10-13 16:27 -0600 | - | imported 41 new / 0 updated tasks | |
 | 2026-10-13 16:27 -0600 | 3.4 | done: Refine task tree — Task tree refined: 41 subtasks split from slice tasks (5.x-12.x) so each fits one sitting, incl. the command-storage benchmark gate (9.2.1); later epics split when started (tracker enforces) (containers: 3 in_progress->pending) | 1bd824ac35 |
 | 2026-10-13 16:27 -0600 | 3.5 | started: Epic review: decisions and specs (containers: 3 pending->in_progress) |  |
-| 2026-10-13 17:04 -0600 | 4.13 | done: Epic review: Claude bridge — Epic 4 review: all 15 findings fixed (literal allow-list + resource-only objects, ASCII header check + silent UTF-8, precheck before body + back-pressure + close on reject, -- before game args, 0600 token + opt-in port fallback, loopback-only/no-proxy CLI, scene-only editor tools, destructive hints, list Content-Length, null ids/client responses/protocol header, game instance + session-checked replies + game-stopped failure, deferred restart, bounded logs/values, no server in cmdline runs + pid-checked file removal); 22 doctests; stress incl. 3 MB stalled reader; record in plan/evidence/reviews/epic_4.md (containers: 4 in_progress->done) | pending |
+| 2026-10-13 17:04 -0600 | 4.13 | done: Epic review: Claude bridge — Epic 4 review: all 15 findings fixed (literal allow-list + resource-only objects, ASCII header check + silent UTF-8, precheck before body + back-pressure + close on reject, -- before game args, 0600 token + opt-in port fallback, loopback-only/no-proxy CLI, scene-only editor tools, destructive hints, list Content-Length, null ids/client responses/protocol header, game instance + session-checked replies + game-stopped failure, deferred restart, bounded logs/values, no server in cmdline runs + pid-checked file removal); 22 doctests; stress incl. 3 MB stalled reader; record in plan/evidence/reviews/epic_4.md (containers: 4 in_progress->done) | c0673d2898 |
+| 2026-10-13 17:07 -0600 | - | imported 5 new / 0 updated tasks (containers: 3.5 in_progress->pending, 3 in_progress->pending) | |
+| 2026-10-13 17:07 -0600 | 3.5.1 | started: Review fixes: battle math and formulas (spec 04) (containers: 3.5 pending->in_progress, 3 pending->in_progress) |  |
+| 2026-10-13 17:11 -0600 | - | imported 0 new / 4 updated tasks | |
+| 2026-10-13 17:11 -0600 | 3.5.1 | done: Review fixes: battle math and formulas (spec 04) — Spec 04 rebuilt: documented behaviour kept with inventory citations (variance range, cri x (1-cev), buffs 25%/2 levels, TP start 0-24, TPB sqrt(agi), hit/evasion rates, guard qualitative), undocumented gaps given Talewright rules chosen on design grounds (formula->variance->element->crit->rate->guard order, x2 crit, average of attack elements, additive one-roll hit, agi +-10% with per-battle tie shuffle, -40% guard, TP on damage) with reasons in talewright/docs/battle_defaults.md; basis points + int64; JRPGRandom over vendored PCG32 with named streams; Expression facts (v as Array, utility precedence :485, const_calls_only :1451) + allow-list; param minimum 0; spec 02 integer trait/effect values; D-009/D-010/D-022 amended; tasks 5.4.x aligned (containers: 3.5 in_progress->pending, 3 in_progress->pending) | pending |
