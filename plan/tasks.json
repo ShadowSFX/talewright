@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "0.2 Task system: plan/ files and tasks.py",
+  "last_completed": "0.3 CLAUDE.md resume protocol, NOTICE and fork README",
   "tasks": [
     {
       "id": "0",
@@ -63,7 +63,7 @@
         "plan/UPSTREAM_PATCHES.md",
         "plan/tools/tasks.py"
       ],
-      "commit": "pending",
+      "commit": "e0717a6727",
       "notes": ""
     },
     {
@@ -74,7 +74,7 @@
       "dependencies": [
         "0.2"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "CLAUDE.md contains the 3-step resume protocol verbatim from the request plus commands",
@@ -85,7 +85,7 @@
         "CLAUDE.md",
         "TALEWRIGHT.md"
       ],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

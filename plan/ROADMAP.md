@@ -4,15 +4,15 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 137, in_progress: 0, done: 2, blocked: 0, deferred: 3 (of 142)
+**Totals:** pending: 136, in_progress: 0, done: 3, blocked: 0, deferred: 3 (of 142)
 
 ## [ ] 0 Bootstrap and task system
 
 Fork, local clone, working branch, persistent tracker, resume protocol, persisted planning research.
 
 - [x] **0.1** Fork, clone, upstream remote, branch talewright @ 4.7.2-stable (P1) _(commit: ed1daf0bf0)_
-- [x] **0.2** Task system: plan/ files and tasks.py (P1) _(deps: 0.1; commit: pending)_
-- [ ] **0.3** CLAUDE.md resume protocol, NOTICE and fork README (P1) _(deps: 0.2)_
+- [x] **0.2** Task system: plan/ files and tasks.py (P1) _(deps: 0.1; commit: e0717a6727)_
+- [x] **0.3** CLAUDE.md resume protocol, NOTICE and fork README (P1) _(deps: 0.2; commit: pending)_
 - [ ] **0.4** Persist planning research reports (P1) _(deps: 0.2)_
 
 ## [ ] 1 Toolchain baseline
