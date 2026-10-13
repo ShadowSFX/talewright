@@ -36,11 +36,13 @@ from __future__ import annotations
 
 import argparse
 import datetime as _dt
+import io
 import json
 import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 PLAN = ROOT / "plan"
@@ -71,30 +73,31 @@ def now() -> str:
     return _dt.datetime.now().astimezone().strftime("%Y-%m-%d %H:%M %z")
 
 
-def id_key(task_id: str) -> tuple:
+def id_key(task_id: str) -> tuple[Any, ...]:
     return tuple(int(p) if p.isdigit() else p for p in task_id.split("."))
 
 
-def load() -> dict:
+def load() -> dict[str, Any]:
     with TASKS.open(encoding="utf-8") as f:
-        return json.load(f)
+        data: dict[str, Any] = json.load(f)
+    return data
 
 
-def save(data: dict) -> None:
+def save(data: dict[str, Any]) -> None:
     data["tasks"].sort(key=lambda t: id_key(t["id"]))
     text = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
-    TASKS.write_text(text, encoding="utf-8", newline="\n")
+    TASKS.write_bytes((text).encode("utf-8"))
 
 
-def index(data: dict) -> dict:
+def index(data: dict[str, Any]) -> dict[str, Any]:
     return {t["id"]: t for t in data["tasks"]}
 
 
-def children(data: dict, task_id: str | None) -> list:
+def children(data: dict[str, Any], task_id: str | None) -> list[Any]:
     return sorted((t for t in data["tasks"] if t["parent"] == task_id), key=lambda t: id_key(t["id"]))
 
 
-def descendants(data: dict, task_id: str) -> list:
+def descendants(data: dict[str, Any], task_id: str) -> list[Any]:
     out = []
     for k in children(data, task_id):
         out.append(k)
@@ -102,7 +105,7 @@ def descendants(data: dict, task_id: str) -> list:
     return out
 
 
-def leaves(data: dict, task_id: str) -> list:
+def leaves(data: dict[str, Any], task_id: str) -> list[Any]:
     kids = children(data, task_id)
     if not kids:
         return [index(data)[task_id]]
@@ -112,7 +115,7 @@ def leaves(data: dict, task_id: str) -> list:
     return out
 
 
-def ancestors(data: dict, task_id: str) -> list:
+def ancestors(data: dict[str, Any], task_id: str) -> list[Any]:
     idx = index(data)
     out = []
     p = idx[task_id]["parent"]
@@ -122,14 +125,14 @@ def ancestors(data: dict, task_id: str) -> list:
     return out
 
 
-def get(data: dict, task_id: str) -> dict:
-    t = index(data).get(task_id)
+def get(data: dict[str, Any], task_id: str) -> dict[str, Any]:
+    t: dict[str, Any] | None = index(data).get(task_id)
     if t is None:
         sys.exit(f"error: unknown task id {task_id!r}")
     return t
 
 
-def validate(data: dict) -> list:
+def validate(data: dict[str, Any]) -> list[Any]:
     errors = []
     ids = set()
     idx = {}
@@ -168,14 +171,14 @@ def validate(data: dict) -> list:
         return errors
     for t in data["tasks"]:
         tid = t["id"]
-        anc = set(ancestors(data, tid))
+        ancestor_ids = set(ancestors(data, tid))
         desc = {d["id"] for d in descendants(data, tid)}
         for dep in t.get("dependencies", []):
             if dep not in idx:
                 errors.append(f"{tid}: dependency {dep} does not exist")
             elif dep == tid:
                 errors.append(f"{tid}: depends on itself")
-            elif dep in anc:
+            elif dep in ancestor_ids:
                 errors.append(f"{tid}: depends on its own ancestor {dep} (deadlock)")
             elif dep in desc:
                 errors.append(f"{tid}: depends on its own descendant {dep} (deadlock)")
@@ -184,16 +187,16 @@ def validate(data: dict) -> list:
     # Cycle detection on the leaf graph: a leaf waits for its own deps and its ancestors' deps; a dependency
     # on a container means every leaf of that container.
     leaf_ids = [t["id"] for t in data["tasks"] if not children(data, t["id"])]
-    edges: dict = {}
+    edges: dict[str, Any] = {}
     for lid in leaf_ids:
-        waits = set()
+        waits: set[str] = set()
         for owner in [lid] + ancestors(data, lid):
             for dep in idx[owner]["dependencies"]:
                 waits.update(x["id"] for x in leaves(data, dep))
         edges[lid] = waits
-    state: dict = {}
+    state: dict[str, Any] = {}
 
-    def visit(node: str, stack: list) -> None:
+    def visit(node: str, stack: list[Any]) -> None:
         if state.get(node) == 2:
             return
         if state.get(node) == 1:
@@ -211,7 +214,7 @@ def validate(data: dict) -> list:
     return errors
 
 
-def deps_done(data: dict, t: dict) -> bool:
+def deps_done(data: dict[str, Any], t: dict[str, Any]) -> bool:
     idx = index(data)
     for dep in t["dependencies"]:
         if any(leaf["status"] != "done" and leaf["status"] != "deferred" for leaf in leaves(data, dep)):
@@ -224,7 +227,7 @@ def deps_done(data: dict, t: dict) -> bool:
     return True
 
 
-def ancestors_ok(data: dict, t: dict) -> bool:
+def ancestors_ok(data: dict[str, Any], t: dict[str, Any]) -> bool:
     idx = index(data)
     for p in ancestors(data, t["id"]):
         pt = idx[p]
@@ -235,7 +238,7 @@ def ancestors_ok(data: dict, t: dict) -> bool:
     return True
 
 
-def ready(data: dict) -> list:
+def ready(data: dict[str, Any]) -> list[Any]:
     out = []
     for t in data["tasks"]:
         if t["status"] != "pending" or children(data, t["id"]):
@@ -248,7 +251,7 @@ def ready(data: dict) -> list:
     return out
 
 
-def unsplit_epics(data: dict) -> list:
+def unsplit_epics(data: dict[str, Any]) -> list[Any]:
     return [
         t
         for t in children(data, None)
@@ -256,7 +259,7 @@ def unsplit_epics(data: dict) -> list:
     ]
 
 
-def sync_containers(data: dict) -> list:
+def sync_containers(data: dict[str, Any]) -> list[Any]:
     """Recompute container statuses from their children (both directions). Returns changed (id, old, new)."""
     changed = []
     for t in sorted(data["tasks"], key=lambda t: -len(t["id"].split("."))):  # deepest first
@@ -286,7 +289,7 @@ def sync_containers(data: dict) -> list:
     return changed
 
 
-def render(data: dict) -> None:
+def render(data: dict[str, Any]) -> None:
     lines = [
         "# Talewright Roadmap",
         "",
@@ -302,7 +305,7 @@ def render(data: dict) -> None:
     lines.append("**Totals:** " + ", ".join(f"{k}: {v}" for k, v in counts.items()) + f" (of {len(data['tasks'])})")
     lines.append("")
 
-    def emit(task: dict, depth: int) -> None:
+    def emit(task: dict[str, Any], depth: int) -> None:
         if depth == 0:
             lines.append(f"## {BOX[task['status']]} {task['id']} {task['title']}")
             lines.append("")
@@ -328,13 +331,13 @@ def render(data: dict) -> None:
 
     for top in children(data, None):
         emit(top, 0)
-    ROADMAP.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8", newline="\n")
+    ROADMAP.write_bytes(("\n".join(lines).rstrip() + "\n").encode("utf-8"))
 
 
 HEADER_RE = re.compile(r"<!-- status:begin -->.*?<!-- status:end -->", re.S)
 
 
-def progress_text(data: dict, log_line: str | None) -> str:
+def progress_text(data: dict[str, Any], log_line: str | None) -> str:
     text = PROGRESS.read_text(encoding="utf-8") if PROGRESS.exists() else ""
     current = [t for t in data["tasks"] if t["status"] == "in_progress" and not children(data, t["id"])]
     done = [t for t in data["tasks"] if t["status"] == "done" and not children(data, t["id"])]
@@ -363,7 +366,7 @@ def progress_text(data: dict, log_line: str | None) -> str:
     return text
 
 
-def write_all(data: dict, log_line: str | None) -> None:
+def write_all(data: dict[str, Any], log_line: str | None) -> None:
     """Compute every output first, then write, so a failure cannot leave the files out of sync."""
     errors = validate(data)
     if errors:
@@ -371,7 +374,7 @@ def write_all(data: dict, log_line: str | None) -> None:
     progress = progress_text(data, log_line)
     save(data)
     render(data)
-    PROGRESS.write_text(progress, encoding="utf-8", newline="\n")
+    PROGRESS.write_bytes((progress).encode("utf-8"))
 
 
 def md_cell(s: str) -> str:
@@ -442,12 +445,10 @@ def cmd_stamp(_args) -> None:
     if changed:
         progress = PROGRESS.read_text(encoding="utf-8")
         for tid, h in changed:
-            progress = re.sub(
-                rf"(\| {re.escape(tid)} \| [^\n]*\| )pending \|", lambda m, h=h: m.group(1) + h + " |", progress
-            )
+            progress = re.sub(rf"(\| {re.escape(tid)} \| [^\n]*\| )pending \|", rf"\g<1>{h} |", progress)
         save(data)
         render(data)
-        PROGRESS.write_text(progress, encoding="utf-8", newline="\n")
+        PROGRESS.write_bytes((progress).encode("utf-8"))
     for tid, h in changed:
         print(f"{tid}: {h}")
     for tid in missing:
@@ -489,7 +490,7 @@ def cmd_import(args) -> None:
     print(what)
 
 
-def git_lines(*cmd: str) -> list:
+def git_lines(*cmd: str) -> list[Any]:
     out = subprocess.run(["git", *cmd], cwd=ROOT, capture_output=True, text=True, check=False).stdout
     return [ln for ln in out.splitlines() if ln.strip()]
 
@@ -540,7 +541,8 @@ def cmd_next(args) -> None:
 
 
 def main() -> None:
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
     for name in ("validate", "render", "stats", "stamp", "doctor"):
@@ -599,8 +601,8 @@ def main() -> None:
         cmd_import(args)
     elif args.cmd == "log":
         data = load()
-        PROGRESS.write_text(
-            progress_text(data, f"| {now()} | {args.id} | {md_cell(args.message)} | |"), encoding="utf-8", newline="\n"
+        PROGRESS.write_bytes(
+            progress_text(data, f"| {now()} | {args.id} | {md_cell(args.message)} | |").encode("utf-8")
         )
         print("logged")
 

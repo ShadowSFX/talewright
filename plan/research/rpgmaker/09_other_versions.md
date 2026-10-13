@@ -271,7 +271,7 @@ Baseline: RPG Maker MZ. This file lists notable features of other RPG Maker vers
 - **Source:** https://rpgmakerofficial.com/product/products/rpgvx/feature/index.html
 
 ### RM-OTH-026 — RPG Maker VX: Faces in messages, icons for items, skills and states
-- **What:** Message commands can show face graphics directly, which needed scripting in XP. Status screens show faces, and items, skills, weapons, armour and states get icons.
+- **What:** Message commands can show face graphics directly, which needed scripting in XP. Status screens show faces, and items, skills, weapons, armor and states get icons.
 - **Relevance to Talewright:** yes. MZ's Show Text has a Face field (H17), and the database supports icons (H21 lists IconSet.png).
 - **Source:** https://rpgmakerofficial.com/product/products/rpgvx/feature/index.html
 
@@ -313,7 +313,7 @@ Baseline: RPG Maker MZ. This file lists notable features of other RPG Maker vers
 - **Source:** https://www.rpgmakerweb.com/products/rpg-maker-vx-ace
 
 ### RM-OTH-034 — RPG Maker VX Ace: Features (traits) and use-effects system
-- **What:** A general "features" list can be attached to actors, classes, weapons, armour and states. Items and skills get "use effects". Element and state resistances become numeric rates.
+- **What:** A general "features" list can be attached to actors, classes, weapons, armor and states. Items and skills get "use effects". Element and state resistances become numeric rates.
 - **Relevance to Talewright:** yes. MZ has Traits and Effects (H14).
 - **Source:** https://www.rpgmakerweb.com/products/rpg-maker-vx-ace ; https://rpgmakerofficial.com/product/products/rpgvxace/feature/index.html
 
@@ -370,7 +370,7 @@ Baseline: RPG Maker MZ. This file lists notable features of other RPG Maker vers
 - **Source:** https://rpgmakerofficial.com/product/MV_Help/page/01_01_01_05.html ; https://store.steampowered.com/app/363890/
 
 ### RM-OTH-045 — RPG Maker MV: JavaScript plugins and Plugin Manager replace the script editor
-- **What:** MV dropped the Ruby script editor. Behaviour is extended by dropping .js plugin files into the project and enabling, ordering and configuring them in a Plugin Manager. Official plugins are bundled.
+- **What:** MV dropped the Ruby script editor. Behavior is extended by dropping .js plugin files into the project and enabling, ordering and configuring them in a Plugin Manager. Official plugins are bundled.
 - **Relevance to Talewright:** yes. MZ keeps this model, adding pull-down plugin commands and load-order errors (H23; S10).
 - **Source:** https://rpgmakerofficial.com/product/MV_Help/page/01_01_01_03.html ; https://store.steampowered.com/app/363890/
 
@@ -385,7 +385,7 @@ Baseline: RPG Maker MZ. This file lists notable features of other RPG Maker vers
 - **Source:** https://rpgmakerofficial.com/product/MV_Help/page/01_01_01_02.html
 
 ### RM-OTH-048 — RPG Maker MV: Larger database caps (2,000 entries)
-- **What:** Skills, items, weapons, armour, enemies and troops can each have up to 2,000 entries, which the official page says is twice the VX Ace limit.
+- **What:** Skills, items, weapons, armor, enemies and troops can each have up to 2,000 entries, which the official page says is twice the VX Ace limit.
 - **Relevance to Talewright:** not verified. The MZ help pages checked state no maximum.
 - **Source:** https://rpgmakerofficial.com/product/MV_Help/page/01_01_01_04.html ; https://www.rpgmakerweb.com/products/rpg-maker-mv
 
@@ -403,7 +403,7 @@ Baseline: RPG Maker MZ. This file lists notable features of other RPG Maker vers
 
 ### RM-OTH-051 — RPG Maker Unite: Runs inside the Unity Editor with source access
 - **What:** Unite is a no-code RPG editor built on and running in the Unity Editor, and it requires a Unity ID. Users can switch to the Unity Editor UI at any time and read or modify most of the runtime source (some DLLs excepted). The official pages say this is not officially supported.
-- **Relevance to Talewright:** no. MZ is a standalone editor; its runtime JavaScript is customised through plugins (H23).
+- **Relevance to Talewright:** no. MZ is a standalone editor; its runtime JavaScript is customized through plugins (H23).
 - **Source:** https://store.steampowered.com/app/1650950/ ; https://store.rpgmakerofficial.com/products/rpg-maker-unite ; https://rpgmakerunite.com/en/
 
 ### RM-OTH-052 — RPG Maker Unite: Unity build pipeline (Windows/Android, later macOS/iOS/WebGL)
@@ -432,7 +432,7 @@ Baseline: RPG Maker MZ. This file lists notable features of other RPG Maker vers
 - **Source:** https://rpgmakerunite.com/en/article/6932492229657/ ; https://rpgmakerunite.com/en/article/14950935540377/
 
 ### RM-OTH-057 — RPG Maker Unite: Outline Editor (story structure view)
-- **What:** A planning view organises the game into chapters, then sections (groups of maps), then maps. It draws story lines between them and auto-generated "switch lines" showing which sections are linked by a switch. It was discontinued in v1.2.0.
+- **What:** A planning view organizes the game into chapters, then sections (groups of maps), then maps. It draws story lines between them and auto-generated "switch lines" showing which sections are linked by a switch. It was discontinued in v1.2.0.
 - **Relevance to Talewright:** no. MZ has only a map tree (H6).
 - **Source:** https://rpgmakerunite.com/en/article/13937815423513/ ; https://store.steampowered.com/app/1650950/
 
@@ -442,7 +442,7 @@ Baseline: RPG Maker MZ. This file lists notable features of other RPG Maker vers
 - **Source:** https://rpgmakerunite.com/en/article/9517190933401/ ; https://rpgmakerunite.com/en/article/6932492229657/ ; https://rpgmakerunite.com/en/about/
 
 ### RM-OTH-059 — RPG Maker Unite: UI Settings editor
-- **What:** A database screen picks one of three UI layout patterns (with optional horizontal flip) and sets fonts, colours and nine-slice window, frame and button images. It can also strip menu commands (for example Save) and hide HP, MP or TP in battle, with live previews.
+- **What:** A database screen picks one of three UI layout patterns (with optional horizontal flip) and sets fonts, colors and nine-slice window, frame and button images. It can also strip menu commands (for example Save) and hide HP, MP or TP in battle, with live previews.
 - **Relevance to Talewright:** partial. MZ has window colour, menu-command toggles and font settings (H12, H13), but no layout patterns or nine-slice skinning UI.
 - **Source:** https://rpgmakerunite.com/en/article/9505520588185/
 
@@ -474,12 +474,12 @@ Baseline: RPG Maker MZ. This file lists notable features of other RPG Maker vers
 ### RPG Maker WITH (console)
 
 ### RM-OTH-065 — RPG Maker WITH: Console-native editor (Switch, PS4, PS5)
-- **What:** WITH is a full RPG editor for home consoles. Its map editor is retuned for console use, with more screen space and a palette row of recently used tiles, and shortcuts jump between the map, database and event editors.
+- **What:** WITH is a full RPG editor for home consoles. Its map editor is re-tuned for console use, with more screen space and a palette row of recently used tiles, and shortcuts jump between the map, database and event editors.
 - **Relevance to Talewright:** no. MZ is a PC/Mac editor (H3).
 - **Source:** https://with.rpgmakerofficial.com/ ; https://with.rpgmakerofficial.com/product/
 
 ### RM-OTH-066 — RPG Maker WITH: Online asset sharing across platforms
-- **What:** Creators upload and download maps, database records (items, weapons, armour, skills, enemies) and common events over the internet, and drop them into their own projects. Shared assets and games work across Switch, PS5 and PS4.
+- **What:** Creators upload and download maps, database records (items, weapons, armor, skills, enemies) and common events over the internet, and drop them into their own projects. Shared assets and games work across Switch, PS5 and PS4.
 - **Relevance to Talewright:** no. MZ has no built-in sharing service.
 - **Source:** https://with.rpgmakerofficial.com/ ; https://with.rpgmakerofficial.com/product/
 
@@ -506,7 +506,7 @@ Baseline: RPG Maker MZ. This file lists notable features of other RPG Maker vers
 - **Source:** https://store.steampowered.com/app/4856440/RPG_MAKER_U2U/ ; https://u2u.rpgmakerofficial.com/en/feature/ ; https://www.gotchagotcha.jp/assets/pdf/20260521_RPGMAKERU2U.pdf
 
 ### RM-OTH-071 — RPG Maker U2U: P2D Map Editor (prefab placement and block building)
-- **What:** In quick mode you place ready-made objects from a list. In detailed mode you build new objects from blocks to form complex shapes and uneven terrain, then decorate them with ordinary 2D map tiles. Gotcha Gotcha Games says it needs no 3D modelling knowledge.
+- **What:** In quick mode you place ready-made objects from a list. In detailed mode you build new objects from blocks to form complex shapes and uneven terrain, then decorate them with ordinary 2D map tiles. Gotcha Gotcha Games says it needs no 3D modeling knowledge.
 - **Relevance to Talewright:** no. MZ's editor paints 2D tiles only (H5).
 - **Source:** https://u2u.rpgmakerofficial.com/en/feature/ ; https://www.gotchagotcha.jp/assets/pdf/20260521_RPGMAKERU2U.pdf ; https://store.steampowered.com/app/4856440/RPG_MAKER_U2U/
 
@@ -531,7 +531,7 @@ Baseline: RPG Maker MZ. This file lists notable features of other RPG Maker vers
 - **Source:** https://store.steampowered.com/app/4856440/RPG_MAKER_U2U/ ; https://u2u.rpgmakerofficial.com/en/feature/ ; https://www.gotchagotcha.jp/assets/pdf/20260521_RPGMAKERU2U.pdf
 
 ### RM-OTH-076 — RPG Maker U2U: MZ-based workflow for events and battles; no project or plugin conversion
-- **What:** Maps, events and battles are configured without code in a UI and UX modelled on MZ. Screenshots of an Event Editor and a Database were shown. Converting projects or plugins from earlier RPG Makers is explicitly not supported.
+- **What:** Maps, events and battles are configured without code in a UI and UX modeled on MZ. Screenshots of an Event Editor and a Database were shown. Converting projects or plugins from earlier RPG Makers is explicitly not supported.
 - **Relevance to Talewright:** n/a. U2U uses MZ as its design baseline, the same as Talewright.
 - **Source:** https://store.steampowered.com/app/4856440/RPG_MAKER_U2U/ ; https://u2u.rpgmakerofficial.com/en/feature/ ; https://rpgmakerofficial.com/en/news/4265/
 

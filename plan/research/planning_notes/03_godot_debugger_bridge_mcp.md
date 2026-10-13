@@ -233,7 +233,7 @@ Five findings matter most for the design:
 - `EditorHTTPServer` exists only for web export (`platform/web/export/editor_http_server.h:36-70`).
 - Limits: GET only (cpp:86), one client at a time, 4096-byte request buffer (h:49, cpp:185), 1 s client timeout (cpp:147).
 - It runs its own thread, polling every 6.9 ms under a mutex (cpp:37-45, 235), with optional TLS (155-173).
-- Treat it as a pattern only. If you use a worker thread, editor API calls still have to be marshalled to the main thread.
+- Treat it as a pattern only. If you use a worker thread, editor API calls still have to be marshaled to the main thread.
 - `core/io/http_client.h` and `scene/main/http_request.h` are clients only.
 
 **JSON** (`core/io/json.h`):

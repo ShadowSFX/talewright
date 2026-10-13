@@ -9,28 +9,32 @@ Usage:
     python plan/tools/crawl_mz_toc.py > plan/research/mz_help_toc.md
     python plan/tools/crawl_mz_toc.py --json > toc.json
 """
+
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import re
 import sys
 import urllib.request
+from typing import Any
 
 BASE = "https://rpgmakerofficial.com/product/MZ_help-en/"
 TOC_RE = re.compile(r"var toc\s*=\s*(\[.*?\]);", re.S)
 
 
-def fetch(key: str) -> list:
+def fetch(key: str) -> list[Any]:
     with urllib.request.urlopen(f"{BASE}whxdata/{key}.new.js", timeout=30) as r:
         text = r.read().decode("utf-8")
     m = TOC_RE.search(text)
     if not m:
         raise SystemExit(f"TOC format changed: no `var toc = [...]` in {key}.new.js")
-    return json.loads(m.group(1))
+    toc: list[Any] = json.loads(m.group(1))
+    return toc
 
 
-def walk(key: str, depth: int = 0, visited: set | None = None) -> list:
+def walk(key: str, depth: int = 0, visited: set[Any] | None = None) -> list[Any]:
     visited = set() if visited is None else visited
     if key in visited:
         return []
@@ -51,7 +55,7 @@ def walk(key: str, depth: int = 0, visited: set | None = None) -> list:
     return out
 
 
-def flatten(entries: list) -> list:
+def flatten(entries: list[Any]) -> list[Any]:
     rows = []
     for e in entries:
         rows.append(e)
@@ -63,7 +67,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
-    sys.stdout.reconfigure(encoding="utf-8", newline="\n")
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(encoding="utf-8", newline="\n")
     tree = walk("toc")
     if not tree:
         raise SystemExit("empty TOC")

@@ -15,6 +15,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 CITE = re.compile(
     r"(?<![\w/.-])((?:[A-Za-z0-9_.-]+/)+[A-Za-z0-9_.-]+\.(?:h|hpp|cpp|c|inc|py|xml|yml|json|md|gd|txt|glsl|cfg|godot|toml)|SConstruct|methods\.py|version\.py)"
@@ -51,7 +52,7 @@ def main() -> int:
     args = ap.parse_args()
     root = Path(args.root)
     ra_root = Path(args.rathena_root)
-    cache: dict = {}
+    cache: dict[str, Any] = {}
     failures = 0
     total = 0
     for f in args.files:

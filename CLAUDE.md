@@ -33,8 +33,11 @@ and move on to the next ready task.
 2. Implement. Verify every Godot claim by reading the code and cite `file:line`; write "not verified" when
    you cannot verify; mark anything that does not exist yet as NEW.
 3. Build (incremental). 4. Run upstream tests + the new doctests for the touched system.
-5. Once the bridge exists (epic 4), verify behaviour through it (screenshots, scene tree, logs, state).
-6. Self-review: re-read the diff line by line, clang-format, no new warnings.
+5. Once the bridge exists (epic 4), verify behavior through it (screenshots, scene tree, logs, state).
+6. Self-review: re-read the diff line by line, clang-format, no new warnings. Run
+   `python talewright/tools/static_checks.py` (the CI static-check hooks on the files the next push brings, plus fork
+   checks; needs `python -m pip install --user prek`) and review every file a hook rewrote — codespell's automatic
+   fixes have renamed identifiers before (D-027). CI fails on any push that skips this.
 7. `python plan/tools/tasks.py done <id> -m "<what was done>"`, then ONE commit for the task containing code
    and tracker files: message `"<id>: <summary>"`. Then `python plan/tools/tasks.py stamp` (fills the hash;
    the stamp is committed with the next task).
@@ -52,7 +55,7 @@ and move on to the next ready task.
 - Minimize the upstream diff: new modules/directories only; every unavoidable core patch is listed in
   `plan/UPSTREAM_PATCHES.md` with its reason.
 - Reuse Godot systems before building new ones; state what is reused and what is new.
-- Legal: RPG Maker behaviour from public documentation only (paraphrase, no verbatim text, no RTP assets,
+- Legal: RPG Maker behavior from public documentation only (paraphrase, no verbatim text, no RTP assets,
   no file formats); never "RPG Maker" or bare "Godot" in names (Godot trademark policy, see
   `TALEWRIGHT.md`); default assets are original (generated) or clearly licensed with the license recorded;
   rAthena/GPL projects are references only — never copy their code. `C:\Users\Relic\Desktop\ro server` is
@@ -78,6 +81,9 @@ and move on to the next ready task.
 - Tests: `bin/<editor binary> --test` (all) or `--test --test-case="*[JRPG]*"`; module tests live in
   `modules/<m>/tests/*.h` (auto-included when built with `tests=yes`, which `dev_mode=yes` enables).
 - Tracker: `python plan/tools/tasks.py validate|render|next|show <id>|start <id>|done <id> -m ..|block <id> -m ..|defer <id> -m ..|stamp|import <file>`.
+- Completion status (owner's goal; run and show its output at the end of every turn): `python plan/status.py`
+  (tasks per status, blocked/deferred reasons, whether the Phase 5 sweep table `plan/evidence/phase5_sweep.md`
+  is committed).
 - Bridge (after epic 4): `python talewright/tools/bridge.py status|list|call <tool> --args '{...}'`.
 - Do not run `npm run build` anywhere (owner's global rule).
 

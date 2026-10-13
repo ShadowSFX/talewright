@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import io
 import json
 import os
 import subprocess
@@ -30,6 +31,7 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 EDITOR = ROOT / "bin" / "godot.windows.editor.x86_64.exe"
@@ -67,7 +69,7 @@ def default_token_path() -> Path:
     return Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "godot" / "claude_bridge" / "token"
 
 
-def load_endpoint(args) -> tuple:
+def load_endpoint(args) -> tuple[Any, ...]:
     # A connection.json inside a project folder could be crafted by whoever shipped the project: only loopback URLs
     # are accepted and the token is always read from the per-user editor config path (or an explicit --token-file).
     token_file = Path(args.token_file) if args.token_file else default_token_path()
@@ -90,7 +92,9 @@ _OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 _next_id = 1
 
 
-def rpc(url: str, token: str, method: str, params: dict | None = None, timeout: float = 60.0) -> dict:
+def rpc(
+    url: str, token: str, method: str, params: dict[str, Any] | None = None, timeout: float = 60.0
+) -> dict[str, Any]:
     global _next_id
     body = {"jsonrpc": "2.0", "id": _next_id, "method": method}
     _next_id += 1
@@ -118,10 +122,11 @@ def rpc(url: str, token: str, method: str, params: dict | None = None, timeout: 
     msg = json.loads(payload)
     if "error" in msg:
         raise BridgeError(f"JSON-RPC error {msg['error'].get('code')}: {msg['error'].get('message')}")
-    return msg["result"]
+    result: dict[str, Any] = msg["result"]
+    return result
 
 
-def parse_kv(pairs: list) -> dict:
+def parse_kv(pairs: list[Any]) -> dict[str, Any]:
     out = {}
     for p in pairs:
         if "=" not in p:
@@ -134,7 +139,7 @@ def parse_kv(pairs: list) -> dict:
     return out
 
 
-def print_result(result: dict, out_dir: Path, tool: str) -> int:
+def print_result(result: dict[str, Any], out_dir: Path, tool: str) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     for i, block in enumerate(result.get("content", [])):
         kind = block.get("type")
@@ -183,7 +188,8 @@ def cmd_wait(args) -> int:
 
 
 def main() -> int:
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     # Global options are accepted before or after the subcommand.
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument(

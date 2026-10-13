@@ -6,6 +6,7 @@ and exits 1 if any content page is uncited. Non-content pages (license, trademar
 Usage: python plan/tools/toc_gate.py
 """
 
+import io
 import re
 import sys
 from pathlib import Path
@@ -16,7 +17,8 @@ LINE_RE = re.compile(r"^(\s*)- (.+?)(?: — (https?://\S+))?$")
 
 
 def main() -> int:
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     toc = (ROOT / "plan/research/mz_help_toc.md").read_text(encoding="utf-8").splitlines()
     inventory = "\n".join(p.read_text(encoding="utf-8") for p in sorted((ROOT / "plan/research/rpgmaker").glob("*.md")))
     items = re.split(r"(?m)^### (?=RM-)", inventory)[1:]

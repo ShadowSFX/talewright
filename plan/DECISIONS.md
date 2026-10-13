@@ -270,7 +270,7 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Reversal:** systems are selected per project in System settings; unused systems can be disabled.
 
 ## D-020 — Legal guardrails
-- **Choice:** RPG Maker behaviour reimplemented from public documentation only (paraphrased inventory,
+- **Choice:** RPG Maker behavior reimplemented from public documentation only (paraphrased inventory,
   no verbatim text, no RTP, no file formats); the RPG Maker project importer is task 45 (`deferred`). No
   Gravity/Nintendo data or protocols. GPL/AGPL projects are design references only; FishNet code is not
   read (its license forbids competing implementations). Asset and data layouts are Talewright's own (47-tile
@@ -291,12 +291,12 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** no idle time; the bridge is the verification tool for everything after it.
 - **Reversal:** restore `"dependencies": ["1", "3"]` on task 4.
 
-## D-022 — Behaviour the official documentation does not specify
+## D-022 — Behavior the official documentation does not specify
 - **Context:** the official MZ help leaves some mechanics unstated (escape formula, critical multiplier, damage
   step order, EXP curve formula, save contents…; see `plan/research/rpgmaker_inventory.md`). The legal rule
   forbids learning them from RPG Maker's code, and the "never guess" rule forbids presenting guesses as parity.
-- **Options:** copy community-reverse-engineered values; leave unimplemented; define our own documented behaviour.
-- **Choice:** Talewright defines its own behaviour for each gap, documents it in `talewright/docs/` and in the
+- **Options:** copy community-reverse-engineered values; leave unimplemented; define our own documented behavior.
+- **Choice:** Talewright defines its own behavior for each gap, documents it in `talewright/docs/` and in the
   relevant spec, makes it data-driven/overridable (system settings or formula fields), and marks the gap-map row
   "parity: functional, exact numbers not verified". Each own rule is chosen deliberately on stated design grounds
   and must not reproduce community-known engine internals (amended in 3.5.1 after the epic 3 review found spec 04
@@ -363,3 +363,20 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   only name overrides set by events.
 - **Why:** translations survive edits; one content pack serves every language; servers stay language-neutral.
 - **Reversal:** keys are data; a project could map them to source text at export time.
+
+## D-027 — Fork files pass upstream's CI static checks
+- **Context:** every push runs the GitHub "Static checks" job: prek with `.pre-commit-config.yaml` on the changed
+  files (`.github/workflows/static_checks.yml`). It failed on every push so far: scripts with shebangs not marked
+  executable, mypy generics, codespell (configured with `en-GB_to_en-US`, `pyproject.toml` `[tool.codespell]`),
+  unowned fork paths in `validate-codeowners`; the `copyright-headers` hook also replaces any C++ header with Godot's.
+- **Options:** disable the workflow in the fork; exclude fork paths from all hooks; make fork files comply and
+  exempt them only where compliance would be wrong.
+- **Choice:** comply: US spelling in all fork files, executable bit on scripts with shebangs, typed generics, and
+  `codespell:ignore` markers where a flagged token is correct (labels such as `SAV`, the PostgreSQL URL, a quoted
+  file name). Two upstream-file patches (ledger rows 1–2): fork modules are excluded from `copyright-headers` (their
+  Talewright header is checked by `add_header.py --check`) and fork paths get CODEOWNERS entries. Before every push,
+  run `python talewright/tools/static_checks.py` (same hooks on the files the push brings, plus fork checks) and
+  review any file a hook rewrote: codespell's automatic fixes renamed identifiers (`and`→`and`, `end`→`end`) and
+  labels once and must never be committed unreviewed.
+- **Why:** keeps the fork's CI green so real regressions are visible, with the smallest upstream diff.
+- **Reversal:** revert ledger rows 1–2; the fork's own checks keep working locally.

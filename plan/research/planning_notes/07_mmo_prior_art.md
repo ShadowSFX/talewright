@@ -68,11 +68,11 @@ Every claim below has a URL. "Not verified" means I found no reputable source fo
 - **Nakama** authoritative matches range from about 1 tick/s for turn-based games to "dozens of times per second". https://heroiclabs.com/docs/nakama/concepts/multiplayer/authoritative/
 - **Ragnarok Online (rAthena)** moves units by per-cell timers of 150 ms by default, rather than a global tick. See §6.
 
-### Bandwidth: delta compression, quantization, prioritisation
+### Bandwidth: delta compression, quantization, prioritization
 - Gaffer's snapshot compression article:
   - The uncompressed example needs about 17.37 Mbps.
   - "Smallest three" quaternion encoding cuts orientation from 128 to 29 bits.
-  - Position quantized at 512 values per metre.
+  - Position quantized at 512 values per meter.
   - Deltas against the last acknowledged baseline ("a big order of magnitude win").
   - About 15 kbps when the scene is at rest.
   - https://gafferongames.com/post/snapshot_compression/
@@ -185,7 +185,7 @@ Sources for the table:
 
 | Component | License | In the MIT engine fork | In proprietary game servers | Source |
 |---|---|---|---|---|
-| libpq (PostgreSQL) | PostgreSQL License, "similar to the BSD or MIT licenses" | **Yes** | Yes | https://www.postgresql.org/about/licence/ |
+| libpq (PostgreSQL) | PostgreSQL License, "similar to the BSD or MIT licenses" | **Yes** | Yes | https://www.postgresql.org/about/licence/ <!-- codespell:ignore licence --> |
 | libpqxx | BSD-3-Clause | **Yes** | Yes | https://api.github.com/repos/jtv/libpqxx |
 | SQLite | Public domain: "does not require a license" | **Yes** | Yes | https://sqlite.org/copyright.html |
 | MariaDB Connector/C | LGPL-2.1 | Only as an optional, dynamically linked module | Yes if dynamically linked. LGPL §6 requires a "suitable shared library mechanism" (or relinkable objects), terms allowing modification "and reverse engineering for debugging", and a notice. | https://api.github.com/repos/mariadb-corporation/mariadb-connector-c, https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html |
@@ -291,7 +291,7 @@ The Godot 4.0 scene-replication blog post (2023) defers visibility to "a separat
   - 8-cell block grid with an AoI radius of about 14 cells, plus Photon-style inner/outer hysteresis.
   - Server-timed cooldowns.
   - Path-start broadcasts for client interpolation.
-  - All modelled on rAthena's design (§6), written clean-room because rAthena is GPL.
+  - All modeled on rAthena's design (§6), written clean-room because rAthena is GPL.
 - **JRPG mode (PokeMMO-like).**
   - Tile movement with prediction plus reconciliation for the local player (Gambetta).
   - Battles as server-side, instanced, turn-based simulations: the client waits for confirmation rather than predicting (Gambetta). They can run in Godot instance processes or as Nakama authoritative matches (1 Hz-class ticks are fine).
@@ -310,7 +310,7 @@ The Godot 4.0 scene-replication blog post (2023) defers visibility to "a separat
 
 ### Cons of this option
 - A second language for server logic (Go, TS or Lua).
-- Open-source Nakama has **no clustering**; that's an Enterprise licence, so the meta layer has a single-node ceiling.
+- Open-source Nakama has **no clustering**; that's an Enterprise license, so the meta layer has a single-node ceiling.
 - Matches are pinned to one node.
 - Needs CockroachDB or a Postgres-wire database.
 - nakama-godot's last *tagged* release was in 2024, though commits continue.

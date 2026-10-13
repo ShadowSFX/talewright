@@ -9,9 +9,11 @@ its anchor text, otherwise generation fails.
 Usage: python plan/tools/gen_gap_map.py
 """
 
+import io
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -98,6 +100,8 @@ GS = "GDScript screen in managed addon res://addons/talewright"
 TOOL = "talewright/tools script"
 
 # AREA -> (refs, reuse, approach, deps, size)
+# Inventory area code of the save/load rows (RM-SAV-*); a label, not a misspelling.
+SAVE_LOAD_AREA = "SAV"  # codespell:ignore sav
 AREA = {
     "PRJ": (["ProjectSettings", "EditorFileSystem"], "extend", CE + " — Set up JRPG Project tool", "6.2", "M"),
     "EDT": (
@@ -181,12 +185,12 @@ AREA = {
     "CMD": (["Resource"], "NEW", CC + " — typed command resources (D-007)", "9.5, 24", "S"),
     "CMD2": (["Resource"], "NEW", CC + " — typed command resources (D-007)", "9.5, 24", "S"),
     "MSG": (["RichTextLabel", "RichTextEffect"], "extend", CR + " — message renderer control codes", "10.2", "S"),
-    "MSGB": (["RichTextLabel", "Tween"], "extend", CR + " — message window behaviour", "10.2", "S"),
+    "MSGB": (["RichTextLabel", "Tween"], "extend", CR + " — message window behavior", "10.2", "S"),
     "MRT": (["Tween", "AStarGrid2D"], "NEW", CC + " — move route commands", "9.6, 24", "S"),
     "MNU": (["Theme", "Control.focus", "NinePatchRect"], "extend", GS, "11, 28", "M"),
     "BTL": (["AnimationPlayer", "Tween"], "NEW", CC + " battle core + " + GS, "12, 27", "M"),
     "FRM": (["Expression"], "extend", CC + " — formula evaluator with proxies (D-009, D-022)", "5.4", "S"),
-    "SAV": (["FileAccess.encrypted", "JSON"], "extend", CC + " — versioned save format", "13.1", "M"),
+    SAVE_LOAD_AREA: (["FileAccess.encrypted", "JSON"], "extend", CC + " — versioned save format", "13.1", "M"),
     "AUD": (["AudioStreamPlayer", "AudioServer"], "extend", CR + " — audio manager", "29", "S"),
     "INP": (["InputMap", "Input"], "reuse", "input actions created by setup tool", "6.2", "S"),
     "GEN": (["Image"], "NEW", CE + " — character generator with original parts", "32", "M"),
@@ -567,13 +571,13 @@ def verify_refs() -> None:
         sys.exit("reference verification failed:\n  " + "\n  ".join(bad))
 
 
-def fmt_refs(names: list) -> str:
+def fmt_refs(names: list[Any]) -> str:
     if not names:
         return "—"
     return "; ".join(f"`{REFS[n][0]}:{REFS[n][1]}` ({n})" for n in names)
 
 
-def load_items() -> list:
+def load_items() -> list[Any]:
     items = []
     for f in sorted((ROOT / "plan/research/rpgmaker").glob("*.md")):
         text = f.read_text(encoding="utf-8")
@@ -591,7 +595,7 @@ def load_items() -> list:
     return items
 
 
-def classify(item: dict) -> tuple:
+def classify(item: dict[str, Any]) -> tuple[Any, ...]:
     if item["id"] in OVERRIDES:
         return OVERRIDES[item["id"]]
     refs, reuse, approach, deps, size = AREA[item["area"]]
@@ -737,7 +741,8 @@ MMO_ROWS = [
 
 
 def main() -> None:
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     verify_refs()
     items = load_items()
     out = [
@@ -755,7 +760,7 @@ def main() -> None:
         "",
     ]
     counts = {"reuse": 0, "extend": 0, "NEW": 0, "—": 0}
-    epic_rows: dict = {}
+    epic_rows: dict[str, Any] = {}
     current = None
     distinct = 0
     for it in items:
@@ -803,7 +808,7 @@ def main() -> None:
         11,
         f"**Rows:** {len(items)} inventory ({distinct} distinct + {len(items) - distinct} duplicates) + {len(MMO_ROWS)} MMO · reuse {counts['reuse']} · extend {counts['extend']} · NEW {counts['NEW']} · not applicable {counts['—']}\n",
     )
-    (ROOT / "plan/research/gap_map.md").write_text("\n".join(out) + "\n", encoding="utf-8", newline="\n")
+    (ROOT / "plan/research/gap_map.md").write_bytes(("\n".join(out) + "\n").encode("utf-8"))
     print(f"gap_map.md: {len(items)} inventory rows + {len(MMO_ROWS)} MMO rows; {counts}")
 
 

@@ -4,7 +4,7 @@ Question (owner, 2026-10-13): can the engine have mature, robust tooling to ship
 (PokeMMO-like or Ragnarok-Online-like), with backend servers as separate programs, so that games are built in
 the editor and integrate seamlessly? Sources: `plan/research/planning_notes/05_godot_networking_server.md`
 (Godot code, file:line at 4.7.2-stable), `06_rathena_study.md` (rAthena d4b8e7b8), `07_mmo_prior_art.md`
-(web sources). Technique catalogue: `plan/research/rathena_techniques.md`.
+(web sources). Technique catalog: `plan/research/rathena_techniques.md`.
 
 ## Verdict
 **Conditionally feasible**, as a set of server programs built from this engine and sharing its JRPG logic core —
@@ -81,7 +81,7 @@ ARPG combat timing; social/economy systems; GM/ops tooling; cluster runner and i
 
 ## Persistence and security (D-017, D-014)
 SQLite (vendored, public domain, https://sqlite.org/copyright.html) for development/single host; PostgreSQL via
-libpq (PostgreSQL License, https://www.postgresql.org/about/licence/) for production; MySQL/MariaDB only via an
+libpq (PostgreSQL License, https://www.postgresql.org/about/licence/) for production; MySQL/MariaDB only via an <!-- codespell:ignore licence -->
 optional dynamically loaded LGPL connector (deferred); MySQL Connector/C++ (GPL + FOSS exception) avoided.
 Argon2id passwords; DTLS/TLS transport; per-IP connection limits; token buckets per opcode; state-gated dispatch;
 atomic versioned character saves; unique item instance IDs; two-phase trades; audit logs.

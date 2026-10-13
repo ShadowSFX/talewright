@@ -16,11 +16,13 @@ Exit code 1 on any failure.
 from __future__ import annotations
 
 import argparse
+import io
 import re
 import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 SAMPLES = ROOT / "talewright" / "samples"
@@ -50,18 +52,16 @@ binary_format/embed_pck=true
 application/modify_resources=false
 """
 
-LOG_LINES: list = []
+LOG_LINES: list[Any] = []
 
 
-def run(cmd: list, timeout: int = 180) -> tuple:
+def run(cmd: list[Any], timeout: int = 180) -> tuple[Any, ...]:
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
         code, out = proc.returncode, (proc.stdout or "") + (proc.stderr or "")
     except subprocess.TimeoutExpired as e:
-        partial = (e.stdout or b"") + (e.stderr or b"")
-        if isinstance(partial, bytes):
-            partial = partial.decode("utf-8", "replace")
-        code, out = -1, f"TIMEOUT after {timeout}s\n{partial}"
+        partial = [p.decode("utf-8", "replace") if isinstance(p, bytes) else p for p in (e.stdout, e.stderr) if p]
+        code, out = -1, f"TIMEOUT after {timeout}s\n{''.join(partial)}"
     except OSError as e:
         code, out = -2, f"could not start: {e}"
     LOG_LINES.append("$ " + " ".join(str(c) for c in cmd) + f"\n[exit {code}]\n{out}")
@@ -87,7 +87,8 @@ def check(label: str, code: int, out: str, marker: str | None = None, must_exist
 
 
 def main() -> int:
-    sys.stdout.reconfigure(errors="replace")
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(errors="replace")
     ap = argparse.ArgumentParser()
     ap.add_argument("--editor-bin", default=str(EDITOR_BIN))
     ap.add_argument("--no-export", action="store_true")
@@ -112,10 +113,8 @@ def main() -> int:
             if exported.exists():
                 exported.unlink()
             project = SAMPLES / "plain_2d"
-            (project / "export_presets.cfg").write_text(
-                PRESET.format(export_path=exported.as_posix(), template=TEMPLATE.as_posix()),
-                encoding="utf-8",
-                newline="\n",
+            (project / "export_presets.cfg").write_bytes(
+                PRESET.format(export_path=exported.as_posix(), template=TEMPLATE.as_posix()).encode("utf-8")
             )
             code, out = run(
                 [exe, "--headless", "--path", str(project), "--export-release", "Windows Desktop", str(exported)], 300

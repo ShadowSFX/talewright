@@ -76,7 +76,7 @@ On save/import of a tileset the editor **bakes** these into `JRPGTilesetData.fla
 palette index) so core code never reads a TileSet: bits 0–1 pass mode, 2–5 no-entry N/E/S/W, 6–9 no-exit N/E/S/W,
 10 overhead, 11 ladder, 12 bush, 13 counter, 14 damage, 16–19 terrain tag; other bits reserved (0). The baked table
 carries a hash of the TileSet's custom data so a stale bake is detected and rebuilt in the editor.
-Documented behaviour this reproduces: entry permission per side for one-way edges (RM-TIL-008) and overhead tiles
+Documented behavior this reproduces: entry permission per side for one-way edges (RM-TIL-008) and overhead tiles
 that never block (RM-TIL-007); the separate no-exit mask is a Talewright addition.
 
 ## Autotile template (Talewright format)
@@ -90,14 +90,14 @@ that never block (RM-TIL-007); the separate no-exit mask is a Talewright additio
 - **Animated kinds:** frames are further 8 × 6 blocks to the right (frame f at column offset 8·f); the importer uses
   Godot atlas animation columns (`scene/resources/2d/tile_set.h:754-766`).
 - **Wall kinds:** a 4 × 4 sheet indexed by the 4-neighbour mask (N = 1, E = 2, S = 4, W = 8; cell (mask mod 4,
-  mask div 4)), for wall faces where diagonal neighbours don't matter.
+  mask div 4)), for wall faces where diagonal neighbors don't matter.
 - The importer (`JRPGAutotileImporter`, editor) adds the sheet to the TileSet as an atlas source, creates one palette
   entry per kind, and sets Godot terrain peering bits (match corners and sides) so the stock terrain painter also
   works.
 
 ## Autotile resolver (core, deterministic)
-For each cell with an autotile kind, build the 8-neighbour mask from neighbours with the **same kind on the same
-layer**, reduce it, and look up the shape index. Neighbours outside the map:
+For each cell with an autotile kind, build the 8-neighbour mask from neighbors with the **same kind on the same
+layer**, reduce it, and look up the shape index. Neighbors outside the map:
 - on an axis that loops (`scroll_type`), the wrapped cell is compared normally;
 - otherwise the tileset's `edge_mode` decides: `extend` (default; out-of-map counts as the same kind, so terrain runs
   cleanly to the map edge) or `border` (counts as different, drawing an outline at the edge).
@@ -125,8 +125,8 @@ are both open and B is not blocked. Used by movement, pathfinding (`AStarGrid2D`
 (server data compiler). Rebuilt when map tiles or the tileset change.
 
 ## Movement (core `JRPGMover`, runtime animates)
-Cell steps advanced by the fixed 60 Hz simulation step (spec 03). Speed levels follow the documented labelling
-(higher is faster; the default shown is "x2 slower" at level 3, so neighbouring levels differ by a factor of two,
+Cell steps advanced by the fixed 60 Hz simulation step (spec 03). Speed levels follow the documented labeling
+(higher is faster; the default shown is "x2 slower" at level 3, so neighboring levels differ by a factor of two,
 RM-EVT-032); the base value is Talewright's:
 
 | Speed | 1 | 2 | 3 | 4 (normal) | 5 | 6 |

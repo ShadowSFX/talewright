@@ -5,8 +5,8 @@ documentation (https://rpgmakerofficial.com/product/MZ_help-en/). Lineup and bas
 `plan/research/planning_notes/00_lineup_baseline_trademark.md` (U2U announced 2026-06-15, unreleased).
 Notable features of other versions: slice 09.
 
-The inventory has **1023 sourced items** (1007 distinct features; 16 items describe the same feature in two slices and are cross-referenced as duplicates in `gap_map.md`), each `### RM-<AREA>-<NNN> — <name>` with **What**, **Behaviour**
-and an official **Source** URL. Items are paraphrased from official pages (legal rule D-020); behaviour that the
+The inventory has **1023 sourced items** (1007 distinct features; 16 items describe the same feature in two slices and are cross-referenced as duplicates in `gap_map.md`), each `### RM-<AREA>-<NNN> — <name>` with **What**, **Behavior**
+and an official **Source** URL. Items are paraphrased from official pages (legal rule D-020); behavior that the
 official pages do not state is listed in each slice's final "Not verified" section, never guessed.
 
 | Slice | File | Items | Areas | Not verified |
@@ -18,7 +18,7 @@ official pages do not state is listed in each slice's final "Not verified" secti
 | Database C: system 1/2, types, terms, traits, effects | `rpgmaker/05_database_c.md` | 84 | SYS 32, TYP 6, TRM 6, TRT 26, EFF 14 | 42 |
 | Events, event commands 1–8, message control characters, movement routes | `rpgmaker/06_events_commands_1.md` | 171 | EVT 48, CMD 53, MSG 19, MRT 51 | 30 |
 | Event commands 9–16 | `rpgmaker/07_event_commands_2.md` | 52 | CMD2 52 | 37 |
-| Runtime: menus, battle flow, formulas, save, audio, messages, input, generator, debug | `rpgmaker/08_runtime_systems.md` | 125 | MNU 20, BTL 26, FRM 21, SAV 7, AUD 15, MSGB 13, INP 9, GEN 7, DBG 7 | 34 |
+| Runtime: menus, battle flow, formulas, save, audio, messages, input, generator, debug | `rpgmaker/08_runtime_systems.md` | 125 | MNU 20, BTL 26, FRM 21, SAV 7, AUD 15, MSGB 13, INP 9, GEN 7, DBG 7 | 34 | <!-- codespell:ignore sav -->
 | Other versions (2000, 2003, XP, VX, VX Ace, MV, Unite, WITH, U2U) | `rpgmaker/09_other_versions.md` | 77 | OTH 77 | 14 |
 
 The request's minimum coverage list maps to areas as follows: project structure (PRJ); map editor, layers,
@@ -26,7 +26,7 @@ autotiles, passability/flags, regions, map properties, encounters (MAP, MPR, TIL
 (DB, ACT, CLS, SKL, ITM, WPN, ARM, ENM, TRP, STA, ANI, TIL, CEV, SYS, TYP, TRM, TRT, EFF); event system,
 pages, conditions, triggers, priority, movement routes, self switches, switches/variables and every event
 command (EVT, CMD, CMD2, MRT); message system and escape codes (MSG, MSGB); menus (MNU); battle systems and
-formulas (BTL, FRM); save/load (SAV); audio (AUD); character/face generator (GEN, AID); resource manager
+formulas (BTL, FRM); save/load (SAV); audio (AUD); character/face generator (GEN, AID); resource manager <!-- codespell:ignore sav -->
 (AID); test play, battle test, debug (TST, DBG); plugins and parameters (PLG); localization (L10N);
 deployment (DEP).
 
@@ -46,7 +46,7 @@ deployment (DEP).
 Escape success formula; critical damage multiplier; order of damage-calculation steps; EXP curve formula;
 the six damage-type names beyond Damage/Recover/Drain; state duration randomness; save file contents and
 storage location; full Options screen list; message fast-forward keys; several dropdown option lists only
-visible in screenshots. Per D-022 Talewright defines and documents its own behaviour for these instead of
+visible in screenshots. Per D-022 Talewright defines and documents its own behavior for these instead of
 guessing RPG Maker's.
 
 ## Gates added by the epic 2 review (task 2.5)

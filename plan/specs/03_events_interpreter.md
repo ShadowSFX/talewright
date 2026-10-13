@@ -64,7 +64,7 @@ parameters are its exported properties. `JRPGPluginRegistry` lists enabled plugi
   the page, load, check the restart and the warning.
 - **Time:** waits and movement count fixed **60 Hz simulation steps** (`JRPGSimClock`, core). The runtime advances
   the clock from `_process` with an accumulator (at most 4 steps per rendered frame; beyond that the game slows down
-  instead of spiralling), so behaviour is identical at any frame rate. `WAIT_FRAMES(n)` waits n steps. Online zones
+  instead of spiralling), so behavior is identical at any frame rate. `WAIT_FRAMES(n)` waits n steps. Online zones
   advance the same steps (spec 07).
 - Determinism: all randomness through the `JRPGRandom` streams of the game state (spec 04); nothing reads wall-clock
   time.

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import http.client
+import io
 import json
 import socket
 import statistics
@@ -24,6 +25,7 @@ import sys
 import threading
 import time
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bridge  # noqa: E402
@@ -35,7 +37,7 @@ def make_conn(url: str) -> http.client.HTTPConnection:
     return http.client.HTTPConnection(host, int(port), timeout=30)
 
 
-def call(conn: http.client.HTTPConnection, token: str, rid: int) -> dict:
+def call(conn: http.client.HTTPConnection, token: str, rid: int) -> dict[str, Any]:
     body = json.dumps({
         "jsonrpc": "2.0",
         "id": rid,
@@ -49,11 +51,13 @@ def call(conn: http.client.HTTPConnection, token: str, rid: int) -> dict:
     data = resp.read()
     if resp.status != 200:
         raise RuntimeError(f"HTTP {resp.status}: {data[:200]!r}")
-    return json.loads(data)
+    result: dict[str, Any] = json.loads(data)
+    return result
 
 
 def main() -> int:
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", required=True)
     ap.add_argument("--calls", type=int, default=1000)

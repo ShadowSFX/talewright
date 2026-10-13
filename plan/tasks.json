@@ -114,7 +114,7 @@
       "dependencies": [
         "0"
       ],
-      "status": "done",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Vanilla editor + templates build",
@@ -123,7 +123,7 @@
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "children",
+      "commit": "",
       "notes": "Closed automatically when all children closed."
     },
     {
@@ -254,6 +254,31 @@
       "commit": "a6fbf412ba",
       "notes": "",
       "parent": "1"
+    },
+    {
+      "id": "1.7",
+      "parent": "1",
+      "title": "Fork files pass upstream CI static checks",
+      "description": "Every push failed the GitHub Static checks job (prek): scripts with shebangs not executable, mypy generics, codespell en-GB->en-US fixes, unowned fork paths, and the copyright-headers hook replacing Talewright headers. Make fork files comply, exempt fork modules from the Godot header hook (Talewright header checked by add_header.py --check), add CODEOWNERS entries, and add talewright/tools/static_checks.py to run the same hooks locally before pushing (D-027).",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "python talewright/tools/static_checks.py --all passes on every file the fork adds or changes",
+        "Bad automatic codespell edits reviewed and reverted (identifiers, labels, URLs, quoted names); research gates, gap map and tracker unchanged in content",
+        "The next push to origin/talewright gets a green Static checks job (verified with gh run view)"
+      ],
+      "test_strategy": "Local static_checks --all; research gates; gh run list after push.",
+      "files": [
+        ".pre-commit-config.yaml",
+        ".github/CODEOWNERS",
+        "talewright/tools/static_checks.py",
+        "talewright/tools/add_header.py",
+        "plan/UPSTREAM_PATCHES.md",
+        "plan/DECISIONS.md"
+      ],
+      "status": "in_progress",
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "2",
@@ -391,7 +416,7 @@
       "status": "done",
       "priority": 1,
       "acceptance_criteria": [
-        "Every command listed with parameters and behaviour"
+        "Every command listed with parameters and behavior"
       ],
       "test_strategy": "Count commands per category vs help pages.",
       "files": [
@@ -404,7 +429,7 @@
     {
       "id": "2.1.7",
       "title": "Messages, escape codes, menus, battle systems and formulas, save/load, audio, character generator, debug",
-      "description": "Message window behaviour and control characters; menu screens; turn-based and TPB; damage formula semantics; save/load; audio types; generator; debug tools.",
+      "description": "Message window behavior and control characters; menu screens; turn-based and TPB; damage formula semantics; save/load; audio types; generator; debug tools.",
       "parent": "2.1",
       "dependencies": [],
       "status": "done",
@@ -652,12 +677,12 @@
     {
       "id": "3.5.1",
       "title": "Review fixes: battle math and formulas (spec 04)",
-      "description": "Epic 3 review findings 1, 7, 8, 14 and the D-009/spec 04 deny/allow-list inconsistency of 15: re-derive the undocumented battle defaults deliberately and differently (documented behaviour kept), record the reasoning in talewright/docs/battle_defaults.md, fixed-point basis points, Expression facts (v as Array, utility precedence, const_calls_only), parameter minimum 0, TP rules.",
+      "description": "Epic 3 review findings 1, 7, 8, 14 and the D-009/spec 04 deny/allow-list inconsistency of 15: re-derive the undocumented battle defaults deliberately and differently (documented behavior kept), record the reasoning in talewright/docs/battle_defaults.md, fixed-point basis points, Expression facts (v as Array, utility precedence, const_calls_only), parameter minimum 0, TP rules.",
       "parent": "3.5",
       "dependencies": [],
       "priority": 1,
       "acceptance_criteria": [
-        "Every Talewright-defined number in spec 04 cites either an inventory row (documented behaviour) or a reasoned entry in talewright/docs/battle_defaults.md; none matches the review's list of RPG Maker internals (order, x3 crit, max element, two-roll hit, agi + rand(agi/4))",
+        "Every Talewright-defined number in spec 04 cites either an inventory row (documented behavior) or a reasoned entry in talewright/docs/battle_defaults.md; none matches the review's list of RPG Maker internals (order, x3 crit, max element, two-roll hit, agi + rand(agi/4))",
         "Critical chance uses the documented cri x (1 - cev)",
         "Expression section matches core/math/expression.cpp (v[5] on an Array, utility functions shadow helpers at :485, const_calls_only) with an explicit utility allow-list",
         "Rates are basis points; RNG API has chance(bp, 10000); int/float rules for formulas documented; FP contraction facts cited (platform/*/detect.py)",
@@ -1057,7 +1082,7 @@
         "3",
         "4"
       ],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Core compiles without scene/ includes",
@@ -1075,11 +1100,11 @@
       "description": "modules/jrpg/{core,runtime,editor}; jrpg/enabled project setting; bootstrap plugin adds/removes the JRPG main screen dynamically.",
       "parent": "5",
       "dependencies": [],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Setting off => no JRPG tab",
-        "Module off build identical behaviour",
+        "Module off build identical behavior",
         "Test baseline unchanged"
       ],
       "test_strategy": "Bridge screenshot of tabs; doctests.",
@@ -1110,7 +1135,7 @@
         "talewright/tools/build.py",
         "CLAUDE.md"
       ],
-      "commit": "pending",
+      "commit": "ebd8ac64d8",
       "notes": "",
       "status": "done"
     },
@@ -1131,7 +1156,7 @@
       "files": [],
       "commit": "",
       "notes": "",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "5.2",
@@ -1801,7 +1826,7 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Matches a separate brute-force reference written in the test (direct neighbour counting, no lookup tables) on 100 seeded random maps",
+        "Matches a separate brute-force reference written in the test (direct neighbor counting, no lookup tables) on 100 seeded random maps",
         "Hand-made cases: single cell, full block, map corners with extend and border, horizontal loop wrap, two kinds side by side, same kind on two layers"
       ],
       "test_strategy": "Doctests.",
@@ -3895,11 +3920,14 @@
       "status": "pending",
       "priority": 3,
       "acceptance_criteria": [
-        "Findings table finding -> file:line -> fix",
-        "Lists of not-verified and blocked/deferred with reasons"
+        "Findings table finding -> file:line -> fix, committed in plan/evidence/phase5_sweep.md",
+        "Lists of not-verified and blocked/deferred with reasons",
+        "python plan/status.py reports the goal reached"
       ],
       "test_strategy": "Manual + scripted checks.",
-      "files": [],
+      "files": [
+        "plan/evidence/phase5_sweep.md"
+      ],
       "commit": "",
       "notes": ""
     }

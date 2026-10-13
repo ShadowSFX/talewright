@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Prepend the Talewright MIT license header to C/C++ source files that lack one.
 
-Usage: python talewright/tools/add_header.py <file> [<file> ...]
+Usage: python talewright/tools/add_header.py [--check] <file> [<file> ...]
 The header mirrors Godot's 76-column box style (see any core file) with Talewright attribution.
+--check: change nothing; exit 1 listing files whose header is missing or differs. Godot's copyright-headers hook
+skips modules/{claude_bridge,jrpg,mmo}, so this is the header check for those files (talewright/tools/static_checks.py).
 """
 
 import sys
@@ -59,15 +61,25 @@ def header(name: str) -> str:
     return "\n".join(lines) + "\n\n"
 
 
-def main() -> None:
-    for arg in sys.argv[1:]:
+def main() -> int:
+    args = sys.argv[1:]
+    check = "--check" in args
+    bad = []
+    for arg in (a for a in args if a != "--check"):
         p = Path(arg)
         text = p.read_text(encoding="utf-8")
+        if check:
+            if not text.startswith(header(p.name)):
+                bad.append(arg)
+            continue
         if text.startswith("/****"):
             continue
-        p.write_text(header(p.name) + text, encoding="utf-8", newline="\n")
+        p.write_bytes((header(p.name) + text).encode("utf-8"))
         print("header added:", p)
+    for arg in bad:
+        print("missing or different Talewright header:", arg)
+    return 1 if bad else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

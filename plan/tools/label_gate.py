@@ -13,6 +13,7 @@ Exit code 1 if any unwaived label is missing.
 
 import argparse
 import html
+import io
 import re
 import sys
 from pathlib import Path
@@ -29,7 +30,8 @@ def norm(text: str) -> str:
 
 
 def main() -> int:
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser()
     ap.add_argument("--verbose", action="store_true")
     args = ap.parse_args()

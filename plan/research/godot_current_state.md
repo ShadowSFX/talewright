@@ -67,7 +67,7 @@ reports (with more citations) are in `plan/research/planning_notes/01..05`.
   `handles` (`editor/plugins/editor_plugin.h:196-205`); `add_dock` (`:167`), `add_tool_menu_item` (`:170`),
   `add_inspector_plugin` (`:249`), `add_debugger_plugin` (`:261`), `add_export_plugin` (`:240`).
 - `EditorDock` (`editor/docks/editor_dock.h:40`), slots incl. bottom (`:51-65`); bottom panel API deprecated in
-  favour of docks (`doc/classes/EditorPlugin.xml:427`).
+  favor of docks (`doc/classes/EditorPlugin.xml:427`).
 - Main screens: `EditorMainScreen` (`editor/editor_main_screen.h:41`), `add_main_plugin`
   (`editor/editor_main_screen.cpp:262-290`), hide via `set_button_enabled` (`editor/editor_main_screen.cpp:106-112`);
   runtime plugin add/remove `EditorNode::add_editor_plugin/remove_editor_plugin` (`editor/editor_node.h:778-779`).

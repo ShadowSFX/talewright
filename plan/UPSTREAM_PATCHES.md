@@ -9,7 +9,8 @@ Check: `python plan/tools/core_diff_check.py` (fails on any changed upstream pat
 
 | # | File(s) | Change | Reason (why unavoidable) | Task | Upstreamable? |
 |---|---------|--------|--------------------------|------|---------------|
-| — | (none yet) | | | | |
+| 1 | `.pre-commit-config.yaml` | `copyright-headers` hook excludes `modules/(claude_bridge\|jrpg\|mmo)/` | Godot's hook rewrites every C++ header to "This file is part of: GODOT ENGINE" with Godot's copyright; fork-authored files carry the Talewright header (D-027); `talewright/tools/add_header.py --check` checks them instead | 5.1.2 | No (fork-only) |
+| 2 | `.github/CODEOWNERS` | Owner entries for the fork paths (`/plan/`, `/talewright/`, fork modules, `CLAUDE.md`, `TALEWRIGHT.md`) at the end of the file | The `validate-codeowners` hook fails CI for files without an owner (D-027) | 5.1.2 | No (fork-only) |
 
 ## Candidates observed upstream (not patched; only if they start to matter)
 - `thirdparty/enet/enet_godot.cpp:366` — `peers.size() < max_clients && status == HANDSHAKING || status == CONNECTED`

@@ -1,3 +1,34 @@
+/**************************************************************************/
+/*  claude_bridge_plugin.cpp                                              */
+/**************************************************************************/
+/*                         This file is part of:                          */
+/*                               TALEWRIGHT                               */
+/*         a JRPG-focused fork of the Godot Engine (MIT License)          */
+/**************************************************************************/
+/* Copyright (c) 2026-present Talewright contributors.                    */
+/* Based on the Godot Engine, Copyright (c) 2014-present Godot Engine     */
+/* contributors and (c) 2007-2014 Juan Linietsky, Ariel Manzur.           */
+/*                                                                        */
+/* Permission is hereby granted, free of charge, to any person obtaining  */
+/* a copy of this software and associated documentation files (the        */
+/* "Software"), to deal in the Software without restriction, including    */
+/* without limitation the rights to use, copy, modify, merge, publish,    */
+/* distribute, sublicense, and/or sell copies of the Software, and to     */
+/* permit persons to whom the Software is furnished to do so, subject to  */
+/* the following conditions:                                              */
+/*                                                                        */
+/* The above copyright notice and this permission notice shall be         */
+/* included in all copies or substantial portions of the Software.        */
+/*                                                                        */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY   */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,   */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE      */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
+/**************************************************************************/
+
 #include "claude_bridge_plugin.h"
 
 #include "claude_bridge_auth.h"
@@ -252,12 +283,12 @@ void ClaudeBridgePlugin::_connect_debuggers() {
 	// `debug_data` is emitted for every message before dispatch (script_editor_debugger.cpp:984). New sessions
 	// (one per running instance) appear over time, so connect idempotently. get_debugger() returns null past the end
 	// (scene/gui/tab_container.cpp:725), as used by EditorDebuggerNode::add_debugger_plugin.
-	EditorDebuggerNode *edn = EditorDebuggerNode::get_singleton();
-	if (!edn) {
+	EditorDebuggerNode *debugger_node = EditorDebuggerNode::get_singleton();
+	if (!debugger_node) {
 		return;
 	}
 	const Callable cb = callable_mp(this, &ClaudeBridgePlugin::_on_debug_data);
-	for (int i = 0; ScriptEditorDebugger *dbg = edn->get_debugger(i); i++) {
+	for (int i = 0; ScriptEditorDebugger *dbg = debugger_node->get_debugger(i); i++) {
 		if (!dbg->is_connected("debug_data", cb)) {
 			dbg->connect("debug_data", cb);
 		}
@@ -360,11 +391,11 @@ void ClaudeBridgePlugin::_send_to_game(const String &p_command, const Array &p_a
 	ScriptEditorDebugger *target = nullptr;
 	int target_index = -1;
 	int active = 0;
-	EditorDebuggerNode *edn = EditorDebuggerNode::get_singleton();
-	for (int i = 0; edn && edn->get_debugger(i); i++) {
-		if (edn->get_debugger(i)->is_session_active()) {
+	EditorDebuggerNode *debugger_node = EditorDebuggerNode::get_singleton();
+	for (int i = 0; debugger_node && debugger_node->get_debugger(i); i++) {
+		if (debugger_node->get_debugger(i)->is_session_active()) {
 			if (active == wanted) {
-				target = edn->get_debugger(i);
+				target = debugger_node->get_debugger(i);
 				target_index = i;
 				break;
 			}

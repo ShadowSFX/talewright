@@ -4,8 +4,8 @@ Decisions: D-009 (formulas), D-010 (determinism, RNG), D-019 (battle systems), D
 numbers are Talewright-defined, documented and data-driven). Inventory: RM-FRM-*, RM-BTL-*, RM-SKL-*, RM-TRT-*,
 RM-EFF-*, RM-STA-*, RM-CLS-*.
 
-**How defaults are chosen.** Where the official documentation states a behaviour, Talewright implements that
-behaviour (the inventory row is cited). Where it is silent (`08_runtime_systems.md` "not verified" list, items 5–12),
+**How defaults are chosen.** Where the official documentation states a behavior, Talewright implements that
+behavior (the inventory row is cited). Where it is silent (`08_runtime_systems.md` "not verified" list, items 5–12),
 Talewright picks its own rule on game-design grounds, deliberately not the community-known RPG Maker internals, and
 records the reasoning in `talewright/docs/battle_defaults.md`. Every such number is a field of `JRPGBattleRules`
 (part of `JRPGSystemData`), so projects can retune it.
@@ -122,7 +122,7 @@ combination is undocumented (`08_runtime_systems.md:685`). Talewright uses an **
   tpb_fill_steps)` per 60 Hz step (`tpb_fill_steps` default 240, i.e. the fastest battler fills in 4 s). Casting time
   and the rest of TPB are specified in epic 27.
 - Escape (undocumented, item 5; Talewright's own): chance % = clamp(50 + 50 · (party_avg_agi − troop_avg_agi) /
-  max(1, troop_avg_agi) + 15 · failed_attempts, 5, 95), computed in integers; guaranteed after a pre-emptive start;
+  max(1, troop_avg_agi) + 15 · failed_attempts, 5, 95), computed in integers; guaranteed after a preemptive start;
   impossible when the battle forbids escape. Constants live in `JRPGBattleRules`.
 - Victory rewards: EXP (× EXP rate; reserve members per system option), gold (doubled by the gold-doubling party
   ability), drops (`1/N` each from the `loot` stream; the drop-doubling party ability doubles the chance, documented

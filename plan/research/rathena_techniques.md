@@ -1,4 +1,4 @@
-# rAthena techniques catalogue (task 2.3)
+# rAthena techniques catalog (task 2.3)
 
 Reference: rAthena commit `d4b8e7b8f16061cc2496d377ac8f777ce72a4f39` (2026-10-06), read-only at
 `C:\Users\Relic\Desktop\ro server\rathena` (the owner's Ragnarok Relic submodule). Paths below are relative to
@@ -25,7 +25,7 @@ Each row: technique → why it matters → rAthena reference → Talewright mapp
 |---|---|---|---|---|
 | B1 | One loop: due timers, then socket poll with timeout = next timer | Deterministic, lock-free, low idle CPU | `ra:src/common/core.cpp:388-391`; `ra:src/common/timer.cpp:357-412`; `ra:src/common/socket.cpp:892-1037` | zone loop (E15) |
 | B2 | Bounded per-session write queue (1 MB client cap), stall timeout, flush only dirty sessions | Slow/dead clients cannot exhaust memory/CPU | `ra:src/common/socket.cpp:257-263,822-890,1016-1024,1689-1761` | session queues (E14) |
-| B3 | Per-IP connection-rate limit with allow/deny rules | Cheap pre-auth DDoS defence | `ra:src/common/socket.cpp:1112-1210`; `ra:conf/packet_athena.conf` | per-IP limits (E14/E40) |
+| B3 | Per-IP connection-rate limit with allow/deny rules | Cheap pre-auth DDoS defense | `ra:src/common/socket.cpp:1112-1210`; `ra:conf/packet_athena.conf` | per-IP limits (E14/E40) |
 | B4 | Table-driven packet dispatch with length checks and session-state gating | Malformed/out-of-phase packets never reach logic | `ra:src/common/packets.hpp:665-752`; `ra:src/map/clif.cpp:25728-25798` | generated dispatch tables + state gates (E14) |
 | B5 | Login brute-force IP bans, registration flood limits | Account security | `ra:src/login/loginclif.cpp:222-223,520-531`; `ra:src/login/login.cpp:770-778` | E17/E40 |
 
@@ -59,7 +59,7 @@ Each row: technique → why it matters → rAthena reference → Talewright mapp
 | E1 | Save only what changed (cached last-saved copy; per-row item diff; dirty vars; zero deletes the row) | DB load drops by orders of magnitude | `ra:src/char/char.cpp:257-749`; `ra:src/map/intif.cpp:432-435`; `ra:src/char/inter.cpp:601-653` | dirty tracking (E16) |
 | E2 | Autosave one player per tick (interval/(players+1)) + saves triggered by risky events | Smooth DB load; small loss window | `ra:src/map/pc.cpp:13002-13041`; `ra:src/map/map.hpp:1121-1133` | E16 |
 | E3 | Unique item instance IDs `(owner << 32) | counter` | Dupes traceable | `ra:src/map/pc.cpp:15334-15336` | item UIDs (E16) |
-| E4 | Two-phase trade (lock, confirm, re-validate vs snapshot, apply, save both); shop-version check on purchase | Classic dupe/race defences | `ra:src/map/trade.cpp:181-239,586-686`; `ra:src/map/vending.cpp:134` | E19/E38 |
+| E4 | Two-phase trade (lock, confirm, re-validate vs snapshot, apply, save both); shop-version check on purchase | Classic dupe/race defenses | `ra:src/map/trade.cpp:181-239,586-686`; `ra:src/map/vending.cpp:134` | E19/E38 |
 | E5 | Item/zeny/GM/chat logs with bitmask config | Auditing | `ra:src/map/log.cpp:207-341` | audit logs (E16/E39) |
 | E6 | Mapreg (global vars) batched writes, immediate inserts/deletes | Cheap global state | `ra:src/map/mapreg.cpp:62-112,230-264` | global variables (E16) |
 

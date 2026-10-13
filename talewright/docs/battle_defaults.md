@@ -2,7 +2,7 @@
 
 Talewright's battle rules come from two places:
 
-- **Documented behaviour**: where the official RPG Maker MZ documentation describes how something works, Talewright
+- **Documented behavior**: where the official RPG Maker MZ documentation describes how something works, Talewright
   behaves the same way, so designers' expectations carry over. The inventory row that documents it is given below.
 - **Talewright rules**: where the documentation is silent, Talewright does not copy anyone's engine internals
   (`plan/DECISIONS.md` D-020, D-022). It picks its own rule for a stated design reason.

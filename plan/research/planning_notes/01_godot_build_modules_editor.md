@@ -144,7 +144,7 @@ Their script-side GDVIRTUAL counterparts are at `:128-133`.
 
 **Trade-off: what GDExtension can see**
 - `extension_api.json` only includes ClassDB classes where `is_class_exposed` is true, each tagged with an `api_type` of core/editor/… (`extension_api_dump.cpp:917-941`). `GDREGISTER_INTERNAL_CLASS` sets `exposed=false` (`core/object/class_db.h:273-280,580-583`).
-- `EditorNode` and `EditorMainScreen` are never ClassDB-registered. `register_editor_types.cpp` only references `EditorNode::` statics (`:302,342`).
+- `EditorNode` and `EditorMainScreen` are never ClassDB-registered. `register_editor_types.cpp` only references `EditorNode::` static members (`:302,342`).
 - Also C++-only: `EditorPlugins::add_by_type` and `EditorNode::add_init_callback` (`editor_node.h:785`).
 - GDExtension instead gets `editor_add_plugin`, `editor_remove_plugin` and `editor_help_load_xml_*` (`gdextension_interface.cpp:1682-1705,1883-1886`), handled through `GDExtensionEditorPlugins` (`gdextension.h:185-227`, consumed at `editor_node.cpp:9424-9428`).
 - The exposed surface is `EditorInterface` (e.g. `get_editor_main_screen`, `set_main_screen_editor`, `editor/editor_interface.h:122,127`) plus the classes registered at `register_editor_types.cpp:155-206`.

@@ -292,3 +292,13 @@
 *.py                                          @godotengine/buildsystem
 SConstruct                                    @godotengine/buildsystem
 SCsub                                         @godotengine/buildsystem
+
+# Talewright fork additions (last, so they take precedence over the catch-all rules above)
+
+/CLAUDE.md                                    @ShadowSFX
+/TALEWRIGHT.md                                @ShadowSFX
+/modules/claude_bridge/                       @ShadowSFX
+/modules/jrpg/                                @ShadowSFX
+/modules/mmo/                                 @ShadowSFX
+/plan/                                        @ShadowSFX
+/talewright/                                  @ShadowSFX

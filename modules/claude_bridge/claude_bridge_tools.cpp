@@ -756,9 +756,9 @@ static Dictionary _run_status() {
 	d["scene"] = bar->get_playing_scene();
 	d["pid"] = (int64_t)bar->get_current_process();
 	bool connected = false;
-	EditorDebuggerNode *edn = EditorDebuggerNode::get_singleton();
-	for (int i = 0; edn && edn->get_debugger(i); i++) {
-		connected = connected || edn->get_debugger(i)->is_session_active();
+	EditorDebuggerNode *debugger_node = EditorDebuggerNode::get_singleton();
+	for (int i = 0; debugger_node && debugger_node->get_debugger(i); i++) {
+		connected = connected || debugger_node->get_debugger(i)->is_session_active();
 	}
 	d["debugger_connected"] = connected;
 	return d;

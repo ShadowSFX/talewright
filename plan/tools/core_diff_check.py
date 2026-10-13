@@ -29,14 +29,14 @@ OWNED = (
 TABLE_HEADER = re.compile(r"^\|\s*#\s*\|\s*File\(s\)\s*\|")
 
 
-def git_paths(root: Path, *cmd: str) -> list:
+def git_paths(root: Path, *cmd: str) -> list[str]:
     out = subprocess.run(["git", *cmd], cwd=root, capture_output=True, check=True).stdout
     return [p for p in out.decode("utf-8").split("\0") if p]
 
 
-def ledger_paths(text: str) -> set:
+def ledger_paths(text: str) -> set[str]:
     """Backticked paths in the File(s) column of the ledger table (other backticks in the document don't count)."""
-    listed = set()
+    listed: set[str] = set()
     in_table = False
     for line in text.splitlines():
         if TABLE_HEADER.match(line):

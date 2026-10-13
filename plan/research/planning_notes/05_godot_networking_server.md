@@ -101,7 +101,7 @@ I verified everything below against the 4.7.2-stable source. Paths are relative 
   - `public_visibility` defaults to true (xml:58).
   - `set_visibility_for`, `add_visibility_filter(Callable)` and `update_visibility` (h:108-116).
   - Filters are ANDed and then combined with the per-peer set (cpp:194-208). They are re-run every idle or physics frame whenever any filter exists (cpp:88-100, 306-308).
-- **Sync and delta behaviour:**
+- **Sync and delta behavior:**
   - Full syncs are sent unreliable (scene_replication_interface.cpp:836, 851). Deltas are sent reliable (746, 763).
   - Deltas use a 64-bit index mask (multiplayer_synchronizer.cpp:426-433), so the practical cap is 64 watched properties. This is inferred from the mask; I found no explicit check.
   - A single state larger than the MTU is dropped: "TODO Handle single state above MTU." (scene_replication_interface.cpp:832-833).
@@ -221,7 +221,7 @@ I verified everything below against the 4.7.2-stable source. Paths are relative 
   - Brotli is "Only brotli decompression is supported." (compression.cpp:51-52, 111-112); only the decoder is vendored (thirdparty/README.md:104).
   - Versions: zstd 1.5.7, zlib 1.3.2, brotli 1.2.0 (README:1304-1307, 1292-1295, 96-99).
 - **Other storage helpers:** `StreamPeerGZIP` (stream_peer_gzip.h:54-57), plus `FileAccessCompressed`, `FileAccessEncrypted` and `ConfigFile` (core/io/*.h).
-- **Variant marshalling:**
+- **Variant marshaling:**
   - `decode_variant(..., p_allow_objects=false)` (marshalls.h:222) has a recursion-depth limit (marshalls.cpp:187).
   - Decoding objects returns ERR_UNAUTHORIZED unless explicitly allowed (718). When allowed, it instantiates any class by name and sets its properties (729-770). Never allow it on input from clients.
   - Script equivalents are `bytes_to_var` and `bytes_to_var_with_objects` (core/variant/variant_utility.cpp:1055-1107; @GlobalScope.xml:192 warning).
@@ -269,7 +269,7 @@ I scanned every doc XML for MMO / massively / large-scale / thousands of. There 
   - ENetConnection (4095 peers per host, 255 channels, DTLS, zstd, RTT stats, broadcast).
   - Headless and dedicated-server export with placeholder resources.
   - A ClassDB-registered custom MainLoop, or SceneTree with multiple MultiplayerAPIs.
-  - Build profiles and module stripping, WorkerThreadPool, safe Variant marshalling with objects off, compression, HTTPClient for backend calls, and HMAC/RSA/CSPRNG.
+  - Build profiles and module stripping, WorkerThreadPool, safe Variant marshaling with objects off, compression, HTTPClient for backend calls, and HMAC/RSA/CSPRNG.
 - **Things to fix or work around:**
   - One engine per process, so plan multi-process sharding.
   - ENet objects are not thread-safe; give each host one owning thread.

@@ -30,22 +30,22 @@ I checked the important claims against the 4.7.2-stable source; citations are `p
 
 **Why not the stock 2D editor with `forward_canvas` plugins:**
 - `CanvasItemEditor` only forwards input to the plugins that are editing the current selection (`canvas_item_editor_plugin.cpp:2772`).
-- The "always forward input" option (`editor/plugins/editor_plugin.cpp:257-259`) is only honoured by the 3D editor (`editor/scene/3d/node_3d_editor_plugin.cpp:2203`). So the JRPG tools would disappear whenever a non-JRPG node is selected.
+- The "always forward input" option (`editor/plugins/editor_plugin.cpp:257-259`) is only honored by the 3D editor (`editor/scene/3d/node_3d_editor_plugin.cpp:2203`). So the JRPG tools would disappear whenever a non-JRPG node is selected.
 - The 2D editor's own shortcuts would also collide with the tools.
-- Keep this as the fallback. The fix would be a ~5-line patch that could go upstream: make `_gui_input_viewport` honour the always-forward option.
+- Keep this as the fallback. The fix would be a ~5-line patch that could go upstream: make `_gui_input_viewport` honor the always-forward option.
 
 **Main risk:** tight coupling to the editor's open-scene lifecycle (clicking a map opens a scene tab; switching, closing, external reloads, the order of `edit()`/`make_visible()`). World sharing also has gaps: `CanvasLayer` children of a map don't show in the JRPG view.
 
 **Mitigation:**
 - Put all `EditorNode` access in one `MapEditSession` adapter that re-binds on `scene_changed`/`scene_closed`.
-- Use "preview tab" behaviour: auto-close the previous map tab if it's unmodified.
+- Use "preview tab" behavior: auto-close the previous map tab if it's unmodified.
 - Make the **first map task a spike**: open, paint, undo, save, reopen, run, all checked through the bridge. Fall back to the 2D-plugin route if it fails; the data model is the same.
 - Record each brush stroke as one undo action that stores a compact before/after patch (`_apply_patch(PackedInt32Array)`), not thousands of `set_cell` calls.
 - Cross-map tools (event search, finding switch usages) can read `PackedScene::get_state()` without instancing the map.
 
 Also replace Godot terrains with **your own autotile resolver**:
 - It applies the RPG Maker same-kind 8-neighbour rule, then picks the matching tile from the baked atlas.
-- `set_cells_terrain_connect` is slow and rewrites neighbouring cells in non-RPG-Maker ways when several terrains touch.
+- `set_cells_terrain_connect` is slow and rewrites neighboring cells in non-RPG-Maker ways when several terrains touch.
 - Keep the terrain metadata so the stock editor still works.
 
 ## 2. All-C++ presentation vs GDScript screens
@@ -61,7 +61,7 @@ Also replace Godot terrains with **your own autotile resolver**:
   - The sources are embedded in the engine binary, using the same pattern as `modules/gdscript/editor/script_templates/SCsub` (`template_builders.make_templates`).
 
 **Deciding reasons:**
-1. **Customisation.** RPG Maker users can override *any* method through JS plugins. GDVIRTUAL hooks can't cover that surface; editable GDScript screens can.
+1. **Customization.** RPG Maker users can override *any* method through JS plugins. GDVIRTUAL hooks can't cover that surface; editable GDScript screens can.
 2. **Iteration speed for the agent.** The UI is the most visually iterative part. GDScript hot-reloads, while each C++ tweak costs an MSVC relink plus an editor restart.
 3. **A smaller, stable C++ API.** Add-ons target the logic layer, which is the part that needs doctest coverage and determinism.
 
@@ -70,7 +70,7 @@ Export templates don't decide this: the C++ runtime needs custom templates eithe
 **Mitigations:**
 - **Version drift of the copied scripts:** stamp each managed file with a version and hash. An "Upgrade JRPG scripts" tool overwrites untouched files and lists the ones the user changed.
 - **Script correctness:** a doctest compiles every embedded `.gd` file with the GDScript parser.
-- **Behaviour:** check it through bridge end-to-end runs.
+- **Behavior:** check it through bridge end-to-end runs.
 - **Plugin parity:** add a `JRPGPluginRegistry` for ordered hook scripts, with plugin parameters exposed as `@export` vars.
 
 ## 3. Database format
@@ -116,7 +116,7 @@ Export templates don't decide this: the C++ runtime needs custom templates eithe
 - **Large data.** Debugger packets are capped at 8 MiB (`core/debugger/remote_debugger_peer.cpp:69,84-85`). Send images as temp-file paths, as `scene_debugger.cpp:540-563` already does.
 - **Game logs.** Game output reaching the editor is rate-limited (`network/limits/debugger/max_chars_per_second` = 32768, `main.cpp:2295`). Keep a game-side ring buffer via print/error handlers and fetch it on demand.
 - **JSON numbers.** All numbers parse as `double` (`core/io/json.cpp:393`). Echo integer JSON-RPC ids as integers and cast integer arguments.
-- **Security.** Check the Host header as well as Origin (DNS-rebinding defence).
+- **Security.** Check the Host header as well as Origin (DNS-rebinding defense).
 - **Survive restarts.** Every build restarts the editor. Use a persistent token and a fixed port so the `claude mcp add` registration stays valid, and make the Python CLI the agent's primary interface.
 
 **Is registering the debugger capture at EDITOR init level in the game process safe? Yes.**
@@ -207,7 +207,7 @@ Caveats:
    Mitigations: resolve labels across the tree into a path; serialize interpreter state as paths; use a whitelisted formula context or a small custom parser.
 8. **Tile fidelity** (animated A1 water frames 0-1-2-1, A3/A4 walls, table tiles, shadows, star-tile priority). Bake the atlas, use your own resolver, and drive tests from tables.
 9. **Verification blind spots.** `[Editor]` doctests don't create an `EditorNode`, and judging pixels is fuzzy. Assert on state queries through the bridge. Use fixed seeds, window size, editor scale and DPI. Use golden screenshots with tolerance.
-10. **Legal/IP.** Never copy RTP assets, `rmmz_*.js` code, default database content or help text. Re-implement behaviour clean-room from documentation, with original generated assets. The importer is only for user-owned projects.
+10. **Legal/IP.** Never copy RTP assets, `rmmz_*.js` code, default database content or help text. Re-implement behavior clean-room from documentation, with original generated assets. The importer is only for user-owned projects.
 
 ### Critical Files for Implementation
 These are upstream Godot files; the working directory is empty.

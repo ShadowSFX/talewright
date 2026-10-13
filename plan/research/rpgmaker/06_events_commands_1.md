@@ -1,6 +1,6 @@
 # RPG Maker MZ — Events & Event Commands (part 1): sourced feature inventory
 
-Clean-room research notes for Talewright. All behaviour below is paraphrased in our own words from the official RPG Maker MZ help (English). Command and field names are quoted as names only. No code.
+Clean-room research notes for Talewright. All behavior below is paraphrased in our own words from the official RPG Maker MZ help (English). Command and field names are quoted as names only. No code.
 
 ## 1. Pages covered
 
@@ -36,8 +36,8 @@ Notes on the help itself:
 ### AREA EVT — Event system, pages, conditions, triggers, priority, quick events, editor
 
 ### RM-EVT-001 — Three kinds of events
-- **What:** Events are the data that produce in-game happenings (dialogue, chests, boss fights and so on) in response to game state and player actions. The help splits them into three kinds.
-- **Behaviour:**
+- **What:** Events are the data that produce in-game happenings (dialog, chests, boss fights and so on) in response to game state and player actions. The help splits them into three kinds.
+- **Behavior:**
   - Map Events: run on the map screen. Used for NPC talk, chests, and also for imageless story/progression logic such as moving the player between places. Story progression is generally built with this kind.
   - Battle Events: run on the battle screen, e.g. an enemy changing form once its HP falls under a threshold. Authored in the database's Troops tab.
   - Common Events: shared, generic events that Map Events and Battle Events can call, e.g. the effect of a special item. Authored in the database's Common Events tab.
@@ -46,14 +46,14 @@ Notes on the help itself:
 
 ### RM-EVT-002 — Map event model (where / when / trigger / what)
 - **What:** A map event is described by four things: its map location, the situation in which it is present (appearance conditions), the action that starts it (trigger), and what it does (contents).
-- **Behaviour:**
+- **Behavior:**
   - Visible things (people, chests) are made by giving the event an image; invisible logic (doorways, automatic cut-scenes) uses events with no image.
   - Authoring flow: first place the event on the map (location plus contents), then fill in conditions and the rest.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_01.html
 
 ### RM-EVT-003 — Event pages (up to 20 per event)
 - **What:** One map event can hold several pages, each a separate variant chosen by game state.
-- **Behaviour:**
+- **Behavior:**
   - Maximum of 20 pages per event.
   - Each page has its own image, trigger and contents (and its own conditions, options, priority and movement, per the page settings).
   - In effect a single map event can act as up to 20 different events, depending on conditions.
@@ -61,7 +61,7 @@ Notes on the help itself:
 
 ### RM-EVT-004 — Active page selection rule
 - **What:** Decides which page of a map event is in effect.
-- **Behaviour:**
+- **Behavior:**
   - Out of all pages whose conditions are currently satisfied, the page with the highest page number wins.
   - If no page satisfies its conditions, the event does nothing on the map (01_09_03 likewise says no event occurs).
   - A page with no conditions enabled always qualifies.
@@ -70,7 +70,7 @@ Notes on the help itself:
 
 ### RM-EVT-005 — Switches (global ON/OFF flags)
 - **What:** Game-wide boolean flags used to record story progress (e.g. "quest accepted", "boss beaten").
-- **Behaviour:**
+- **Behavior:**
   - Value is ON or OFF; every switch is OFF when a new game starts.
   - Changed with the [Control Switches] command.
   - Several events can use the same switch in their page conditions, so turning one switch ON can change many events at once.
@@ -79,7 +79,7 @@ Notes on the help itself:
 
 ### RM-EVT-006 — Variables (global integer storage)
 - **What:** Game-wide integer slots for counts and calculations.
-- **Behaviour:**
+- **Behavior:**
   - Integer values; every variable is 0 when a new game starts.
   - Changed with [Control Variables] (assignment or arithmetic with other values).
   - Can hold game data (e.g. player HP, gold owned) so that event conditions and results can depend on it.
@@ -88,7 +88,7 @@ Notes on the help itself:
 
 ### RM-EVT-007 — Naming switches and variables
 - **What:** Creators can label each switch and variable.
-- **Behaviour:**
+- **Behavior:**
   - The help suggests using names that make each slot's purpose clear.
   - Names are entered in a [Name] field in the switch/variable selection windows.
   - Which number tracks which game state is entirely up to the creator.
@@ -96,27 +96,27 @@ Notes on the help itself:
 
 ### RM-EVT-008 — Self Switches (A–D, per event)
 - **What:** Four ON/OFF flags owned by one map event, used only by that event.
-- **Behaviour:**
+- **Behavior:**
   - Four per event, named A, B, C, D.
   - Typical use: a chest that tracks "already opened" in a self switch, with a "closed" page and an "opened" page, so its item can only be taken once.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_01.html
 
 ### RM-EVT-009 — Event editing mode
 - **What:** The editor mode for placing and editing map events.
-- **Behaviour:**
+- **Behavior:**
   - Turned on with the toolbar [Events] button or menu [Mode] → [Events].
   - In this mode the tile palette is replaced by an Event List (see RM-EVT-012).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_02.html
 
 ### RM-EVT-010 — Creating a new map event
 - **What:** Placing a new event on the map.
-- **Behaviour:**
+- **Behavior:**
   - Double-click an empty spot on the map view in event mode; the [Event Editor] window opens; confirm with [OK].
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_02.html
 
 ### RM-EVT-011 — Event icon, re-editing and moving
 - **What:** How placed events look in the editor and how they are changed.
-- **Behaviour:**
+- **Behavior:**
   - A placed event shows as an icon on the map, drawn with the image of the event's first page.
   - Double-click the icon to open the Event Editor again.
   - Drag and drop the icon to move the event to another tile.
@@ -125,7 +125,7 @@ Notes on the help itself:
 
 ### RM-EVT-012 — Event List panel
 - **What:** A list of the map's events that replaces the tile palette in event mode.
-- **Behaviour:**
+- **Behavior:**
   - Selection is synced both ways: picking an entry selects the event on the map, and selecting an event on the map highlights its entry.
   - Double-clicking an entry opens the Event Editor.
   - Entries show ID and name, e.g. "001 EV001" **(screenshot)**.
@@ -133,7 +133,7 @@ Notes on the help itself:
 
 ### RM-EVT-013 — Map view context menu (event mode)
 - **What:** Right-click menu on the map view while in event mode.
-- **Behaviour:**
+- **Behavior:**
   - Edit: opens the Event Editor; shown as "New" when the tile has no event yet.
   - Cut: puts the clicked event on the clipboard and removes it from the map.
   - Copy: puts the clicked event on the clipboard.
@@ -145,14 +145,14 @@ Notes on the help itself:
 
 ### RM-EVT-014 — Set Starting Position
 - **What:** Sets where the player and the vehicles begin a new game.
-- **Behaviour:**
+- **Behavior:**
   - Chosen from the map context menu at the clicked tile.
   - Shown on the map with a blue frame (events use white frames).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_02.html
 
 ### RM-EVT-015 — Quick Event: Transfer ("Movement")
 - **What:** A template that makes an invisible event that moves the player somewhere else, for entrances and stairs.
-- **Behaviour:**
+- **Behavior:**
   - The event has no image.
   - Inputs: [Location] (where the player arrives) and [Direction] (which way the player faces on arrival).
   - Like any event, the generated event can be edited and copied afterwards.
@@ -161,14 +161,14 @@ Notes on the help itself:
 
 ### RM-EVT-016 — Quick Event: Door
 - **What:** A template that makes a door event that moves the player somewhere else.
-- **Behaviour:**
+- **Behavior:**
   - Inputs: [Image] (door graphic) and [Location] (where the player arrives).
   - Can be edited afterwards like any event.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_02.html
 
 ### RM-EVT-017 — Quick Event: Treasure
 - **What:** A template that makes a chest that gives its contents only the first time it is checked.
-- **Behaviour:**
+- **Behavior:**
   - Inputs: [Image] (chest graphic) and [Content]: one of gold, an item, a weapon or an armor.
   - Gives its contents only once.
   - Can be edited afterwards like any event.
@@ -176,7 +176,7 @@ Notes on the help itself:
 
 ### RM-EVT-018 — Quick Event: Inn
 - **What:** A template that makes an event which fully heals the party for a fee.
-- **Behaviour:**
+- **Behavior:**
   - Inputs: [Image] and [Price].
   - Fully restores the party.
   - Can be edited afterwards like any event.
@@ -184,7 +184,7 @@ Notes on the help itself:
 
 ### RM-EVT-019 — Event ID
 - **What:** A unique number for each event on a map.
-- **Behaviour:**
+- **Behavior:**
   - Assigned automatically per map, in order of creation.
   - Shown in the Event Editor title bar (e.g. "ID:001 - Event Editor") **(screenshot)**.
   - Used wherever an event is referenced by number, e.g. through variables.
@@ -192,38 +192,38 @@ Notes on the help itself:
 
 ### RM-EVT-020 — Event Name
 - **What:** An editor-only label for the event.
-- **Behaviour:**
+- **Behavior:**
   - Has no effect on the game.
   - Pre-filled with a name based on the ID, e.g. "EV001" **(screenshot)**. It can be renamed.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-021 — Event Memo / Note
 - **What:** A free-text notes field on the event.
-- **Behaviour:**
+- **Behavior:**
   - The text calls it "Memo" and the screenshot labels it "Note:".
   - Any text can be entered.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-022 — Event page tabs
 - **What:** Numbered tabs, one per page, in the Event Editor.
-- **Behaviour:**
+- **Behavior:**
   - Click a tab to edit that page. Page numbers start at 1 **(screenshot)**.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-023 — Event page control buttons
 - **What:** Buttons at the top of the Event Editor that manage pages.
-- **Behaviour:**
+- **Behavior:**
   - New Event Page: adds a page directly after the current one. Each new page's number is one higher.
   - Copy Event Page: puts the current page on the clipboard.
   - Paste Event Page: inserts the clipboard page directly after the current page, with the next number.
   - Delete Event Page: removes the current page. Every later page's number goes down by one.
   - Clear Event Page: resets the current page to its blank initial state.
-  - In a fresh single-page event, Paste and Delete are greyed out **(screenshot)**.
+  - In a fresh single-page event, Paste and Delete are grayed out **(screenshot)**.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-024 — Appearance Conditions (general)
 - **What:** Per-page conditions that decide whether that page can be active.
-- **Behaviour:**
+- **Behavior:**
   - Condition types: Switch, Variable, Self Switch, Item, Actor. Each is turned on with its checkbox and then given a target.
   - With none enabled, the page qualifies unconditionally.
   - With several enabled, all must be true.
@@ -232,35 +232,35 @@ Notes on the help itself:
 
 ### RM-EVT-025 — Page condition: Switch (two slots)
 - **What:** The page qualifies when a chosen switch is ON.
-- **Behaviour:**
+- **Behavior:**
   - The text describes one switch condition, but the screenshot shows two separate [Switch] checkboxes/fields **(screenshot)**. When both are enabled, both must be ON (by the all-conditions rule).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-026 — Page condition: Variable
 - **What:** The page qualifies when a chosen variable reaches a fixed number.
-- **Behaviour:**
+- **Behavior:**
   - One variable and one constant.
   - The text says "greater than" the value, but the screenshot shows the comparison as "≥" (greater than or equal) **(screenshot)**. Conflict noted; see the Not verified list.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-027 — Page condition: Self Switch
 - **What:** The page qualifies when one of this event's self switches (A–D) is ON.
-- **Behaviour:** Self switch letter is chosen from a dropdown **(screenshot)**.
+- **Behavior:** Self switch letter is chosen from a dropdown **(screenshot)**.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-028 — Page condition: Item
 - **What:** The page qualifies when the party holds a chosen item.
-- **Behaviour:** Item is chosen from a dropdown **(screenshot)**.
+- **Behavior:** Item is chosen from a dropdown **(screenshot)**.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-029 — Page condition: Actor
 - **What:** The page qualifies when a chosen actor is a party member.
-- **Behaviour:** Actor is chosen from a dropdown **(screenshot)**.
+- **Behavior:** Actor is chosen from a dropdown **(screenshot)**.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-030 — Page Image
 - **What:** The graphic used for the event on the map while this page is active.
-- **Behaviour:**
+- **Behavior:**
   - Double-click the image box to open [Select an Image]. Pick a file on the left, then the specific image on the right.
   - With no image, nothing is drawn on the map.
   - Choosing [(None)] at the top of the file list removes the image.
@@ -269,54 +269,54 @@ Notes on the help itself:
 
 ### RM-EVT-031 — Autonomous Movement: Type
 - **What:** How the event moves by itself while the page is active.
-- **Behaviour:**
+- **Behavior:**
   - Fixed: does not move. This is the default **(screenshot)**.
   - Random: wanders randomly.
   - Approach: heads toward the player.
-  - Custom: follows a route defined with the [Route...] / Set Movement Route editor (see the MRT area). The Route button is greyed out unless Custom is selected **(screenshot)**.
+  - Custom: follows a route defined with the [Route...] / Set Movement Route editor (see the MRT area). The Route button is grayed out unless Custom is selected **(screenshot)**.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-032 — Autonomous Movement: Speed
 - **What:** How fast the event moves.
-- **Behaviour:**
+- **Behavior:**
   - Higher number = faster.
   - Default shown as "3: x2 Slower" **(screenshot)**. The full list of levels is not given in the text.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-033 — Autonomous Movement: Frequency
 - **What:** How often the event takes a movement step.
-- **Behaviour:**
+- **Behavior:**
   - Higher number = shorter pause between moves.
   - Default shown as "3: Normal" **(screenshot)**. The full list of levels is not given in the text.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-034 — Option: Walking (walking animation)
 - **What:** Plays the walk-cycle animation while the event moves.
-- **Behaviour:**
+- **Behavior:**
   - For people and animals that should look like they are walking.
   - Checked by default **(screenshot)**.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-035 — Option: Stepping (stepping animation)
 - **What:** Keeps the walk-cycle animation running even while the event stands still.
-- **Behaviour:**
+- **Behavior:**
   - For things like rippling water or flickering fire.
   - Unchecked by default **(screenshot)**.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-036 — Option: Direction Fix
 - **What:** Keeps the graphic's facing from changing when the event moves.
-- **Behaviour:** Unchecked by default **(screenshot)**.
+- **Behavior:** Unchecked by default **(screenshot)**.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-037 — Option: Through
 - **What:** Lets the event pass through terrain and events that would normally block it.
-- **Behaviour:** Unchecked by default **(screenshot)**.
+- **Behavior:** Unchecked by default **(screenshot)**.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-038 — Priority
 - **What:** The event's layer relative to the player and other characters. It controls draw order when they overlap, and whether they can share the tile.
-- **Behaviour:**
+- **Behavior:**
   - Below characters: the player and others can walk onto it. If the page image is a tile, passability instead follows that tile's settings.
   - Same as characters: on the same layer as characters and blocks movement into its tile.
   - Above characters: the player and others can walk underneath it.
@@ -326,7 +326,7 @@ Notes on the help itself:
 
 ### RM-EVT-039 — Trigger: Action Button
 - **What:** The page's contents run when the player presses the action button at the event.
-- **Behaviour:**
+- **Behavior:**
   - Fires when the player is next to the event, facing it, and presses the button.
   - Also fires when the player is on the same tile, for events that can be overlapped.
   - Default trigger **(screenshot)**.
@@ -334,33 +334,33 @@ Notes on the help itself:
 
 ### RM-EVT-040 — Trigger: Player Touch
 - **What:** Contents run when the player makes contact with the event.
-- **Behaviour:**
+- **Behavior:**
   - Fires when the player bumps into the event, or steps onto it if overlapping is possible.
   - Also fires on an action-button press while in that position.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-041 — Trigger: Event Touch
 - **What:** Contents run when the event, through its own autonomous movement, reaches the player.
-- **Behaviour:**
+- **Behavior:**
   - Fires when the event's own movement brings it into contact with (or onto, if overlap is possible) the player.
   - Also fires under all the Player Touch conditions.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-042 — Trigger: Autorun
 - **What:** Contents run on their own as soon as the page becomes active (its conditions are met).
-- **Behaviour:** The help says only that it starts when the event appears with its conditions met. Blocking and repeat behaviour is not described on this page.
+- **Behavior:** The help says only that it starts when the event appears with its conditions met. Blocking and repeat behavior is not described on this page.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-043 — Trigger: Parallel
 - **What:** Contents run in a loop for as long as the page is active.
-- **Behaviour:**
+- **Behavior:**
   - Begins once the page's conditions are met and repeats its contents.
   - Keeps running even while other events are executing (concurrent).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-044 — Contents list (event command list)
 - **What:** The ordered list of event commands that runs when the trigger fires.
-- **Behaviour:**
+- **Behavior:**
   - Commands run from top to bottom.
   - Rows starting with "◆" are commands.
   - Rows starting with ":" show a command's extra settings or mark where a branch splits.
@@ -369,14 +369,14 @@ Notes on the help itself:
 
 ### RM-EVT-045 — Adding event commands
 - **What:** Inserting commands into the contents list.
-- **Behaviour:**
+- **Behavior:**
   - Double-click a "◆" row to open the command picker, choose a command, then fill in its settings (some commands have none).
   - Double-clicking a row that already holds a command inserts the new command at that position.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_09_03.html
 
 ### RM-EVT-046 — Contents list context menu
 - **What:** Right-click menu on a command row.
-- **Behaviour:**
+- **Behavior:**
   - New: insert a command at the selected row.
   - Edit: reopen the selected command's settings.
   - Cut: copy the row(s) to the clipboard and remove them.
@@ -391,7 +391,7 @@ Notes on the help itself:
 
 ### RM-EVT-047 — Multi-selecting commands
 - **What:** Selecting a range of commands to act on all of them at once.
-- **Behaviour:**
+- **Behavior:**
   - Select a row, then Shift-click another to select every command block between them (highlighted blue).
   - Right-click to apply a context-menu action to all of them.
   - When branches are involved, a range can only cover rows inside the same branch.
@@ -399,7 +399,7 @@ Notes on the help itself:
 
 ### RM-EVT-048 — Event command picker: tabs and categories
 - **What:** The window used to choose a command. Commands are spread over three tabs and grouped by category.
-- **Behaviour:**
+- **Behavior:**
   - Tab 1: Message, Game Progression, Flow Control, Party, Actor.
   - Tab 2: Movement, Character, Picture, Timing, Screen, Audio & Video.
   - Tab 3: Scene Control, System Settings, Map, Battle, Advanced.
@@ -413,7 +413,7 @@ Notes on the help itself:
 
 ### RM-CMD-001 — Messages: Show Text
 - **What:** Opens the message window and shows a block of text, optionally with a face graphic and a speaker name.
-- **Behaviour:**
+- **Behavior:**
   - Face: face graphic drawn on the left side of the message window. Picked by double-clicking the face box ([Select an Image]).
   - Text: up to 4 lines fit in the window at once. Enter starts a new line.
   - Text right-click menu: [Plugin Help] (shows plugin help), [Insert Color Number] (pick a colour and its number is inserted), [Insert Icon Number] (pick an icon and its number is inserted).
@@ -438,7 +438,7 @@ Notes on the help itself:
 
 ### RM-CMD-002 — Messages: Show Choices
 - **What:** Shows a choice window with up to six options and branches the event by the player's pick.
-- **Behaviour:**
+- **Behavior:**
   - Choices #1–#6: text for each option. Blank options are not shown. Control characters are allowed.
   - Background: style of the choice window. Default "Window" **(screenshot)**.
   - Window Position: where the choice window appears. Shown set to "Right" **(screenshot)**. The full list of positions is not in the text.
@@ -450,7 +450,7 @@ Notes on the help itself:
 
 ### RM-CMD-003 — Messages: Input Number
 - **What:** Shows a number-entry window and stores the entered number in a variable.
-- **Behaviour:**
+- **Behavior:**
   - Variable: where the number is stored.
   - Digits: number of digits accepted, from 1 to 8. Default 1 **(screenshot)**.
   - Battle events: not stated.
@@ -458,7 +458,7 @@ Notes on the help itself:
 
 ### RM-CMD-004 — Messages: Select Item
 - **What:** Shows an item-picker window and stores the ID of the chosen item in a variable.
-- **Behaviour:**
+- **Behavior:**
   - Variable: receives the item ID.
   - Item Type: which category of items is listed. Default "Key Item" **(screenshot)**. The other types are not listed in the text.
   - Battle events: not stated.
@@ -466,7 +466,7 @@ Notes on the help itself:
 
 ### RM-CMD-005 — Messages: Show Scrolling Text
 - **What:** Shows text that scrolls up the screen from the bottom (credits-style).
-- **Behaviour:**
+- **Behavior:**
   - Text: the content.
   - Text right-click menu: [Plugin Help], [Icon Set Viewer].
   - Speed: 1–8. Higher is faster. Default 2 **(screenshot)**.
@@ -477,7 +477,7 @@ Notes on the help itself:
 
 ### RM-CMD-006 — Game Progression: Control Switches
 - **What:** Sets one switch or a range of switches ON or OFF.
-- **Behaviour:**
+- **Behavior:**
   - Switch: [Single] (one switch) or [Range] (a numbered from–to span). Default Single **(screenshot)**.
   - Operation: ON or OFF. Default ON **(screenshot)**.
   - Battle events: not stated.
@@ -485,7 +485,7 @@ Notes on the help itself:
 
 ### RM-CMD-007 — Game Progression: Control Variables
 - **What:** Changes one variable or a range of variables using an operation and an operand.
-- **Behaviour:**
+- **Behavior:**
   - Variable: [Single] or [Range] (from–to).
   - Operations:
     - Set: store the operand.
@@ -525,7 +525,7 @@ Notes on the help itself:
 
 ### RM-CMD-008 — Game Progression: Control Self Switch
 - **What:** Sets a self switch ON or OFF.
-- **Behaviour:**
+- **Behavior:**
   - Self Switch: A, B, C or D. Default A **(screenshot)**.
   - Operation: ON or OFF. Default ON **(screenshot)**.
   - Cannot be used in battle events (stated).
@@ -533,7 +533,7 @@ Notes on the help itself:
 
 ### RM-CMD-009 — Game Progression: Control Timer
 - **What:** Starts or stops a countdown timer.
-- **Behaviour:**
+- **Behavior:**
   - Operation: Start or Stop. Default Start **(screenshot)**.
   - Duration (only for Start): from 0 min 0 sec up to 99 min 59 sec, entered as separate minute and second fields **(screenshot)**.
   - While running, the remaining time is shown in the top-right corner of the screen.
@@ -544,7 +544,7 @@ Notes on the help itself:
 
 ### RM-CMD-010 — Flow Control: Conditional Branch
 - **What:** Runs a block of commands only when a condition holds, optionally with an "else" block.
-- **Behaviour:**
+- **Behavior:**
   - Dialog has four tabs (1–4) of condition types **(screenshot)**. Tab 1 shows Switch, Variable, Self Switch and Timer **(screenshot)**.
   - Create Else Branch: adds a block that runs when the condition is false.
   - Conditions:
@@ -569,7 +569,7 @@ Notes on the help itself:
 
 ### RM-CMD-011 — Flow Control: Loop
 - **What:** Inserts a [Loop] … [Repeat Above] pair. The commands between them repeat.
-- **Behaviour:**
+- **Behavior:**
   - Repeats forever until something exits it, e.g. [Break Loop].
   - Loops can be nested inside other loops.
   - No settings dialog is described.
@@ -578,7 +578,7 @@ Notes on the help itself:
 
 ### RM-CMD-012 — Flow Control: Break Loop
 - **What:** Leaves the current loop.
-- **Behaviour:**
+- **Behavior:**
   - Execution continues with the command after the matching [Repeat Above].
   - No parameters.
   - Battle events: not stated.
@@ -586,7 +586,7 @@ Notes on the help itself:
 
 ### RM-CMD-013 — Flow Control: Exit Event Processing
 - **What:** Ends the current event's contents immediately.
-- **Behaviour:**
+- **Behavior:**
   - No later commands in the list run.
   - No parameters.
   - Battle events: not stated.
@@ -594,7 +594,7 @@ Notes on the help itself:
 
 ### RM-CMD-014 — Flow Control: Common Event
 - **What:** Calls a common event as a subroutine.
-- **Behaviour:**
+- **Behavior:**
   - Common Event: which one to run (dropdown) **(screenshot)**.
   - The caller resumes with its next command only after the called common event has finished.
   - Listed as "Common Events" on the overview page.
@@ -603,14 +603,14 @@ Notes on the help itself:
 
 ### RM-CMD-015 — Flow Control: Label
 - **What:** Marks a named point that [Jump to Label] can jump to.
-- **Behaviour:**
+- **Behavior:**
   - Label Name: the label's name.
   - Battle events: not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_03.html
 
 ### RM-CMD-016 — Flow Control: Jump to Label
 - **What:** Moves execution to a named label.
-- **Behaviour:**
+- **Behavior:**
   - Label Name: the target label.
   - Execution continues with the command right after that label.
   - Only labels on the same event page can be targeted.
@@ -619,7 +619,7 @@ Notes on the help itself:
 
 ### RM-CMD-017 — Flow Control: Comment
 - **What:** A note shown in the contents list that does nothing in the game.
-- **Behaviour:**
+- **Behavior:**
   - Comment: free text.
   - Right-click → [Plugin Help] shows plugin help.
   - Battle events: not stated.
@@ -627,7 +627,7 @@ Notes on the help itself:
 
 ### RM-CMD-018 — Party: Change Gold
 - **What:** Adds or removes party gold.
-- **Behaviour:**
+- **Behavior:**
   - Operation: Increase or Decrease. Default Increase **(screenshot)**.
   - Operand: [Constant] (typed amount, default 1 **(screenshot)**) or [Variable] (amount read from a variable).
   - Gold limits are not stated.
@@ -636,7 +636,7 @@ Notes on the help itself:
 
 ### RM-CMD-019 — Party: Change Items
 - **What:** Adds or removes a quantity of one item.
-- **Behaviour:**
+- **Behavior:**
   - Items: which item.
   - Operation: Increase or Decrease.
   - Operand: Constant or Variable.
@@ -646,18 +646,18 @@ Notes on the help itself:
 
 ### RM-CMD-020 — Party: Change Weapons
 - **What:** Adds or removes a quantity of one weapon.
-- **Behaviour:**
+- **Behavior:**
   - Weapons: which weapon.
   - Operation: Increase or Decrease.
   - Operand: Constant or Variable.
   - The result is clamped to 0–99.
-  - Include Equipped: when checked, a decrease may also take weapons that actors have equipped. In the screenshot the checkbox (labelled "Include Equipment") is greyed out while Increase is selected **(screenshot)**.
+  - Include Equipped: when checked, a decrease may also take weapons that actors have equipped. In the screenshot the checkbox (labeled "Include Equipment") is grayed out while Increase is selected **(screenshot)**.
   - Battle events: not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_04.html
 
 ### RM-CMD-021 — Party: Change Armor
 - **What:** Adds or removes a quantity of one armor.
-- **Behaviour:**
+- **Behavior:**
   - Armor: which armor.
   - Operation: Increase or Decrease.
   - Operand: Constant or Variable.
@@ -669,7 +669,7 @@ Notes on the help itself:
 
 ### RM-CMD-022 — Party: Change Party Member
 - **What:** Adds an actor to the party or removes one.
-- **Behaviour:**
+- **Behavior:**
   - Actors: which actor.
   - Operation: Add or Remove. Default Add **(screenshot)**.
   - Initialize: when adding, resets the actor to the state defined in the database.
@@ -679,19 +679,19 @@ Notes on the help itself:
 
 ### RM-CMD-023 — Actor: Change HP
 - **What:** Raises or lowers HP of an actor or the whole party.
-- **Behaviour:**
+- **Behavior:**
   - Actor:
     - [Fixed]: pick an actor, or [Entire Party] (the default **(screenshot)**).
     - [Variable]: the actor ID is read from a variable.
   - Operation: Increase or Decrease.
   - Operand: Constant (1–9999) or Variable.
-  - Allow Death: when checked, an actor whose HP reaches 0 or less is knocked out. When unchecked, HP stops at 1 instead. The checkbox is greyed out while Increase is selected **(screenshot)**.
+  - Allow Death: when checked, an actor whose HP reaches 0 or less is knocked out. When unchecked, HP stops at 1 instead. The checkbox is grayed out while Increase is selected **(screenshot)**.
   - Battle events: not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_05.html
 
 ### RM-CMD-024 — Actor: Change MP
 - **What:** Raises or lowers MP of an actor or the whole party.
-- **Behaviour:**
+- **Behavior:**
   - Actor: Fixed (an actor or Entire Party) or Variable (ID from a variable).
   - Operation: Increase or Decrease.
   - Operand: Constant (1–9999) or Variable.
@@ -700,7 +700,7 @@ Notes on the help itself:
 
 ### RM-CMD-025 — Actor: Change TP
 - **What:** Raises or lowers TP of an actor or the whole party.
-- **Behaviour:**
+- **Behavior:**
   - Actor: Fixed (an actor or Entire Party) or Variable.
   - Operation: Increase or Decrease.
   - Operand: Constant (1–100) or Variable.
@@ -709,7 +709,7 @@ Notes on the help itself:
 
 ### RM-CMD-026 — Actor: Change State
 - **What:** Adds a state to an actor (or the whole party) or removes one.
-- **Behaviour:**
+- **Behavior:**
   - Actor: Fixed (an actor or Entire Party) or Variable.
   - Operation: Add or Remove. Default Add **(screenshot)**.
   - State: which state. The first entry in the screenshot list is "0001 Dead" **(screenshot)**.
@@ -718,7 +718,7 @@ Notes on the help itself:
 
 ### RM-CMD-027 — Actor: Recover All
 - **What:** Fully heals an actor or the whole party.
-- **Behaviour:**
+- **Behavior:**
   - Restores HP and MP to full and removes every state.
   - Actor: Fixed (an actor or Entire Party) or Variable.
   - Battle events: not stated.
@@ -726,7 +726,7 @@ Notes on the help itself:
 
 ### RM-CMD-028 — Actor: Change EXP
 - **What:** Raises or lowers experience points.
-- **Behaviour:**
+- **Behavior:**
   - Actor: Fixed (an actor or Entire Party) or Variable.
   - Operation: Increase or Decrease.
   - Operand: Constant (1–9,999,999) or Variable.
@@ -736,7 +736,7 @@ Notes on the help itself:
 
 ### RM-CMD-029 — Actor: Change Level
 - **What:** Raises or lowers level.
-- **Behaviour:**
+- **Behavior:**
   - Actor: Fixed (an actor or Entire Party) or Variable.
   - Operation: Increase or Decrease.
   - Operand: Constant (1–98) or Variable.
@@ -746,7 +746,7 @@ Notes on the help itself:
 
 ### RM-CMD-030 — Actor: Change Parameter
 - **What:** Raises or lowers one base parameter.
-- **Behaviour:**
+- **Behavior:**
   - Actor: Fixed (an actor or Entire Party) or Variable.
   - Parameter: which stat. Default "Max HP" **(screenshot)**. The full list is not in the text.
   - Operation: Increase or Decrease.
@@ -756,7 +756,7 @@ Notes on the help itself:
 
 ### RM-CMD-031 — Actor: Change Skill
 - **What:** Teaches an actor a skill or removes one.
-- **Behaviour:**
+- **Behavior:**
   - Actor: Fixed or Variable. The text only mentions a specific actor, but the screenshot's Fixed dropdown shows [Entire Party] **(screenshot)**.
   - Operation: [Learn] (skill becomes usable) or [Forget] (skill becomes unusable).
   - Skill: which skill.
@@ -765,7 +765,7 @@ Notes on the help itself:
 
 ### RM-CMD-032 — Actor: Change Equipment
 - **What:** Changes what an actor has equipped in one slot.
-- **Behaviour:**
+- **Behavior:**
   - Actor: a specific actor (dropdown).
   - Equipment Type: which slot. Default "Weapon" **(screenshot)**.
   - Equipment Item: what to equip. The list includes "None" **(screenshot)**.
@@ -775,7 +775,7 @@ Notes on the help itself:
 
 ### RM-CMD-033 — Actor: Change Name
 - **What:** Renames an actor.
-- **Behaviour:**
+- **Behavior:**
   - Actor: which actor.
   - Name: the new name.
   - Battle events: not stated.
@@ -783,7 +783,7 @@ Notes on the help itself:
 
 ### RM-CMD-034 — Actor: Change Class
 - **What:** Moves an actor to another class.
-- **Behaviour:**
+- **Behavior:**
   - Actor: which actor.
   - Class: the new class.
   - Save Level: when checked, the actor keeps their current level after the change.
@@ -793,7 +793,7 @@ Notes on the help itself:
 
 ### RM-CMD-035 — Actor: Change Nickname
 - **What:** Sets an actor's nickname.
-- **Behaviour:**
+- **Behavior:**
   - Actor: which actor.
   - Nickname: the new nickname.
   - Battle events: not stated.
@@ -801,7 +801,7 @@ Notes on the help itself:
 
 ### RM-CMD-036 — Actor: Change Profile
 - **What:** Sets an actor's profile (bio) text.
-- **Behaviour:**
+- **Behavior:**
   - Actor: which actor.
   - Profile: the new text (a multi-line box **(screenshot)**).
   - Battle events: not stated.
@@ -809,7 +809,7 @@ Notes on the help itself:
 
 ### RM-CMD-037 — Movement: Transfer Player
 - **What:** Moves the party to another location, which can be on another map.
-- **Behaviour:**
+- **Behavior:**
   - Location:
     - [Direct Designation]: a [...] map picker where you click the destination.
     - [Designation with Variables]: variables hold the map ID, X and Y.
@@ -820,7 +820,7 @@ Notes on the help itself:
 
 ### RM-CMD-038 — Movement: Set Vehicle Location
 - **What:** Moves a vehicle to a new spot.
-- **Behaviour:**
+- **Behavior:**
   - Vehicle: boat, ship or airship ("plane" in the help text). Default "Boat" **(screenshot)**.
   - Location: [Direct Designation] (map picker) or [Designation with Variables] (variables for map ID, X, Y).
   - Battle events: not stated.
@@ -828,7 +828,7 @@ Notes on the help itself:
 
 ### RM-CMD-039 — Movement: Set Event Location
 - **What:** Moves an event to another tile on the same map.
-- **Behaviour:**
+- **Behavior:**
   - Event: the target event, or [This Event] for the event running the command.
   - Destinations are limited to the current map.
   - Location:
@@ -841,7 +841,7 @@ Notes on the help itself:
 
 ### RM-CMD-040 — Movement: Scroll Map
 - **What:** Pans the map view without moving the player.
-- **Behaviour:**
+- **Behavior:**
   - Direction: which way to pan. Default "Down" **(screenshot)**.
   - Distance: how many tiles. Default 1 **(screenshot)**.
   - Speed: six levels. Default "4: Normal" **(screenshot)**.
@@ -851,7 +851,7 @@ Notes on the help itself:
 
 ### RM-CMD-041 — Movement: Set Movement Route
 - **What:** Forces the player or a map event to follow a scripted route (the editor is described in the MRT area).
-- **Behaviour:**
+- **Behavior:**
   - The character starts the route immediately.
   - Issuing a new route to a character that is already on one throws the old route away; only the new one applies. To chain routes, use [Wait for Completion] on the earlier one.
   - With [Wait for Completion] on, the player cannot act until the route ends (parallel processes still run). If the character gets blocked and cannot continue, the event stalls at that point. Options such as [Skip If Cannot Move] avoid this.
@@ -861,7 +861,7 @@ Notes on the help itself:
 
 ### RM-CMD-042 — Movement: Get On/Off Vehicle
 - **What:** Toggles boarding: leaves the vehicle if on one, boards a vehicle if not.
-- **Behaviour:**
+- **Behavior:**
   - No parameters.
   - Works the same as the player pressing the action key to board or exit.
   - Does nothing if there is no vehicle to board or no ground to step off onto.
@@ -870,14 +870,14 @@ Notes on the help itself:
 
 ### RM-CMD-043 — Character: Change Transparency
 - **What:** Hides or shows the party on the map.
-- **Behaviour:**
+- **Behavior:**
   - Transparency: [ON] makes the party invisible; [OFF] makes it visible again.
   - Battle events: not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_07.html
 
 ### RM-CMD-044 — Character: Change Player Followers
 - **What:** Turns on or off the display of party members 2+ walking behind the leader.
-- **Behaviour:**
+- **Behavior:**
   - Player Followers: [ON] shows followers; [OFF] hides them.
   - Even with five or more members, only the first four actors are shown on the map.
   - Battle events: not stated.
@@ -885,14 +885,14 @@ Notes on the help itself:
 
 ### RM-CMD-045 — Character: Gather Followers
 - **What:** Moves every follower onto the leader's tile.
-- **Behaviour:**
+- **Behavior:**
   - No parameters.
   - Battle events: not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_07.html
 
 ### RM-CMD-046 — Character: Show Animation
 - **What:** Plays an animation on the map at a character's position.
-- **Behaviour:**
+- **Behavior:**
   - Character: the player or an event the animation is anchored to. Default "Player" **(screenshot)**.
   - Animation: which animation.
   - Wait for Completion: when checked, the event pauses until the animation ends.
@@ -901,7 +901,7 @@ Notes on the help itself:
 
 ### RM-CMD-047 — Character: Show Balloon Icon
 - **What:** Shows an emotion balloon above the player/party member or an event.
-- **Behaviour:**
+- **Behavior:**
   - Character: who the balloon appears over. Default "Player" **(screenshot)**.
   - Balloon Icon: which balloon. Ten built-in kinds, e.g. "!" for surprise and a light bulb for an idea. Default "Exclamation" **(screenshot)**. Users can define their own balloons.
   - Wait for Completion: when checked, the event pauses until the balloon disappears.
@@ -910,7 +910,7 @@ Notes on the help itself:
 
 ### RM-CMD-048 — Character: Erase Event
 - **What:** Temporarily removes the event that is running the command.
-- **Behaviour:**
+- **Behavior:**
   - No parameters.
   - The event stays gone until the party moves to another map.
   - Cannot be used in battle events (stated).
@@ -918,7 +918,7 @@ Notes on the help itself:
 
 ### RM-CMD-049 — Picture: Show Picture
 - **What:** Shows a still image on screen in a numbered picture slot.
-- **Behaviour:**
+- **Behavior:**
   - Number: slot 1–100. Default 1 **(screenshot)**.
   - Image: the picture file.
   - Position:
@@ -936,7 +936,7 @@ Notes on the help itself:
 
 ### RM-CMD-050 — Picture: Move Picture
 - **What:** Moves a displayed picture over time to new position, scale, opacity and blend values.
-- **Behaviour:**
+- **Behavior:**
   - Number: slot 1–100.
   - Easing: four choices:
     - Constant speed (the text calls it "Fixed Speed"; default **(screenshot)**).
@@ -953,7 +953,7 @@ Notes on the help itself:
 
 ### RM-CMD-051 — Picture: Rotate Picture
 - **What:** Spins a displayed picture continuously.
-- **Behaviour:**
+- **Behavior:**
   - Number: slot 1–100.
   - Speed: −90 to 90. Positive turns clockwise, negative turns counter-clockwise, 0 stops. Default 0 **(screenshot)**.
   - The picture turns around the origin set by its most recent Show Picture or Move Picture.
@@ -962,7 +962,7 @@ Notes on the help itself:
 
 ### RM-CMD-052 — Picture: Tint Picture
 - **What:** Changes a displayed picture's colour tone over time.
-- **Behaviour:**
+- **Behavior:**
   - Number (also called "ID" in the help): slot 1–100.
   - Color Tone:
     - Red, Green and Blue offsets, each from −255 to 255.
@@ -978,7 +978,7 @@ Notes on the help itself:
 
 ### RM-CMD-053 — Picture: Erase Picture
 - **What:** Removes a displayed picture.
-- **Behaviour:**
+- **Behavior:**
   - Number/ID: slot 1–100.
   - Battle events: not stated.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_08.html
@@ -991,27 +991,27 @@ All codes below come from the Show Text control-character table. They must be ty
 
 ### RM-MSG-001 — `\V[n]` (variable value)
 - **What:** Inserts the current value of variable n.
-- **Behaviour:** Replaced by the number stored in variable n when the text is shown.
+- **Behavior:** Replaced by the number stored in variable n when the text is shown.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-002 — `\N[n]` (actor name)
 - **What:** Inserts the name of actor n (database actor ID).
-- **Behaviour:** Replaced by that actor's current name.
+- **Behavior:** Replaced by that actor's current name.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-003 — `\P[n]` (party member name)
 - **What:** Inserts the name of the party member in slot n of the current party order.
-- **Behaviour:** Uses party order, not database ID.
+- **Behavior:** Uses party order, not database ID.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-004 — `\G` (currency unit)
 - **What:** Inserts the game's currency unit name.
-- **Behaviour:** No argument.
+- **Behavior:** No argument.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-005 — `\C[n]` (text colour)
 - **What:** Draws the following text in colour n.
-- **Behaviour:**
+- **Behavior:**
   - The colour comes from the palette in the system image "Window.png".
   - Applies to all text after it until changed again.
   - The editor's right-click [Insert Color Number] helps choose n.
@@ -1019,72 +1019,72 @@ All codes below come from the Show Text control-character table. They must be ty
 
 ### RM-MSG-006 — `\I[n]` (icon)
 - **What:** Draws icon n inline in the text.
-- **Behaviour:** The editor's right-click [Insert Icon Number] helps choose n.
+- **Behavior:** The editor's right-click [Insert Icon Number] helps choose n.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-007 — `\{` (bigger text)
 - **What:** Makes the following text one step larger.
-- **Behaviour:** No argument.
+- **Behavior:** No argument.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-008 — `\}` (smaller text)
 - **What:** Makes the following text one step smaller.
-- **Behaviour:** No argument.
+- **Behavior:** No argument.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-009 — `\\` (literal backslash)
 - **What:** Prints a backslash character instead of starting a code.
-- **Behaviour:** Escape for the code prefix.
+- **Behavior:** Escape for the code prefix.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-010 — `\$` (gold window)
 - **What:** Opens the gold (money) window while the message is shown.
-- **Behaviour:** No argument.
+- **Behavior:** No argument.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-011 — `\.` (short wait)
 - **What:** Pauses the text for a quarter of a second.
-- **Behaviour:** 1/4 second wait at that point.
+- **Behavior:** 1/4 second wait at that point.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-012 — `\|` (long wait)
 - **What:** Pauses the text for one second.
-- **Behaviour:** 1 second wait at that point.
+- **Behavior:** 1 second wait at that point.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-013 — `\!` (wait for input)
 - **What:** Pauses the text until the player presses a button.
-- **Behaviour:** No argument.
+- **Behavior:** No argument.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-014 — `\>` (instant display on)
 - **What:** Shows the rest of the current line all at once instead of letter by letter.
-- **Behaviour:** Stays in effect until cancelled with `\<`.
+- **Behavior:** Stays in effect until cancelled with `\<`.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-015 — `\<` (instant display off)
 - **What:** Ends the instant-display effect started by `\>`.
-- **Behaviour:** Text goes back to normal letter-by-letter output.
+- **Behavior:** Text goes back to normal letter-by-letter output.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-016 — `\^` (no input wait)
 - **What:** The message does not wait for the player to press a button once it has finished showing.
-- **Behaviour:** The help's wording is terse ("after displaying the next"). In effect, the message closes or proceeds without waiting for confirmation.
+- **Behavior:** The help's wording is terse ("after displaying the next"). In effect, the message closes or proceeds without waiting for confirmation.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-017 — `\PX[n]` (text X position)
 - **What:** Moves the text drawing position to horizontal coordinate n.
-- **Behaviour:** Measured from the window's top-left corner as origin.
+- **Behavior:** Measured from the window's top-left corner as origin.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-018 — `\PY[n]` (text Y position)
 - **What:** Moves the text drawing position to vertical coordinate n.
-- **Behaviour:** Measured from the window's top-left corner as origin.
+- **Behavior:** Measured from the window's top-left corner as origin.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ### RM-MSG-019 — `\FS[n]` (font size)
 - **What:** Sets the text size to n.
-- **Behaviour:** Absolute size, unlike the relative steps of `\{` / `\}`.
+- **Behavior:** Absolute size, unlike the relative steps of `\{` / `\}`.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_01.html
 
 ---
@@ -1100,19 +1100,19 @@ General rules for every MRT item (from 01_10_06_01):
 
 ### RM-MRT-001 — Route editor: target selector
 - **What:** A dropdown at the top-left that picks whose route this is: the player or an event.
-- **Behaviour:**
+- **Behavior:**
   - Only shown when editing via the [Set Movement Route] command (not for a page's Custom movement).
   - Default "Player" **(screenshot)**.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-002 — Route editor: Preview
 - **What:** Plays the route on the map as a preview.
-- **Behaviour:** Opened with the [Preview...] button.
+- **Behavior:** Opened with the [Preview...] button.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-003 — Route editor: command list
 - **What:** The ordered list of route commands that have been added.
-- **Behaviour:**
+- **Behavior:**
   - New commands go in at the highlighted row.
   - Right-clicking a row opens a menu with actions such as re-editing or copying.
   - An empty list shows one "◇" row **(screenshot)**.
@@ -1120,72 +1120,72 @@ General rules for every MRT item (from 01_10_06_01):
 
 ### RM-MRT-004 — Move Down
 - **What:** One step down.
-- **Behaviour:** Moves one tile in the named direction.
+- **Behavior:** Moves one tile in the named direction.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-005 — Move Left
 - **What:** One step left.
-- **Behaviour:** Moves one tile in the named direction.
+- **Behavior:** Moves one tile in the named direction.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-006 — Move Right
 - **What:** One step right.
-- **Behaviour:** Moves one tile in the named direction.
+- **Behavior:** Moves one tile in the named direction.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-007 — Move Up
 - **What:** One step up.
-- **Behaviour:** Moves one tile in the named direction.
+- **Behavior:** Moves one tile in the named direction.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-008 — Move Lower Left
 - **What:** One diagonal step down-left.
-- **Behaviour:** Moves one tile in the named diagonal direction.
+- **Behavior:** Moves one tile in the named diagonal direction.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-009 — Move Lower Right
 - **What:** One diagonal step down-right.
-- **Behaviour:** Moves one tile in the named diagonal direction.
+- **Behavior:** Moves one tile in the named diagonal direction.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-010 — Move Upper Left
 - **What:** One diagonal step up-left.
-- **Behaviour:** Moves one tile in the named diagonal direction.
+- **Behavior:** Moves one tile in the named diagonal direction.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-011 — Move Upper Right
 - **What:** One diagonal step up-right.
-- **Behaviour:** Moves one tile in the named diagonal direction.
+- **Behavior:** Moves one tile in the named diagonal direction.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-012 — Move at Random
 - **What:** One step in a random direction.
-- **Behaviour:** The direction is randomly one of the four cardinal directions (up, down, left, right).
+- **Behavior:** The direction is randomly one of the four cardinal directions (up, down, left, right).
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-013 — Move Toward Player
 - **What:** One step toward the player.
-- **Behaviour:** Single step.
+- **Behavior:** Single step.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-014 — Move Away From Player
 - **What:** One step away from the player.
-- **Behaviour:** Single step.
+- **Behavior:** Single step.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-015 — 1 Step Forward
 - **What:** One step in the direction the character currently faces.
-- **Behaviour:** Single step.
+- **Behavior:** Single step.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-016 — 1 Step Backward
 - **What:** One step opposite to the direction the character faces.
-- **Behaviour:** Single step.
+- **Behavior:** Single step.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-017 — Jump
 - **What:** Jumps by a relative offset.
-- **Behaviour:**
+- **Behavior:**
   - X and Y offsets, each from −100 to 100. Positive X is right; positive Y is down.
   - The jump ignores obstacles along the way.
   - If [Show Player Followers] is ON, followers (members 2+) do not jump with the leader; they stay where they were.
@@ -1193,182 +1193,182 @@ General rules for every MRT item (from 01_10_06_01):
 
 ### RM-MRT-018 — Wait
 - **What:** Pauses the route for a number of frames.
-- **Behaviour:** 1–999 frames; 60 frames = 1 second.
+- **Behavior:** 1–999 frames; 60 frames = 1 second.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-019 — Face Down (button: "Turn Down")
 - **What:** Turns to face down without moving.
-- **Behaviour:** Changes facing only.
+- **Behavior:** Changes facing only.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-020 — Face Left (button: "Turn Left")
 - **What:** Turns to face left without moving.
-- **Behaviour:** Changes facing only.
+- **Behavior:** Changes facing only.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-021 — Face Right (button: "Turn Right")
 - **What:** Turns to face right without moving.
-- **Behaviour:** Changes facing only.
+- **Behavior:** Changes facing only.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-022 — Face Up (button: "Turn Up")
 - **What:** Turns to face up without moving.
-- **Behaviour:** Changes facing only.
+- **Behavior:** Changes facing only.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-023 — Turn 90° Right
 - **What:** Turns a quarter turn clockwise (to the right).
-- **Behaviour:** Changes facing only.
+- **Behavior:** Changes facing only.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-024 — Turn 90° Left
 - **What:** Turns a quarter turn counter-clockwise (to the left).
-- **Behaviour:** Changes facing only.
+- **Behavior:** Changes facing only.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-025 — Turn 180°
 - **What:** Turns to face the opposite way.
-- **Behaviour:** Changes facing only.
+- **Behavior:** Changes facing only.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-026 — Turn 90° Right or Left
 - **What:** Turns 90° randomly to one side or the other.
-- **Behaviour:** Random quarter turn.
+- **Behavior:** Random quarter turn.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-027 — Turn at Random
 - **What:** Faces a random one of up/down/left/right.
-- **Behaviour:** Changes facing only.
+- **Behavior:** Changes facing only.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-028 — Turn toward Player
 - **What:** Faces in the player's direction.
-- **Behaviour:** Changes facing only.
+- **Behavior:** Changes facing only.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-029 — Turn away from Player
 - **What:** Faces away from the player.
-- **Behaviour:** Changes facing only.
+- **Behavior:** Changes facing only.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-030 — Switch ON
 - **What:** Turns a chosen (global) switch ON from inside the route.
-- **Behaviour:** Switch selected via a dialog (button "Switch ON...") **(screenshot)**.
+- **Behavior:** Switch selected via a dialog (button "Switch ON...") **(screenshot)**.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-031 — Switch OFF
 - **What:** Turns a chosen (global) switch OFF from inside the route.
-- **Behaviour:** Switch selected via a dialog (button "Switch OFF...") **(screenshot)**.
+- **Behavior:** Switch selected via a dialog (button "Switch OFF...") **(screenshot)**.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-032 — Change Speed
 - **What:** Changes the target's autonomous-movement [Speed].
-- **Behaviour:**
+- **Behavior:**
   - The new speed stays after the route has finished.
   - The level is picked in a dialog. The level list is not given in the text.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-033 — Change Frequency
 - **What:** Changes the target's autonomous-movement [Frequency].
-- **Behaviour:** The new frequency stays after the route has finished.
+- **Behavior:** The new frequency stays after the route has finished.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-034 — Walking Animation ON
 - **What:** Turns the target's [Walking] option on.
-- **Behaviour:** Stays after the route has finished.
+- **Behavior:** Stays after the route has finished.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-035 — Walking Animation OFF
 - **What:** Turns the target's [Walking] option off.
-- **Behaviour:** Stays after the route has finished.
+- **Behavior:** Stays after the route has finished.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-036 — Stepping Animation ON
 - **What:** Turns the target's [Stepping] option on.
-- **Behaviour:** Stays after the route has finished.
+- **Behavior:** Stays after the route has finished.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-037 — Stepping Animation OFF
 - **What:** Turns the target's [Stepping] option off.
-- **Behaviour:** Stays after the route has finished.
+- **Behavior:** Stays after the route has finished.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-038 — Direction Fix ON
 - **What:** Turns the target's [Direction Fix] option on.
-- **Behaviour:** Stays after the route has finished.
+- **Behavior:** Stays after the route has finished.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-039 — Direction Fix OFF
 - **What:** Turns the target's [Direction Fix] option off.
-- **Behaviour:** Stays after the route has finished.
+- **Behavior:** Stays after the route has finished.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-040 — Through ON
 - **What:** Turns the target's [Through] option on (pass through obstacles).
-- **Behaviour:** Stays after the route has finished.
+- **Behavior:** Stays after the route has finished.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-041 — Through OFF
 - **What:** Turns the target's [Through] option off.
-- **Behaviour:** Stays after the route has finished.
+- **Behavior:** Stays after the route has finished.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-042 — Transparent ON
 - **What:** Hides the character's graphic.
-- **Behaviour:** Stays after the route has finished.
+- **Behavior:** Stays after the route has finished.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-043 — Transparent OFF
 - **What:** Shows the character's graphic again.
-- **Behaviour:** Stays after the route has finished.
+- **Behavior:** Stays after the route has finished.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-044 — Change Image
 - **What:** Swaps the character's graphic for a chosen image.
-- **Behaviour:** Stays after the route has finished.
+- **Behavior:** Stays after the route has finished.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-045 — Change Opacity
 - **What:** Sets the character graphic's opacity.
-- **Behaviour:**
+- **Behavior:**
   - 0–255; 0 is fully invisible.
   - Stays after the route has finished.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-046 — Change Blend Mode
-- **What:** Sets how the character's colours blend with the map underneath.
-- **Behaviour:**
+- **What:** Sets how the character's colors blend with the map underneath.
+- **Behavior:**
   - Modes: Normal; Additive (lighter/whiter); Multiply (darker); Screen (brighter).
   - Stays after the route has finished.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-047 — Play SE
 - **What:** Plays a chosen sound effect at that point in the route.
-- **Behaviour:** SE picked in a dialog.
+- **Behavior:** SE picked in a dialog.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-048 — Script
 - **What:** Runs an entered script as a route step.
-- **Behaviour:** The script text is entered in a dialog.
+- **Behavior:** The script text is entered in a dialog.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-049 — Option: Repeat Movements
 - **What:** Loops the whole command list.
-- **Behaviour:**
+- **Behavior:**
   - When checked, the list runs again from the start after it finishes, repeatedly.
   - Unchecked by default **(screenshot)**.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-050 — Option: Skip If Cannot Move
 - **What:** Skips blocked steps instead of waiting at them.
-- **Behaviour:**
+- **Behavior:**
   - When checked, any move that cannot be made (e.g. blocked by an obstacle) is skipped.
   - Unchecked by default **(screenshot)**.
 - **Source:** https://rpgmakerofficial.com/product/MZ_help-en/01_10_06_01.html
 
 ### RM-MRT-051 — Option: Wait for Completion
 - **What:** Holds other processing until the whole route has finished.
-- **Behaviour:**
+- **Behavior:**
   - Only available for the [Set Movement Route] command (not for a page's Custom movement).
   - Checked by default **(screenshot)**.
   - With it on, a route that gets blocked stalls the event (see RM-CMD-041).

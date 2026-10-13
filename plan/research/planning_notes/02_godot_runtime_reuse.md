@@ -257,7 +257,7 @@ Everything below was checked against the source at tag **4.7.2-stable** (`gh api
 ## 9. AUDIO
 
 - **AudioStreamPlayer** (`scene/audio/audio_stream_player.h:41`):
-  - Playback: `play(from_pos)` :91, `seek` :92, `get_playback_position` :95. Memorising and resuming BGM is possible with these.
+  - Playback: `play(from_pos)` :91, `seek` :92, `get_playback_position` :95. Memorizing and resuming BGM is possible with these.
   - Settings: `set_volume_db` :79, `set_volume_linear` :82, `set_pitch_scale` :85 (range hint "0.01,4,...,or_greater" at .cpp:286), `set_max_polyphony` :88, `set_bus` :97, `set_stream_paused` :106.
   - `get_stream_playback` :110. Signal `finished` (.cpp:295).
 - **AudioServer** (`servers/audio/audio_server.h:180`): `add_bus` :385, `set_bus_name` :389, `get_bus_index` :391, `set_bus_volume_db/linear` :395-398, `set_bus_send` :401, `set_bus_mute` :407, `add_bus_effect` :413, `set_playback_speed_scale` :430, `set_bus_layout` :488. Effects are in `servers/audio/effects/` (reverb, filter, pitch_shift, delay, eq, compressor, limiter, chorus).

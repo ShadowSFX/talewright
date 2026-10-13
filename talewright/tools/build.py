@@ -21,12 +21,14 @@ from __future__ import annotations
 
 import argparse
 import datetime as _dt
+import io
 import os
 import re
 import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 LOGS = ROOT / "talewright" / "build_logs"
@@ -50,11 +52,11 @@ ERROR_RE = re.compile(
 WARNING_RE = re.compile(r"\bwarning [A-Z]+\d+\b|: warning:", re.I)
 
 
-def existing_talewright_modules() -> list:
+def existing_talewright_modules() -> list[Any]:
     return [m for m in TALEWRIGHT_MODULES if (ROOT / "modules" / m / "config.py").exists()]
 
 
-def stop_locking_processes(stem: str) -> list:
+def stop_locking_processes(stem: str) -> list[Any]:
     """Stop processes running this build's binaries from bin/ (they lock the link output on Windows, LNK1104).
 
     Only `bin/<stem>*` executables are stopped (stem = `godot.windows.<target>`, plus `.x86_64.vanilla` for the
@@ -84,7 +86,8 @@ def stop_locking_processes(stem: str) -> list:
 
 def main() -> int:
     # MSVC output can contain characters the Windows console code page cannot encode.
-    sys.stdout.reconfigure(errors="replace")
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(errors="replace")
     argv = sys.argv[1:]
     extra = []
     if "--" in argv:

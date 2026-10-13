@@ -56,7 +56,7 @@ Its main weaknesses: synchronous SQL on the game thread, MyISAM tables with no t
    - inventory, cart and storage are requested (`pc.cpp:2434-2436`);
    - skill cooldowns and bonus scripts are requested (`pc.cpp:2474-2475`);
    - status-effect data arrives and sets `pc_loaded` (`pc.cpp:14791-14804`).
-   
+
    `LoadEndAck` is ignored until loading is complete (`clif.cpp:10756-10760`).
 
 **How map-servers register and split maps**
@@ -207,7 +207,7 @@ Login and char use a typed `PacketDatabase<Session>` that validates fixed/variab
 - Pathfinding is A* with Manhattan heuristic, straight cost 10 and diagonal 14, and no corner cutting (`src/map/path.cpp:337-399`; `path.hpp:11-14`, `MAX_WALKPATH 32`).
 - Each cell step is its own timer with duration = speed, ×14/10 on diagonals (`unit.cpp:180-247`).
 - The step handler re-checks the next cell, which also handles a path blocked mid-walk (`unit.cpp:542-632`).
-- A new destination while walking is applied at the next cell centre (`unit.cpp:894-899`).
+- A new destination while walking is applied at the next cell center (`unit.cpp:894-899`).
 - Knockback uses `path_blownpos` and only checks cells, not paths (`unit.cpp:1300-1349`).
 
 **Monster AI**
@@ -466,7 +466,7 @@ Login also kicks duplicate logins with 0x2734 (`loginclif.cpp:90-96`).
 - **Staged Apply.** A resumable state machine: planned → generated → validated → files_written → reload_queued → reloaded → exported → verified, or mismatch → rolled_back. It generates a complete new import generation, swaps the link, reloads in a fixed order, exports what the server loaded, compares field by field, and reverts by itself on a mismatch (`CLAUDE.md:43-46`; `docs/design/01-data-and-bridge.md:211-260`).
 - **Wiki parity.** Python reads the same files with the same merge rules, and parity runs compare against the live server through the bridge (`CLAUDE.md:47-50`).
 - **Client-gen and signed launcher** (`CLAUDE.md:51-54`). A headless test client drives login → char → map end to end (`CLAUDE.md:89-91`).
-- **Lessons recorded from rAthena behaviour:**
+- **Lessons recorded from rAthena behavior:**
   - Cached YAML databases size their array to twice the largest ID; huge sentinel IDs made the map-server try to allocate ~62 GB and get OOM-killed (`CLAUDE.md:131-135`; `src/common/database.hpp:194-220`).
   - Kill versus graceful stop and the 4th-signal exit (`CLAUDE.md:136-139`; `src/common/core.cpp:118-125`).
 
@@ -480,7 +480,7 @@ Login also kicks duplicate logins with 0x2734 (`loginclif.cpp:90-96`).
 | 2 | Timers carry entity ID plus data and check they still own the entity on fire; deletion is lazy | Use-after-free and stale-callback safety without reference counting | `unit.cpp:544-557`; `status.cpp:14155`; `timer.cpp:302-319` |
 | 3 | Late timers use the current tick; repeating timers re-arm from now | No catch-up storms after a lag spike | `timer.cpp:376-380`, `:401-404` |
 | 4 | Per-session buffers: bounded write queue, stall timeout, flush list of only "dirty" sessions | A slow or dead client cannot exhaust memory or CPU | `socket.cpp:257-263`, `:822-890`, `:1016-1024`, `:1689-1761` |
-| 5 | Per-IP connection-rate limit plus allow/deny rules | Cheap pre-auth DDoS defence | `socket.cpp:1112-1210`; `conf/packet_athena.conf:21-67` |
+| 5 | Per-IP connection-rate limit plus allow/deny rules | Cheap pre-auth DDoS defense | `socket.cpp:1112-1210`; `conf/packet_athena.conf:21-67` |
 | 6 | Table-driven packet dispatch with length checks and session-state gating | Malformed or out-of-phase packets never reach game logic | `common/packets.hpp:665-752`; `clif.cpp:25728-25798` |
 | 7 | One-time handoff tokens between login → char → map, expiring in 30 s | No password reuse downstream; replay-resistant handoff | `login.cpp:136-150`; `loginchrif.cpp:84-108`; `char_mapif.cpp:1024-1077` |
 | 8 | Online registry with conflict detection that kicks the older session | Stops double-login duplication | `char.cpp:121-160`; `loginclif.cpp:84-108` |
@@ -490,7 +490,7 @@ Login also kicks duplicate logins with 0x2734 (`loginclif.cpp:90-96`).
 | 12 | Save only what changed (cached last-saved copy; per-row item diff; dirty variables; zero deletes the row) | Database load drops by orders of magnitude | `char.cpp:257-749`; `intif.cpp:432-435`; `inter.cpp:601-653`; `mapreg.cpp:62-112` |
 | 13 | Autosave one player per tick, plus saves triggered by risky events | Smooth database load; small loss window on crash | `pc.cpp:13002-13041`; `map.hpp:1121-1133`; `trade.cpp:682-685` |
 | 14 | Unique item instance IDs `(owner_id << 32) | counter` | Duplicated items become traceable and auditable | `pc.cpp:15334-15336`; `log.cpp:225-234` |
-| 15 | Two-phase trade (lock, confirm, re-validate against a snapshot, apply, save both); shop-version check on purchase | Classic duplication and race defences | `trade.cpp:181-239`, `:586-686`; `vending.cpp:134` |
+| 15 | Two-phase trade (lock, confirm, re-validate against a snapshot, apply, save both); shop-version check on purchase | Classic duplication and race defenses | `trade.cpp:181-239`, `:586-686`; `vending.cpp:134` |
 | 16 | 8x8 block grid, separate monster lists, collect-then-apply with deferred free | Fast area queries; safe when callbacks remove objects | `map.cpp:120`, `:293-366`, `:407-506`, `:719-791` |
 | 17 | On movement, scan only the strip that entered or left view | Visibility updates scale with view edge, not view area | `map.cpp:1077-1125`; `unit.cpp:621-631` |
 | 18 | Server-decided movement: client sends a destination; server runs A* with no corner cutting and steps cell by cell with speed-based timers; path length caps | Kills speed and teleport hacks; one source of truth | `clif.cpp:11379-11425`; `unit.cpp:180-247`, `:542-632`, `:841-916`; `path.cpp:337-399` |
@@ -524,5 +524,5 @@ Login also kicks duplicate logins with 0x2734 (`loginclif.cpp:90-96`).
 15. **Small apparent bugs (not verified at runtime):**
     - `chmapif_server_destroy` closes the socket only when `fd == -1`, which looks inverted (`char_mapif.cpp:1483-1488`).
     - `char_online_data_cleanup` returns at the first still-connected character instead of continuing the loop (`char.cpp:2210-2213`).
-    
+
     Both are reminders to test the reconnect and cleanup paths.

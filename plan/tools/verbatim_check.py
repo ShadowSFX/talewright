@@ -12,10 +12,12 @@ Exit code 1 if any shared run is found.
 
 import argparse
 import html
+import io
 import re
 import sys
 import urllib.request
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / "talewright" / "build_logs" / "mz_help_cache"
@@ -34,13 +36,14 @@ def page_text(url: str) -> str:
     return html.unescape(re.sub(r"(?s)<[^>]+>", " ", raw))
 
 
-def ngrams(text: str, n: int) -> set:
+def ngrams(text: str, n: int) -> set[Any]:
     words = WORD_RE.findall(text.lower())
     return {" ".join(words[i : i + n]) for i in range(len(words) - n + 1)}
 
 
 def main() -> int:
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=9)
     ap.add_argument("files", nargs="*")
