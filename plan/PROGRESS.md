@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 16:02 -0600
+- **Updated:** 2026-10-13 16:06 -0600
 - **Current task:** none
-- **Last completed:** 3.2 UPSTREAM_PATCHES.md ledger
+- **Last completed:** 4.6 Editor tools: tree, nodes, project
 - **Next task:** 3.3 Specs
-- **Done leaf tasks:** 30
+- **Done leaf tasks:** 31
 <!-- status:end -->
 
 ## Log
@@ -69,4 +69,6 @@
 | 2026-10-13 16:01 -0600 | 3.1 | started: DECISIONS.md (containers: 3 pending->in_progress) |  |
 | 2026-10-13 16:02 -0600 | 3.1 | done: DECISIONS.md — DECISIONS.md: 25 decisions (D-001..D-024 + D-015a), all with context/options/choice/why/reversal (containers: 3 in_progress->pending) | 7d0964b4de |
 | 2026-10-13 16:02 -0600 | 3.2 | started: UPSTREAM_PATCHES.md ledger (containers: 3 pending->in_progress) |  |
-| 2026-10-13 16:02 -0600 | 3.2 | done: UPSTREAM_PATCHES.md ledger — UPSTREAM_PATCHES.md ledger with format, candidates (ENet notes) and enforcement script core_diff_check.py; core diff currently empty (containers: 3 in_progress->pending) | pending |
+| 2026-10-13 16:02 -0600 | 3.2 | done: UPSTREAM_PATCHES.md ledger — UPSTREAM_PATCHES.md ledger with format, candidates (ENet notes) and enforcement script core_diff_check.py; core diff currently empty (containers: 3 in_progress->pending) | 81bb919732 |
+| 2026-10-13 16:03 -0600 | 4.6 | started: Editor tools: tree, nodes, project (containers: 4 pending->in_progress) |  |
+| 2026-10-13 16:06 -0600 | 4.6 | done: Editor tools: tree, nodes, project — Editor tools: editor_scene_tree, editor_node_get/set (undoable), editor_open_scene, editor_save_scene, editor_select, project_info, project_settings_get, project_list_files, project_read_file (res:// only, traversal rejected), editor_rescan, editor_undo_redo; variant<->JSON helpers; 2 new doctests; e2e verified on plain_2d (set+undo) (containers: 4 in_progress->pending) | pending |

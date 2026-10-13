@@ -11,6 +11,7 @@
 #include "modules/claude_bridge/claude_bridge_http.h"
 #include "modules/claude_bridge/claude_bridge_mcp.h"
 #include "modules/claude_bridge/claude_bridge_plugin.h"
+#include "modules/claude_bridge/claude_bridge_tools.h"
 
 namespace TestClaudeBridge {
 
@@ -398,6 +399,35 @@ TEST_CASE("[ClaudeBridge][MCP] tools/list and tools/call (sync, error, unknown, 
 	res = parse_obj(mcp.finish(r.id, r.call))["result"];
 	CHECK(bool(res["isError"])); // Not completed before the deadline.
 	stored_call.unref();
+}
+
+TEST_CASE("[ClaudeBridge][Tools] JSON conversion of variants and values") {
+	CHECK(ClaudeBridgeTools::variant_to_json(Variant(3)) == Variant(3));
+	CHECK(String(ClaudeBridgeTools::variant_to_json(Vector2(1, 2))) == "Vector2(1, 2)");
+	CHECK(String(ClaudeBridgeTools::variant_to_json(StringName("abc"))) == "abc");
+	Array a;
+	a.push_back(Color(1, 0, 0));
+	const Array ja = ClaudeBridgeTools::variant_to_json(a);
+	CHECK(String(ja[0]) == "Color(1, 0, 0, 1)");
+
+	bool ok = false;
+	CHECK(Vector2(ClaudeBridgeTools::json_to_value("Vector2(10, 20)", Variant::VECTOR2, ok)) == Vector2(10, 20));
+	CHECK(ok);
+	CHECK(int(ClaudeBridgeTools::json_to_value(2.0, Variant::INT, ok)) == 2);
+	CHECK(ok);
+	CHECK(String(ClaudeBridgeTools::json_to_value("hi", Variant::STRING, ok)) == "hi");
+	ClaudeBridgeTools::json_to_value("not a vector", Variant::VECTOR2, ok);
+	CHECK_FALSE(ok);
+}
+
+TEST_CASE("[ClaudeBridge][Tools] res:// path validation rejects traversal") {
+	CHECK(ClaudeBridgeTools::validate_res_path("res://main.tscn") == "res://main.tscn");
+	CHECK(ClaudeBridgeTools::validate_res_path("main.tscn") == "res://main.tscn");
+	CHECK(ClaudeBridgeTools::validate_res_path("res://a/./b/../c.gd") == "res://a/c.gd");
+	CHECK(ClaudeBridgeTools::validate_res_path("res://../secret.txt").is_empty());
+	CHECK(ClaudeBridgeTools::validate_res_path("res://a/../../x").is_empty());
+	CHECK(ClaudeBridgeTools::validate_res_path("C:/Windows/win.ini").is_empty());
+	CHECK(ClaudeBridgeTools::validate_res_path("").is_empty());
 }
 
 } // namespace TestClaudeBridge

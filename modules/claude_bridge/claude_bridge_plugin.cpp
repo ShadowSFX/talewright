@@ -1,6 +1,7 @@
 #include "claude_bridge_plugin.h"
 
 #include "claude_bridge_auth.h"
+#include "claude_bridge_tools.h"
 
 #include "core/config/project_settings.h"
 #include "core/io/dir_access.h"
@@ -204,6 +205,7 @@ void ClaudeBridgePlugin::_register_tools() {
 	status.func = &ClaudeBridgePlugin::_tool_bridge_status;
 	status.userdata = this;
 	mcp.register_tool(status);
+	ClaudeBridgeTools::register_editor_tools(mcp, this);
 }
 
 void ClaudeBridgePlugin::RequestHandler::handle_http_request(uint64_t p_connection_id, const ClaudeBridgeHTTPRequest &p_request) {

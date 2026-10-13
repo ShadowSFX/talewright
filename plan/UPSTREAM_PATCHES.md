@@ -6,7 +6,6 @@ upstream (`git diff 4.7.2-stable -- <path>` non-empty outside `modules/jrpg`, `m
 merging later upstream releases stays easy.
 
 Check: `python plan/tools/core_diff_check.py` (fails on any changed upstream path not listed in the table below).
-must list exactly the files below.
 
 | # | File(s) | Change | Reason (why unavoidable) | Task | Upstreamable? |
 |---|---------|--------|--------------------------|------|---------------|
