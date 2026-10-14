@@ -93,6 +93,9 @@ public:
 	// Checks a System start position (task 8.3.2): p_map_id is 0 (not set) or a listed map, and p_cell is inside that
 	// map. r_message says what is wrong.
 	static Error check_start_position(int p_map_id, const Vector2i &p_cell, String *r_message = nullptr);
+	// Makes cell p_cell of p_map the System start position (the start map and cell; the direction stays) as one undo
+	// action of the database (Set Start Position Here, task 8.4.3.2). The map must be listed in the map list.
+	static Error set_start_position(JRPGMap *p_map, const Vector2i &p_cell, String *r_message = nullptr);
 };
 
 // A brush stroke (spec 05 "one brush stroke = one undo action"; tasks 8.4.2, 8.4.3.1) on a tile layer, the regions or
@@ -144,6 +147,11 @@ public:
 	// Writes p_values[i] to p_cells[i] of p_target (any target; values clamped to its range). Returns how many cells
 	// changed with this call.
 	int set_values(int p_target, const Vector<Vector2i> &p_cells, const PackedInt32Array &p_values);
+	// The automatic layer (spec 05, D-040; RM-MAP-019, RM-MAP-022): p_value goes to the layer its kind belongs to.
+	// Autotile and wall kinds (p_ground_kind) replace the Ground tile; plain tiles stack on Objects and Upper, which
+	// hold at most two tiles, older below: a new tile goes on top and the oldest drops out, and painting the tile
+	// already on top changes nothing. p_value 0 erases the cell's top-most tile. Returns how many values changed.
+	int add_auto(const Vector<Vector2i> &p_cells, int p_value, bool p_ground_kind);
 	// Files the stroke as one undo action named p_name (none when nothing changed); returns how many cells changed,
 	// all targets together.
 	int end(const String &p_name);

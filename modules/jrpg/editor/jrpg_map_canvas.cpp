@@ -31,23 +31,30 @@
 
 #include "jrpg_map_canvas.h"
 
+#include "jrpg_database_editing.h"
+
 #include "core/input/input_event.h"
 #include "core/object/callable_mp.h"
 #include "editor/editor_node.h"
 #include "editor/editor_string_names.h"
+#include "editor/gui/editor_toaster.h"
 #include "editor/gui/editor_zoom_widget.h"
 #include "editor/settings/editor_settings.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/button.h"
 #include "scene/gui/label.h"
 #include "scene/gui/panel_container.h"
+#include "scene/gui/popup_menu.h"
 #include "scene/gui/subviewport_container.h"
 #include "scene/main/viewport.h"
 #include "scene/resources/font.h"
 #include "scene/resources/world_2d.h"
 
+#include "modules/jrpg/core/jrpg_autotile_resolver.h"
+#include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_map_shapes.h"
+#include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 
 namespace {
@@ -256,8 +263,9 @@ bool JRPGMapCanvas::pick_tile(const Vector2i &p_cell) {
 		return false;
 	}
 	const Ref<JRPGMapData> map_data = map->get_map_data();
-	int layer = session->get_layer();
-	if (map_data->get_cell(layer, p_cell) == 0) {
+	const bool automatic = session->get_layer() == JRPGMapEditSession::LAYER_AUTO;
+	int layer = automatic ? JRPGMapData::LAYER_GROUND : session->get_layer();
+	if (automatic || map_data->get_cell(layer, p_cell) == 0) {
 		layer = JRPGMapData::LAYER_COUNT - 1;
 		while (layer >= 0 && map_data->get_cell(layer, p_cell) == 0) {
 			layer--;
@@ -265,10 +273,40 @@ bool JRPGMapCanvas::pick_tile(const Vector2i &p_cell) {
 		if (layer < 0) {
 			return false;
 		}
-		session->set_layer(layer);
+		if (!automatic) {
+			session->set_layer(layer); // With the automatic layer, the tile finds its layer when drawn.
+		}
 	}
 	session->set_value(map_data->get_cell(layer, p_cell));
 	return true;
+}
+
+bool JRPGMapCanvas::set_start_position_here(const Vector2i &p_cell) {
+	String message;
+	if (JRPGMapEditing::set_start_position(_get_map(), p_cell, &message) != OK) {
+		if (EditorToaster::get_singleton()) {
+			EditorToaster::get_singleton()->popup_str(vformat(TTR("Could not set the start position: %s"), message), EditorToaster::SEVERITY_WARNING);
+		}
+		return false;
+	}
+	overlay->queue_redraw();
+	return true;
+}
+
+void JRPGMapCanvas::_cell_menu_pressed(int p_id) {
+	set_start_position_here(menu_cell);
+}
+
+void JRPGMapCanvas::_database_changed() {
+	overlay->queue_redraw(); // The start position may have moved.
+}
+
+void JRPGMapCanvas::_stroke_cells(const Vector<Vector2i> &p_cells) {
+	if (stroke_auto) {
+		stroke->add_auto(p_cells, stroke_value, stroke_ground_kind);
+	} else {
+		stroke->add(p_cells);
+	}
 }
 
 void JRPGMapCanvas::_begin_stroke(const Vector2 &p_point) {
@@ -288,8 +326,12 @@ void JRPGMapCanvas::_begin_stroke(const Vector2 &p_point) {
 		}
 		return;
 	}
-	const int target = regions ? JRPGMapStroke::TARGET_REGIONS : (stroke_tool == JRPGMapEditSession::TOOL_SHADOW ? JRPGMapStroke::TARGET_SHADOWS : session->get_layer());
 	const int value = stroke_tool == JRPGMapEditSession::TOOL_ERASER || stroke_tool == JRPGMapEditSession::TOOL_SHADOW ? 0 : (regions ? session->get_region() : session->get_value());
+	stroke_auto = !regions && stroke_tool != JRPGMapEditSession::TOOL_SHADOW && session->get_layer() == JRPGMapEditSession::LAYER_AUTO;
+	stroke_ground_kind = stroke_auto && map->get_palette_kind(value) != JRPGAutotileResolver::KIND_PLAIN;
+	stroke_value = value;
+	// The automatic layer writes to the layers its rules pick; the stroke's own layer is then only nominal.
+	const int target = regions ? JRPGMapStroke::TARGET_REGIONS : (stroke_tool == JRPGMapEditSession::TOOL_SHADOW ? JRPGMapStroke::TARGET_SHADOWS : (stroke_auto ? int(JRPGMapData::LAYER_GROUND) : session->get_layer()));
 	stroke.instantiate();
 	if (stroke->begin(map, target, value) != OK) {
 		stroke.unref();
@@ -300,7 +342,7 @@ void JRPGMapCanvas::_begin_stroke(const Vector2 &p_point) {
 	switch (stroke_tool) {
 		case JRPGMapEditSession::TOOL_PENCIL:
 		case JRPGMapEditSession::TOOL_ERASER: {
-			stroke->add({ cell });
+			_stroke_cells({ cell });
 		} break;
 		case JRPGMapEditSession::TOOL_SHADOW: {
 			// The first quarter decides: shadowed becomes clear for the whole stroke, clear becomes shadowed.
@@ -311,8 +353,10 @@ void JRPGMapCanvas::_begin_stroke(const Vector2 &p_point) {
 			_shadow_quarters({ stroke_last_half });
 		} break;
 		case JRPGMapEditSession::TOOL_FILL: {
+			// With the automatic layer, the area of matching cells on the layer the tile goes to.
 			const Ref<JRPGMapData> map_data = map->get_map_data();
-			stroke->add(JRPGMapShapes::flood_fill(JRPGMapStroke::read_all(map_data, target), map_data->get_size(), cell));
+			const int area_layer = stroke_auto ? (stroke_ground_kind ? JRPGMapData::LAYER_GROUND : JRPGMapData::LAYER_OBJECTS) : target;
+			_stroke_cells(JRPGMapShapes::flood_fill(JRPGMapStroke::read_all(map_data, area_layer), map_data->get_size(), cell));
 			_finish_stroke();
 		} break;
 		default: {
@@ -338,7 +382,7 @@ void JRPGMapCanvas::_continue_stroke(const Vector2 &p_point) {
 		return;
 	}
 	if (stroke_tool == JRPGMapEditSession::TOOL_PENCIL || stroke_tool == JRPGMapEditSession::TOOL_ERASER) {
-		stroke->add(JRPGMapShapes::line(stroke_last, cell)); // No gaps when the mouse moves fast.
+		_stroke_cells(JRPGMapShapes::line(stroke_last, cell)); // No gaps when the mouse moves fast.
 	}
 	stroke_last = cell;
 	overlay->queue_redraw();
@@ -349,7 +393,7 @@ void JRPGMapCanvas::_finish_stroke() {
 		return;
 	}
 	if (stroke_tool == JRPGMapEditSession::TOOL_RECTANGLE || stroke_tool == JRPGMapEditSession::TOOL_ELLIPSE) {
-		stroke->add(_shape_cells());
+		_stroke_cells(_shape_cells());
 	}
 	stroke->end(JRPGMapEditSession::get_action_name(stroke_tool, session->get_mode()));
 	stroke.unref();
@@ -393,6 +437,12 @@ void JRPGMapCanvas::handle_input(const Ref<InputEvent> &p_event) {
 			pick_tile(cell);
 		} else if (session->get_mode() == JRPGMapEditSession::MODE_REGIONS) {
 			pick_region(cell);
+		} else if (map->get_map_data()->has_cell(cell)) {
+			// Events mode: what can be done at this cell.
+			menu_cell = cell;
+			cell_menu->set_position(overlay->get_screen_position() + mouse->get_position());
+			cell_menu->reset_size();
+			cell_menu->popup();
 		}
 		overlay->accept_event();
 		return;
@@ -461,6 +511,19 @@ void JRPGMapCanvas::_draw_overlay() {
 			}
 		}
 	}
+	// Where new games begin, when it is on this map.
+	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
+	const Ref<JRPGDatabase> database = editing ? editing->get_database() : Ref<JRPGDatabase>();
+	const Ref<JRPGSystemData> system = database.is_valid() ? database->get_system() : Ref<JRPGSystemData>();
+	if (system.is_valid() && system->get_start_map_id() > 0 && system->get_start_map_id() == map->get_map_data()->get_map_id()) {
+		const Rect2 start_rect(offset + Vector2(system->get_start_cell()) * cell, cell);
+		overlay->draw_rect(start_rect, get_theme_color(SNAME("accent_color"), EditorStringName(Editor)), false, Math::round(2 * EDSCALE));
+		const Ref<Texture2D> icon = get_editor_theme_icon(SNAME("PlayStart"));
+		if (icon.is_valid()) {
+			const Vector2 icon_size = icon->get_size() * MIN(1.0f, MIN(cell.x, cell.y) / MAX(icon->get_size().x, 1.0f));
+			overlay->draw_texture_rect(icon, Rect2(start_rect.get_center() - icon_size / 2, icon_size), false);
+		}
+	}
 	// The map's edge in the color the 2D editor frames the game's view with (editors/2d/viewport_border_color).
 	const Color border = EditorSettings::get_singleton() ? Color(EDITOR_GET("editors/2d/viewport_border_color")) : Color(0.4, 0.4, 1.0, 0.4);
 	overlay->draw_rect(bounds, border, false, Math::round(2 * EDSCALE));
@@ -516,10 +579,16 @@ void JRPGMapCanvas::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
 			session->start(); // Follows the scene tabs from now on; _map_changed runs when the map is another one.
+			if (JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton()) {
+				editing->connect(SNAME("database_changed"), callable_mp(this, &JRPGMapCanvas::_database_changed));
+			}
 		} break;
 		case NOTIFICATION_EXIT_TREE: {
 			_store_view();
 			session->stop();
+			if (JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton()) {
+				editing->disconnect(SNAME("database_changed"), callable_mp(this, &JRPGMapCanvas::_database_changed));
+			}
 		} break;
 		case EditorSettings::NOTIFICATION_EDITOR_SETTINGS_CHANGED: {
 			if (!EditorSettings::get_singleton()->check_changed_settings_in_group("editors/panning")) {
@@ -536,6 +605,7 @@ void JRPGMapCanvas::_notification(int p_what) {
 			}
 		} break;
 		case NOTIFICATION_THEME_CHANGED: {
+			cell_menu->set_item_icon(0, get_editor_theme_icon(SNAME("PlayStart")));
 			center_button->set_button_icon(get_editor_theme_icon(SNAME("CenterView")));
 			grid_button->set_button_icon(get_editor_theme_icon(SNAME("GridToggle")));
 			readout_panel->add_theme_style_override(SceneStringName(panel), get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles)));
@@ -612,6 +682,11 @@ JRPGMapCanvas::JRPGMapCanvas() {
 	readout = memnew(Label);
 	readout->set_accessibility_name(TTR("Cell under the mouse"));
 	readout_panel->add_child(readout);
+
+	cell_menu = memnew(PopupMenu);
+	cell_menu->add_item(TTR("Set Start Position Here"), 0);
+	cell_menu->connect(SceneStringName(id_pressed), callable_mp(this, &JRPGMapCanvas::_cell_menu_pressed));
+	add_child(cell_menu);
 
 	panner.instantiate();
 	panner->set_callbacks(callable_mp(this, &JRPGMapCanvas::_pan_callback), callable_mp(this, &JRPGMapCanvas::_zoom_callback));

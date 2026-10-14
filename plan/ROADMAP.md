@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 106, in_progress: 0, done: 134, blocked: 0, deferred: 3 (of 243)
+**Totals:** pending: 103, in_progress: 0, done: 137, blocked: 0, deferred: 3 (of 243)
 
 ## [x] 0 Bootstrap and task system
 
@@ -173,12 +173,12 @@ JRPGMap scenes, map editor canvas, cell cache, runtime map and movement.
   - [x] **8.3.1** Map list authoring API and bridge tools (P1) _(commit: a80ed0a213)_
   - [x] **8.3.2** Start map checks and start position picker (P1) _(deps: 8.3.1; commit: da64948eea)_
   - [x] **8.3.3** Map tree and properties UI (P1) _(deps: 8.3.2; commit: 3d1e41f6ae)_
-- [ ] **8.4** Map canvas tools (P1) _(deps: 8.3, 7.4)_
+- [x] **8.4** Map canvas tools (P1) _(deps: 8.3, 7.4)_
   - [x] **8.4.1** Map canvas view and MapEditSession (P1) _(commit: 58ce91703c)_
   - [x] **8.4.2** Drawing tools with undo patches (P1) _(deps: 8.4.1; commit: bf93360f24)_
-  - [ ] **8.4.3** Shadow, region, event modes and auto-layer (P1) _(deps: 8.4.2)_
-    - [x] **8.4.3.1** Region mode and shadow pen (P1) _(deps: 8.4.2; commit: pending)_
-    - [ ] **8.4.3.2** Automatic layer and Set Start Position Here (P1) _(deps: 8.4.3.1)_
+  - [x] **8.4.3** Shadow, region, event modes and auto-layer (P1) _(deps: 8.4.2)_
+    - [x] **8.4.3.1** Region mode and shadow pen (P1) _(deps: 8.4.2; commit: 998d1fb7d6)_
+    - [x] **8.4.3.2** Automatic layer and Set Start Position Here (P1) _(deps: 8.4.3.1; commit: pending)_
 - [ ] **8.5** Tile palette (P1) _(deps: 8.4)_
 - [ ] **8.6** Runtime map, cell-step movement, camera, transfer (P1) _(deps: 8.2)_
   - [ ] **8.6.1** Scene manager, map loading and transfer (P1)

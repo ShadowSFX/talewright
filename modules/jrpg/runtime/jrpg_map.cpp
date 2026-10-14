@@ -169,6 +169,10 @@ void JRPGMap::_update_cell(int p_layer, const Vector2i &p_cell) {
 	target->set_cell(p_cell, entry.get("source_id", TileSet::INVALID_SOURCE), coords, entry.get("alternative", 0));
 }
 
+int JRPGMap::get_palette_kind(int p_index) const {
+	return p_index > 0 && p_index < kinds.size() ? int(kinds[p_index]) : int(JRPGAutotileResolver::KIND_PLAIN);
+}
+
 void JRPGMap::_draw_shadows() {
 	// Each shadowed quarter darkened: bit 1 top left, 2 top right, 4 bottom left, 8 bottom right (spec 05).
 	if (map_data.is_null()) {
@@ -242,6 +246,7 @@ void JRPGMap::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_rebuild_count"), &JRPGMap::get_rebuild_count);
 	ClassDB::bind_method(D_METHOD("get_tile_layer", "layer", "above"), &JRPGMap::get_tile_layer);
 	ClassDB::bind_method(D_METHOD("get_cell_size"), &JRPGMap::get_cell_size);
+	ClassDB::bind_method(D_METHOD("get_palette_kind", "index"), &JRPGMap::get_palette_kind);
 
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "map_data", PROPERTY_HINT_RESOURCE_TYPE, "JRPGMapData"), "set_map_data", "get_map_data");
 

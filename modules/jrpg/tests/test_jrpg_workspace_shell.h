@@ -55,6 +55,7 @@ TEST_CASE("[SceneTree][JRPG][Workspace] The workspace builds and follows its bru
 
 	// The brush the toolbar shows is the canvas session's.
 	const Ref<JRPGMapEditSession> session = shell->get_map_canvas()->get_session();
+	CHECK(session->get_layer() == JRPGMapEditSession::LAYER_AUTO); // The automatic layer by default.
 	session->set_tool(JRPGMapEditSession::TOOL_SHADOW);
 	session->set_layer(2);
 	session->set_value(7);

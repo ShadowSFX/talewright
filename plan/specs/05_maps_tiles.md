@@ -193,6 +193,8 @@ sweep). All numbers are fields of `JRPGSystemData`.
 
 ## Map editor (editor, `JRPGMapCanvas` + `MapEditSession`)
 Modes: map (pencil, rectangle, ellipse, flood fill, shadow pen, eraser, eyedropper), region, event. Auto-layer
-selection by tile kind (RM-MAP) or explicit layer. One brush stroke = one undo action with a compact before/after
+selection by tile kind (D-040: autotiles and walls replace Ground; plain tiles stack on Objects and Upper, two at
+most, the oldest dropping out; the eraser clears the top-most tile) or explicit layer. Events mode: Set Start Position
+Here (8.4.3.2); event placement comes with the event editor (9.7, D-039). One brush stroke = one undo action with a compact before/after
 patch of the touched layers/cells. The canvas renders the edited map scene through a SubViewport sharing its World2D.
 Spike first (task 8.1): open → paint → undo → save → reopen → run, verified through the bridge.

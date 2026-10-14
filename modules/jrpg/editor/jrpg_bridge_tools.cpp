@@ -69,7 +69,9 @@
 
 #include "modules/claude_bridge/claude_bridge_registry.h"
 #include "modules/claude_bridge/claude_bridge_tools.h"
+#include "modules/jrpg/core/jrpg_autotile_resolver.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
+#include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_map_list.h"
 #include "modules/jrpg/core/jrpg_map_shapes.h"
@@ -1536,7 +1538,8 @@ void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 		p_call->fail("\"tool\" must be pencil, rectangle, ellipse, fill or eraser.");
 		return;
 	}
-	const int layer = map_target(p_args, p_call);
+	const bool automatic = String(p_args.get("layer", "")).strip_edges().to_lower() == "auto";
+	const int layer = automatic ? int(JRPGMapData::LAYER_GROUND) : map_target(p_args, p_call);
 	if (layer < 0) {
 		return;
 	}
@@ -1568,20 +1571,30 @@ void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 		return;
 	}
 	const Ref<JRPGMapData> data = map->get_map_data();
+	// The automatic layer as the canvas draws with it: the tile's kind picks its layer (JRPGMapStroke::add_auto).
+	const bool ground_kind = automatic && map->get_palette_kind(int(value)) != JRPGAutotileResolver::KIND_PLAIN;
+	const auto draw = [&](const Vector<Vector2i> &p_cells) {
+		if (automatic) {
+			stroke->add_auto(p_cells, int(value), ground_kind);
+		} else {
+			stroke->add(p_cells);
+		}
+	};
 	switch (tool) {
 		case JRPGMapEditSession::TOOL_RECTANGLE: {
-			stroke->add(JRPGMapShapes::rectangle(points[0], points[1]));
+			draw(JRPGMapShapes::rectangle(points[0], points[1]));
 		} break;
 		case JRPGMapEditSession::TOOL_ELLIPSE: {
-			stroke->add(JRPGMapShapes::ellipse(points[0], points[1]));
+			draw(JRPGMapShapes::ellipse(points[0], points[1]));
 		} break;
 		case JRPGMapEditSession::TOOL_FILL: {
-			stroke->add(JRPGMapShapes::flood_fill(JRPGMapStroke::read_all(data, layer), data->get_size(), points[0]));
+			const int area_layer = automatic ? (ground_kind ? JRPGMapData::LAYER_GROUND : JRPGMapData::LAYER_OBJECTS) : layer;
+			draw(JRPGMapShapes::flood_fill(JRPGMapStroke::read_all(data, area_layer), data->get_size(), points[0]));
 		} break;
 		default: {
-			stroke->add({ points[0] });
+			draw({ points[0] });
 			for (int i = 1; i < points.size(); i++) {
-				stroke->add(JRPGMapShapes::line(points[i - 1], points[i]));
+				draw(JRPGMapShapes::line(points[i - 1], points[i]));
 			}
 		} break;
 	}
@@ -1589,9 +1602,32 @@ void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 	const int changed = stroke->end(layer == JRPGMapStroke::TARGET_SHADOWS ? JRPGMapEditSession::get_action_name(JRPGMapEditSession::TOOL_SHADOW) : JRPGMapEditSession::get_action_name(tool, regions ? JRPGMapEditSession::MODE_REGIONS : JRPGMapEditSession::MODE_TILES));
 	Dictionary result = describe_map(data, map->get_scene_file_path());
 	result["tool"] = String(JRPGMapEditSession::get_tool_name(tool)).to_lower();
-	result["layer"] = target_key(layer);
+	result["layer"] = automatic ? String("auto") : target_key(layer);
 	result["changed"] = changed;
 	result["undoable"] = changed > 0;
+	p_call->complete_data(result);
+}
+
+void tool_map_set_start(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGMap *map = edited_map(p_call);
+	if (!map) {
+		return;
+	}
+	Vector<Vector2i> cell;
+	if (!cell_list(Dictionary({ { "cell", Array({ p_args.get("cell", Variant()) }) } }), "cell", p_call, cell)) {
+		return;
+	}
+	String message;
+	if (JRPGMapEditing::set_start_position(map, cell[0], &message) != OK) {
+		p_call->fail(message + " Nothing was changed.");
+		return;
+	}
+	const Ref<JRPGSystemData> system = JRPGDatabaseEditing::get_singleton()->get_database()->get_system();
+	Dictionary result;
+	result["start_map_id"] = system->get_start_map_id();
+	result["start_cell"] = Array({ system->get_start_cell().x, system->get_start_cell().y });
+	result["start_direction"] = int(system->get_start_direction());
+	result["undoable"] = true;
 	p_call->complete_data(result);
 }
 
@@ -1998,12 +2034,12 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool map_stroke;
 	map_stroke.name = "jrpg_map_stroke";
 	map_stroke.title = "Draw on the map";
-	map_stroke.description = "Draws one stroke on the edited map with a map canvas tool, as one undo action of the map scene: pencil (the path through points, joined by straight lines), rectangle and ellipse (filled, between two corner points), fill (the area of matching cells around the one point), eraser (the pencil drawing 0). layer is a tile layer, regions or shadows; value is the palette index, the region ID (1-255) or the shadowed quarters of each cell (1-15: 1 top left, 2 top right, 4 bottom left, 8 bottom right; the canvas's shadow pen toggles single quarters instead). Points outside the map are allowed; only cells inside are drawn. Returns the cells changed and each layer's SHA-256 (layer_sha256), which undo restores exactly.";
+	map_stroke.description = "Draws one stroke on the edited map with a map canvas tool, as one undo action of the map scene: pencil (the path through points, joined by straight lines), rectangle and ellipse (filled, between two corner points), fill (the area of matching cells around the one point), eraser (the pencil drawing 0). layer is a tile layer, auto (the layer the tile's kind belongs to, as the canvas's Auto: autotiles and walls replace the ground, other tiles stack on the two upper layers, at most two per cell, the oldest dropping out; the eraser clears the top-most tile), regions or shadows; value is the palette index, the region ID (1-255) or the shadowed quarters of each cell (1-15: 1 top left, 2 top right, 4 bottom left, 8 bottom right; the canvas's shadow pen toggles single quarters instead). Points outside the map are allowed; only cells inside are drawn. Returns the cells changed and each layer's SHA-256 (layer_sha256), which undo restores exactly.";
 	Dictionary map_stroke_properties;
 	Dictionary tool_property = schema_property("string", "The tool.");
 	tool_property["enum"] = Array({ "pencil", "rectangle", "ellipse", "fill", "eraser" });
 	map_stroke_properties["tool"] = tool_property;
-	map_stroke_properties["layer"] = schema_property("string", "ground, ground_detail, objects, upper (or 0-3), regions or shadows.");
+	map_stroke_properties["layer"] = schema_property("string", "ground, ground_detail, objects, upper (or 0-3), auto, regions or shadows.");
 	map_stroke_properties["value"] = schema_property("integer", "Palette index, region ID or shadow quarters (not for the eraser).");
 	map_stroke_properties["points"] = schema_property("array", "[x, y] cells: the path (pencil, eraser), two corners (rectangle, ellipse) or the start cell (fill).");
 	map_stroke.input_schema = ClaudeBridgeMCP::object_schema(map_stroke_properties, PackedStringArray({ "tool", "layer", "points" }));
@@ -2011,6 +2047,18 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	map_stroke.destructive = false; // Undoable.
 	map_stroke.func = &tool_map_stroke;
 	r_mcp.register_tool(map_stroke);
+
+	ClaudeBridgeMCP::Tool map_set_start;
+	map_set_start.name = "jrpg_map_set_start";
+	map_set_start.title = "Set the start position here";
+	map_set_start.description = "Makes a cell of the edited map the System start position (start map and cell; the facing direction stays, jrpg_db_set changes it), as Set Start Position Here in the map canvas's Events mode: one undoable action of the database. The map must be in the map list. Save with jrpg_db_save.";
+	Dictionary map_set_start_properties;
+	map_set_start_properties["cell"] = schema_property("array", "[x, y] of the cell where new games begin.");
+	map_set_start.input_schema = ClaudeBridgeMCP::object_schema(map_set_start_properties, PackedStringArray({ "cell" }));
+	map_set_start.read_only = false;
+	map_set_start.destructive = false;
+	map_set_start.func = &tool_map_set_start;
+	r_mcp.register_tool(map_set_start);
 
 	ClaudeBridgeMCP::Tool map_capture;
 	map_capture.name = "jrpg_map_capture";

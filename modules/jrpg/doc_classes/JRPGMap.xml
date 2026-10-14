@@ -21,6 +21,13 @@
 				Returns the database the map's tileset comes from: the one given with [method set_database], or else the project's ([code]res://jrpg/database.tres[/code]).
 			</description>
 		</method>
+		<method name="get_palette_kind" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns the [enum JRPGAutotileResolver.Kind] of palette index [param index] in the tileset the map draws with: [constant JRPGAutotileResolver.KIND_PLAIN] for plain tiles, for 0, for indexes the palette does not have, and before the map's first build.
+			</description>
+		</method>
 		<method name="get_rebuild_count" qualifiers="const">
 			<return type="int" />
 			<description>

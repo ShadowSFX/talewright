@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.4.3.1 Region mode and shadow pen",
+  "last_completed": "8.4.3.2 Automatic layer and Set Start Position Here",
   "tasks": [
     {
       "id": "0",
@@ -2976,15 +2976,15 @@
         "8.3",
         "7.4"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Golden screenshot; undo restores hash"
       ],
       "test_strategy": "Bridge.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "8.4.1",
@@ -3067,9 +3067,9 @@
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
-      "commit": "",
-      "notes": "",
-      "status": "pending"
+      "commit": "children",
+      "notes": "Closed automatically when all children closed.",
+      "status": "done"
     },
     {
       "id": "8.4.3.1",
@@ -3106,7 +3106,7 @@
         "plan/DECISIONS.md",
         "plan/evidence/jrpg/8.4.3.1-*"
       ],
-      "commit": "pending",
+      "commit": "998d1fb7d6",
       "notes": ""
     },
     {
@@ -3123,9 +3123,24 @@
         "Set Start Position Here on the canvas sets the System start position (map, cell), undoable, and the System form row shows it"
       ],
       "test_strategy": "Doctests + jrpg_bridge_checks + bridge screenshots.",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/editor/jrpg_map_editing.{h,cpp}",
+        "modules/jrpg/editor/jrpg_map_edit_session.{h,cpp}",
+        "modules/jrpg/editor/jrpg_map_canvas.{h,cpp}",
+        "modules/jrpg/editor/jrpg_workspace_shell.cpp",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/runtime/jrpg_map.{h,cpp}",
+        "modules/jrpg/doc_classes/JRPGMap.xml",
+        "modules/jrpg/tests/test_jrpg_map_canvas.h",
+        "modules/jrpg/tests/test_jrpg_workspace_shell.h",
+        "talewright/tools/jrpg_bridge_checks.py",
+        "talewright/docs/claude_bridge.md",
+        "plan/specs/05_maps_tiles.md",
+        "plan/DECISIONS.md",
+        "plan/evidence/jrpg/8.4.3.2-*"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

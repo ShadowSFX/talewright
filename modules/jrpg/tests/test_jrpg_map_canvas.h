@@ -165,7 +165,34 @@ TEST_CASE("[SceneTree][JRPG][MapCanvas] A stroke paints as it goes, ends as one 
 	CHECK(JRPGMapStroke::get_max_value(JRPGMapStroke::TARGET_REGIONS) == 255);
 	CHECK(JRPGMapStroke::get_max_value(JRPGMapStroke::TARGET_SHADOWS) == 15);
 
+	// The automatic layer: autotile kinds replace the ground; plain tiles stack on the two upper layers, at most two,
+	// the oldest dropping out; the eraser clears the top-most tile.
+	const Vector2i spot(0, 3);
+	const auto layers = [&]() {
+		return Vector<int>({ data->get_cell(0, spot), data->get_cell(1, spot), data->get_cell(2, spot), data->get_cell(3, spot) });
+	};
+	REQUIRE(stroke->begin(map, JRPGMapData::LAYER_GROUND, 21) == OK);
+	CHECK(stroke->add_auto({ spot }, 21, true) == 1);
+	CHECK(stroke->add_auto({ spot }, 5, false) == 1);
+	CHECK(layers() == Vector<int>({ 21, 0, 5, 0 }));
+	CHECK(stroke->add_auto({ spot, spot }, 6, false) == 1); // A cell twice in one call counts once.
+	CHECK(layers() == Vector<int>({ 21, 0, 5, 6 }));
+	CHECK(stroke->add_auto({ spot }, 6, false) == 0); // The tile on top again: nothing changes.
+	CHECK(stroke->add_auto({ spot }, 5, false) == 2); // The oldest (5) drops out; 5 goes on top of 6.
+	CHECK(layers() == Vector<int>({ 21, 0, 6, 5 }));
+	CHECK(stroke->add_auto({ spot }, 22, true) == 1); // Another autotile replaces the ground only.
+	CHECK(layers() == Vector<int>({ 22, 0, 6, 5 }));
+	stroke->add_auto({ spot }, 0, false);
+	CHECK(layers() == Vector<int>({ 22, 0, 6, 0 }));
+	stroke->add_auto({ spot }, 0, false);
+	stroke->add_auto({ spot }, 0, false);
+	CHECK(layers() == Vector<int>({ 0, 0, 0, 0 }));
+	CHECK(stroke->add_auto({ spot, Vector2i(-1, 0) }, 0, false) == 0); // Nothing left; outside the map: skipped.
+	CHECK(stroke->end("Draw with Pencil") == 0); // Back where it started: nothing to undo.
+
 	String message;
+	CHECK(JRPGMapEditing::set_start_position(map, Vector2i(), &message) == ERR_DOES_NOT_EXIST); // Not a listed map.
+	CHECK(JRPGMapEditing::set_start_position(nullptr, Vector2i(), &message) == ERR_UNCONFIGURED);
 	CHECK(stroke->begin(map, JRPGMapStroke::TARGET_REGIONS, 256, &message) == ERR_INVALID_PARAMETER);
 	CHECK(stroke->begin(map, 7, 1, &message) == ERR_INVALID_PARAMETER);
 	CHECK(stroke->begin(nullptr, 0, 1, &message) == ERR_UNCONFIGURED);
@@ -241,6 +268,27 @@ TEST_CASE("[SceneTree][JRPG][MapCanvas] The canvas tools draw what the mouse doe
 	CHECK((session->get_layer() == JRPGMapData::LAYER_UPPER && session->get_value() == 5));
 	click(canvas, MouseButton::RIGHT, at(0, 0), true);
 	CHECK((session->get_layer() == JRPGMapData::LAYER_GROUND && session->get_value() == 3));
+
+	// The automatic layer: without a tileset every tile is a plain one, stacking on the two upper layers; picking keeps
+	// the automatic layer.
+	session->set_tool(JRPGMapEditSession::TOOL_PENCIL);
+	session->set_layer(JRPGMapEditSession::LAYER_AUTO);
+	session->set_value(4);
+	click(canvas, MouseButton::LEFT, at(0, 3), true);
+	click(canvas, MouseButton::LEFT, at(0, 3), false);
+	session->set_value(8);
+	click(canvas, MouseButton::LEFT, at(0, 3), true);
+	click(canvas, MouseButton::LEFT, at(0, 3), false);
+	CHECK((cell(JRPGMapData::LAYER_OBJECTS, 0, 3) == 4 && cell(JRPGMapData::LAYER_UPPER, 0, 3) == 8));
+	session->set_value(1);
+	click(canvas, MouseButton::RIGHT, at(0, 3), true);
+	CHECK((session->get_value() == 8 && session->get_layer() == JRPGMapEditSession::LAYER_AUTO));
+	session->set_tool(JRPGMapEditSession::TOOL_ERASER);
+	click(canvas, MouseButton::LEFT, at(0, 3), true);
+	click(canvas, MouseButton::LEFT, at(0, 3), false);
+	CHECK((cell(JRPGMapData::LAYER_OBJECTS, 0, 3) == 4 && cell(JRPGMapData::LAYER_UPPER, 0, 3) == 0));
+	session->set_layer(JRPGMapData::LAYER_GROUND);
+	CHECK_FALSE(canvas->set_start_position_here(Vector2i(0, 3))); // A map outside the map list cannot be the start.
 
 	// Escape takes a stroke back; so does a right click during it.
 	session->set_tool(JRPGMapEditSession::TOOL_PENCIL);

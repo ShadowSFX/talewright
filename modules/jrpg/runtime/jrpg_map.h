@@ -101,6 +101,9 @@ public:
 	TileMapLayer *get_tile_layer(int p_layer, bool p_above) const;
 	// The size of one cell in the map's local coordinates: its TileSet's tile size (DEFAULT_CELL_SIZE without one).
 	Vector2i get_cell_size() const;
+	// The JRPGAutotileResolver::Kind of palette index p_index in the tileset the map draws with (KIND_PLAIN for plain
+	// tiles, 0 and indexes the palette does not have, and before the first build).
+	int get_palette_kind(int p_index) const;
 
 	JRPGMap();
 	~JRPGMap();

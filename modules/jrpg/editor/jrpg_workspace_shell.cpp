@@ -189,7 +189,7 @@ void JRPGWorkspaceShell::_sync_brush() {
 	}
 	layer_picker->set_visible(mode != JRPGMapEditSession::MODE_REGIONS);
 	layer_picker->set_disabled(!tiles);
-	layer_picker->select(session->get_layer());
+	layer_picker->select(session->get_layer() + 1); // Auto first.
 	region_picker->set_visible(mode == JRPGMapEditSession::MODE_REGIONS);
 	region_picker->set_editable(map != nullptr);
 	region_picker->set_value_no_signal(session->get_region());
@@ -202,7 +202,7 @@ void JRPGWorkspaceShell::_sync_brush() {
 		return;
 	}
 	if (mode == JRPGMapEditSession::MODE_EVENTS) {
-		palette_empty->set_text(TTR("Events mode has no drawing tools."));
+		palette_empty->set_text(TTR("Right-click a cell to set where new games begin."));
 		return;
 	}
 	// The tile drawn, until the palette lists the tileset (task 8.5): its index and its sheet's name.
@@ -219,7 +219,11 @@ void JRPGWorkspaceShell::_sync_brush() {
 			tile += "  " + String(Dictionary(palette[session->get_value() - 1]).get("name", ""));
 		}
 	}
-	palette_empty->set_text(vformat(TTR("Drawing with %s on the %s layer. Right-click a tile on the map to draw with it."), tile, layer_picker->get_item_text(session->get_layer())));
+	if (session->get_layer() == JRPGMapEditSession::LAYER_AUTO) {
+		palette_empty->set_text(vformat(TTR("Drawing with %s on the layer its kind belongs to. Right-click a tile on the map to draw with it."), tile));
+	} else {
+		palette_empty->set_text(vformat(TTR("Drawing with %s on the %s layer. Right-click a tile on the map to draw with it."), tile, layer_picker->get_item_text(session->get_layer() + 1)));
+	}
 }
 
 void JRPGWorkspaceShell::_mode_toggled(bool p_on, int p_mode) {
@@ -243,7 +247,7 @@ void JRPGWorkspaceShell::_tool_toggled(bool p_on, int p_tool) {
 }
 
 void JRPGWorkspaceShell::_layer_selected(int p_index) {
-	map_canvas->get_session()->set_layer(p_index);
+	map_canvas->get_session()->set_layer(p_index - 1); // Item 0 is Auto.
 }
 
 Label *JRPGWorkspaceShell::_make_note(const String &p_text) {
@@ -396,11 +400,11 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 	toolbar->add_child(memnew(VSeparator));
 	layer_picker = memnew(OptionButton);
 	layer_picker->set_flat(true);
-	const String layer_names[JRPGMapData::LAYER_COUNT] = { TTR("Ground"), TTR("Ground Detail"), TTR("Objects"), TTR("Upper") };
+	const String layer_names[JRPGMapData::LAYER_COUNT + 1] = { TTR("Auto"), TTR("Ground"), TTR("Ground Detail"), TTR("Objects"), TTR("Upper") };
 	for (const String &name : layer_names) {
 		layer_picker->add_item(name);
 	}
-	layer_picker->set_tooltip_text(TTR("The tile layer the tools draw on, from the ground up."));
+	layer_picker->set_tooltip_text(TTR("The tile layer the tools draw on, from the ground up. Auto puts autotiles and walls on the ground and stacks other tiles on the two upper layers, at most two per cell."));
 	layer_picker->set_accessibility_name(TTR("Layer"));
 	layer_picker->set_disabled(true);
 	layer_picker->connect(SceneStringName(item_selected), callable_mp(this, &JRPGWorkspaceShell::_layer_selected));

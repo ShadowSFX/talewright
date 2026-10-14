@@ -1,0 +1,27 @@
+# 8.4.3.2 bridge verification: automatic layer and Set Start Position Here
+  fill on ground: 160 values
+## the automatic layer is the default; plain tiles stack, two at most
+  brush: {'mode': 'tiles', 'tool': 'pencil', 'layer': -1, 'value': 1}
+  pencil on auto: 1 values
+  objects at (8, 6): 19, upper: 0
+  pencil on auto: 1 values
+  objects at (8, 6): 19, upper: 23
+  pencil on auto: 2 values
+  objects at (8, 6): 23, upper: 30
+  after undo:
+  objects at (8, 6): 19, upper: 23
+## Events mode: Set Start Position Here at (5, 4) (the canvas menu's action), marked on the canvas
+  start: 0 Vector2i(0, 0) facing 2
+  set: {'start_map_id': 1, 'start_cell': [5, 4], 'start_direction': 2, 'undoable': True}
+  start: 1 Vector2i(5, 4) facing 2
+  screenshot: plan/evidence/jrpg/8.4.3.2-events-start-marker.png
+  palette note: 'Right-click a cell to set where new games begin.'
+## the System form's Player row shows the start position
+  map picker: '0001  Village'
+  cell fields: [5.0, 4.0]
+  screenshot: plan/evidence/jrpg/8.4.3.2-system-form.png
+## undo: the start position goes back
+  start: 0 Vector2i(0, 0) facing 2
+## errors
+    "errors": 0,
+    "warnings": 0,

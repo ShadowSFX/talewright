@@ -493,6 +493,58 @@ int JRPGMapStroke::set_values(int p_target, const Vector<Vector2i> &p_cells, con
 	return cells.size();
 }
 
+int JRPGMapStroke::add_auto(const Vector<Vector2i> &p_cells, int p_value, bool p_ground_kind) {
+	ERR_FAIL_COND_V(!is_active(), 0);
+	Vector<Vector2i> cells[JRPGMapData::LAYER_COUNT];
+	PackedInt32Array values[JRPGMapData::LAYER_COUNT];
+	HashSet<Vector2i> seen;
+	for (const Vector2i &cell : p_cells) {
+		if (!data->has_cell(cell) || seen.has(cell)) {
+			continue;
+		}
+		seen.insert(cell);
+		int now[JRPGMapData::LAYER_COUNT];
+		int next[JRPGMapData::LAYER_COUNT];
+		for (int layer = 0; layer < JRPGMapData::LAYER_COUNT; layer++) {
+			now[layer] = data->get_cell(layer, cell);
+			next[layer] = now[layer];
+		}
+		if (p_value == 0) {
+			for (int layer = JRPGMapData::LAYER_COUNT - 1; layer >= 0; layer--) {
+				if (next[layer] != 0) {
+					next[layer] = 0; // The top-most tile only.
+					break;
+				}
+			}
+		} else if (p_ground_kind) {
+			next[JRPGMapData::LAYER_GROUND] = p_value;
+		} else {
+			const int lower = now[JRPGMapData::LAYER_OBJECTS];
+			const int upper = now[JRPGMapData::LAYER_UPPER];
+			const int top = upper != 0 ? upper : lower;
+			if (top == 0) {
+				next[JRPGMapData::LAYER_OBJECTS] = p_value;
+			} else if (top != p_value) {
+				next[JRPGMapData::LAYER_OBJECTS] = top; // The older one goes below; the one below it drops out.
+				next[JRPGMapData::LAYER_UPPER] = p_value;
+			}
+		}
+		for (int layer = 0; layer < JRPGMapData::LAYER_COUNT; layer++) {
+			if (next[layer] != now[layer]) {
+				cells[layer].push_back(cell);
+				values[layer].push_back(next[layer]);
+			}
+		}
+	}
+	int changed = 0;
+	for (int layer = 0; layer < JRPGMapData::LAYER_COUNT; layer++) {
+		if (!cells[layer].is_empty()) {
+			changed += set_values(layer, cells[layer], values[layer]);
+		}
+	}
+	return changed;
+}
+
 int JRPGMapStroke::end(const String &p_name) {
 	ERR_FAIL_COND_V(!is_active(), 0);
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
@@ -549,6 +601,30 @@ void JRPGMapStroke::cancel() {
 		}
 	}
 	data.unref();
+}
+
+Error JRPGMapEditing::set_start_position(JRPGMap *p_map, const Vector2i &p_cell, String *r_message) {
+	if (!p_map || p_map->get_map_data().is_null()) {
+		return refuse("there is no map to start on.", r_message, ERR_UNCONFIGURED);
+	}
+	const Ref<JRPGMapData> data = p_map->get_map_data();
+	if (!get_map_list()->has_map(data->get_map_id())) {
+		return refuse(vformat("this map (id %d) is not in the map list; only listed maps can be the start map.", data->get_map_id()), r_message, ERR_DOES_NOT_EXIST);
+	}
+	if (!data->has_cell(p_cell)) {
+		return refuse(vformat(U"cell (%d, %d) is outside the map, which is %d × %d cells.", p_cell.x, p_cell.y, data->get_size().x, data->get_size().y), r_message, ERR_PARAMETER_RANGE_ERROR);
+	}
+	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
+	if (!editing || editing->get_database().is_null()) {
+		return refuse("the project has no JRPG database to hold the start position.", r_message, ERR_UNAVAILABLE);
+	}
+	Dictionary values;
+	values["start_map_id"] = data->get_map_id();
+	values["start_cell"] = p_cell;
+	if (editing->set_record_properties("system", 0, values) != OK) {
+		return refuse("the System data refused the start position (see the editor log).", r_message, FAILED);
+	}
+	return OK;
 }
 
 void JRPGMapEditing::_bind_methods() {

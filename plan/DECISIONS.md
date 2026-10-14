@@ -561,3 +561,15 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   no event data: Set Start Position Here (8.4.3.2).
 - **Why:** no throwaway format to migrate; one place builds events and their canvas handling.
 - **Reversal:** move the placement criteria back into an epic 8 task once a minimal event model is wanted earlier.
+
+## D-040 — What the automatic layer does
+- **Context:** the map canvas's Auto layer (task 8.4.3.2) picks the layer a tile is drawn on (RM-MAP-022). The
+  reference says Auto picks the layer while drawing, a cell keeps at most two upper tiles, a third drops the oldest and
+  the tile already on top changes nothing (RM-MAP-019); it does not say which numbered layer holds what. Talewright's
+  tiles have kinds (autotile, wall, plain), not the reference's sheet slots.
+- **Options:** keep explicit layers only; map kinds to layers; also guess base/decoration splits for autotiles.
+- **Choice:** autotile and wall kinds replace the Ground tile; plain tiles stack on Objects and Upper (older below,
+  the oldest drops out, the top tile again changes nothing); the eraser clears the cell's top-most tile. Ground
+  Detail is reached by choosing it explicitly. Auto is the default layer choice.
+- **Why:** the documented stacking rules, applied to the kinds the tileset knows; no flag a tileset would have to set.
+- **Reversal:** `JRPGMapStroke::add_auto` (one function) and the layer picker's default.

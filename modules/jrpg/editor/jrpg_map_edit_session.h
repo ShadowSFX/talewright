@@ -64,6 +64,8 @@ public:
 		TOOL_MAX,
 	};
 
+	static constexpr int LAYER_AUTO = -1; // The layer each tile's kind belongs to (JRPGMapStroke::add_auto).
+
 private:
 	struct View {
 		float zoom = 1.0;
@@ -76,7 +78,7 @@ private:
 	bool watching = false;
 	Mode mode = MODE_TILES;
 	Tool tool = TOOL_PENCIL;
-	int layer = 0; // JRPGMapData::Layer.
+	int layer = LAYER_AUTO; // JRPGMapData::Layer, or LAYER_AUTO.
 	int value = 1; // Palette index of the tile drawn.
 	int region = 1; // Region ID painted in Regions mode, 1-255.
 

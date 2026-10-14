@@ -116,7 +116,7 @@ void JRPGMapEditSession::set_tool(Tool p_tool) {
 }
 
 void JRPGMapEditSession::set_layer(int p_layer) {
-	ERR_FAIL_INDEX(p_layer, JRPGMapData::LAYER_COUNT);
+	ERR_FAIL_COND(p_layer < LAYER_AUTO || p_layer >= JRPGMapData::LAYER_COUNT);
 	layer = p_layer;
 	emit_signal(SNAME("brush_changed"));
 }

@@ -515,6 +515,42 @@ def run(checks: Checks) -> None:
         (compared.stdout.strip() or compared.stderr.strip()) + " " + json.dumps(capture)[:200],
     )
 
+    # The automatic layer and Set Start Position Here (task 8.4.3.2), after the golden: plain tiles stack on the two
+    # upper layers (the trees' 19 is on Objects at (9, 7)), autotiles replace the ground, the eraser clears the top.
+    def stack() -> Any:
+        rows = {
+            layer: c.call("jrpg_map_get", {"layer": layer})["cells"][7][9] for layer in ("ground", "objects", "upper")
+        }
+        return [rows["ground"], rows["objects"], rows["upper"]]
+
+    c.round_trip("jrpg_map_stroke (automatic layer)", stack, lambda: stroke("pencil", "auto", [[9, 7]], 5))
+    stroke("pencil", "auto", [[9, 7]], 9)
+    c.check(
+        "jrpg_map_stroke: auto keeps two upper tiles, the oldest dropping out",
+        stack() == [1, 5, 9],
+        json.dumps(stack()),
+    )
+    stroke("eraser", "auto", [[9, 7]])
+    c.check("jrpg_map_stroke: the automatic eraser clears the top-most tile", stack() == [1, 5, 0], json.dumps(stack()))
+    stroke(
+        "pencil", "ground", [[9, 7]], 2
+    )  # Another tile on the ground first, so the autotile has something to replace.
+    stroke("pencil", "auto", [[9, 7]], 1)  # The grass autotile: the ground, not the stack.
+    c.check("jrpg_map_stroke: an autotile replaces the ground tile", stack() == [1, 5, 0], json.dumps(stack()))
+
+    def start_position() -> Any:
+        system = c.record("system", 0)
+        return [system["start_map_id"], system["start_cell"]]
+
+    strokes_map = c.call("jrpg_map_list")["edited_map_id"]
+    c.round_trip("jrpg_map_set_start", start_position, lambda: c.call("jrpg_map_set_start", {"cell": [2, 3]}))
+    c.check(
+        "jrpg_map_set_start: the edited map and cell",
+        start_position() == [strokes_map, "Vector2i(2, 3)"],
+        json.dumps(start_position()),
+    )
+    c.check("jrpg_map_set_start: refuses a cell outside the map", c.refused("jrpg_map_set_start", {"cell": [10, 0]}))
+
     # Saving leaves nothing unsaved, bakes the tile flags and writes the TileSet.
     c.call("jrpg_db_save")
     unsaved = c.call("jrpg_db_list")["unsaved_paths"]
