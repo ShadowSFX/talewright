@@ -75,3 +75,7 @@ finding below is marked with the task and fix as it lands.
   full suite earlier in 10.4.1.1 crashed in the upstream `[Image] Saving and loading` case (SIGSEGV) and passed in
   every run since (not reproduced; watched).
 - Static checks: ALL PASS. Bridge checks: 188/188, and a plain run leaves the repository untouched.
+- First push (6b6fb91483): CI run 38625515777 failed in one job, the Windows template built with MinGW: a doctest
+  variable named `far`, which MinGW's Windows headers define as an empty macro. Fixed by a rename (9026c501e9), and
+  `static_checks.py` now rejects identifiers that Windows headers define as macros (D-055). CI run 38628591521 green
+  (20/20 jobs).

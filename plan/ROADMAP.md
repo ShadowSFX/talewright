@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 88, in_progress: 3, done: 172, blocked: 0, deferred: 3 (of 266)
+**Totals:** pending: 88, in_progress: 0, done: 175, blocked: 0, deferred: 3 (of 266)
 
 ## [x] 0 Bootstrap and task system
 
@@ -225,7 +225,7 @@ Pages, conditions, triggers, command model with authority, interpreter with pres
 - [ ] **9.8** Event authoring tools (P2) _(deps: 9.7)_
 - [ ] **9.9** Epic review: events (P1) _(deps: 9.8)_
 
-## [~] 10 Messages and UI kit
+## [x] 10 Messages and UI kit
 
 Window frame, selectable list, message system, screen stack. Built before epic 9 so the local presentation port and NPC dialogs have a message window (epic 3 review).
 
@@ -238,7 +238,7 @@ Window frame, selectable list, message system, screen stack. Built before epic 9
     - [x] **10.2.2.1** Message window: layout, letter by letter, waits, face, name box (P1) _(commit: 8306884ccb)_
     - [x] **10.2.2.2** Choice, number input and gold windows; message and choice end to end (P1) _(deps: 10.2.2.1; commit: 1277a95165)_
 - [x] **10.3** Screen stack (GDScript managed addon) (P1) _(deps: 10.2; commit: ee6e62c0ff)_
-- [~] **10.4** Epic review: messages/UI (P1) _(deps: 10.3)_
+- [x] **10.4** Epic review: messages/UI (P1) _(deps: 10.3)_
   - [x] **10.4.1** Epic 10 review: findings fixed (P1)
     - [x] **10.4.1.1** Epic 10 review: input and focus (P1) _(commit: e03f8a993a)_
     - [x] **10.4.1.2** Epic 10 review: drawing, theme and data (P1) _(deps: 10.4.1.1)_
@@ -246,7 +246,7 @@ Window frame, selectable list, message system, screen stack. Built before epic 9
       - [x] **10.4.1.2.2** Epic 10 review: lists, choices, number and gold windows (P1) _(deps: 10.4.1.2.1; commit: df06a99e4b)_
       - [x] **10.4.1.2.3** Epic 10 review: message text and message window (P1) _(deps: 10.4.1.2.2; commit: 7b8a0c25ef)_
     - [x] **10.4.1.3** Epic 10 review: screen stack and checks (P1) _(deps: 10.4.1.2; commit: 6b6fb91483)_
-  - [~] **10.4.2** Close epic 10 (P1) _(deps: 10.4.1)_
+  - [x] **10.4.2** Close epic 10 (P1) _(deps: 10.4.1; commit: pending)_
 
 ## [ ] 11 Menu (slice)
 

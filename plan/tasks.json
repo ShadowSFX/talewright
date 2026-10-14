@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "10.4.1.3 Epic 10 review: screen stack and checks",
+  "last_completed": "10.4.2 Close epic 10",
   "tasks": [
     {
       "id": "0",
@@ -4022,15 +4022,15 @@
       "dependencies": [
         "8"
       ],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Message advance end-to-end"
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "10.1",
@@ -4200,15 +4200,15 @@
       "dependencies": [
         "10.3"
       ],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "10.4.1 and 10.4.2 done"
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "10.4.1",
@@ -4423,14 +4423,14 @@
         "CI green on the push"
       ],
       "test_strategy": "Smoke, checks, CI.",
-      "status": "in_progress",
+      "status": "done",
       "files": [
         "plan/evidence/reviews/epic_10.md",
         "modules/jrpg/tests/test_jrpg_message_window.h",
         "talewright/tools/static_checks.py",
         "plan/DECISIONS.md"
       ],
-      "commit": "",
+      "commit": "pending",
       "notes": "First push (6b6fb91483): CI run 38625515777 failed only in the Windows MinGW template: a doctest variable named far, a macro in MinGW's Windows headers. Fixed with a rename and a static check for such names (D-055)."
     },
     {
