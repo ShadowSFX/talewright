@@ -90,6 +90,10 @@ protected:
 	void _notification(int p_what);
 	static void _bind_methods();
 	virtual void _update_theme_item_cache() override;
+	// Internal processing runs while the window opens or closes, or while a subclass needs it (a list with focus);
+	// subclasses call _update_process() when their need changes.
+	virtual bool _needs_process() const { return false; }
+	void _update_process();
 
 public:
 	// Adds the built-in skin to Godot's default theme when that theme has none yet (and exists: it is made with the

@@ -742,3 +742,28 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   a window to draw (games, tests, goldens); the tone tints only the body, as the skin's two layers allow.
 - **Reversal:** contents hidden until open: give the window an internal content node and toggle it; skin in the
   addon: drop `ensure_default_skin` and point a project theme at the addon's images; timing: `OPEN_FRAMES`.
+
+## D-050 — How a list reads the player (selectable list)
+- **Context:** task 10.1.2 needs the list window every menu uses. The help gives the controls (RM-INP-001, RM-TST-015,
+  RM-TST-016), the repeat timing (RM-INP-004: again 24 frames after the press, then every 6), mouse and touch use
+  (RM-MNU-017) and the interface sounds (RM-MNU-019); it is silent on which window takes the keys, wrapping at the
+  ends, what the page keys do in a list, and what a click does.
+- **Options:** an "active" flag per list, or Godot's focus; Godot's `is_action_just_pressed` (it compares the engine's
+  process frame, which doctests never advance, and a window that gets the focus in the frame of a press would take
+  that press too), or the list's own edge detection; key repeat from the operating system's echo events (keyboard
+  only, its own timing), or the list's own.
+- **Choice:** `JRPGSelectableList` (runtime, a `JRPGWindow`) takes input while it has focus (`FOCUS_ALL`; its own
+  actions are accepted so the viewport's `ui_*` navigation never moves the focus away). A press is new when the action
+  was up the frame before or arrived as an event while the list had focus (taps shorter than a frame count); a key
+  already down when the focus comes in is not new. Directions wrap round at the ends on a fresh press only (a held
+  key stops at the end); held, they repeat after 24/60 s, then every 6/60 s. Up and down move by rows, left and right
+  by items (with two columns or more). The page actions move the view and the cursor by a page of rows. OK on a
+  disabled item buzzes (`item_refused`). The mouse: pointing at an item moves the cursor there, a click on the item
+  under the cursor chooses it (on another item it moves the cursor first), the right button cancels, the wheel
+  scrolls; clicking a list also gives it the focus (Godot's `FOCUS_ALL`). Sounds come from the System data of the
+  list's database (the project's when none is set); the player is made with the first sound, as a player needs the
+  audio server from its creation (`scene/audio/audio_stream_player_internal.cpp:365`).
+- **Why:** focus is Godot's own notion of the active control; the list's own press detection behaves the same in
+  games, doctests and bridge runs, and never lets one press act on two windows.
+- **Reversal:** `JRPGSelectableList::_process_input` (presses and repeats), `_move_cursor` (wrapping), `gui_input`
+  (mouse).

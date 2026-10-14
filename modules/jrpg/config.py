@@ -47,6 +47,7 @@ def get_doc_classes():
         "JRPGRandomStreams",
         "JRPGReferenceScanner",
         "JRPGSceneManager",
+        "JRPGSelectableList",
         "JRPGSimClock",
         "JRPGSkillData",
         "JRPGStatBlock",

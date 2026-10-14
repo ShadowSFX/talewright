@@ -123,32 +123,36 @@ void JRPGWindow::_set_openness(double p_openness) {
 	queue_redraw();
 }
 
+void JRPGWindow::_update_process() {
+	set_process_internal(opening != 0 || _needs_process());
+}
+
 void JRPGWindow::set_openness(double p_openness) {
 	opening = 0;
-	set_process_internal(false);
+	_update_process();
 	_set_openness(p_openness);
 }
 
 void JRPGWindow::open() {
 	if (is_open()) {
 		opening = 0;
-		set_process_internal(false);
+		_update_process();
 		emit_signal(SNAME("opened")); // Already open: done at once.
 		return;
 	}
 	opening = 1;
-	set_process_internal(true);
+	_update_process();
 }
 
 void JRPGWindow::close() {
 	if (is_closed()) {
 		opening = 0;
-		set_process_internal(false);
+		_update_process();
 		emit_signal(SNAME("closed"));
 		return;
 	}
 	opening = -1;
-	set_process_internal(true);
+	_update_process();
 }
 
 void JRPGWindow::set_scroll_up_visible(bool p_visible) {
@@ -210,6 +214,9 @@ void JRPGWindow::_notification(int p_what) {
 			}
 		} break;
 		case NOTIFICATION_INTERNAL_PROCESS: {
+			if (opening == 0) {
+				break; // Processing for a subclass.
+			}
 			// OPEN_FRAMES frames at 60 a second, whatever the frame rate.
 			const double step = get_process_delta_time() * 60.0 / OPEN_FRAMES;
 			double next = openness + (opening > 0 ? step : -step);
@@ -220,7 +227,7 @@ void JRPGWindow::_notification(int p_what) {
 			if ((opening > 0 && is_open()) || (opening < 0 && is_closed())) {
 				const bool opened = opening > 0;
 				opening = 0;
-				set_process_internal(false);
+				_update_process();
 				emit_signal(opened ? SNAME("opened") : SNAME("closed"));
 			}
 		} break;

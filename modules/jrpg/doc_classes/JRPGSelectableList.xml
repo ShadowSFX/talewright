@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGSelectableList" inherits="JRPGWindow" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A window listing items for the player to choose from, with a cursor, the game's controls and interface sounds.
+	</brief_description>
+	<description>
+		Shows [member items] in [member columns] and rows inside a [JRPGWindow], with the skin's cursor on the [member selected] item. The list takes the player's input while it has focus: [code]jrpg_up[/code], [code]jrpg_down[/code], [code]jrpg_left[/code] and [code]jrpg_right[/code] move the cursor (left and right with two columns or more), going round at the ends on a fresh press only, so a held key stops at the end; a held direction repeats [constant REPEAT_DELAY_FRAMES] frames after the press, then every [constant REPEAT_INTERVAL_FRAMES] (at 60 frames a second). [code]jrpg_page_prev[/code] and [code]jrpg_page_next[/code] move a page of rows; [code]jrpg_ok[/code] chooses the item under the cursor ([signal item_chosen]; a disabled item only buzzes, [signal item_refused]); [code]jrpg_cancel[/code] backs out ([signal cancelled]). A key already held when the list gets the focus is not a press for it.
+		With the mouse, pointing at an item moves the cursor there, clicking the item under the cursor chooses it, the right button cancels and the wheel scrolls.
+		The cursor, OK, cancel and buzzer sounds come from the System data of [member database], the project's database when none is set.
+		Authority: client. The list only reports what the player picks.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_item">
+			<return type="void" />
+			<param index="0" name="text" type="String" />
+			<param index="1" name="enabled" type="bool" default="true" />
+			<param index="2" name="icon" type="Texture2D" default="null" />
+			<param index="3" name="right_text" type="String" default="&quot;&quot;" />
+			<description>
+				Adds an item at the end: its [param text], whether it is [param enabled], an optional [param icon] and an optional [param right_text] shown on the right (a count or a cost).
+			</description>
+		</method>
+		<method name="clear_items">
+			<return type="void" />
+			<description>
+				Removes every item; nothing is selected.
+			</description>
+		</method>
+		<method name="ensure_default_theme" qualifiers="static">
+			<return type="void" />
+			<description>
+				Adds the list's defaults (item height, column spacing, cursor margins, text colors) to the default theme under the [code skip-lint]JRPGSelectableList[/code] theme type, unless they are there already. Lists call it before reading their theme items.
+			</description>
+		</method>
+		<method name="get_item_at_position" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="position" type="Vector2" />
+			<description>
+				Returns the index of the item at [param position], in the list's own coordinates, or [code]-1[/code].
+			</description>
+		</method>
+		<method name="get_item_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns how many items the list has.
+			</description>
+		</method>
+		<method name="get_item_rect" qualifiers="const">
+			<return type="Rect2" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns where the item [param index] is drawn, in the list's own coordinates (rows above [member top_row] are above the content area).
+			</description>
+		</method>
+		<method name="get_item_text" qualifiers="const">
+			<return type="String" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns the text of the item [param index].
+			</description>
+		</method>
+		<method name="get_last_sound" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the interface sound played last, a [enum JRPGSystemData.Sound] value, or [code]-1[/code]. It is recorded even when the System data has no sound for it.
+			</description>
+		</method>
+		<method name="get_sound_player" qualifiers="const">
+			<return type="AudioStreamPlayer" />
+			<description>
+				Returns the internal player of the interface sounds, made with the first sound played; [code]null[/code] before.
+			</description>
+		</method>
+		<method name="is_item_enabled" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns [code]true[/code] if the item [param index] can be chosen.
+			</description>
+		</method>
+		<method name="play_sound">
+			<return type="void" />
+			<param index="0" name="sound" type="int" enum="JRPGSystemData.Sound" />
+			<description>
+				Plays one of the System data's interface sounds; silent when the database has none for it.
+			</description>
+		</method>
+		<method name="set_item_enabled">
+			<return type="void" />
+			<param index="0" name="index" type="int" />
+			<param index="1" name="enabled" type="bool" />
+			<description>
+				Sets whether the item [param index] can be chosen. Disabled items are drawn dimmed and only buzz when chosen.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="cancellable" type="bool" setter="set_cancellable" getter="is_cancellable" default="true">
+			If [code]true[/code], the cancel action and the right mouse button back out of the list with [signal cancelled]; if [code]false[/code], they do nothing.
+		</member>
+		<member name="columns" type="int" setter="set_columns" getter="get_columns" default="1">
+			How many items each row holds.
+		</member>
+		<member name="database" type="JRPGDatabase" setter="set_database" getter="get_database">
+			The database whose System data gives the interface sounds. If [code]null[/code], the project's database is used.
+		</member>
+		<member name="focus_mode" type="int" setter="set_focus_mode" getter="get_focus_mode" overrides="Control" enum="Control.FocusMode" default="2" />
+		<member name="items" type="Array" setter="set_items" getter="get_items" default="[]">
+			The items, as dictionaries: [code]text[/code], [code]enabled[/code] (default [code]true[/code]), [code]icon[/code] (a [Texture2D], optional) and [code]right_text[/code] (optional).
+		</member>
+		<member name="selected" type="int" setter="set_selected" getter="get_selected" default="-1">
+			The item under the cursor, or [code]-1[/code]. Setting it moves the cursor at once, scrolling to show it, without a sound or a signal.
+		</member>
+		<member name="top_row" type="int" setter="set_top_row" getter="get_top_row">
+			The first row shown. The list scrolls by itself to keep the cursor in view.
+		</member>
+	</members>
+	<signals>
+		<signal name="cancelled">
+			<description>
+				Emitted when the player backs out of the list (cancel, or the right mouse button).
+			</description>
+		</signal>
+		<signal name="cursor_moved">
+			<param index="0" name="index" type="int" />
+			<description>
+				Emitted when the player moves the cursor to the item [param index].
+			</description>
+		</signal>
+		<signal name="item_chosen">
+			<param index="0" name="index" type="int" />
+			<description>
+				Emitted when the player chooses the enabled item [param index].
+			</description>
+		</signal>
+		<signal name="item_refused">
+			<param index="0" name="index" type="int" />
+			<description>
+				Emitted when the player chooses the disabled item [param index]; the buzzer sounds.
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="REPEAT_DELAY_FRAMES" value="24">
+			Frames a direction is held before it repeats.
+		</constant>
+		<constant name="REPEAT_INTERVAL_FRAMES" value="6">
+			Frames between repeats while a direction stays held.
+		</constant>
+		<constant name="DEFAULT_ITEM_HEIGHT" value="36">
+			The default [theme_item item_height].
+		</constant>
+		<constant name="DEFAULT_COLUMN_SPACING" value="8">
+			The default [theme_item column_spacing].
+		</constant>
+		<constant name="DEFAULT_CURSOR_MARGIN" value="8">
+			The default [theme_item cursor_margin].
+		</constant>
+		<constant name="ICON_SIZE" value="32">
+			The largest size an item's icon is drawn at, in pixels.
+		</constant>
+	</constants>
+	<theme_items>
+		<theme_item name="font_color" data_type="color" type="Color" default="Color(1, 1, 1, 1)">
+			The color of enabled items' text and icons.
+		</theme_item>
+		<theme_item name="font_disabled_color" data_type="color" type="Color" default="Color(1, 1, 1, 0.45)">
+			The color of disabled items' text and icons.
+		</theme_item>
+		<theme_item name="column_spacing" data_type="constant" type="int" default="8">
+			Space between columns, in pixels.
+		</theme_item>
+		<theme_item name="cursor_margin" data_type="constant" type="int" default="8">
+			The margins of the cursor's nine-slice image, in pixels.
+		</theme_item>
+		<theme_item name="item_height" data_type="constant" type="int" default="36">
+			The height of each row, in pixels.
+		</theme_item>
+		<theme_item name="font" data_type="font" type="Font">
+			The items' font.
+		</theme_item>
+		<theme_item name="font_size" data_type="font_size" type="int">
+			The items' font size.
+		</theme_item>
+	</theme_items>
+</class>

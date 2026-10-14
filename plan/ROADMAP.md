@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 96, in_progress: 0, done: 157, blocked: 0, deferred: 3 (of 256)
+**Totals:** pending: 94, in_progress: 0, done: 159, blocked: 0, deferred: 3 (of 256)
 
 ## [x] 0 Bootstrap and task system
 
@@ -229,9 +229,9 @@ Pages, conditions, triggers, command model with authority, interpreter with pres
 
 Window frame, selectable list, message system, screen stack. Built before epic 9 so the local presentation port and NPC dialogs have a message window (epic 3 review).
 
-- [ ] **10.1** Window frame + selectable list (C++) (P1)
-  - [x] **10.1.1** Window frame, default skin, tone and open/close (P1) _(commit: pending)_
-  - [ ] **10.1.2** Selectable list: cursor, navigation, paging, key repeat, mouse, UI sounds (P1) _(deps: 10.1.1)_
+- [x] **10.1** Window frame + selectable list (C++) (P1)
+  - [x] **10.1.1** Window frame, default skin, tone and open/close (P1) _(commit: d593be100a)_
+  - [x] **10.1.2** Selectable list: cursor, navigation, paging, key repeat, mouse, UI sounds (P1) _(deps: 10.1.1; commit: pending)_
 - [ ] **10.2** Message system (P1) _(deps: 10.1)_
   - [ ] **10.2.1** Control-code parser and text layout (P1)
   - [ ] **10.2.2** Message window, choices, number input, gold window (P1) _(deps: 10.2.1)_

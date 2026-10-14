@@ -39,6 +39,12 @@ SHEETS = {  # Generated CC0 sheets (talewright/assets/LICENSES.md) the tileset c
     "grass.png": GENERATED / "autotiles" / "grass.png",
     "outdoor.png": GENERATED / "tiles" / "outdoor.png",
 }
+UI_SOUNDS = {  # Generated CC0 sound (audio/se) -> its System data field, for the list checks (task 10.1.2).
+    "cursor": "sound_cursor",
+    "decision": "sound_ok",
+    "cancel": "sound_cancel",
+    "buzzer": "sound_buzzer",
+}
 IMAGES = {  # Project path: generated CC0 source, for the image checks (task 7.5).
     "characters/hero.png": GENERATED / "characters" / "hero.png",
     "characters/knight.png": GENERATED / "characters" / "knight.png",
@@ -112,6 +118,16 @@ class Checks:
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             if (self.project / relative).is_file():
+                return True
+            time.sleep(0.5)
+        return False
+
+    def wait_for_import(self, relative: str, timeout: float = 90.0) -> bool:
+        """Waits until the editor has imported res://<relative> (it writes the uid into the .import file)."""
+        deadline = time.monotonic() + timeout
+        sidecar = self.project / f"{relative}.import"
+        while time.monotonic() < deadline:
+            if sidecar.is_file() and "uid=" in sidecar.read_text(encoding="utf-8", errors="replace"):
                 return True
             time.sleep(0.5)
         return False
@@ -736,6 +752,7 @@ def run(checks: Checks) -> None:
     c.check("jrpg_db_save: saves the TileSet with its flag layers", "jrpg_pass" in saved and "jrpg_no_entry" in saved)
 
     run_windows(c)
+    run_lists(c)
 
 
 # Windows (task 10.1.1) on a plain backdrop: open with a scroll mark, tinted with the pause mark, and three quarters open (its
@@ -826,6 +843,98 @@ def run_windows(c: Checks) -> None:
         json.dumps(states)[:300],
     )
     compare_golden(c, "jrpg_window.png", shot.get("path", ""), "JRPGWindow: the windows match the golden image")
+
+
+# Lists (task 10.1.2): a column of items with counts (one disabled, one name too long for its row, more items than
+# rows) and a three-column grid. The mouse is ignored so the pointer cannot move the cursor during the check.
+LIST_SCENE = """[gd_scene format=3]
+
+[node name="ListCheck" type="Control"]
+offset_right = 640.0
+offset_bottom = 360.0
+
+[node name="Backdrop" type="ColorRect" parent="."]
+offset_right = 640.0
+offset_bottom = 360.0
+color = Color(0.27, 0.43, 0.3, 1)
+
+[node name="List" type="JRPGSelectableList" parent="."]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 344.0
+offset_bottom = 156.0
+mouse_filter = 2
+items = [{"text": "Potion", "right_text": "x3"}, {"text": "Ether", "right_text": "x1", "enabled": false}, {"text": "Feather of a phoenix, with a name longer than its row", "right_text": "x12"}, {"text": "Antidote", "right_text": "x1"}, {"text": "Tent"}]
+
+[node name="Grid" type="JRPGSelectableList" parent="."]
+offset_left = 24.0
+offset_top = 180.0
+offset_right = 616.0
+offset_bottom = 312.0
+mouse_filter = 2
+columns = 3
+items = [{"text": "Fire"}, {"text": "Ice"}, {"text": "Thunder"}, {"text": "Heal"}, {"text": "Cure", "enabled": false}, {"text": "Raise"}]
+selected = 4
+"""
+
+
+def run_lists(c: Checks) -> None:
+    se = c.project / "se"
+    se.mkdir(exist_ok=True)
+    for stem in UI_SOUNDS:
+        for suffix in (".ogg", ".ogg.import"):
+            shutil.copyfile(GENERATED / "audio" / "se" / f"{stem}{suffix}", se / f"{stem}{suffix}")
+    c.call("editor_rescan")
+    c.check(
+        "JRPGSelectableList: the interface sounds are imported",
+        all(c.wait_for_import(f"se/{stem}.ogg") for stem in UI_SOUNDS),
+    )
+    values = {
+        field: {"stream": f"res://se/{stem}.ogg", "volume": 90, "pitch": 100} for stem, field in UI_SOUNDS.items()
+    }
+    c.call("jrpg_db_set", {"table": "system", "values": values})
+    c.call("jrpg_db_save")  # The game reads the database file.
+    (c.project / "ui_checks" / "list.tscn").write_text(LIST_SCENE, encoding="utf-8")
+    c.call("editor_rescan")
+    c.call("run_project", {"scene": "res://ui_checks/list.tscn"})
+    connected = False
+    for _ in range(120):
+        if c.call("run_status").get("debugger_connected"):
+            connected = True
+            break
+        time.sleep(0.5)
+    c.check("JRPGSelectableList: the list scene runs", connected)
+    if not connected:
+        c.call("stop_project")
+        return
+    path = "/root/ListCheck/List"
+    c.call("game_call", {"path": path, "method": "grab_focus"})
+    c.call("game_wait", {"frames": 5})
+    # Down selects Potion, OK chooses it, down moves to Ether (disabled), OK buzzes, cancel backs out. The sounds are
+    # too short to be caught playing between calls: the list's last sound and its player's stream show what played.
+    steps = [
+        ("jrpg_down", 0, "cursor", 0),
+        ("jrpg_ok", 1, "decision", 0),
+        ("jrpg_down", 0, "cursor", 1),
+        ("jrpg_ok", 3, "buzzer", 1),
+        ("jrpg_cancel", 2, "cancel", 1),
+    ]
+    for action, sound, stem, selected in steps:
+        c.call("game_input", {"action": action})
+        c.call("game_wait", {"frames": 6})
+        last = c.call("game_call", {"path": path, "method": "get_last_sound"}).get("result")
+        at = c.call("game_call", {"path": path, "method": "get_selected"}).get("result")
+        player = c.call("game_node_get", {"path": f"{path}/Sounds", "properties": ["stream"]})
+        c.check(
+            f"JRPGSelectableList: {action} plays the {stem} sound",
+            last == sound and at == selected and f"res://se/{stem}.ogg" in json.dumps(player),
+            f"last {last}, selected {at}, player {json.dumps(player)[:200]}",
+        )
+    c.call("game_call", {"path": path, "method": "set_selected", "args": [2]})
+    c.call("game_wait", {"frames": 10})
+    shot = c.call("game_screenshot", {"include_image": False})
+    c.call("stop_project")
+    compare_golden(c, "jrpg_list.png", shot.get("path", ""), "JRPGSelectableList: the lists match the golden image")
 
 
 def main() -> int:
