@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "5.5.2 Runtime actor state",
+  "last_completed": "5.5.4 Actor equipment, class change and reference repair",
   "tasks": [
     {
       "id": "0",
@@ -1634,9 +1634,9 @@
         "Repair after database edits doctested (deleted class, item, skill, state)"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

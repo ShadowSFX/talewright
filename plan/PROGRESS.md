@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 19:29 -0600
+- **Updated:** 2026-10-13 19:40 -0600
 - **Current task:** 1.8 Fork CI: every Linux job green
-- **Last completed:** 5.5.2 Runtime actor state
+- **Last completed:** 5.5.4 Actor equipment, class change and reference repair
 - **Next task:** 5.5.3 Event runtime state
-- **Done leaf tasks:** 58
+- **Done leaf tasks:** 59
 <!-- status:end -->
 
 ## Log
@@ -152,3 +152,5 @@
 | 2026-10-13 19:14 -0600 | 5.5.2 | started: Runtime actor state (containers: 5.5 pending->in_progress, 5 pending->in_progress) |  |
 | 2026-10-13 19:23 -0600 | 5.5.2 | done: Runtime actor state — JRPGActorState (core): setup from the database, level/EXP up and down within max level with class learnings reported, parameter bonuses, params via JRPGStatBlock (class curve, actor/class/state traits, buffs), HP/MP/TP clamps, knockout/revive/Recover All, skills incl. trait-added, states with turns/steps (resist, refresh), buffs with cancel rules; canonical serialize/validated deserialize; JRPGGameState actors section (ensure_actor, attach_database, starting party actors); 6 doctests; full suite 1456/1456 (containers: 5.5 in_progress->pending, 5 in_progress->pending) | 1295b2eb53 |
 | 2026-10-13 19:29 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 19:30 -0600 | 5.5.4 | started: Actor equipment, class change and reference repair (containers: 5.5 pending->in_progress, 5 pending->in_progress) |  |
+| 2026-10-13 19:40 -0600 | 5.5.4 | done: Actor equipment, class change and reference repair — Equipment slots from equipment types (dual wield makes slot 2 a weapon slot), Equip Weapon/Armor, Lock and Seal rules, Change Equipment trading with the party inventory (ownership required, previous item returned), forced/initial equipment (unusable discarded), release of unusable equipment to the inventory on any refresh, equipment params/traits in the stat block, Change Class with/without keep level, load repair (deleted class->1, skills/states/equipment/actors/party/inventory cleared, one warning); 4 new doctests; full suite 1460/1460 (containers: 5.5 in_progress->pending, 5 in_progress->pending) | pending |

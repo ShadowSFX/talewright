@@ -26,10 +26,10 @@
 			</description>
 		</method>
 		<method name="attach_database">
-			<return type="void" />
+			<return type="int" />
 			<param index="0" name="database" type="JRPGDatabase" />
 			<description>
-				Gives every actor state the database after [method deserialize], so parameters and limits are computed again.
+				Gives every actor state the database after [method deserialize], so parameters and limits are computed again, and clears references to entries deleted since the save: actors and party members whose actor is gone, inventory entries, and each actor's class, skills, states and equipment ([method JRPGActorState.repair_references]). Prints one warning when something was cleared and returns how many references were fixed.
 			</description>
 		</method>
 		<method name="clear">

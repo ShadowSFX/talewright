@@ -11,11 +11,15 @@ dropped)`, `variables: Array (int/float/String, index = id)`, `self_switches: Di
 (only switches that are on), `party: {members, gold, steps, items, weapons, armors}` (each kind `{id: count}` in
 ascending id order, counts ≥ 1),
 `actors: [{id, name, nickname, class_id, level, exp, hp, mp, tp, param_bonus[8], skills (ascending), states: [{id,
-turns, steps}], buffs[8], buff_turns[8], equips}]` in ascending actor id, one entry per actor used so far (`name` and
-`nickname` only when an event changed them; otherwise they come from the database through the current language,
-D-026; `equips` arrives with task 5.5.4). An actor keeps one EXP total: levels follow it within 1 and the actor's
-maximum level, and loading never re-learns skills,
-`JRPGGameState.attach_database()` recomputes parameters after loading.
+turns, steps}], buffs[8], buff_turns[8], equips: [{kind: "weapon"|"armor", id} or {} per slot]}]` in ascending
+actor id, one entry per actor used so far (`name` and `nickname` only when an event changed them; otherwise they come
+from the database through the current language, D-026). An actor keeps one EXP total: levels follow it within 1 and
+the actor's maximum level, and loading never re-learns skills. Change Class without "keep level" keeps the EXP and
+lets the level follow the new class's table (the help documents only the keep-level option, RM-CMD-034). Each slot
+stores the item kind with its id, so losing dual wield never reads a weapon id as an armor id.
+`JRPGGameState.attach_database()` recomputes parameters after loading and repairs references to entries deleted
+since the save (actors, party members, inventory, and each actor's class, skills, states and equipment), with one
+warning,
 `system: {save_enabled, menu_enabled, encounters_enabled, formation_enabled, window_tone (only when set by an event),
 music: {battle/victory/defeat → {stream, volume, pitch, pan}} (only overrides), timer: {working, steps}}` (vehicle
 music joins with vehicles), `screen: {tint, pictures, weather}`, `audio: {bgm, bgs, saved bgm}`, `interpreters: [spec

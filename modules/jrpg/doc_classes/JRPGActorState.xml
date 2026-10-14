@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <class name="JRPGActorState" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
 	<brief_description>
-		One JRPG actor as it is during play: level, EXP, HP/MP/TP, skills, states and buffs.
+		One JRPG actor as it is during play: level, EXP, HP/MP/TP, skills, states, buffs and equipment.
 	</brief_description>
 	<description>
-		Created from an actor of the [JRPGDatabase] with [method setup], usually through [method JRPGGameState.ensure_actor]. Parameters come from a [JRPGStatBlock] fed with the class curve at the current level, the parameter bonuses, the traits of the actor, its class and its states, and the buffs.
+		Created from an actor of the [JRPGDatabase] with [method setup], usually through [method JRPGGameState.ensure_actor]. Parameters come from a [JRPGStatBlock] fed with the class curve at the current level, the parameter bonuses and equipment, the traits of the actor, its class, its equipment and its states, and the buffs. Equipment the actor can no longer use (after a class change, a sealing state, losing dual wield) returns to the inventory of the [JRPGGameState] that owns the actor.
 		HP 0 knocks the actor out: state 1 is added and every other state and buff is removed. Removing state 1, or setting HP above 0, revives the actor.
 		[method serialize] and [method deserialize] save and load the actor in a canonical form; the database is not saved, so call [method set_database] after loading.
 		Online, zone servers own actor states; clients receive copies for menus and battle views.
@@ -44,6 +44,31 @@
 				Adds a state, or refreshes its turns when the actor already has it. Turns are drawn from [param random] between the state's minimum and maximum turns (the maximum when [param random] is [code]null[/code]); states without auto-removal have none. Unknown states, states the actor resists and states on a knocked-out actor are refused ([code]false[/code]). State 1 knocks the actor out.
 			</description>
 		</method>
+		<method name="can_equip" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="kind" type="int" enum="JRPGActorState.EquipKind" />
+			<param index="1" name="id" type="int" />
+			<description>
+				Returns [code]true[/code] when the actor may use the weapon or armor: an Equip Weapon or Equip Armor trait allows its type, and its slot type is not sealed.
+			</description>
+		</method>
+		<method name="change_class">
+			<return type="bool" />
+			<param index="0" name="class_id" type="int" />
+			<param index="1" name="keep_level" type="bool" />
+			<description>
+				Moves the actor to class [param class_id]. With [param keep_level] the level stays and the EXP becomes what the new class needs for it; otherwise the EXP stays and the level follows the new class's EXP table. Equipment the new class cannot use returns to the party's inventory. Returns [code]false[/code] when the class does not exist.
+			</description>
+		</method>
+		<method name="change_equip">
+			<return type="bool" />
+			<param index="0" name="slot" type="int" />
+			<param index="1" name="kind" type="int" enum="JRPGActorState.EquipKind" />
+			<param index="2" name="id" type="int" />
+			<description>
+				Equips the weapon or armor [param id] in [param slot], or takes the slot's item off when [param id] is 0. The party must own the item: it leaves the inventory and the previous item returns to it. Locked and sealed slots, items for another slot and items the actor cannot use are refused ([code]false[/code]).
+			</description>
+		</method>
 		<method name="change_exp">
 			<return type="Dictionary" />
 			<param index="0" name="exp" type="int" />
@@ -64,6 +89,12 @@
 				Removes every buff and debuff.
 			</description>
 		</method>
+		<method name="clear_equipment">
+			<return type="void" />
+			<description>
+				Takes off everything in unlocked slots, back to the party's inventory.
+			</description>
+		</method>
 		<method name="clear_name_override">
 			<return type="void" />
 			<description>
@@ -81,6 +112,15 @@
 			<param index="0" name="data" type="Dictionary" />
 			<description>
 				Replaces the actor with [param data], made by [method serialize]. Malformed data leaves the actor unchanged and returns [constant ERR_INVALID_DATA].
+			</description>
+		</method>
+		<method name="force_equip">
+			<return type="bool" />
+			<param index="0" name="slot" type="int" />
+			<param index="1" name="kind" type="int" enum="JRPGActorState.EquipKind" />
+			<param index="2" name="id" type="int" />
+			<description>
+				Equips without ownership or lock checks and without returning the previous item, as for initial equipment. Items the actor cannot use, or that do not fit the slot, are discarded. Returns [code]true[/code] when the item ends up equipped.
 			</description>
 		</method>
 		<method name="forget_skill">
@@ -154,6 +194,32 @@
 			<return type="JRPGDatabase" />
 			<description>
 				Returns the database the actor reads its data from.
+			</description>
+		</method>
+		<method name="get_equip" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="slot" type="int" />
+			<description>
+				Returns the ID of the weapon or armor in [param slot], or 0 when it is empty.
+			</description>
+		</method>
+		<method name="get_equip_kind" qualifiers="const">
+			<return type="int" enum="JRPGActorState.EquipKind" />
+			<param index="0" name="slot" type="int" />
+			<description>
+				Returns whether [param slot] holds a weapon, an armor or nothing.
+			</description>
+		</method>
+		<method name="get_equip_slot_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns how many equipment slots the actor has (one per equipment type of the database).
+			</description>
+		</method>
+		<method name="get_equip_slot_types" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<description>
+				Returns the equipment type of each slot: slot N takes type N, except that dual wield (Slot Type trait) makes the second slot a weapon slot.
 			</description>
 		</method>
 		<method name="get_exp" qualifiers="const">
@@ -321,6 +387,20 @@
 				Returns [code]true[/code] when the actor is knocked out (has state 1).
 			</description>
 		</method>
+		<method name="is_equip_slot_locked" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="slot" type="int" />
+			<description>
+				Returns [code]true[/code] when a Lock Equip trait prevents changing [param slot].
+			</description>
+		</method>
+		<method name="is_equip_slot_sealed" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="slot" type="int" />
+			<description>
+				Returns [code]true[/code] when a Seal Equip trait prevents equipping anything in [param slot].
+			</description>
+		</method>
 		<method name="learn_skill">
 			<return type="bool" />
 			<param index="0" name="skill_id" type="int" />
@@ -353,6 +433,13 @@
 			<param index="0" name="state_id" type="int" />
 			<description>
 				Removes a state. Removing state 1 revives the actor with 1 HP. Returns [code]false[/code] when the actor did not have it.
+			</description>
+		</method>
+		<method name="repair_references">
+			<return type="int" />
+			<param index="0" name="database" type="JRPGDatabase" />
+			<description>
+				Attaches [param database] and fixes references to entries deleted since the actor was saved, before anything is computed: a deleted class becomes class 1; deleted skills, states and equipment are dropped; the level is kept within the maximum level. Returns how many references were fixed. [method JRPGGameState.attach_database] calls it for every actor.
 			</description>
 		</method>
 		<method name="serialize" qualifiers="const">
@@ -445,6 +532,18 @@
 		</constant>
 		<constant name="MAX_PARAM_BONUS" value="9999999">
 			Largest permanent parameter bonus, positive or negative.
+		</constant>
+		<constant name="DEFAULT_EQUIP_SLOTS" value="5">
+			Number of equipment slots when the database has no type lists.
+		</constant>
+		<constant name="EQUIP_NONE" value="0" enum="EquipKind">
+			An empty slot.
+		</constant>
+		<constant name="EQUIP_WEAPON" value="1" enum="EquipKind">
+			A weapon (the [code]weapons[/code] table).
+		</constant>
+		<constant name="EQUIP_ARMOR" value="2" enum="EquipKind">
+			An armor (the [code]armors[/code] table).
 		</constant>
 	</constants>
 </class>

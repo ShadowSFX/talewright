@@ -36,12 +36,17 @@
 
 #include "modules/jrpg/core/jrpg_actor_data.h"
 #include "modules/jrpg/core/jrpg_actor_state.h"
+#include "modules/jrpg/core/jrpg_armor_data.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_game_state.h"
+#include "modules/jrpg/core/jrpg_item_data.h"
 #include "modules/jrpg/core/jrpg_random.h"
+#include "modules/jrpg/core/jrpg_skill_data.h"
 #include "modules/jrpg/core/jrpg_state_data.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
+#include "modules/jrpg/core/jrpg_types_data.h"
+#include "modules/jrpg/core/jrpg_weapon_data.h"
 
 namespace TestJRPGActorState {
 
@@ -106,17 +111,72 @@ static Ref<JRPGDatabase> make_database() {
 	knight->set_learnings(Array({ learning(1, 3), learning(5, 7), learning(8, 9), learning(8, 10), learning(20, 11) }));
 	db->set_table(JRPGDatabase::TABLE_CLASSES, classes);
 
-	Ref<JRPGTable> states = make_table("JRPGStateData", 6);
+	db->set_table(JRPGDatabase::TABLE_SKILLS, make_table("JRPGSkillData", 12));
+
+	Ref<JRPGTable> states = make_table("JRPGStateData", 9);
 	Ref<JRPGStateData> weak = states->get_entry(4);
 	weak->set_auto_removal(JRPGStateData::AUTO_REMOVAL_TURN_END);
 	weak->set_min_turns(2);
 	weak->set_max_turns(5);
 	weak->set_traits(Array({ trait(JRPGTraits::TRAIT_PARAM, JRPGClassData::PARAM_MAX_HP, 5000) }));
+	Ref<JRPGStateData>(states->get_entry(7))->set_traits(Array({ trait(JRPGTraits::TRAIT_SEAL_EQUIP, 2, 0) }));
+	Ref<JRPGStateData>(states->get_entry(8))->set_traits(Array({ trait(JRPGTraits::TRAIT_SLOT_TYPE, 1, 0) }));
+	Ref<JRPGStateData>(states->get_entry(9))->set_traits(Array({ trait(JRPGTraits::TRAIT_LOCK_EQUIP, 1, 0) }));
 	db->set_table(JRPGDatabase::TABLE_STATES, states);
 
 	Ref<JRPGSystemData> system;
 	system.instantiate();
 	db->set_system(system);
+	return db;
+}
+
+// make_database() plus equipment: the default five slots (weapon, shield, head, body, accessory); class 1 equips
+// weapon type 1 and armor types 1-2, class 2 (EXP needs doubled) only armor type 1. Weapon 1 (type 1, attack +10),
+// weapon 2 (type 2), weapon 3 (type 1, two-handed: seals the shield slot); armor 1 a shield, armor 2 a head piece
+// that allows weapon type 2, armor 3 a body armor. Actor 1 starts with weapon 1, armor 1 and armor 3; actor 2
+// (class 2) starts with weapon 1, which its class cannot use. States: 7 seals the shield slot, 8 gives dual wield,
+// 9 locks the weapon slot.
+static Ref<JRPGDatabase> make_equip_database() {
+	Ref<JRPGDatabase> db = make_database();
+	Ref<JRPGTypesData> types;
+	types.instantiate();
+	db->set_types(types);
+
+	Ref<JRPGTable> classes = db->get_table(JRPGDatabase::TABLE_CLASSES);
+	classes->set_maximum(2);
+	Ref<JRPGClassData>(classes->get_entry(1))->set_traits(Array({ trait(JRPGTraits::TRAIT_EQUIP_WEAPON, 1, 0), trait(JRPGTraits::TRAIT_EQUIP_ARMOR, 1, 0), trait(JRPGTraits::TRAIT_EQUIP_ARMOR, 2, 0) }));
+	Ref<JRPGClassData> mage = classes->get_entry(2);
+	mage->set_exp_base(50);
+	mage->set_traits(Array({ trait(JRPGTraits::TRAIT_EQUIP_ARMOR, 1, 0) }));
+
+	Ref<JRPGTable> weapons = make_table("JRPGWeaponData", 3);
+	Ref<JRPGWeaponData> sword = weapons->get_entry(1);
+	sword->set_weapon_type_id(1);
+	sword->set_params(PackedInt32Array({ 0, 0, 10 }));
+	Ref<JRPGWeaponData>(weapons->get_entry(2))->set_weapon_type_id(2);
+	Ref<JRPGWeaponData> greatsword = weapons->get_entry(3);
+	greatsword->set_weapon_type_id(1);
+	greatsword->set_traits(Array({ trait(JRPGTraits::TRAIT_SEAL_EQUIP, 2, 0) }));
+	db->set_table(JRPGDatabase::TABLE_WEAPONS, weapons);
+
+	Ref<JRPGTable> armors = make_table("JRPGArmorData", 3);
+	Ref<JRPGArmorData> shield = armors->get_entry(1);
+	shield->set_armor_type_id(1);
+	shield->set_equip_type_id(2);
+	Ref<JRPGArmorData> circlet = armors->get_entry(2);
+	circlet->set_armor_type_id(2);
+	circlet->set_equip_type_id(3);
+	circlet->set_traits(Array({ trait(JRPGTraits::TRAIT_EQUIP_WEAPON, 2, 0) }));
+	Ref<JRPGArmorData> mail = armors->get_entry(3);
+	mail->set_armor_type_id(1);
+	mail->set_equip_type_id(4);
+	db->set_table(JRPGDatabase::TABLE_ARMORS, armors);
+	db->set_table(JRPGDatabase::TABLE_ITEMS, make_table("JRPGItemData", 10));
+
+	Ref<JRPGTable> actors = db->get_table(JRPGDatabase::TABLE_ACTORS);
+	Ref<JRPGActorData>(actors->get_entry(1))->set_initial_equipment(PackedInt32Array({ 1, 1, 0, 3, 0 }));
+	Ref<JRPGActorData>(actors->get_entry(2))->set_initial_equipment(PackedInt32Array({ 1 }));
+	db->get_system()->set_starting_party(PackedInt32Array({ 1, 2 }));
 	return db;
 }
 
@@ -334,6 +394,7 @@ TEST_CASE("[JRPG][ActorState] Save, load and save again gives the same data") {
 	game.instantiate();
 	REQUIRE(game->start_new_game(db, 9) == OK);
 	CHECK(game->get_actor_ids() == PackedInt32Array({ 1 }));
+	Ref<JRPGActorData>(db->get_table(JRPGDatabase::TABLE_ACTORS)->get_entry(2))->set_class_id(1);
 	REQUIRE(game->ensure_actor(db, 2).is_valid()); // Out of the party, still remembered.
 	ERR_PRINT_OFF;
 	CHECK(game->ensure_actor(db, 7).is_null());
@@ -344,7 +405,7 @@ TEST_CASE("[JRPG][ActorState] Save, load and save again gives the same data") {
 	Ref<JRPGGameState> restored;
 	restored.instantiate();
 	REQUIRE(restored->deserialize(saved) == OK);
-	restored->attach_database(db);
+	CHECK(restored->attach_database(db) == 0); // Same database: nothing to repair.
 	CHECK(restored->serialize() == saved);
 	CHECK(to_bytes(restored->serialize()) == to_bytes(saved));
 	CHECK(restored->get_actor(2)->get_actor_name() == "Guest");
@@ -398,6 +459,180 @@ TEST_CASE("[JRPG][ActorState] Bad actor data is refused and changes nothing") {
 	CHECK(game->deserialize(twice) != OK); // The same actor twice.
 	ERR_PRINT_ON;
 	CHECK(game->serialize() == saved);
+}
+
+TEST_CASE("[JRPG][ActorState] Equipment rules and the party inventory") {
+	Ref<JRPGDatabase> db = make_equip_database();
+	Ref<JRPGGameState> game;
+	game.instantiate();
+	REQUIRE(game->start_new_game(db, 1) == OK);
+	Ref<JRPGActorState> actor = game->get_actor(1);
+	REQUIRE(actor.is_valid());
+	CHECK(actor->get_equip_slot_types() == PackedInt32Array({ 1, 2, 3, 4, 5 }));
+	CHECK(actor->get_equip(0) == 1);
+	CHECK(actor->get_equip_kind(0) == JRPGActorState::EQUIP_WEAPON);
+	CHECK(actor->get_equip(1) == 1);
+	CHECK(actor->get_equip_kind(1) == JRPGActorState::EQUIP_ARMOR);
+	CHECK(actor->get_equip(3) == 3);
+	CHECK(actor->get_param(JRPGClassData::PARAM_ATTACK) == 11 + 10); // The sword's attack bonus.
+
+	// Actor 2's class cannot use its initial weapon: it is discarded, not given to the party.
+	CHECK(game->get_actor(2)->get_equip(0) == 0);
+	CHECK(game->get_item_count(JRPGGameState::ITEM_KIND_WEAPON, 1) == 0);
+
+	// The party must own the item, and the actor must be allowed its type.
+	CHECK_FALSE(actor->change_equip(0, JRPGActorState::EQUIP_WEAPON, 2)); // Not owned.
+	game->gain_item(JRPGGameState::ITEM_KIND_WEAPON, 2, 1);
+	CHECK_FALSE(actor->change_equip(0, JRPGActorState::EQUIP_WEAPON, 2)); // Owned, but type 2 is not allowed.
+	game->gain_item(JRPGGameState::ITEM_KIND_ARMOR, 2, 1);
+	CHECK(actor->change_equip(2, JRPGActorState::EQUIP_ARMOR, 2)); // The circlet allows type 2 weapons.
+	CHECK(game->get_item_count(JRPGGameState::ITEM_KIND_ARMOR, 2) == 0);
+	CHECK(actor->can_equip(JRPGActorState::EQUIP_WEAPON, 2));
+	CHECK(actor->change_equip(0, JRPGActorState::EQUIP_WEAPON, 2));
+	CHECK(game->get_item_count(JRPGGameState::ITEM_KIND_WEAPON, 1) == 1); // The sword went back.
+	CHECK(game->get_item_count(JRPGGameState::ITEM_KIND_WEAPON, 2) == 0);
+	CHECK(actor->get_param(JRPGClassData::PARAM_ATTACK) == 11);
+
+	game->gain_item(JRPGGameState::ITEM_KIND_ARMOR, 1, 1);
+	CHECK_FALSE(actor->change_equip(3, JRPGActorState::EQUIP_ARMOR, 1)); // A shield does not go in the body slot.
+	CHECK_FALSE(actor->change_equip(1, JRPGActorState::EQUIP_WEAPON, 1)); // Nor a weapon in the shield slot.
+
+	// Taking the circlet off removes the permission the dagger needed: the dagger goes back too.
+	CHECK(actor->change_equip(2, JRPGActorState::EQUIP_NONE, 0));
+	CHECK(actor->get_equip(0) == 0);
+	CHECK(game->get_item_count(JRPGGameState::ITEM_KIND_WEAPON, 2) == 1);
+	CHECK(game->get_item_count(JRPGGameState::ITEM_KIND_ARMOR, 2) == 1);
+	CHECK_FALSE(actor->change_equip(2, JRPGActorState::EQUIP_NONE, 0)); // Nothing to take off.
+
+	actor->clear_equipment();
+	CHECK(game->get_item_count(JRPGGameState::ITEM_KIND_ARMOR, 1) == 2);
+	CHECK(game->get_item_count(JRPGGameState::ITEM_KIND_ARMOR, 3) == 1);
+	for (int slot = 0; slot < actor->get_equip_slot_count(); slot++) {
+		CHECK(actor->get_equip(slot) == 0);
+	}
+}
+
+TEST_CASE("[JRPG][ActorState] Sealed, locked and dual-wield slots") {
+	Ref<JRPGDatabase> db = make_equip_database();
+	Ref<JRPGGameState> game;
+	game.instantiate();
+	REQUIRE(game->start_new_game(db, 1) == OK);
+	Ref<JRPGActorState> actor = game->get_actor(1);
+	Ref<JRPGRandom> rng;
+	rng.instantiate();
+
+	// A state sealing the shield slot takes the shield off, back to the party.
+	REQUIRE(actor->add_state(7, rng));
+	CHECK(actor->is_equip_slot_sealed(1));
+	CHECK(actor->get_equip(1) == 0);
+	CHECK(game->get_item_count(JRPGGameState::ITEM_KIND_ARMOR, 1) == 1);
+	CHECK_FALSE(actor->change_equip(1, JRPGActorState::EQUIP_ARMOR, 1));
+	actor->remove_state(7);
+	CHECK(actor->change_equip(1, JRPGActorState::EQUIP_ARMOR, 1));
+
+	// A two-handed weapon seals the shield slot once equipped.
+	game->gain_item(JRPGGameState::ITEM_KIND_WEAPON, 3, 1);
+	CHECK(actor->change_equip(0, JRPGActorState::EQUIP_WEAPON, 3));
+	CHECK(actor->get_equip(1) == 0);
+	CHECK(game->get_item_count(JRPGGameState::ITEM_KIND_ARMOR, 1) == 1);
+	CHECK(game->get_item_count(JRPGGameState::ITEM_KIND_WEAPON, 1) == 1);
+
+	// A locked slot cannot change, and clearing skips it.
+	REQUIRE(actor->add_state(9, rng));
+	CHECK(actor->is_equip_slot_locked(0));
+	CHECK_FALSE(actor->change_equip(0, JRPGActorState::EQUIP_WEAPON, 1));
+	actor->clear_equipment();
+	CHECK(actor->get_equip(0) == 3);
+	actor->remove_state(9);
+
+	// Dual wield turns the shield slot into a weapon slot; losing it sends the second weapon back.
+	CHECK(actor->change_equip(0, JRPGActorState::EQUIP_WEAPON, 1));
+	REQUIRE(actor->add_state(8, rng));
+	CHECK(actor->get_equip_slot_types() == PackedInt32Array({ 1, 1, 3, 4, 5 }));
+	game->gain_item(JRPGGameState::ITEM_KIND_WEAPON, 1, 1);
+	CHECK(actor->change_equip(1, JRPGActorState::EQUIP_WEAPON, 1));
+	CHECK(actor->get_param(JRPGClassData::PARAM_ATTACK) == 11 + 20);
+	actor->remove_state(8);
+	CHECK(actor->get_equip(1) == 0);
+	CHECK(game->get_item_count(JRPGGameState::ITEM_KIND_WEAPON, 1) == 1);
+
+	// Forced changes skip ownership and do not give the previous item back.
+	const int swords = game->get_item_count(JRPGGameState::ITEM_KIND_WEAPON, 1);
+	CHECK(actor->force_equip(2, JRPGActorState::EQUIP_ARMOR, 2));
+	CHECK(actor->force_equip(0, JRPGActorState::EQUIP_WEAPON, 2));
+	CHECK(game->get_item_count(JRPGGameState::ITEM_KIND_WEAPON, 1) == swords);
+	CHECK_FALSE(actor->force_equip(3, JRPGActorState::EQUIP_WEAPON, 1)); // Still never in the wrong slot.
+}
+
+TEST_CASE("[JRPG][ActorState] Change Class keeps or recomputes the level") {
+	Ref<JRPGDatabase> db = make_equip_database();
+	Ref<JRPGGameState> game;
+	game.instantiate();
+	REQUIRE(game->start_new_game(db, 1) == OK);
+	Ref<JRPGActorState> actor = game->get_actor(1);
+	actor->change_level(5);
+	const Ref<JRPGClassData> mage = db->get_table(JRPGDatabase::TABLE_CLASSES)->get_entry(2);
+
+	CHECK(actor->change_class(2, true));
+	CHECK(actor->get_class_id() == 2);
+	CHECK(actor->get_level() == 5);
+	CHECK(actor->get_exp() == mage->get_exp_for_level(5));
+	CHECK(actor->get_equip(0) == 0); // Class 2 cannot use weapons: the sword returns to the party.
+	CHECK(game->get_item_count(JRPGGameState::ITEM_KIND_WEAPON, 1) == 1);
+	CHECK(actor->get_equip(1) == 1); // Armor type 1 is still allowed.
+
+	// Without keeping the level, the EXP stays and the level follows class 1's cheaper table.
+	const int64_t exp = actor->get_exp();
+	CHECK(actor->change_class(1, false));
+	CHECK(actor->get_exp() == exp);
+	CHECK(actor->get_level() > 5);
+	CHECK(exp >= actor->get_exp_for_level(actor->get_level()));
+	CHECK(exp < actor->get_exp_for_level(actor->get_level() + 1));
+	CHECK_FALSE(actor->change_class(99, true));
+}
+
+TEST_CASE("[JRPG][ActorState] Loading after database edits clears deleted references") {
+	Ref<JRPGDatabase> db = make_equip_database();
+	Ref<JRPGGameState> game;
+	game.instantiate();
+	REQUIRE(game->start_new_game(db, 1) == OK);
+	Ref<JRPGActorState> actor = game->get_actor(1);
+	Ref<JRPGRandom> rng;
+	rng.instantiate();
+	actor->change_level(5); // Skills 3 and 7.
+	REQUIRE(actor->add_state(4, rng));
+	REQUIRE(actor->change_class(2, true));
+	game->gain_item(JRPGGameState::ITEM_KIND_ITEM, 9, 3);
+	game->gain_item(JRPGGameState::ITEM_KIND_ITEM, 2, 1);
+	const Dictionary saved = game->serialize();
+
+	// The database changes: class 2, skill 7, state 4, armor 3, item 9 and actor 2 are gone.
+	db->get_table(JRPGDatabase::TABLE_CLASSES)->set_maximum(1);
+	db->get_table(JRPGDatabase::TABLE_SKILLS)->set_maximum(5);
+	db->get_table(JRPGDatabase::TABLE_STATES)->set_maximum(3);
+	db->get_table(JRPGDatabase::TABLE_ARMORS)->set_maximum(2);
+	db->get_table(JRPGDatabase::TABLE_ITEMS)->set_maximum(5);
+	db->get_table(JRPGDatabase::TABLE_ACTORS)->set_maximum(1);
+
+	Ref<JRPGGameState> restored;
+	restored.instantiate();
+	REQUIRE(restored->deserialize(saved) == OK);
+	ERR_PRINT_OFF;
+	const int fixes = restored->attach_database(db);
+	ERR_PRINT_ON;
+	// Actor 2 and its party place, class 2 -> 1, skill 7, state 4, armor 3 in the body slot, item 9.
+	CHECK(fixes == 7);
+	Ref<JRPGActorState> loaded = restored->get_actor(1);
+	CHECK(loaded->get_class_id() == 1);
+	CHECK(loaded->get_learned_skills() == PackedInt32Array({ 3 }));
+	CHECK_FALSE(loaded->has_state(4));
+	CHECK(loaded->get_equip(3) == 0);
+	CHECK(loaded->get_equip(1) == 1); // Untouched references stay.
+	CHECK(restored->get_actor(2).is_null());
+	CHECK(restored->get_party_members() == PackedInt32Array({ 1 }));
+	CHECK_FALSE(restored->has_item(JRPGGameState::ITEM_KIND_ITEM, 9));
+	CHECK(restored->has_item(JRPGGameState::ITEM_KIND_ITEM, 2));
+	CHECK(restored->attach_database(db) == 0); // Repaired once; nothing left.
 }
 
 } // namespace TestJRPGActorState

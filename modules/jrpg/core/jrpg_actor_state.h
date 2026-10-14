@@ -40,12 +40,16 @@
 class JRPGActorData;
 class JRPGClassData;
 class JRPGDatabase;
+class JRPGEquipData;
+class JRPGGameState;
 class JRPGRandom;
 
 // One actor as it is during play: class, level and EXP, parameter bonuses, HP/MP/TP, learned skills, states with
-// their turns and buffs (plan/specs/04_formulas_battle.md, plan/specs/06_save_format.md). Parameters come from a
-// JRPGStatBlock fed with the class curve, the bonuses, the traits of the actor, its class and its states, and the
-// buffs. The database is attached with setup() or set_database() and is not saved.
+// their turns, buffs and equipment (plan/specs/04_formulas_battle.md, plan/specs/06_save_format.md). Parameters come
+// from a JRPGStatBlock fed with the class curve, the bonuses and equipment, the traits of the actor, its class, its
+// equipment and its states, and the buffs. The database is attached with setup() or set_database() and is not saved.
+// Equipment the actor can no longer use (after a class change, a sealing state, losing dual wield...) goes back to
+// the inventory of the game state that owns the actor.
 // Online (D-007): zone servers own actor states; clients receive copies for menus and battle views.
 class JRPGActorState : public RefCounted {
 	GDCLASS(JRPGActorState, RefCounted);
@@ -54,8 +58,20 @@ public:
 	static constexpr int PARAM_COUNT = JRPGStatBlock::PARAM_COUNT;
 	static constexpr int64_t MAX_EXP = 999999999999LL;
 	static constexpr int MAX_PARAM_BONUS = 9999999;
+	static constexpr int DEFAULT_EQUIP_SLOTS = 5; // Slots when the database has no type lists (JRPGTypesData).
+
+	enum EquipKind {
+		EQUIP_NONE,
+		EQUIP_WEAPON,
+		EQUIP_ARMOR,
+	};
 
 private:
+	struct EquipSlot {
+		EquipKind kind = EQUIP_NONE;
+		int id = 0;
+	};
+
 	struct StateTurns {
 		int turns = 0; // Turns left before auto-removal (0 when the state has none).
 		int steps = 0; // Steps walked while affected, for removal by walking.
@@ -79,11 +95,14 @@ private:
 		RBMap<int, StateTurns> states;
 		int buff_levels[PARAM_COUNT] = {};
 		int buff_turns[PARAM_COUNT] = {};
+		Vector<EquipSlot> equips; // One per equipment slot, in slot order.
 	};
 
 	Data data;
 	Ref<JRPGDatabase> database;
 	Ref<JRPGStatBlock> stats;
+	ObjectID party_id; // The game state whose inventory receives released equipment (not owned).
+	bool releasing = false;
 
 	Ref<JRPGActorData> _actor_data() const;
 	Ref<JRPGClassData> _class_data() const;
@@ -92,8 +111,15 @@ private:
 	void _learn_skills_up_to(int p_from_level, int p_to_level, PackedInt32Array *r_learned);
 	Dictionary _set_exp(int64_t p_exp);
 	void _knock_out();
-	// Recomputes parameters from the database, keeps HP/MP/TP within their maximums and applies the knockout rule
-	// (HP 0 means knocked out). Does nothing without a database.
+	Ref<JRPGEquipData> _equip_data(EquipKind p_kind, int p_id) const;
+	bool _fits_slot(int p_slot_type, EquipKind p_kind, int p_id) const;
+	JRPGGameState *_party() const;
+	void _give_to_party(const EquipSlot &p_item) const;
+	void _update_stats();
+	// Takes off equipment that no longer fits its slot or that the actor cannot use; returns true if any was removed.
+	bool _release_unequippable(bool p_to_party);
+	// Recomputes parameters from the database, releases equipment the actor cannot use, keeps HP/MP/TP within their
+	// maximums and applies the knockout rule (HP 0 means knocked out). Does nothing without a database.
 	void _refresh();
 	static Error _parse(const Dictionary &p_data, Data &r_data);
 
@@ -107,6 +133,12 @@ public:
 	// Attaches the database after loading; parameters and limits are recomputed from it.
 	void set_database(const Ref<JRPGDatabase> &p_database);
 	Ref<JRPGDatabase> get_database() const { return database; }
+	// The game state whose inventory trades equipment with this actor (set by JRPGGameState; not owned).
+	void set_party(JRPGGameState *p_party);
+	// Attaches p_database after loading and, when it changed since the save, fixes references to deleted entries
+	// before anything is computed: a deleted class becomes class 1, deleted skills, states and equipment are dropped,
+	// the level is kept within the maximum level (spec 06). Returns how many references were fixed.
+	int repair_references(const Ref<JRPGDatabase> &p_database);
 
 	int get_actor_id() const { return data.actor_id; }
 
@@ -191,9 +223,36 @@ public:
 	int get_buff_turns(int p_param) const;
 	void set_buff_turns(int p_param, int p_turns);
 
+	// Equipment slots: the equipment types of the database, slot N taking type N; dual wield (Slot Type trait) turns
+	// the second slot into a weapon slot (RM-TRT-022).
+	int get_equip_slot_count() const;
+	PackedInt32Array get_equip_slot_types() const;
+	int get_equip(int p_slot) const;
+	EquipKind get_equip_kind(int p_slot) const;
+	// Whether the actor may use a weapon or armor: its type allowed by an Equip Weapon/Armor trait and its slot type
+	// not sealed (RM-TRT-018..021).
+	bool can_equip(EquipKind p_kind, int p_id) const;
+	bool is_equip_slot_locked(int p_slot) const;
+	bool is_equip_slot_sealed(int p_slot) const;
+	// Change Equipment (RM-CMD-032): the party must own the item, which leaves the inventory while the previous one
+	// returns to it. Locked slots, sealed slots, items for another slot and items the actor cannot use are refused.
+	// p_id 0 takes the slot's item off.
+	bool change_equip(int p_slot, EquipKind p_kind, int p_id);
+	// Equips without ownership or lock checks and without returning the previous item (initial equipment, forced
+	// changes); equipment the actor cannot use is discarded.
+	bool force_equip(int p_slot, EquipKind p_kind, int p_id);
+	// Takes off everything in unlocked slots, back to the inventory.
+	void clear_equipment();
+	// Change Class (RM-CMD-034): with p_keep_level the level stays and the EXP becomes what the new class needs for
+	// it; otherwise the EXP stays and the level follows the new class's table. Equipment the new class cannot use
+	// returns to the inventory.
+	bool change_class(int p_class_id, bool p_keep_level);
+
 	Dictionary serialize() const;
 	// Replaces the actor with p_data; malformed data leaves it unchanged and returns ERR_INVALID_DATA.
 	Error deserialize(const Dictionary &p_data);
 
 	JRPGActorState();
 };
+
+VARIANT_ENUM_CAST(JRPGActorState::EquipKind);

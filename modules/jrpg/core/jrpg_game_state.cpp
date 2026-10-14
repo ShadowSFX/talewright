@@ -36,6 +36,7 @@
 
 #include "core/math/math_funcs.h"
 #include "core/object/class_db.h"
+#include "core/templates/local_vector.h"
 
 namespace {
 
@@ -223,6 +224,7 @@ Ref<JRPGActorState> JRPGGameState::ensure_actor(const Ref<JRPGDatabase> &p_datab
 	if (actor->setup(p_database, p_actor_id) != OK) {
 		return Ref<JRPGActorState>();
 	}
+	actor->set_party(this); // After setup: unusable initial equipment is discarded, not given to the party.
 	data.actors[p_actor_id] = actor;
 	return actor;
 }
@@ -235,10 +237,50 @@ PackedInt32Array JRPGGameState::get_actor_ids() const {
 	return ids;
 }
 
-void JRPGGameState::attach_database(const Ref<JRPGDatabase> &p_database) {
+int JRPGGameState::attach_database(const Ref<JRPGDatabase> &p_database) {
+	ERR_FAIL_COND_V_MSG(p_database.is_null(), 0, "JRPGGameState: attach_database needs a database.");
+	int fixes = 0;
+	const Ref<JRPGTable> actor_table = p_database->get_table(JRPGDatabase::TABLE_ACTORS);
+	LocalVector<int> gone;
 	for (const KeyValue<int, Ref<JRPGActorState>> &kv : data.actors) {
-		kv.value->set_database(p_database);
+		if (actor_table.is_null() || !Object::cast_to<JRPGActorData>(actor_table->get_entry(kv.key).ptr())) {
+			gone.push_back(kv.key);
+		}
 	}
+	for (int id : gone) {
+		data.actors.erase(id);
+		fixes++;
+	}
+	for (int i = data.party_members.size() - 1; i >= 0; i--) {
+		if (actor_table.is_null() || !Object::cast_to<JRPGActorData>(actor_table->get_entry(data.party_members[i]).ptr())) {
+			data.party_members.remove_at(i);
+			fixes++;
+		}
+	}
+	for (const KeyValue<int, Ref<JRPGActorState>> &kv : data.actors) {
+		kv.value->set_party(this);
+		// Equipment the actor can no longer use goes back to the inventory, cleaned below if its entry is gone.
+		fixes += kv.value->repair_references(p_database);
+	}
+	const JRPGDatabase::TableKind item_tables[ITEM_KIND_MAX] = { JRPGDatabase::TABLE_ITEMS, JRPGDatabase::TABLE_WEAPONS, JRPGDatabase::TABLE_ARMORS };
+	for (int kind = 0; kind < ITEM_KIND_MAX; kind++) {
+		const Ref<JRPGTable> table = p_database->get_table(item_tables[kind]);
+		gone.clear();
+		for (const KeyValue<int, int> &kv : data.inventory[kind]) {
+			if (table.is_null() || !table->has_entry(kv.key)) {
+				gone.push_back(kv.key);
+			}
+		}
+		for (int id : gone) {
+			data.inventory[kind].erase(id);
+			fixes++;
+		}
+	}
+	if (fixes > 0) {
+		_changed();
+		WARN_PRINT(vformat("JRPG game state: the database changed since this game was saved; %d references to deleted entries were cleared.", fixes));
+	}
+	return fixes;
 }
 
 void JRPGGameState::set_party_members(const PackedInt32Array &p_actor_ids) {
@@ -632,6 +674,9 @@ Error JRPGGameState::deserialize(const Dictionary &p_data) {
 		return err;
 	}
 	data = loaded;
+	for (const KeyValue<int, Ref<JRPGActorState>> &kv : data.actors) {
+		kv.value->set_party(this);
+	}
 	// Streams missing from older saves start from seed 0, so loading the same data always gives the same draws.
 	random->seed_all(0);
 	random->deserialize(random_data);

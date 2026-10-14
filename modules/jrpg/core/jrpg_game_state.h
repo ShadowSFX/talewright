@@ -168,8 +168,11 @@ public:
 	// has no such actor.
 	Ref<JRPGActorState> ensure_actor(const Ref<JRPGDatabase> &p_database, int p_actor_id);
 	PackedInt32Array get_actor_ids() const;
-	// Gives every actor the database after deserialize(), so parameters and limits are computed again.
-	void attach_database(const Ref<JRPGDatabase> &p_database);
+	// Gives every actor the database after deserialize(), so parameters and limits are computed again, and clears
+	// references to entries deleted since the save (spec 06): actors and party members whose actor is gone,
+	// inventory entries, and each actor's class, skills, states and equipment (JRPGActorState::repair_references).
+	// Prints one warning when something was cleared and returns how many references were fixed.
+	int attach_database(const Ref<JRPGDatabase> &p_database);
 
 	// Party members are actor IDs in formation order, each at most once.
 	void set_party_members(const PackedInt32Array &p_actor_ids);
