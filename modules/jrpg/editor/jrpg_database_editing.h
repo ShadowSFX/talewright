@@ -83,8 +83,8 @@ public:
 	// Replaces parameter p_param's curve of class p_class_id with one generated from p_first (level 1) to p_last
 	// (level 99) with growth shape p_growth (-10..10, JRPGCurves::generate), clamped to the parameter's range; undoable.
 	Error generate_param_curve(int p_class_id, int p_param, int p_first, int p_last, int p_growth);
-	// Stored, inspector-visible data properties (what the form shows and the bridge reports), and those of them that are
-	// not read-only (derived values such as a class's baked EXP table are read-only).
+	// Stored data properties (what the bridge reports; the form shows those that apply), and those of them that are not
+	// read-only (derived values such as a class's baked EXP table are read-only). Engine properties are never data.
 	static bool is_data_property(const PropertyInfo &p_property);
 	static bool is_editable_property(const PropertyInfo &p_property);
 

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "6.5.2.2 Parameter curve editor",
+  "last_completed": "6.5.2.3 Actor initial equipment and slice field check",
   "tasks": [
     {
       "id": "0",
@@ -2022,9 +2022,9 @@
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
-      "commit": "",
-      "notes": "",
-      "status": "pending"
+      "commit": "children",
+      "notes": "Closed automatically when all children closed.",
+      "status": "done"
     },
     {
       "id": "6.5.2.1",
@@ -2094,7 +2094,7 @@
         "plan/evidence/jrpg/6.5.2.2-curve-dialog.png"
       ],
       "status": "done",
-      "commit": "pending",
+      "commit": "04dbf10e7d",
       "notes": "frontend-design applied (editor theme only): one memorable element, the curve graphs (accent line over a filled area on the dark surface), everything else native (flat buttons, SpinBoxes, ConfirmationDialog). Fill drawn as quads (draw_primitive) after the first version's overlapping rectangles striped."
     },
     {
@@ -2112,11 +2112,19 @@
       "test_strategy": "Doctests (slot choices) + editor_ui_* run over the four tables.",
       "files": [
         "modules/jrpg/editor/jrpg_equipment_editor.h",
-        "modules/jrpg/editor/jrpg_equipment_editor.cpp"
+        "modules/jrpg/editor/jrpg_equipment_editor.cpp",
+        "modules/jrpg/editor/jrpg_inspector_plugin.cpp",
+        "modules/jrpg/editor/jrpg_database_editing.h",
+        "modules/jrpg/editor/jrpg_database_editing.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/tests/test_jrpg_equipment_editor.h",
+        "plan/specs/02_database_model.md",
+        "plan/evidence/jrpg/6.5.2.3-bridge-slice-fields.txt",
+        "plan/evidence/jrpg/6.5.2.3-actor-equipment.png"
       ],
-      "status": "pending",
-      "commit": "",
-      "notes": ""
+      "status": "done",
+      "commit": "pending",
+      "notes": "Slice-field coverage: a doctest asserts every spec 02 slice field of actors, classes, skills and items is editable stored data (the form's inspector and jrpg_db_set both rest on that); the live run lists each table's form labels and types one field per table with undo. Hidden fields (an item's damage fields while it deals no damage) are now data for the bridge, so damage type and formula can be set in one call. Icon index stays a number until the icon set exists (assets, epic 7)."
     },
     {
       "id": "6.5.3",

@@ -75,7 +75,9 @@ void JRPGDatabaseEditing::_watch_table(const Ref<JRPGTable> &p_table) {
 }
 
 bool JRPGDatabaseEditing::is_data_property(const PropertyInfo &p_property) {
-	return (p_property.usage & PROPERTY_USAGE_STORAGE) && (p_property.usage & PROPERTY_USAGE_EDITOR) && !p_property.name.begins_with("resource_") && p_property.name != "script" && !p_property.name.begins_with("metadata/");
+	// Stored data, whether or not the inspector shows it right now (an item's damage fields are hidden while it deals
+	// no damage, yet saved and settable).
+	return (p_property.usage & PROPERTY_USAGE_STORAGE) && !p_property.name.begins_with("resource_") && p_property.name != "script" && !p_property.name.begins_with("metadata/");
 }
 
 bool JRPGDatabaseEditing::is_editable_property(const PropertyInfo &p_property) {

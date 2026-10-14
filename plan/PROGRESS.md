@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 22:32 -0600
+- **Updated:** 2026-10-13 22:36 -0600
 - **Current task:** none
-- **Last completed:** 6.5.2.2 Parameter curve editor
-- **Next task:** 6.5.2.3 Actor initial equipment and slice field check
-- **Done leaf tasks:** 73
+- **Last completed:** 6.5.2.3 Actor initial equipment and slice field check
+- **Next task:** 6.5.3 Weapons, armors, enemies, troops, states, system, types, terms forms
+- **Done leaf tasks:** 74
 <!-- status:end -->
 
 ## Log
@@ -201,3 +201,6 @@
 | 2026-10-13 22:29 -0600 | - | imported 0 new / 1 updated tasks | |
 | 2026-10-13 22:29 -0600 | 6.5.2.2 | done: Parameter curve editor — Parameter curve editor: eight curve graphs with 'Max HP: 445 → 4855' buttons in the class form; per-parameter dialog with a large clickable graph, single-level Level/Value editing and Generate Curve from level 1/99 values and a growth shape; JRPGCurves helpers; JRPGClassData::get_param_limits shared with set_param; authoring API generate_param_curve + bridge tool jrpg_db_generate_curve; readable curves in jrpg_db_get; 3 doctests (322 assertions); verified live via editor_ui_*: generate, single-level edit, apply, undo/redo, bridge generate + undo, errors 0; full suite 1493/1493 (containers: 6.5.2 in_progress->pending, 6.5 in_progress->pending, 6 in_progress->pending) | 04dbf10e7d |
 | 2026-10-13 22:32 -0600 | 6.5.1 | CI run 38510290436 failed on macOS: std::size needs <iterator> under libc++ (MSVC pulls it in). Fixed with the engine's std_size (core/typedefs.h:158); static_checks.py now rejects std::size( in fork C++. | |
+| 2026-10-13 22:32 -0600 | 6.5.2.3 | started: Actor initial equipment and slice field check (containers: 6.5.2 pending->in_progress, 6.5 pending->in_progress, 6 pending->in_progress) |  |
+| 2026-10-13 22:36 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 22:36 -0600 | 6.5.2.3 | done: Actor initial equipment and slice field check — Actor initial equipment as named slot pickers (Weapon, Shield, Head, Body, Accessory from Types; weapons in slot 1 and in slot 2 with dual wield from actor or class; armors filtered by equipment type; foreign values kept and marked); data properties now include stored fields the inspector hides (bridge sets damage type + formula in one call); slice-field doctest for actors, classes, skills, items; verified live: slot pick + undo, form labels for every slice field, typed nickname/MP cost/price + undo per table, errors 0; full suite 1495/1495 (containers: 6.5.2 in_progress->done, 6.5 in_progress->pending, 6 in_progress->pending) | pending |

@@ -104,7 +104,11 @@ Full field lists per table follow the inventory slices (03/04/05). The vertical 
   Parameter curves (6.5.2.2) are eight small graphs on a fixed scale (0 to the parameter's limit,
   `JRPGClassData::get_param_limits`); a dialog per parameter edits single levels and generates a curve from the
   level 1 and 99 values and a growth shape (`JRPGCurves::generate`: t^(2^(-growth/5)), editor-side; the saved curve
-  is plain integers). Actor equipment slots come with 6.5.2.3.
+  is plain integers). Actor initial equipment (6.5.2.3) is one picker per equipment type (slot i = type i + 1):
+  weapons in slot 1, and in slot 2 with Dual Wield on the actor or its class; armors of the slot's type elsewhere.
+- Data properties are the stored ones (not engine `resource_*`), whether or not the inspector shows them right now
+  (an item's damage fields are hidden while it deals no damage): the bridge reads and sets them all; derived ones
+  (a class's EXP table) are read-only.
 - Entries added by Change Maximum get their `file::Kind_id` path at once (as the loader and saver would,
   scene/resources/resource_format_text.cpp:633,1942), so inspector edits of an unsaved new entry also go to the
   global history.

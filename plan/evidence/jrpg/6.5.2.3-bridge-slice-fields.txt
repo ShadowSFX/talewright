@@ -1,0 +1,37 @@
+# 6.5.2.3 bridge verification: actor equipment slots and slice fields
+## actor 1: equipment slots (labels and pickers)
+[('0001  Short Sword', ['None', '0001  Short Sword', '0002', '0003'])]
+slot label: ['Shield']
+slot label: ['Head']
+slot label: ['Body']
+slot label: ['Accessory']
+[image saved] plan/evidence/jrpg/6.5.2.3-actor-equipment.png
+## pick weapon 0002 for the Weapon slot, then undo
+PackedInt32Array(2, 0, 0, 1, 0)
+PackedInt32Array(1, 0, 0, 1, 0)
+## actor form fields
+['Battler', 'Character', 'Class ID', 'Face', 'ID', 'Initial Equipment', 'Initial Level', 'Max Level', 'Name', 'Nickname', 'Note', 'Profile', 'Traits']
+## type a nickname into the form, then undo
+The Wanderer
+''
+## class form fields
+['Base', 'Extra', 'Growth', 'ID', 'Learnings', 'Name', 'Note', 'Param Curves', 'Table', 'Traits']
+## skill 1 form fields
+['Animation ID', 'Count', 'Critical', 'Description', 'Effects', 'Element ID', 'Formula', 'Hit Type', 'ID', 'Icon Index', 'Message', 'Mp Cost', 'Name', 'Note', 'Occasion', 'Repeats', 'Side', 'Skill Type ID', 'Speed', 'Status', 'Success', 'Tp Cost', 'Tp Gain', 'Type', 'Variance', 'Weapon Type 1', 'Weapon Type 2']
+## set MP Cost to 4 in the form, then undo
+4
+0
+## item 1 form fields (no damage: the damage fields stay hidden)
+['Animation ID', 'Consumable', 'Count', 'Description', 'Effects', 'Hit Type', 'ID', 'Icon Index', 'Item Type', 'Name', 'Note', 'Occasion', 'Price', 'Repeats', 'Side', 'Speed', 'Status', 'Success', 'Tp Gain', 'Type']
+## set Price to 55 in the form, then undo
+55
+40
+## bridge: damage type and formula in one call on item 1 (hidden fields are still data), then undo
+  "changed": {
+    "damage_type": 1,
+    "damage_formula": "50 + a.mat"
+  },
+0 ''
+## errors
+    "errors": 0,
+    "warnings": 0,
