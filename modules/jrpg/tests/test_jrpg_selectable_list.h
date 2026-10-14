@@ -40,6 +40,7 @@
 #include "scene/resources/audio_stream_wav.h"
 #include "servers/audio/audio_driver_dummy.h"
 #include "servers/audio/audio_server.h"
+#include "servers/audio/audio_stream.h"
 #include "tests/display_server_mock.h"
 #include "tests/signal_watcher.h"
 #include "tests/test_macros.h"
@@ -293,9 +294,20 @@ TEST_CASE("[SceneTree][JRPG][SelectableList] Sounds come from the System data's 
 	CHECK(player->is_playing());
 	CHECK(player->get_stream()->get_path() == track);
 	CHECK(player->get_volume_linear() == doctest::Approx(0.8));
+	// The same sound again plays over the first instead of cutting it (epic 10 review A8).
+	const Ref<AudioStreamPlayback> first = player->get_stream_playback();
+	tap("jrpg_down");
+	CHECK(player->get_stream_playback() != first);
+	CHECK(AudioServer::get_singleton()->is_playback_active(first));
 	tap("jrpg_ok"); // No OK sound in this System data: silent, the cursor sound's stream stays.
 	CHECK(list->get_last_sound() == JRPGSystemData::SOUND_OK);
 	CHECK(player->get_stream()->get_path() == track);
+	// Freed from outside (scripts reach it through get_sound_player), the player is made again (epic 10 review A21).
+	memdelete(player);
+	CHECK(list->get_sound_player() == nullptr);
+	tap("jrpg_up");
+	REQUIRE(list->get_sound_player());
+	CHECK(list->get_sound_player()->is_playing());
 	memdelete(list);
 
 	if (own_audio) {

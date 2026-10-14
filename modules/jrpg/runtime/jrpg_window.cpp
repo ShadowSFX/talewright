@@ -36,6 +36,7 @@
 #include "core/io/image.h"
 #include "core/io/resource_loader.h"
 #include "core/io/resource_uid.h"
+#include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
 #include "scene/audio/audio_stream_player.h"
 #include "scene/main/viewport.h"
@@ -81,6 +82,7 @@ void JRPGWindow::ensure_default_skin() {
 	}
 	theme->set_constant(SNAME("padding"), type, DEFAULT_PADDING);
 	theme->set_constant(SNAME("frame_margin"), type, DEFAULT_FRAME_MARGIN);
+	theme->set_constant(SNAME("mark_offset"), type, DEFAULT_MARK_OFFSET);
 	theme->set_constant(SNAME("icon_size"), type, DEFAULT_ICON_SIZE);
 	theme->set_block_signals(false);
 }
@@ -94,7 +96,8 @@ void JRPGWindow::_update_theme_item_cache() {
 void JRPGWindow::_update_toned_back() {
 	toned_back.unref();
 	const Ref<Texture2D> back = theme_cache.back;
-	if (tone == Vector3i() || back.is_null()) {
+	const Vector3i tone_in_use = get_tone_in_use();
+	if (tone_in_use == Vector3i() || back.is_null()) {
 		return;
 	}
 	Ref<Image> image = back->get_image();
@@ -109,7 +112,7 @@ void JRPGWindow::_update_toned_back() {
 	const int64_t count = int64_t(image->get_width()) * image->get_height();
 	for (int64_t i = 0; i < count; i++) {
 		for (int channel = 0; channel < 3; channel++) {
-			pixels[i * 4 + channel] = uint8_t(CLAMP(int(pixels[i * 4 + channel]) + tone[channel], 0, 255));
+			pixels[i * 4 + channel] = uint8_t(CLAMP(int(pixels[i * 4 + channel]) + tone_in_use[channel], 0, 255));
 		}
 	}
 	toned_back = ImageTexture::create_from_image(image);
@@ -123,6 +126,25 @@ void JRPGWindow::set_tone(const Vector3i &p_tone) {
 	tone = clamped;
 	_update_toned_back();
 	queue_redraw();
+}
+
+void JRPGWindow::set_use_system_tone(bool p_use) {
+	if (use_system_tone == p_use) {
+		return;
+	}
+	use_system_tone = p_use;
+	_update_toned_back();
+	queue_redraw();
+	notify_property_list_changed(); // The tone property is read-only while the System data's is used.
+}
+
+Vector3i JRPGWindow::get_tone_in_use() const {
+	if (!use_system_tone) {
+		return tone;
+	}
+	const Ref<JRPGDatabase> db = get_effective_database();
+	const Ref<JRPGSystemData> system = db.is_valid() ? db->get_system() : Ref<JRPGSystemData>();
+	return system.is_valid() ? system->get_window_tone() : Vector3i();
 }
 
 void JRPGWindow::_set_openness(double p_openness) {
@@ -152,11 +174,15 @@ void JRPGWindow::set_openness(double p_openness) {
 	_set_openness(p_openness);
 }
 
+void JRPGWindow::_emit_reached(bool p_open) {
+	emit_signal(p_open ? SNAME("opened") : SNAME("closed"));
+}
+
 void JRPGWindow::open() {
 	if (is_open()) {
 		opening = 0;
 		_update_process();
-		emit_signal(SNAME("opened")); // Already open: done at once.
+		callable_mp(this, &JRPGWindow::_emit_reached).call_deferred(true); // Already open: done, after the caller.
 		return;
 	}
 	opening = 1;
@@ -167,7 +193,7 @@ void JRPGWindow::close() {
 	if (is_closed()) {
 		opening = 0;
 		_update_process();
-		emit_signal(SNAME("closed"));
+		callable_mp(this, &JRPGWindow::_emit_reached).call_deferred(false);
 		return;
 	}
 	opening = -1;
@@ -220,19 +246,33 @@ Ref<Texture2D> JRPGWindow::get_back_texture() const {
 
 void JRPGWindow::set_database(const Ref<JRPGDatabase> &p_database) {
 	database = p_database;
+	_update_toned_back(); // The tone may come from the new database's System data.
+	queue_redraw();
 }
 
 Ref<JRPGDatabase> JRPGWindow::get_database() const {
+	return database;
+}
+
+Ref<JRPGDatabase> JRPGWindow::get_effective_database() const {
 	if (database.is_valid()) {
 		return database;
 	}
-	return ResourceLoader::exists(JRPGDatabase::PROJECT_PATH) ? JRPGDatabase::load_database(JRPGDatabase::PROJECT_PATH) : Ref<JRPGDatabase>();
+	if (project_database.is_null() && ResourceLoader::exists(JRPGDatabase::PROJECT_PATH)) {
+		// From the resource cache when something holds it (the editor's database tools edit the same object).
+		project_database = JRPGDatabase::load_database(JRPGDatabase::PROJECT_PATH);
+	}
+	return project_database;
+}
+
+AudioStreamPlayer *JRPGWindow::get_sound_player() const {
+	return ObjectDB::get_instance<AudioStreamPlayer>(sound_player_id);
 }
 
 void JRPGWindow::play_sound(JRPGSystemData::Sound p_sound) {
 	ERR_FAIL_INDEX(int(p_sound), JRPGSystemData::SOUND_MAX);
 	last_sound = p_sound;
-	const Ref<JRPGDatabase> db = get_database();
+	const Ref<JRPGDatabase> db = get_effective_database();
 	const Ref<JRPGSystemData> system = db.is_valid() ? db->get_system() : Ref<JRPGSystemData>();
 	const Ref<JRPGAudioCue> cue = system.is_valid() ? system->get_sound(p_sound) : Ref<JRPGAudioCue>();
 	if (cue.is_null() || cue->is_empty()) {
@@ -244,6 +284,7 @@ void JRPGWindow::play_sound(JRPGSystemData::Sound p_sound) {
 		WARN_PRINT_ONCE(vformat("JRPG: the interface sound %s cannot be loaded; it stays silent.", path));
 		return;
 	}
+	AudioStreamPlayer *sound_player = get_sound_player();
 	if (!sound_player) {
 		// Made with the first sound: a player needs the audio server from its creation
 		// (scene/audio/audio_stream_player_internal.cpp:365), which tools and tests may not have.
@@ -254,11 +295,17 @@ void JRPGWindow::play_sound(JRPGSystemData::Sound p_sound) {
 		sound_player->set_name("Sounds");
 		sound_player->set_max_polyphony(4); // A cursor sound may start before the last one ends.
 		add_child(sound_player, false, INTERNAL_MODE_FRONT);
+		sound_player_id = sound_player->get_instance_id();
+	}
+	if (!sound_player->is_inside_tree()) {
+		return; // Playback needs the tree (scene/audio/audio_stream_player_internal.cpp:145).
 	}
 	// Volume and pitch follow the cue; pan waits for the audio system (task 29), as for map music.
 	sound_player->set_volume_linear(CLAMP(cue->get_volume(), 0, 100) / 100.0);
 	sound_player->set_pitch_scale(MAX(cue->get_pitch(), 1) / 100.0);
-	sound_player->set_stream(stream);
+	if (sound_player->get_stream() != stream) {
+		sound_player->set_stream(stream); // Stops what plays (scene/audio/audio_stream_player_internal.cpp:261).
+	}
 	sound_player->play();
 }
 
@@ -275,6 +322,23 @@ Size2 JRPGWindow::get_minimum_size() const {
 		}
 	}
 	return minimum + Size2(theme_cache.padding, theme_cache.padding) * 2;
+}
+
+bool JRPGWindow::get_nine_patch_region(const Ref<Texture2D> &p_texture, const Rect2 &p_rect, Rect2 &r_rect, Rect2 &r_source) {
+	if (p_texture.is_null()) {
+		return false;
+	}
+	return p_texture->get_rect_region(p_rect, Rect2(Point2(), p_texture->get_size()), r_rect, r_source); // False: an atlas without its image.
+}
+
+void JRPGWindow::draw_nine_patch(const Ref<Texture2D> &p_texture, const Rect2 &p_rect, real_t p_margin, const Color &p_modulate) const {
+	Rect2 rect;
+	Rect2 source;
+	if (!get_nine_patch_region(p_texture, p_rect, rect, source)) {
+		return;
+	}
+	const Vector2 margin(p_margin, p_margin);
+	RenderingServer::get_singleton()->canvas_item_add_nine_patch(get_canvas_item(), rect, source, p_texture->get_scaled_rid(), margin, margin, RSE::NINE_PATCH_STRETCH, RSE::NINE_PATCH_STRETCH, true, p_modulate);
 }
 
 void JRPGWindow::_draw_mark(Mark p_mark, const Point2 &p_position) {
@@ -324,31 +388,40 @@ void JRPGWindow::_notification(int p_what) {
 				rs->canvas_item_set_clip(ci, true);
 				rs->canvas_item_add_set_transform(ci, Transform2D(0, Size2(1, openness), 0, Vector2(0, size.y * (1.0 - openness) / 2.0)));
 			}
-			const Rect2 rect(Point2(), size);
-			const Vector2 margin(theme_cache.frame_margin, theme_cache.frame_margin);
-			for (const Ref<Texture2D> &layer : { get_back_texture(), theme_cache.border }) {
-				if (layer.is_valid() && frame_visible) {
-					rs->canvas_item_add_nine_patch(ci, rect, Rect2(Point2(), layer->get_size()), layer->get_rid(), margin, margin);
+			if (frame_visible) {
+				for (const Ref<Texture2D> &layer : { get_back_texture(), theme_cache.border }) {
+					draw_nine_patch(layer, Rect2(Point2(), size), theme_cache.frame_margin);
 				}
 			}
 			if (openness < 1.0) {
 				rs->canvas_item_add_set_transform(ci, Transform2D()); // Contents drawn after this are clipped, not squashed.
 				break;
 			}
+			// Centered mark_offset from the edge (in the padding, over the border), so they stay off the first and last rows.
 			const real_t middle = Math::round((size.x - ARROW_SIZE) / 2);
+			const real_t offset = theme_cache.mark_offset;
 			if (scroll_up_visible) {
-				_draw_mark(MARK_SCROLL_UP, Point2(middle, 2));
+				_draw_mark(MARK_SCROLL_UP, Point2(middle, offset - ARROW_SIZE / 2));
 			}
 			if (scroll_down_visible || pause_visible) {
-				_draw_mark(pause_visible ? MARK_PAUSE : MARK_SCROLL_DOWN, Point2(middle, size.y - ARROW_SIZE - 2));
+				_draw_mark(pause_visible ? MARK_PAUSE : MARK_SCROLL_DOWN, Point2(middle, size.y - offset - ARROW_SIZE / 2));
 			}
 		} break;
+	}
+}
+
+void JRPGWindow::_validate_property(PropertyInfo &p_property) const {
+	if (use_system_tone && p_property.name == "tone") {
+		p_property.usage |= PROPERTY_USAGE_READ_ONLY;
 	}
 }
 
 void JRPGWindow::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_tone", "tone"), &JRPGWindow::set_tone);
 	ClassDB::bind_method(D_METHOD("get_tone"), &JRPGWindow::get_tone);
+	ClassDB::bind_method(D_METHOD("set_use_system_tone", "use"), &JRPGWindow::set_use_system_tone);
+	ClassDB::bind_method(D_METHOD("is_using_system_tone"), &JRPGWindow::is_using_system_tone);
+	ClassDB::bind_method(D_METHOD("get_tone_in_use"), &JRPGWindow::get_tone_in_use);
 	ClassDB::bind_method(D_METHOD("set_openness", "openness"), &JRPGWindow::set_openness);
 	ClassDB::bind_method(D_METHOD("get_openness"), &JRPGWindow::get_openness);
 	ClassDB::bind_method(D_METHOD("open"), &JRPGWindow::open);
@@ -376,10 +449,12 @@ void JRPGWindow::_bind_methods() {
 	ClassDB::bind_static_method("JRPGWindow", D_METHOD("ensure_default_skin"), &JRPGWindow::ensure_default_skin);
 	ClassDB::bind_method(D_METHOD("set_database", "database"), &JRPGWindow::set_database);
 	ClassDB::bind_method(D_METHOD("get_database"), &JRPGWindow::get_database);
+	ClassDB::bind_method(D_METHOD("get_effective_database"), &JRPGWindow::get_effective_database);
 	ClassDB::bind_method(D_METHOD("play_sound", "sound"), &JRPGWindow::play_sound);
 	ClassDB::bind_method(D_METHOD("get_last_sound"), &JRPGWindow::get_last_sound);
 	ClassDB::bind_method(D_METHOD("get_sound_player"), &JRPGWindow::get_sound_player);
 
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "use_system_tone"), "set_use_system_tone", "is_using_system_tone");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3I, "tone"), "set_tone", "get_tone");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "openness", PROPERTY_HINT_RANGE, "0,1,0.01"), "set_openness", "get_openness");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "scroll_up_visible"), "set_scroll_up_visible", "is_scroll_up_visible");
@@ -396,6 +471,7 @@ void JRPGWindow::_bind_methods() {
 	BIND_CONSTANT(DEFAULT_FRAME_MARGIN);
 	BIND_CONSTANT(ARROW_SIZE);
 	BIND_CONSTANT(DEFAULT_ICON_SIZE);
+	BIND_CONSTANT(DEFAULT_MARK_OFFSET);
 
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, JRPGWindow, back);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, JRPGWindow, border);
@@ -405,6 +481,7 @@ void JRPGWindow::_bind_methods() {
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, JRPGWindow, icon_size);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, JRPGWindow, padding);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, JRPGWindow, frame_margin);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, JRPGWindow, mark_offset);
 }
 
 JRPGWindow::JRPGWindow() {

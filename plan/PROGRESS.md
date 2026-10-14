@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 12:45 -0600
+- **Updated:** 2026-10-14 13:01 -0600
 - **Current task:** none
-- **Last completed:** 10.4.1.1 Epic 10 review: input and focus
-- **Next task:** 10.4.1.2 Epic 10 review: drawing, theme and data
-- **Done leaf tasks:** 127
+- **Last completed:** 10.4.1.2.1 Epic 10 review: window, skin and data
+- **Next task:** 10.4.1.2.2 Epic 10 review: lists, choices, number and gold windows
+- **Done leaf tasks:** 128
 <!-- status:end -->
 
 ## Log
@@ -339,4 +339,7 @@
 | 2026-10-14 12:32 -0600 | - | imported 3 new / 1 updated tasks (containers: 10.4.1 in_progress->pending, 10.4 in_progress->pending, 10 in_progress->pending) | |
 | 2026-10-14 12:32 -0600 | 10.4.1.1 | started: Epic 10 review: input and focus (containers: 10.4.1 pending->in_progress, 10.4 pending->in_progress, 10 pending->in_progress) |  |
 | 2026-10-14 12:36 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-14 12:45 -0600 | 10.4.1.1 | done: Epic 10 review: input and focus — Epic 10 review input/focus fixes (A1-4, A13-15, B4, B5, B10, B12): keys held at focus-in blocked until released, no repeat catch-up, focus keys kept by focused windows, closed windows take no clicks or focus, the focusing click only selects, answered choices FOCUS_NONE, right click anywhere cancels, list page_mode (scroll/signal/none), no walking while a control has focus, message window focusable only while under way with left/right clicks anywhere, even letter reveal capped at 4 a frame; D-044/D-050/D-052 amended; doctests in test_jrpg_window_input.h (full suite 1611/1611 twice after one unreproduced SIGSEGV in upstream [Image] Saving and loading; template 1499/1499; bridge checks 187/187; static checks pass) (containers: 10.4.1 in_progress->pending, 10.4 in_progress->pending, 10 in_progress->pending) | pending |
+| 2026-10-14 12:45 -0600 | 10.4.1.1 | done: Epic 10 review: input and focus — Epic 10 review input/focus fixes (A1-4, A13-15, B4, B5, B10, B12): keys held at focus-in blocked until released, no repeat catch-up, focus keys kept by focused windows, closed windows take no clicks or focus, the focusing click only selects, answered choices FOCUS_NONE, right click anywhere cancels, list page_mode (scroll/signal/none), no walking while a control has focus, message window focusable only while under way with left/right clicks anywhere, even letter reveal capped at 4 a frame; D-044/D-050/D-052 amended; doctests in test_jrpg_window_input.h (full suite 1611/1611 twice after one unreproduced SIGSEGV in upstream [Image] Saving and loading; template 1499/1499; bridge checks 187/187; static checks pass) (containers: 10.4.1 in_progress->pending, 10.4 in_progress->pending, 10 in_progress->pending) | e03f8a993a |
+| 2026-10-14 12:45 -0600 | - | imported 3 new / 1 updated tasks | |
+| 2026-10-14 12:45 -0600 | 10.4.1.2.1 | started: Epic 10 review: window, skin and data (containers: 10.4.1.2 pending->in_progress, 10.4.1 pending->in_progress, 10.4 pending->in_progress, 10 pending->in_progress) |  |
+| 2026-10-14 13:01 -0600 | 10.4.1.2.1 | done: Epic 10 review: window, skin and data — Epic 10 review window/skin/data fixes (A5-8, A16, A19, A21, B9): database getter returns what was set and the project's is used through get_effective_database (loaded once); nine-slices drawn from AtlasTexture regions (draw_nine_patch/get_nine_patch_region) for frame and cursors; use_system_tone takes System data's window tone (game-state override noted for epic 24); repeated sounds overlap (stream set only on change); marks centered mark_offset=6 in the padding (goldens window/list/message regenerated on purpose after visual check); opened/closed deferred when already reached; sound player by ObjectID; D-049 amended. JRPG 207/207, full 1613/1613, template 1501/1501, bridge 187/187, static checks pass (containers: 10.4.1.2 in_progress->pending, 10.4.1 in_progress->pending, 10.4 in_progress->pending, 10 in_progress->pending) | pending |

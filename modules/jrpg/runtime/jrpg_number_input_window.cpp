@@ -37,7 +37,6 @@
 #include "core/object/class_db.h"
 #include "scene/main/viewport.h"
 #include "scene/resources/font.h"
-#include "servers/rendering/rendering_server.h"
 
 int JRPGNumberInputWindow::_place_value(int p_digit) const {
 	int place = 1;
@@ -151,8 +150,7 @@ void JRPGNumberInputWindow::_notification(int p_what) {
 			for (int i = 0; i < digits; i++) {
 				const Rect2 cell(left + i * DIGIT_WIDTH, content.position.y, DIGIT_WIDTH, line_height);
 				if (i == cursor && active && cursor_texture.is_valid()) {
-					const Vector2 margin(8, 8);
-					RenderingServer::get_singleton()->canvas_item_add_nine_patch(get_canvas_item(), cell, Rect2(Point2(), cursor_texture->get_size()), cursor_texture->get_rid(), margin, margin);
+					draw_nine_patch(cursor_texture, cell, 8);
 				}
 				if (font.is_valid()) {
 					const String digit = itos(get_digit(i));

@@ -743,6 +743,16 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   appearing only when open); closed, nothing is drawn. Windows stop mouse clicks.
 - **Why:** reuses Godot's theme system for customization and its renderer's clipping; no project files are needed for
   a window to draw (games, tests, goldens); the tone tints only the body, as the skin's two layers allow.
+- **Amended (epic 10 review A5-A8, A16, A19, A21, B9; task 10.4.1.2.1):** by default (`use_system_tone`) a window
+  takes the window tone of its database's System data, the window's own `tone` otherwise; the game state's Change
+  Window Color override (`JRPGGameState::set_window_tone_override`) joins with that command (epic 24). `database`
+  holds only what was set; the project's database is used through `get_effective_database()` (loaded once, never
+  stored in scenes). Skin images may be AtlasTextures: nine-slices are drawn from the texture's region, as
+  `StyleBoxTexture::draw` does (`scene/resources/style_box_texture.cpp:166-185`). The scroll and pause marks are
+  centered `mark_offset` (a theme constant, 6) from the edge, in the padding over the border, so they never cover a
+  row. `open()`/`close()` on a window already in that state emit on the next idle frame (a caller can still await);
+  on a window going the other way they turn it round without the other signal. The interface sound player keeps its
+  stream while the same sound repeats (so repeats overlap, up to four) and is found by ObjectID (scripts may free it).
 - **Reversal:** contents hidden until open: give the window an internal content node and toggle it; skin in the
   addon: drop `ensure_default_skin` and point a project theme at the addon's images; timing: `OPEN_FRAMES`.
 

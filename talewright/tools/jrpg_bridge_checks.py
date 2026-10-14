@@ -798,6 +798,7 @@ offset_left = 336.0
 offset_top = 24.0
 offset_right = 616.0
 offset_bottom = 184.0
+use_system_tone = false
 tone = Vector3i(96, 0, -48)
 pause_visible = true
 

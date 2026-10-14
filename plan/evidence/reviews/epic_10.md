@@ -18,10 +18,10 @@ finding below is marked with the task and fix as it lands.
 | 2 | med | Only the eight jrpg actions were accepted: Tab (`ui_focus_next`, also the default `jrpg_menu` key) and other `ui_*` focus keys moved the focus off the active window | 10.4.1.1: `handle_event` also recognizes the viewport's focus keys (`FOCUS_NAVIGATION`); focused windows accept them. Doctest "Focus keys stay with the focused window" |
 | 3 | med | A closed window still passed hit tests and took the focus on a click (children too) | 10.4.1.1: `JRPGWindow::has_point` covers only the part that shows; closed: `MOUSE_BEHAVIOR_DISABLED` for the window and its children, focus released. Doctest "Clicks: a closed window takes none…" |
 | 4 | med | One click on an inactive list both focused it and chose its item; an answered choice window could be refocused and replay the OK sound | 10.4.1.1: the click that gives a list the focus only moves the cursor; an answered choice window is `FOCUS_NONE` until `show_choices`. Same doctest, and "Right click anywhere cancels…" |
-| 5 | med-low | `database` getter returned the project database, so the class default and saved scenes could hold it; every sound reloaded the database | pending (10.4.1.2) |
-| 6 | med-low | Nine-patches drew `get_rid()` with the full size: AtlasTexture skin parts drew the wrong region | pending (10.4.1.2) |
-| 7 | med-low | Nothing applied System data's window tone to windows (task 10.1.1, RM-MNU-016) | pending (10.4.1.2) |
-| 8 | low | `set_max_polyphony(4)` had no effect: `set_stream` on every sound stops the playbacks | pending (10.4.1.2) |
+| 5 | med-low | `database` getter returned the project database, so the class default and saved scenes could hold it; every sound reloaded the database | 10.4.1.2.1: `database` returns what was set (null: nothing stored); `get_effective_database()` uses the project's, loaded once. Doctest "By default the tone and the sounds come from the System data…" |
+| 6 | med-low | Nine-patches drew `get_rid()` with the full size: AtlasTexture skin parts drew the wrong region | 10.4.1.2.1: `JRPGWindow::draw_nine_patch`/`get_nine_patch_region` take the texture's region (`get_rect_region`, `get_scaled_rid`) for the frame and the list and number cursors. Doctest "Skin parts may be regions of one image" |
+| 7 | med-low | Nothing applied System data's window tone to windows (task 10.1.1, RM-MNU-016) | 10.4.1.2.1: `use_system_tone` (default on): the back takes the System data's window tone; `tone` when off; `get_tone_in_use()`. The game state's Change Window Color override joins with that command (epic 24 note). Doctest "By default the tone…" |
+| 8 | low | `set_max_polyphony(4)` had no effect: `set_stream` on every sound stops the playbacks | 10.4.1.2.1: the stream is set only when it changes, so a sound played again overlaps itself. Doctest in "Sounds come from the System data's cues" (the first playback stays active) |
 | 9 | low | Icon-only choices counted as blank and were hidden; nothing handled "every choice blank" | pending (10.4.1.2) |
 | 10 | low | `show_choices` cancel index not validated | pending (10.4.1.2) |
 | 11 | low | Choice and number windows not clamped to the screen | pending (10.4.1.2) |
@@ -29,12 +29,12 @@ finding below is marked with the task and fix as it lands.
 | 13 | low | Right click cancelled only over the focused list; no drag scrolling; no mouse on the number input | 10.4.1.1: right click anywhere cancels a focused list (`unhandled_input`). Drag/swipe and number input by mouse or touch moved to epic 28 (criterion added). Doctest "Right click anywhere cancels…" |
 | 14 | low | Page actions always scrolled the list: no way to use them for actor switching (RM-TST-015) | 10.4.1.1: `page_mode` (`PAGE_SCROLL`, `PAGE_SIGNAL` with `page_requested(direction)`, `PAGE_NONE`). Same doctest |
 | 15 | low | Repeats caught up one per frame after a long frame | 10.4.1.1: after a repeat the next one is an interval after now (`MAX(next, held) + interval`). Doctest "Repeats do not catch up after a long frame" |
-| 16 | low | Scroll and pause marks overlapped the first and last rows | pending (10.4.1.2) |
+| 16 | low | Scroll and pause marks overlapped the first and last rows | 10.4.1.2.1: marks centered `mark_offset` (new theme constant, 6) from the edge: in the padding, over the border, clear of the rows. Goldens window, list and message regenerated on purpose |
 | 17 | low | Coded item text had no ellipsis and dropped `right_text`; choice width ignored size codes | pending (10.4.1.2) |
 | 18 | low | Number and gold windows skipped their own theme overrides; number input hard-coded the cursor margin; gold amount appeared only when fully open | pending (10.4.1.2) |
-| 19 | low | `open()`/`close()` in the state already reached emitted at once (an `await` after the call hangs) | pending (10.4.1.2) |
+| 19 | low | `open()`/`close()` in the state already reached emitted at once (an `await` after the call hangs) | 10.4.1.2.1: already in the state asked for, `opened`/`closed` are emitted on the next idle frame (deferred). Doctest "Opening and closing…" |
 | 20 | low | A list with a theme type variation fell back to the default 16 px font size | pending (10.4.1.2) |
-| 21 | low | The sound player was a raw pointer exposed to scripts | pending (10.4.1.2) |
+| 21 | low | The sound player was a raw pointer exposed to scripts | 10.4.1.2.1: the player is kept as an ObjectID; freed from outside, it is made again with the next sound. Doctest in "Sounds come from the System data's cues" |
 
 ## Part B — findings
 
@@ -48,7 +48,7 @@ finding below is marked with the task and fix as it lands.
 | 6 | med | Values inserted by `expand` were read again as codes (names with codes, self-expanding variables growing without bound) | pending (10.4.1.2) |
 | 7 | low | Message height used the default padding, not the theme's | pending (10.4.1.2) |
 | 8 | low | Layout and placement computed once: theme, font or screen size changes not followed | pending (10.4.1.2) |
-| 9 | low | `show_message` on a closing window reverses the close without `closed` | pending (10.4.1.2) |
+| 9 | low | `show_message` on a closing window reverses the close without `closed` | 10.4.1.2.1: documented on `open()`/`close()` (a closing window turns round, `closed` not emitted). Doctest "Opening and closing…" |
 | 10 | low | Click-anywhere only where no stopping control is under the pointer; right click not handled | 10.4.1.1: left and right clicks both read the message while it is under way, on the window (`gui_input`) or anywhere unhandled; a control that takes the click keeps it (documented). Same doctest |
 | 11 | low | Lines past the fourth and big fonts drawn outside the window | pending (10.4.1.2) |
 | 12 | low | Reveal by raw elapsed time: jitter gives 0 then 2 letters; a hitch shows many letters at once | 10.4.1.1: a frame within 0.05 of whole 60ths counts that many letters; at most `MAX_LETTERS_PER_FRAME` = 4 a frame. Same doctest |

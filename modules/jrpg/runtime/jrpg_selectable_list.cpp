@@ -40,7 +40,6 @@
 #include "scene/resources/font.h"
 #include "scene/resources/text_line.h"
 #include "scene/theme/theme_db.h"
-#include "servers/rendering/rendering_server.h"
 
 #include "modules/jrpg/core/jrpg_message_text.h"
 
@@ -463,9 +462,7 @@ void JRPGSelectableList::_notification(int p_what) {
 				const Rect2 rect = get_item_rect(index);
 				const Dictionary item = items[index];
 				if (index == selected && cursor.is_valid()) {
-					// Dimmed while another window is active.
-					const Vector2 margin(theme_cache.cursor_margin, theme_cache.cursor_margin);
-					RenderingServer::get_singleton()->canvas_item_add_nine_patch(ci, rect, Rect2(Point2(), cursor->get_size()), cursor->get_rid(), margin, margin, RSE::NINE_PATCH_STRETCH, RSE::NINE_PATCH_STRETCH, true, Color(1, 1, 1, has_focus() ? 1.0 : 0.5));
+					draw_nine_patch(cursor, rect, theme_cache.cursor_margin, Color(1, 1, 1, has_focus() ? 1.0 : 0.5)); // Dimmed without focus.
 				}
 				const Color color = bool(item.get("enabled", true)) ? theme_cache.font_color : theme_cache.font_disabled_color;
 				real_t x = rect.position.x + 4;

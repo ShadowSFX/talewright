@@ -4,8 +4,8 @@
 		A game window: a tinted back, a border, and contents inside a padding, opening and closing from its middle.
 	</brief_description>
 	<description>
-		A window of the game's interface, such as a menu or a message box. It draws a back tinted by [member tone] and a nine-slice border over it, and lays its children out inside the padding, as [PanelContainer] does. [member openness] opens it from the middle: while it opens or closes, the frame is squashed into the band it opens through and the children show through that band only; closed, it draws nothing. Clicks land only on the part that shows; a closed window and its children take no clicks and keep no focus. [method open] and [method close] take [constant OPEN_FRAMES] frames at 60 frames a second and end with [signal opened] or [signal closed].
-		The skin comes from the theme items below, so a project theme or theme overrides replace it as for any control. Talewright's built-in skin is added to the default theme the first time a window needs it, so windows draw without any project file.
+		A window of the game's interface, such as a menu or a message box. It draws a back tinted by the window tone (the System data's, or [member tone]: see [member use_system_tone]) and a nine-slice border over it, and lays its children out inside the padding, as [PanelContainer] does. [member openness] opens it from the middle: while it opens or closes, the frame is squashed into the band it opens through and the children show through that band only; closed, it draws nothing. Clicks land only on the part that shows; a closed window and its children take no clicks and keep no focus. [method open] and [method close] take [constant OPEN_FRAMES] frames at 60 frames a second and end with [signal opened] or [signal closed].
+		The skin comes from the theme items below, so a project theme or theme overrides replace it as for any control; its images may be [AtlasTexture]s, regions of one image. Talewright's built-in skin is added to the default theme the first time a window needs it, so windows draw without any project file.
 		Authority: client. Windows only show what the game decides.
 	</description>
 	<tutorials>
@@ -14,7 +14,7 @@
 		<method name="close">
 			<return type="void" />
 			<description>
-				Starts closing the window over [constant OPEN_FRAMES] frames; [signal closed] is emitted when it is closed. A window that is already closed emits it at once.
+				Starts closing the window over [constant OPEN_FRAMES] frames; [signal closed] is emitted when it is closed. A window that is already closed emits it on the next idle frame, so a caller can still await it. A window that is opening turns round, and [signal opened] is not emitted.
 			</description>
 		</method>
 		<method name="ensure_default_skin" qualifiers="static">
@@ -45,6 +45,12 @@
 			<return type="Texture2D" />
 			<description>
 				Returns the skin's selection cursor, a nine-slice image, for windows that draw their own contents.
+			</description>
+		</method>
+		<method name="get_effective_database" qualifiers="const">
+			<return type="JRPGDatabase" />
+			<description>
+				Returns the database the window reads its sounds and tone from: [member database], or the project's database when that is [code]null[/code] (loaded once), or [code]null[/code] when the project has none.
 			</description>
 		</method>
 		<method name="get_icon_region" qualifiers="const">
@@ -81,7 +87,13 @@
 		<method name="get_sound_player" qualifiers="const">
 			<return type="AudioStreamPlayer" />
 			<description>
-				Returns the internal player of the interface sounds, made with the first sound played; [code]null[/code] before.
+				Returns the internal player of the interface sounds, made with the first sound played; [code]null[/code] before, and after something freed it until the next sound.
+			</description>
+		</method>
+		<method name="get_tone_in_use" qualifiers="const">
+			<return type="Vector3i" />
+			<description>
+				Returns the tone the back is drawn with: the System data's window tone of [method get_effective_database] when [member use_system_tone] is [code]true[/code] (zero without System data), else [member tone].
 			</description>
 		</method>
 		<method name="is_closed" qualifiers="const">
@@ -111,20 +123,20 @@
 		<method name="open">
 			<return type="void" />
 			<description>
-				Starts opening the window over [constant OPEN_FRAMES] frames; [signal opened] is emitted when it is open. A window that is already open emits it at once.
+				Starts opening the window over [constant OPEN_FRAMES] frames; [signal opened] is emitted when it is open. A window that is already open emits it on the next idle frame, so a caller can still await it. A window that is closing turns round, and [signal closed] is not emitted.
 			</description>
 		</method>
 		<method name="play_sound">
 			<return type="void" />
 			<param index="0" name="sound" type="int" enum="JRPGSystemData.Sound" />
 			<description>
-				Plays one of the System data's interface sounds (cursor, OK, cancel, buzzer); silent when the database has none for it.
+				Plays one of the System data's interface sounds (cursor, OK, cancel, buzzer); silent when the database has none for it. The same sound played again plays over the last one (up to four at once); another sound stops the one playing.
 			</description>
 		</method>
 	</methods>
 	<members>
 		<member name="database" type="JRPGDatabase" setter="set_database" getter="get_database">
-			The database whose System data gives the interface sounds. If [code]null[/code], the project's database is used.
+			The database whose System data gives the interface sounds and the window tone. If [code]null[/code], the project's database is used (see [method get_effective_database]); it is not stored in the window.
 		</member>
 		<member name="frame_visible" type="bool" setter="set_frame_visible" getter="is_frame_visible" default="true">
 			If [code]true[/code], the back and the border are drawn. Message windows on a dimmed or transparent background draw neither.
@@ -143,7 +155,10 @@
 			If [code]true[/code], the scroll up mark shows at the top middle while the window is open.
 		</member>
 		<member name="tone" type="Vector3i" setter="set_tone" getter="get_tone" default="Vector3i(0, 0, 0)">
-			Added to every pixel of the back, per channel, from -255 to 255, as the System data's window tone. The border and the contents keep their colors.
+			The window's own tone, used when [member use_system_tone] is [code]false[/code]: added to every pixel of the back, per channel, from -255 to 255. The border and the contents keep their colors.
+		</member>
+		<member name="use_system_tone" type="bool" setter="set_use_system_tone" getter="is_using_system_tone" default="true">
+			If [code]true[/code], the back takes the window tone of the System data of [method get_effective_database], as every window of the game does; if [code]false[/code], it takes [member tone].
 		</member>
 	</members>
 	<signals>
@@ -174,6 +189,9 @@
 		<constant name="DEFAULT_ICON_SIZE" value="32">
 			The built-in skin's [theme_item icon_size].
 		</constant>
+		<constant name="DEFAULT_MARK_OFFSET" value="6">
+			The built-in skin's [theme_item mark_offset].
+		</constant>
 	</constants>
 	<theme_items>
 		<theme_item name="frame_margin" data_type="constant" type="int" default="16">
@@ -181,6 +199,9 @@
 		</theme_item>
 		<theme_item name="icon_size" data_type="constant" type="int" default="32">
 			The size of one icon of [theme_item icon_set], in pixels.
+		</theme_item>
+		<theme_item name="mark_offset" data_type="constant" type="int" default="6">
+			Distance, in pixels, from the window's edge to the line the scroll and pause marks are centered on: with the built-in skin, the middle of the padding, over the border, so the marks stay inside the window and off the first and last rows.
 		</theme_item>
 		<theme_item name="padding" data_type="constant" type="int" default="12">
 			Space between the window's edge and its contents, in pixels.
