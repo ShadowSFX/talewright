@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGActorState" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		One JRPG actor as it is during play: level, EXP, HP/MP/TP, skills, states and buffs.
+	</brief_description>
+	<description>
+		Created from an actor of the [JRPGDatabase] with [method setup], usually through [method JRPGGameState.ensure_actor]. Parameters come from a [JRPGStatBlock] fed with the class curve at the current level, the parameter bonuses, the traits of the actor, its class and its states, and the buffs.
+		HP 0 knocks the actor out: state 1 is added and every other state and buff is removed. Removing state 1, or setting HP above 0, revives the actor.
+		[method serialize] and [method deserialize] save and load the actor in a canonical form; the database is not saved, so call [method set_database] after loading.
+		Online, zone servers own actor states; clients receive copies for menus and battle views.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_buff">
+			<return type="bool" />
+			<param index="0" name="param" type="int" />
+			<param index="1" name="turns" type="int" />
+			<description>
+				Raises [param param] one buff level, up to the project's limit (2 by default); a debuff on it is canceled one level instead. While the level is not 0, its turns become the longer of the current ones and [param turns]. Returns [code]false[/code] for a knocked-out actor.
+			</description>
+		</method>
+		<method name="add_debuff">
+			<return type="bool" />
+			<param index="0" name="param" type="int" />
+			<param index="1" name="turns" type="int" />
+			<description>
+				Lowers [param param] one buff level, down to the project's limit; a buff on it is canceled one level instead. Turns work as in [method add_buff]. Returns [code]false[/code] for a knocked-out actor.
+			</description>
+		</method>
+		<method name="add_param_bonus">
+			<return type="void" />
+			<param index="0" name="param" type="int" />
+			<param index="1" name="amount" type="int" />
+			<description>
+				Adds [param amount] to the permanent bonus of a parameter (from events and growth items), kept within ±[constant MAX_PARAM_BONUS].
+			</description>
+		</method>
+		<method name="add_state">
+			<return type="bool" />
+			<param index="0" name="state_id" type="int" />
+			<param index="1" name="random" type="JRPGRandom" />
+			<description>
+				Adds a state, or refreshes its turns when the actor already has it. Turns are drawn from [param random] between the state's minimum and maximum turns (the maximum when [param random] is [code]null[/code]); states without auto-removal have none. Unknown states, states the actor resists and states on a knocked-out actor are refused ([code]false[/code]). State 1 knocks the actor out.
+			</description>
+		</method>
+		<method name="change_exp">
+			<return type="Dictionary" />
+			<param index="0" name="exp" type="int" />
+			<description>
+				Sets the EXP total, then levels up or down to match it, within 1 and [method get_max_level]. Class skills of every level reached are learned. Returns a [Dictionary] with [code]old_level[/code], [code]level[/code] and [code]learned_skills[/code] for level-up messages. Level-ups do not heal.
+			</description>
+		</method>
+		<method name="change_level">
+			<return type="Dictionary" />
+			<param index="0" name="level" type="int" />
+			<description>
+				Sets the level, within 1 and [method get_max_level], and the EXP total that level needs. Returns the same report as [method change_exp].
+			</description>
+		</method>
+		<method name="clear_buffs">
+			<return type="void" />
+			<description>
+				Removes every buff and debuff.
+			</description>
+		</method>
+		<method name="clear_name_override">
+			<return type="void" />
+			<description>
+				Uses the database name again.
+			</description>
+		</method>
+		<method name="clear_nickname_override">
+			<return type="void" />
+			<description>
+				Uses the database nickname again.
+			</description>
+		</method>
+		<method name="deserialize">
+			<return type="int" enum="Error" />
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Replaces the actor with [param data], made by [method serialize]. Malformed data leaves the actor unchanged and returns [constant ERR_INVALID_DATA].
+			</description>
+		</method>
+		<method name="forget_skill">
+			<return type="bool" />
+			<param index="0" name="skill_id" type="int" />
+			<description>
+				Forgets a learned skill. Returns [code]false[/code] when it was not learned.
+			</description>
+		</method>
+		<method name="gain_exp">
+			<return type="Dictionary" />
+			<param index="0" name="amount" type="int" />
+			<description>
+				Adds [param amount] EXP (negative to remove) and levels up or down like [method change_exp].
+			</description>
+		</method>
+		<method name="gain_hp">
+			<return type="void" />
+			<param index="0" name="amount" type="int" />
+			<description>
+				Changes HP by [param amount] like [method set_hp].
+			</description>
+		</method>
+		<method name="gain_mp">
+			<return type="void" />
+			<param index="0" name="amount" type="int" />
+			<description>
+				Changes MP by [param amount], within 0 and max MP.
+			</description>
+		</method>
+		<method name="gain_tp">
+			<return type="void" />
+			<param index="0" name="amount" type="int" />
+			<description>
+				Changes TP by [param amount], within 0 and the project's maximum TP.
+			</description>
+		</method>
+		<method name="get_actor_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the ID of the actor in the database.
+			</description>
+		</method>
+		<method name="get_actor_name" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the name set by an event, or the database name.
+			</description>
+		</method>
+		<method name="get_buff_level" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="param" type="int" />
+			<description>
+				Returns the buff level of a parameter: positive for buffs, negative for debuffs.
+			</description>
+		</method>
+		<method name="get_buff_turns" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="param" type="int" />
+			<description>
+				Returns the turns left for the buff or debuff of a parameter.
+			</description>
+		</method>
+		<method name="get_class_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the ID of the actor's class.
+			</description>
+		</method>
+		<method name="get_database" qualifiers="const">
+			<return type="JRPGDatabase" />
+			<description>
+				Returns the database the actor reads its data from.
+			</description>
+		</method>
+		<method name="get_exp" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the EXP total.
+			</description>
+		</method>
+		<method name="get_exp_for_level" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="level" type="int" />
+			<description>
+				Returns the EXP total needed to reach [param level] in the actor's class.
+			</description>
+		</method>
+		<method name="get_exp_to_next_level" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the EXP still needed for the next level, or 0 at the maximum level.
+			</description>
+		</method>
+		<method name="get_hp" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the current HP.
+			</description>
+		</method>
+		<method name="get_learned_skills" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<description>
+				Returns the learned skill IDs in ascending order.
+			</description>
+		</method>
+		<method name="get_level" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the current level.
+			</description>
+		</method>
+		<method name="get_max_hp" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the maximum HP.
+			</description>
+		</method>
+		<method name="get_max_level" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the highest level the actor can reach (its database maximum level).
+			</description>
+		</method>
+		<method name="get_max_mp" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the maximum MP.
+			</description>
+		</method>
+		<method name="get_mp" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the current MP.
+			</description>
+		</method>
+		<method name="get_nickname" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the nickname set by an event, or the database nickname.
+			</description>
+		</method>
+		<method name="get_param" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="param" type="int" />
+			<description>
+				Returns a parameter after equipment, traits and buffs ([enum JRPGClassData.Param] order).
+			</description>
+		</method>
+		<method name="get_param_bonus" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="param" type="int" />
+			<description>
+				Returns the permanent bonus of a parameter.
+			</description>
+		</method>
+		<method name="get_skills" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<description>
+				Returns the learned skills plus the skills added by traits, in ascending order.
+			</description>
+		</method>
+		<method name="get_sparam" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="sparam" type="int" />
+			<description>
+				Returns an sp-parameter in basis points (10000 = 100%).
+			</description>
+		</method>
+		<method name="get_state_steps" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="state_id" type="int" />
+			<description>
+				Returns the steps walked while affected by a state.
+			</description>
+		</method>
+		<method name="get_state_turns" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="state_id" type="int" />
+			<description>
+				Returns the turns left before a state's auto-removal.
+			</description>
+		</method>
+		<method name="get_states" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<description>
+				Returns the IDs of the actor's states in ascending order.
+			</description>
+		</method>
+		<method name="get_stats" qualifiers="const">
+			<return type="JRPGStatBlock" />
+			<description>
+				Returns the [JRPGStatBlock] that computes the actor's parameters.
+			</description>
+		</method>
+		<method name="get_tp" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the current TP.
+			</description>
+		</method>
+		<method name="get_xparam" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="xparam" type="int" />
+			<description>
+				Returns an ex-parameter in basis points (10000 = 100%).
+			</description>
+		</method>
+		<method name="has_learned_skill" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="skill_id" type="int" />
+			<description>
+				Returns [code]true[/code] when the actor has learned the skill.
+			</description>
+		</method>
+		<method name="has_name_override" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when an event set the actor's name.
+			</description>
+		</method>
+		<method name="has_nickname_override" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when an event set the actor's nickname.
+			</description>
+		</method>
+		<method name="has_state" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="state_id" type="int" />
+			<description>
+				Returns [code]true[/code] when the actor has the state.
+			</description>
+		</method>
+		<method name="is_dead" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when the actor is knocked out (has state 1).
+			</description>
+		</method>
+		<method name="learn_skill">
+			<return type="bool" />
+			<param index="0" name="skill_id" type="int" />
+			<description>
+				Learns a skill. Returns [code]false[/code] when it was already learned.
+			</description>
+		</method>
+		<method name="recover_all">
+			<return type="void" />
+			<description>
+				Restores HP and MP to their maximums and removes every state, including the knockout.
+			</description>
+		</method>
+		<method name="remove_buff">
+			<return type="bool" />
+			<param index="0" name="param" type="int" />
+			<description>
+				Removes a buff. Does nothing on a debuffed parameter ([code]false[/code]).
+			</description>
+		</method>
+		<method name="remove_debuff">
+			<return type="bool" />
+			<param index="0" name="param" type="int" />
+			<description>
+				Removes a debuff. Does nothing on a buffed parameter ([code]false[/code]).
+			</description>
+		</method>
+		<method name="remove_state">
+			<return type="bool" />
+			<param index="0" name="state_id" type="int" />
+			<description>
+				Removes a state. Removing state 1 revives the actor with 1 HP. Returns [code]false[/code] when the actor did not have it.
+			</description>
+		</method>
+		<method name="serialize" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns the actor as a [Dictionary] of plain values in a canonical form. Names are included only when an event set them.
+			</description>
+		</method>
+		<method name="set_buff_turns">
+			<return type="void" />
+			<param index="0" name="param" type="int" />
+			<param index="1" name="turns" type="int" />
+			<description>
+				Sets the turns left for the buff or debuff of a parameter (ignored when its level is 0).
+			</description>
+		</method>
+		<method name="set_database">
+			<return type="void" />
+			<param index="0" name="database" type="JRPGDatabase" />
+			<description>
+				Attaches the database after loading; parameters, HP, MP and TP limits are recomputed from it.
+			</description>
+		</method>
+		<method name="set_hp">
+			<return type="void" />
+			<param index="0" name="hp" type="int" />
+			<description>
+				Sets HP within 0 and max HP. HP 0 knocks the actor out; HP above 0 revives a knocked-out actor.
+			</description>
+		</method>
+		<method name="set_mp">
+			<return type="void" />
+			<param index="0" name="mp" type="int" />
+			<description>
+				Sets MP within 0 and max MP.
+			</description>
+		</method>
+		<method name="set_name_override">
+			<return type="void" />
+			<param index="0" name="name" type="String" />
+			<description>
+				Sets the actor's name for the rest of the game (Change Name).
+			</description>
+		</method>
+		<method name="set_nickname_override">
+			<return type="void" />
+			<param index="0" name="nickname" type="String" />
+			<description>
+				Sets the actor's nickname for the rest of the game.
+			</description>
+		</method>
+		<method name="set_state_steps">
+			<return type="void" />
+			<param index="0" name="state_id" type="int" />
+			<param index="1" name="steps" type="int" />
+			<description>
+				Sets the steps walked while affected by a state the actor has.
+			</description>
+		</method>
+		<method name="set_state_turns">
+			<return type="void" />
+			<param index="0" name="state_id" type="int" />
+			<param index="1" name="turns" type="int" />
+			<description>
+				Sets the turns left for a state the actor has.
+			</description>
+		</method>
+		<method name="set_tp">
+			<return type="void" />
+			<param index="0" name="tp" type="int" />
+			<description>
+				Sets TP within 0 and the project's maximum TP.
+			</description>
+		</method>
+		<method name="setup">
+			<return type="int" enum="Error" />
+			<param index="0" name="database" type="JRPGDatabase" />
+			<param index="1" name="actor_id" type="int" />
+			<description>
+				Starts the actor from the database: its class, initial level and that level's EXP, the class skills learned up to that level, full HP and MP, no TP. Returns [constant ERR_DOES_NOT_EXIST] when [param database] has no actor [param actor_id].
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="PARAM_COUNT" value="8">
+			Number of regular parameters.
+		</constant>
+		<constant name="MAX_EXP" value="999999999999">
+			Highest EXP total.
+		</constant>
+		<constant name="MAX_PARAM_BONUS" value="9999999">
+			Largest permanent parameter bonus, positive or negative.
+		</constant>
+	</constants>
+</class>

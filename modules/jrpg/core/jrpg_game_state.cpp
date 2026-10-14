@@ -31,6 +31,7 @@
 
 #include "jrpg_game_state.h"
 
+#include "jrpg_actor_data.h"
 #include "jrpg_database.h"
 
 #include "core/math/math_funcs.h"
@@ -102,8 +103,9 @@ Error JRPGGameState::start_new_game(const Ref<JRPGDatabase> &p_database, int64_t
 	const Ref<JRPGTable> actors = p_database->get_table(JRPGDatabase::TABLE_ACTORS);
 	const PackedInt32Array starting_party = system->get_starting_party();
 	for (int i = 0; i < starting_party.size(); i++) {
-		if (actors.is_valid() && actors->has_entry(starting_party[i])) {
+		if (actors.is_valid() && Object::cast_to<JRPGActorData>(actors->get_entry(starting_party[i]).ptr())) {
 			add_party_member(starting_party[i]);
+			ensure_actor(p_database, starting_party[i]);
 		}
 	}
 	data.map_id = system->get_start_map_id();
@@ -202,6 +204,41 @@ void JRPGGameState::set_self_switch(int p_map_id, int p_event_id, const String &
 bool JRPGGameState::get_self_switch(int p_map_id, int p_event_id, const String &p_letter) const {
 	uint64_t key = 0;
 	return _encode_self_switch(p_map_id, p_event_id, p_letter, key) && data.self_switches.has(key);
+}
+
+Ref<JRPGActorState> JRPGGameState::get_actor(int p_actor_id) const {
+	const RBMap<int, Ref<JRPGActorState>>::Element *e = data.actors.find(p_actor_id);
+	return e ? e->value() : Ref<JRPGActorState>();
+}
+
+Ref<JRPGActorState> JRPGGameState::ensure_actor(const Ref<JRPGDatabase> &p_database, int p_actor_id) {
+	Ref<JRPGActorState> actor = get_actor(p_actor_id);
+	if (actor.is_valid()) {
+		if (p_database.is_valid() && actor->get_database() != p_database) {
+			actor->set_database(p_database);
+		}
+		return actor;
+	}
+	actor.instantiate();
+	if (actor->setup(p_database, p_actor_id) != OK) {
+		return Ref<JRPGActorState>();
+	}
+	data.actors[p_actor_id] = actor;
+	return actor;
+}
+
+PackedInt32Array JRPGGameState::get_actor_ids() const {
+	PackedInt32Array ids;
+	for (const KeyValue<int, Ref<JRPGActorState>> &kv : data.actors) {
+		ids.push_back(kv.key);
+	}
+	return ids;
+}
+
+void JRPGGameState::attach_database(const Ref<JRPGDatabase> &p_database) {
+	for (const KeyValue<int, Ref<JRPGActorState>> &kv : data.actors) {
+		kv.value->set_database(p_database);
+	}
 }
 
 void JRPGGameState::set_party_members(const PackedInt32Array &p_actor_ids) {
@@ -369,6 +406,12 @@ Dictionary JRPGGameState::serialize() const {
 	}
 	d["party"] = party;
 
+	Array actors;
+	for (const KeyValue<int, Ref<JRPGActorState>> &kv : data.actors) {
+		actors.push_back(kv.value->serialize());
+	}
+	d["actors"] = actors;
+
 	Dictionary system;
 	system["save_enabled"] = data.save_enabled;
 	system["menu_enabled"] = data.menu_enabled;
@@ -502,6 +545,19 @@ Error JRPGGameState::_parse(const Dictionary &p_data, Data &r_data, Dictionary &
 		}
 	}
 
+	v = Array();
+	JRPG_LOAD_CHECK(read(p_data, "actors", Variant::ARRAY, v), "actors");
+	{
+		const Array actors = v;
+		for (int i = 0; i < actors.size(); i++) {
+			JRPG_LOAD_CHECK(actors[i].get_type() == Variant::DICTIONARY, "actors");
+			Ref<JRPGActorState> actor;
+			actor.instantiate();
+			JRPG_LOAD_CHECK(actor->deserialize(actors[i]) == OK && !r_data.actors.has(actor->get_actor_id()), "actors");
+			r_data.actors[actor->get_actor_id()] = actor;
+		}
+	}
+
 	v = Dictionary();
 	JRPG_LOAD_CHECK(read(p_data, "system", Variant::DICTIONARY, v), "system flags");
 	{
@@ -618,6 +674,10 @@ void JRPGGameState::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_self_switch", "map_id", "event_id", "letter", "on"), &JRPGGameState::set_self_switch);
 	ClassDB::bind_method(D_METHOD("get_self_switch", "map_id", "event_id", "letter"), &JRPGGameState::get_self_switch);
 
+	ClassDB::bind_method(D_METHOD("get_actor", "actor_id"), &JRPGGameState::get_actor);
+	ClassDB::bind_method(D_METHOD("ensure_actor", "database", "actor_id"), &JRPGGameState::ensure_actor);
+	ClassDB::bind_method(D_METHOD("get_actor_ids"), &JRPGGameState::get_actor_ids);
+	ClassDB::bind_method(D_METHOD("attach_database", "database"), &JRPGGameState::attach_database);
 	ClassDB::bind_method(D_METHOD("set_party_members", "actor_ids"), &JRPGGameState::set_party_members);
 	ClassDB::bind_method(D_METHOD("get_party_members"), &JRPGGameState::get_party_members);
 	ClassDB::bind_method(D_METHOD("add_party_member", "actor_id"), &JRPGGameState::add_party_member);

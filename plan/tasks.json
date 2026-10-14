@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "5.5.1 JRPGGameState core",
+  "last_completed": "5.5.2 Runtime actor state",
   "tasks": [
     {
       "id": "0",
@@ -1549,7 +1549,7 @@
         "modules/jrpg/tests/test_jrpg_game_state.h",
         "plan/specs/06_save_format.md"
       ],
-      "commit": "pending",
+      "commit": "f357cf1e53",
       "notes": "",
       "status": "done"
     },
@@ -1557,19 +1557,34 @@
       "id": "5.5.2",
       "parent": "5.5",
       "title": "Runtime actor state",
-      "description": "JRPGActorState: level/exp/equips/skills/states with turns/buffs/hp/mp/tp; level up/down; equip rules.",
+      "description": "JRPGActorState (core): actor id, name/nickname overrides, class, level and EXP (level up/down within the actor's max level, class learnings learned on the way up, Change Level sets the level's EXP), parameter bonuses, parameters through JRPGStatBlock (class curve + bonuses, actor/class/state traits, buffs), HP/MP/TP with knockout and revive rules, learned skills, states with turns, buffs with turns; serialize/deserialize; the actors section of JRPGGameState (actors created from the database on first use, starting party set up by start_new_game).",
       "dependencies": [
         "5.5.1"
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "Round-trip equality; level-up cases"
+        "Round-trip equality of actor states and of a game state holding actors (Dictionary and bytes)",
+        "Level-up cases: EXP crossing several levels at once learns every skill on the way and reports them; EXP loss levels down; the actor's max level caps levels; Change Level sets the level's EXP; HP/MP never exceed the new maximums",
+        "Knockout: HP 0 adds state 1 and clears other states and buffs; removing state 1 revives with 1 HP; Recover All restores HP/MP and removes every state",
+        "Malformed actor data is refused and leaves the game state unchanged",
+        "Doctests [JRPG]; dev_mode build clean; doctool stable; full suite passes"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
-      "files": [],
-      "commit": "",
+      "files": [
+        "modules/jrpg/core/jrpg_actor_state.h",
+        "modules/jrpg/core/jrpg_actor_state.cpp",
+        "modules/jrpg/core/jrpg_game_state.h",
+        "modules/jrpg/core/jrpg_game_state.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGActorState.xml",
+        "modules/jrpg/doc_classes/JRPGGameState.xml",
+        "modules/jrpg/tests/test_jrpg_actor_state.h",
+        "plan/specs/06_save_format.md"
+      ],
+      "commit": "pending",
       "notes": "",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "5.5.3",
@@ -1583,6 +1598,26 @@
       "acceptance_criteria": [
         "Round-trip equality of the events_state section",
         "States of missing events are dropped on load with one warning"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "5.5.4",
+      "parent": "5.5",
+      "title": "Actor equipment, class change and reference repair",
+      "description": "Equipment slots from the equipment types (dual wield turns slot 2 into a weapon slot), equip rules (Equip Weapon/Armor traits, Lock Equip, Seal Equip), Change Equipment trading with the party inventory (the party must own the item), initial equipment, release of equipment the actor can no longer use (back to the inventory), Change Class with or without keeping the level, equipment parameters and traits feeding the stat block; on load, references to deleted entries become none with one warning and actors whose class is gone fall back to class 1 (spec 06).",
+      "dependencies": [
+        "5.5.2"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Equip rules doctested: type traits, lock, seal, dual wield, ownership, swap returns the old item",
+        "Class change keeps or recomputes the level and releases unusable equipment",
+        "Repair after database edits doctested (deleted class, item, skill, state)"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "status": "pending",

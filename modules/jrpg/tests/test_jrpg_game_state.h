@@ -382,6 +382,7 @@ TEST_CASE("[JRPG][GameState] A new game starts from the database") {
 	db.instantiate();
 	Ref<JRPGTable> actors;
 	actors.instantiate();
+	actors->set_entry_class("JRPGActorData");
 	actors->set_maximum(3);
 	db->set_table(JRPGDatabase::TABLE_ACTORS, actors);
 	Ref<JRPGSystemData> system;

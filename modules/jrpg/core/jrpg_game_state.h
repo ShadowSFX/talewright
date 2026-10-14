@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include "jrpg_actor_state.h"
 #include "jrpg_audio_cue.h"
 #include "jrpg_random.h"
 #include "jrpg_sim_clock.h"
@@ -99,6 +100,8 @@ private:
 		Ref<JRPGAudioCue> music_overrides[JRPGSystemData::MUSIC_MAX];
 		bool timer_working = false;
 		int timer_steps = 0;
+
+		RBMap<int, Ref<JRPGActorState>> actors; // Actors used so far, by actor ID.
 	};
 
 	Data data;
@@ -124,7 +127,7 @@ public:
 	// Resets everything to the state before a new game, with every random stream seeded from 0.
 	void clear();
 	// Clears the state and applies the database's starting values: game id, starting party (IDs without an actor
-	// entry are skipped), start position, random streams seeded from p_seed.
+	// entry are skipped) with their actor states, start position, random streams seeded from p_seed.
 	Error start_new_game(const Ref<JRPGDatabase> &p_database, int64_t p_seed);
 
 	void set_game_id(const String &p_id) { data.game_id = p_id; }
@@ -157,6 +160,16 @@ public:
 	// Self switches A-D of one event on one map (RM-EVT-008).
 	void set_self_switch(int p_map_id, int p_event_id, const String &p_letter, bool p_on);
 	bool get_self_switch(int p_map_id, int p_event_id, const String &p_letter) const;
+
+	// Actor states are created from the database the first time an actor is used (joins the party, or an event
+	// changes it) and kept for the rest of the game, in and out of the party.
+	Ref<JRPGActorState> get_actor(int p_actor_id) const;
+	// Returns the actor's state, creating it from p_database when it does not exist yet; null when the database
+	// has no such actor.
+	Ref<JRPGActorState> ensure_actor(const Ref<JRPGDatabase> &p_database, int p_actor_id);
+	PackedInt32Array get_actor_ids() const;
+	// Gives every actor the database after deserialize(), so parameters and limits are computed again.
+	void attach_database(const Ref<JRPGDatabase> &p_database);
 
 	// Party members are actor IDs in formation order, each at most once.
 	void set_party_members(const PackedInt32Array &p_actor_ids);
@@ -215,7 +228,8 @@ public:
 
 	Dictionary serialize() const;
 	// Replaces the state with p_data. Malformed data, another format or a newer format version leave the state
-	// unchanged and return an error; unknown keys are ignored and missing sections keep their defaults.
+	// unchanged and return an error; unknown keys are ignored and missing sections keep their defaults. Call
+	// attach_database() afterwards so actors compute their parameters.
 	Error deserialize(const Dictionary &p_data);
 
 	JRPGGameState();

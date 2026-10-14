@@ -4,7 +4,7 @@
 		Everything a JRPG remembers while it is played, saved and loaded as a [Dictionary].
 	</brief_description>
 	<description>
-		Holds the switches, variables, self switches, the party with its gold, steps and inventory, the player's position, system flags (save, menu, encounter and formation access, window tone, battle music, timer), the [JRPGRandomStreams] and the [JRPGSimClock] of a game.
+		Holds the switches, variables, self switches, the party with its gold, steps and inventory, the actor states, the player's position, system flags (save, menu, encounter and formation access, window tone, battle music, timer), the [JRPGRandomStreams] and the [JRPGSimClock] of a game.
 		[method serialize] converts the state to a [Dictionary] of plain values in a canonical form: saving, loading and saving again gives an equal [Dictionary] with the same bytes. [method deserialize] checks the whole input before changing anything.
 		Online, zone servers hold the authoritative state of each character and of the world; clients keep a copy to show their own event pages and never send it back.
 	</description>
@@ -25,6 +25,13 @@
 				Adds [param steps] simulation steps (60 per second) of play time. Negative values are refused.
 			</description>
 		</method>
+		<method name="attach_database">
+			<return type="void" />
+			<param index="0" name="database" type="JRPGDatabase" />
+			<description>
+				Gives every actor state the database after [method deserialize], so parameters and limits are computed again.
+			</description>
+		</method>
 		<method name="clear">
 			<return type="void" />
 			<description>
@@ -41,7 +48,15 @@
 			<return type="int" enum="Error" />
 			<param index="0" name="data" type="Dictionary" />
 			<description>
-				Replaces the state with [param data], a [Dictionary] made by [method serialize]. Unknown keys are ignored and missing sections keep their defaults. Malformed data, another format or a newer format version return an error ([constant ERR_INVALID_DATA] or [constant ERR_FILE_UNRECOGNIZED]) and leave the state unchanged.
+				Replaces the state with [param data], a [Dictionary] made by [method serialize]. Unknown keys are ignored and missing sections keep their defaults. Call [method attach_database] afterwards so actors compute their parameters. Malformed data, another format or a newer format version return an error ([constant ERR_INVALID_DATA] or [constant ERR_FILE_UNRECOGNIZED]) and leave the state unchanged.
+			</description>
+		</method>
+		<method name="ensure_actor">
+			<return type="JRPGActorState" />
+			<param index="0" name="database" type="JRPGDatabase" />
+			<param index="1" name="actor_id" type="int" />
+			<description>
+				Returns the state of actor [param actor_id], creating it from [param database] the first time. Returns [code]null[/code] when the database has no such actor.
 			</description>
 		</method>
 		<method name="gain_gold">
@@ -58,6 +73,19 @@
 			<param index="2" name="amount" type="int" />
 			<description>
 				Changes how many of an item, weapon or armor the party holds by [param amount], keeping the count between 0 and [constant MAX_ITEM_COUNT]. Returns the new count. Equipped weapons and armors are not counted here.
+			</description>
+		</method>
+		<method name="get_actor" qualifiers="const">
+			<return type="JRPGActorState" />
+			<param index="0" name="actor_id" type="int" />
+			<description>
+				Returns the state of actor [param actor_id], or [code]null[/code] when the actor was never used.
+			</description>
+		</method>
+		<method name="get_actor_ids" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<description>
+				Returns the IDs of every actor used so far, in ascending order.
 			</description>
 		</method>
 		<method name="get_clock" qualifiers="const">
@@ -395,7 +423,7 @@
 			<param index="0" name="database" type="JRPGDatabase" />
 			<param index="1" name="seed" type="int" />
 			<description>
-				Clears the state and applies the starting values of [param database]: game id, starting party (IDs without an actor entry are skipped), start position, and random streams seeded from [param seed]. The same database and seed always give the same state.
+				Clears the state and applies the starting values of [param database]: game id, starting party (IDs without an actor entry are skipped) with their actor states, start position, and random streams seeded from [param seed]. The same database and seed always give the same state.
 			</description>
 		</method>
 		<method name="start_timer">

@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 19:12 -0600
+- **Updated:** 2026-10-13 19:23 -0600
 - **Current task:** 1.8 Fork CI: every Linux job green
-- **Last completed:** 5.5.1 JRPGGameState core
-- **Next task:** 5.5.2 Runtime actor state
-- **Done leaf tasks:** 57
+- **Last completed:** 5.5.2 Runtime actor state
+- **Next task:** 5.5.3 Event runtime state
+- **Done leaf tasks:** 58
 <!-- status:end -->
 
 ## Log
@@ -147,4 +147,7 @@
 | 2026-10-13 18:58 -0600 | 1.8 | started: Fork CI: every Linux job green (containers: 1 pending->in_progress) |  |
 | 2026-10-13 19:01 -0600 | - | imported 1 new / 1 updated tasks | |
 | 2026-10-13 19:01 -0600 | 5.5.1 | started: JRPGGameState core (containers: 5.5 pending->in_progress, 5 pending->in_progress) |  |
-| 2026-10-13 19:12 -0600 | 5.5.1 | done: JRPGGameState core — JRPGGameState (switches bitset, variables, self switches, party/gold/steps/inventory, position, system flags, timer, music/window tone overrides, RNG streams, clock) and JRPGSimClock (60 Hz, max 4 steps/frame) in core; canonical serialize/validated deserialize; spec 06 limits; 7 doctests (round-trip bytes, RNG/clock continuity, 22 corruptions refused unchanged, new game, frame rates); full suite 1450/1450 (containers: 5.5 in_progress->pending, 5 in_progress->pending) | pending |
+| 2026-10-13 19:12 -0600 | 5.5.1 | done: JRPGGameState core — JRPGGameState (switches bitset, variables, self switches, party/gold/steps/inventory, position, system flags, timer, music/window tone overrides, RNG streams, clock) and JRPGSimClock (60 Hz, max 4 steps/frame) in core; canonical serialize/validated deserialize; spec 06 limits; 7 doctests (round-trip bytes, RNG/clock continuity, 22 corruptions refused unchanged, new game, frame rates); full suite 1450/1450 (containers: 5.5 in_progress->pending, 5 in_progress->pending) | f357cf1e53 |
+| 2026-10-13 19:14 -0600 | - | imported 1 new / 1 updated tasks | |
+| 2026-10-13 19:14 -0600 | 5.5.2 | started: Runtime actor state (containers: 5.5 pending->in_progress, 5 pending->in_progress) |  |
+| 2026-10-13 19:23 -0600 | 5.5.2 | done: Runtime actor state — JRPGActorState (core): setup from the database, level/EXP up and down within max level with class learnings reported, parameter bonuses, params via JRPGStatBlock (class curve, actor/class/state traits, buffs), HP/MP/TP clamps, knockout/revive/Recover All, skills incl. trait-added, states with turns/steps (resist, refresh), buffs with cancel rules; canonical serialize/validated deserialize; JRPGGameState actors section (ensure_actor, attach_database, starting party actors); 6 doctests; full suite 1456/1456 (containers: 5.5 in_progress->pending, 5 in_progress->pending) | pending |

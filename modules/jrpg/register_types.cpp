@@ -35,6 +35,7 @@
 #include "core/object/class_db.h"
 
 #include "modules/jrpg/core/jrpg_actor_data.h"
+#include "modules/jrpg/core/jrpg_actor_state.h"
 #include "modules/jrpg/core/jrpg_armor_data.h"
 #include "modules/jrpg/core/jrpg_audio_cue.h"
 #include "modules/jrpg/core/jrpg_battle_rules.h"
@@ -106,6 +107,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGCommonEventData);
 		GDREGISTER_CLASS(JRPGDatabase);
 		GDREGISTER_CLASS(JRPGSimClock);
+		GDREGISTER_CLASS(JRPGActorState);
 		GDREGISTER_CLASS(JRPGGameState);
 	}
 #ifdef TOOLS_ENABLED
