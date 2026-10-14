@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGReferenceScanner" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Finds every use of a JRPG database ID and reports references to missing or cleared entries.
+	</brief_description>
+	<description>
+		Scans the [JRPGDatabase] tables, type lists and system data for ID references: traits, effects, learnings, drops, enemy actions, troop members and page conditions, actor classes and initial equipment, skill, weapon and armor types, elements, animations and the starting party.
+		Each reference is a [Dictionary] with [code]source[/code], [code]source_id[/code], [code]path[/code], [code]target[/code] and [code]target_id[/code]. [code]source[/code] and [code]target[/code] are table names (see [method JRPGDatabase.get_table_name]) or type lists ([code]elements[/code], [code]skill_types[/code], [code]weapon_types[/code], [code]armor_types[/code], [code]equip_types[/code]); System data references have the source [code]system[/code] and source ID 0. IDs 0 and below mean "none" and are never references.
+		The database editor uses it to warn before clearing an entry or shrinking a table, and to list dangling references.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="collect_references" qualifiers="static">
+			<return type="Array" />
+			<param index="0" name="database" type="JRPGDatabase" />
+			<description>
+				Returns every reference in [param database], in table order and then entry order, with the System data last.
+			</description>
+		</method>
+		<method name="describe" qualifiers="static">
+			<return type="String" />
+			<param index="0" name="reference" type="Dictionary" />
+			<description>
+				Returns where a reference is and what it points to, for reports, for example [code]Skill 4, effects[1].data_id: state 12[/code].
+			</description>
+		</method>
+		<method name="find_dangling" qualifiers="static">
+			<return type="Array" />
+			<param index="0" name="database" type="JRPGDatabase" />
+			<description>
+				Returns the references whose target does not exist, with [code]problem[/code] set to [code]missing[/code] (beyond the table or type list), or whose target was cleared, with [code]problem[/code] set to [code]blank[/code] (an entry or type without a name).
+			</description>
+		</method>
+		<method name="find_uses" qualifiers="static">
+			<return type="Array" />
+			<param index="0" name="database" type="JRPGDatabase" />
+			<param index="1" name="target" type="String" />
+			<param index="2" name="id" type="int" />
+			<description>
+				Returns the references to entry or type [param id] of [param target], for example before clearing it.
+			</description>
+		</method>
+		<method name="find_uses_from" qualifiers="static">
+			<return type="Array" />
+			<param index="0" name="database" type="JRPGDatabase" />
+			<param index="1" name="target" type="String" />
+			<param index="2" name="first_id" type="int" />
+			<description>
+				Returns the references to [param first_id] and higher IDs of [param target], for example before shrinking a table to [code]first_id - 1[/code] entries.
+			</description>
+		</method>
+	</methods>
+</class>

@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 19:44 -0600
+- **Updated:** 2026-10-13 19:50 -0600
 - **Current task:** 1.8 Fork CI: every Linux job green
-- **Last completed:** 5.5.3 Event runtime state
-- **Next task:** 5.6 Reference scanner
-- **Done leaf tasks:** 60
+- **Last completed:** 5.6 Reference scanner
+- **Next task:** 5.7 Epic review: JRPG core
+- **Done leaf tasks:** 61
 <!-- status:end -->
 
 ## Log
@@ -156,4 +156,7 @@
 | 2026-10-13 19:40 -0600 | 5.5.4 | done: Actor equipment, class change and reference repair — Equipment slots from equipment types (dual wield makes slot 2 a weapon slot), Equip Weapon/Armor, Lock and Seal rules, Change Equipment trading with the party inventory (ownership required, previous item returned), forced/initial equipment (unusable discarded), release of unusable equipment to the inventory on any refresh, equipment params/traits in the stat block, Change Class with/without keep level, load repair (deleted class->1, skills/states/equipment/actors/party/inventory cleared, one warning); 4 new doctests; full suite 1460/1460 (containers: 5.5 in_progress->pending, 5 in_progress->pending) | 63a440f97e |
 | 2026-10-13 19:40 -0600 | 5.5.3 | started: Event runtime state (containers: 5.5 pending->in_progress, 5 pending->in_progress) |  |
 | 2026-10-13 19:44 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-13 19:44 -0600 | 5.5.3 | done: Event runtime state — JRPGEventState (core: event_id, cell, direction, pattern, route index/wait, erased, transparent, through override) with strict deserialize; JRPGGameState events_state section (map id + revision, states by event id), set_events_map forgets other maps, prune_event_states drops deleted events with one warning; revision-based reset assigned to 8.6.1; 3 doctests; full suite 1463/1463 (containers: 5.5 in_progress->done, 5 in_progress->pending) | pending |
+| 2026-10-13 19:44 -0600 | 5.5.3 | done: Event runtime state — JRPGEventState (core: event_id, cell, direction, pattern, route index/wait, erased, transparent, through override) with strict deserialize; JRPGGameState events_state section (map id + revision, states by event id), set_events_map forgets other maps, prune_event_states drops deleted events with one warning; revision-based reset assigned to 8.6.1; 3 doctests; full suite 1463/1463 (containers: 5.5 in_progress->done, 5 in_progress->pending) | 5ec93c1ded |
+| 2026-10-13 19:46 -0600 | - | imported 0 new / 4 updated tasks | |
+| 2026-10-13 19:46 -0600 | 5.6 | started: Reference scanner (containers: 5 pending->in_progress) |  |
+| 2026-10-13 19:50 -0600 | 5.6 | done: Reference scanner — JRPGReferenceScanner (core): collect_references over tables, type lists and system data with locations (traits/effects by code, learnings, drops, enemy actions + state conditions, troop members + page actor, actor class + initial equipment with dual wield, skill/weapon/armor types, elements, animations, starting party); find_uses, find_uses_from, find_dangling (missing/blank), describe; 10 planted dangling kinds each reported, clean fixture empty; event params/encounters/start map assigned to 9.2.2/12.3/8.3; full suite 1465/1465 (containers: 5 in_progress->pending) | pending |

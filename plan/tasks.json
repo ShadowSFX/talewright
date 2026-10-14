@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "5.5.3 Event runtime state",
+  "last_completed": "5.6 Reference scanner",
   "tasks": [
     {
       "id": "0",
@@ -1616,7 +1616,7 @@
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "5ec93c1ded",
       "notes": ""
     },
     {
@@ -1642,20 +1642,29 @@
     {
       "id": "5.6",
       "title": "Reference scanner",
-      "description": "Reference scanner over tables, events, common events, maps and system data. Fixtures are built in test code: a database with one planted dangling reference of each kind (trait, effect, learning, drop, enemy action, troop member, equipment, event command parameter, map encounter, system start map).",
+      "description": "JRPGReferenceScanner (core) over the database tables, the type lists and the system data: every ID reference with its location (traits, effects, learnings, drops, enemy actions and their state conditions, troop members and page actor conditions, actor class and initial equipment, skill/weapon/armor types, elements, animations, system starting party). find_uses(target, id) for clear/delete warnings, find_uses_from(target, first_id) for Change Maximum warnings, find_dangling() for the integrity report (missing = beyond the table or list, blank = cleared entry). Event command parameters, map encounters and the system start map join when their data exists (tasks 9.2.2, 12.3, 8.3 carry those criteria).",
       "parent": "5",
       "dependencies": [
         "5.5"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 2,
       "acceptance_criteria": [
-        "Each planted dangling reference kind is reported with its location",
-        "No reports on a clean fixture"
+        "Each planted dangling reference kind that exists in the data model so far (trait, effect, learning, drop, enemy action, troop member, actor equipment, actor class, type ids, system starting party) is reported with its location",
+        "No reports on a clean fixture; find_uses and find_uses_from list exactly the planted uses",
+        "Doctests [JRPG]; dev_mode build clean; doctool stable; full suite passes; clang check clean"
       ],
       "test_strategy": "Doctests.",
-      "files": [],
-      "commit": "",
+      "files": [
+        "modules/jrpg/core/jrpg_reference_scanner.h",
+        "modules/jrpg/core/jrpg_reference_scanner.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGReferenceScanner.xml",
+        "modules/jrpg/tests/test_jrpg_reference_scanner.h",
+        "plan/specs/02_database_model.md"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -2160,7 +2169,8 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Bridge-driven create/rename"
+        "Bridge-driven create/rename",
+        "JRPGReferenceScanner checks the System start map against the map list and reports a deleted start map with its location (task 5.6 deferral)"
       ],
       "test_strategy": "Bridge.",
       "files": [],
@@ -2454,7 +2464,8 @@
       "priority": 1,
       "acceptance_criteria": [
         "Script subclass discovered and executed",
-        "Troop pages and common events save and load their command lists"
+        "Troop pages and common events save and load their command lists",
+        "Command metadata declares which parameters are database IDs; JRPGReferenceScanner visits command lists of map events, common events and troop pages and reports a dangling command parameter with its location (task 5.6 deferral)"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
@@ -3252,7 +3263,8 @@
       "acceptance_criteria": [
         "With a fixed encounter seed the first encounter happens at the step predicted by the spec 05 rule computed in the test",
         "Troop chosen by weight among entries matching the region; battle return resumes the map",
-        "Troop event page with a turn condition runs at that turn"
+        "Troop event page with a turn condition runs at that turn",
+        "JRPGReferenceScanner reports a map encounter whose troop no longer exists, with its location (task 5.6 deferral)"
       ],
       "test_strategy": "Doctests + bridge.",
       "files": [],

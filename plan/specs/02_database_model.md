@@ -80,6 +80,13 @@ Full field lists per table follow the inventory slices (03/04/05). The vertical 
 Finds every use of an entry ID: other tables (traits, effects, learnings, drops, actions, members, equipment),
 events and common events (command parameters), maps (encounters), system data. Used for: delete/clear warnings,
 "Change Maximum" warnings, a dangling-reference report, and the final sweep's database-integrity checks.
+`JRPGReferenceScanner` (core) returns references as `{source, source_id, path, target, target_id}` (`path` such as
+`effects[1].data_id`; targets are table names or the type lists `elements`, `skill_types`, `weapon_types`,
+`armor_types`, `equip_types`; System data is source `system`, id 0). `find_dangling` marks targets beyond the table or
+list as `missing` and entries/types without a name as `blank` (cleared). Which trait and effect codes carry IDs is
+listed in `jrpg_reference_scanner.cpp` (`trait_target`, `effect_target`); actor initial equipment slot 1 is a
+weapon, and slot 2 too with dual wield. Event command parameters (task 9.2.2), map encounters (task 12.3) and the
+System start map (task 8.3) join the scanner when their data exists.
 
 ## Edge cases
 - Dangling ID (points beyond the table or to a cleared entry) → runtime treats it as "none" and logs a warning once.

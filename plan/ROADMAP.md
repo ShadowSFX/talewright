@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 136, in_progress: 2, done: 71, blocked: 0, deferred: 3 (of 212)
+**Totals:** pending: 135, in_progress: 2, done: 72, blocked: 0, deferred: 3 (of 212)
 
 ## [x] 0 Bootstrap and task system
 
@@ -101,9 +101,9 @@ modules/jrpg with pure-logic core (no Node dependency), database, game state, RN
 - [x] **5.5** Game state core (P1) _(deps: 5.4)_
   - [x] **5.5.1** JRPGGameState core (P1) _(commit: f357cf1e53)_
   - [x] **5.5.2** Runtime actor state (P1) _(deps: 5.5.1; commit: 1295b2eb53)_
-  - [x] **5.5.3** Event runtime state (P1) _(deps: 5.5.1; commit: pending)_
+  - [x] **5.5.3** Event runtime state (P1) _(deps: 5.5.1; commit: 5ec93c1ded)_
   - [x] **5.5.4** Actor equipment, class change and reference repair (P1) _(deps: 5.5.2; commit: 63a440f97e)_
-- [ ] **5.6** Reference scanner (P2) _(deps: 5.5)_
+- [x] **5.6** Reference scanner (P2) _(deps: 5.5; commit: pending)_
 - [ ] **5.7** Epic review: JRPG core (P1) _(deps: 5.6)_
 
 ## [ ] 6 JRPG workspace and database editor

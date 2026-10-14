@@ -50,6 +50,7 @@
 #include "modules/jrpg/core/jrpg_item_data.h"
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_random.h"
+#include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_sim_clock.h"
 #include "modules/jrpg/core/jrpg_skill_data.h"
 #include "modules/jrpg/core/jrpg_stat_block.h"
@@ -110,6 +111,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGSimClock);
 		GDREGISTER_CLASS(JRPGActorState);
 		GDREGISTER_CLASS(JRPGEventState);
+		GDREGISTER_CLASS(JRPGReferenceScanner);
 		GDREGISTER_CLASS(JRPGGameState);
 	}
 #ifdef TOOLS_ENABLED
