@@ -40,6 +40,7 @@
 #include "core/io/resource_saver.h"
 #include "core/object/class_db.h"
 #include "core/os/os.h"
+#include "editor/editor_data.h"
 #include "editor/editor_interface.h"
 #include "editor/editor_node.h"
 #include "editor/editor_undo_redo_manager.h"
@@ -322,6 +323,50 @@ Error JRPGMapEditing::set_map_properties(JRPGMap *p_map, const Dictionary &p_val
 		undo_redo->add_undo_method(data.ptr(), "set_regions", data->get_regions());
 	}
 	undo_redo->commit_action();
+	return OK;
+}
+
+Ref<JRPGMapData> JRPGMapEditing::get_open_map_data(int p_map_id) {
+	const String scene = get_map_list()->get_scene(p_map_id);
+	if (scene.is_empty() || !EditorNode::get_singleton()) {
+		return Ref<JRPGMapData>();
+	}
+	EditorData &editor_data = EditorNode::get_editor_data();
+	for (int i = 0; i < editor_data.get_edited_scene_count(); i++) {
+		const JRPGMap *map = Object::cast_to<JRPGMap>(editor_data.get_edited_scene_root(i));
+		if (map && map->get_scene_file_path() == scene) {
+			return map->get_map_data();
+		}
+	}
+	return Ref<JRPGMapData>();
+}
+
+Vector2i JRPGMapEditing::get_map_size(int p_map_id) {
+	const String scene = get_map_list()->get_scene(p_map_id);
+	if (scene.is_empty()) {
+		return Vector2i();
+	}
+	Ref<JRPGMapData> data = get_open_map_data(p_map_id);
+	if (data.is_null() && FileAccess::exists(scene)) {
+		data = JRPGMapFiles::read_map_data(scene);
+	}
+	return data.is_valid() ? data->get_size() : Vector2i();
+}
+
+Error JRPGMapEditing::check_start_position(int p_map_id, const Vector2i &p_cell, String *r_message) {
+	if (p_map_id == 0) {
+		return OK;
+	}
+	if (p_map_id < 0 || !get_map_list()->has_map(p_map_id)) {
+		return refuse(vformat("there is no map %d.", p_map_id), r_message, ERR_DOES_NOT_EXIST);
+	}
+	const Vector2i size = get_map_size(p_map_id);
+	if (size == Vector2i()) {
+		return refuse(vformat("map %d has no map data to place the player on (%s).", p_map_id, get_map_list()->get_scene(p_map_id)), r_message, ERR_FILE_CORRUPT);
+	}
+	if (p_cell.x < 0 || p_cell.y < 0 || p_cell.x >= size.x || p_cell.y >= size.y) {
+		return refuse(vformat(U"cell (%d, %d) is outside map %d, which is %d × %d cells.", p_cell.x, p_cell.y, p_map_id, size.x, size.y), r_message, ERR_PARAMETER_RANGE_ERROR);
+	}
 	return OK;
 }
 

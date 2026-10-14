@@ -51,7 +51,7 @@ static Ref<JRPGTable> make_sample_table() {
 	table.instantiate();
 	table->set_maximum(4);
 	table->get_entry(1)->set_entry_name("Hero");
-	table->get_entry(2)->set_entry_name("Ünïcödé — 名前");
+	table->get_entry(2)->set_entry_name(U"Ünïcödé — 名前");
 	table->get_entry(2)->set_note("Line one\nLine two with \"quotes\" and <tag:value>");
 	table->clear_entry(3);
 	table->get_entry(4)->set_entry_name("Last");
@@ -66,7 +66,7 @@ TEST_CASE("[JRPG][Database] Save, load and save again gives identical bytes") {
 
 	Ref<JRPGTable> loaded = ResourceLoader::load(path, "", ResourceFormatLoader::CACHE_MODE_IGNORE);
 	REQUIRE(loaded.is_valid());
-	CHECK(loaded->get_entry(2)->get_entry_name() == "Ünïcödé — 名前");
+	CHECK(loaded->get_entry(2)->get_entry_name() == U"Ünïcödé — 名前");
 	REQUIRE(ResourceSaver::save(loaded, path) == OK);
 	CHECK(read_bytes(path) == first);
 }

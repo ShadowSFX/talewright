@@ -36,6 +36,7 @@
 #include "jrpg_class_data.h"
 #include "jrpg_database.h"
 #include "jrpg_enemy_data.h"
+#include "jrpg_map_list.h"
 #include "jrpg_state_data.h"
 #include "jrpg_traits.h"
 #include "jrpg_troop_data.h"
@@ -52,6 +53,7 @@ const char *const SKILL_TYPES = "skill_types";
 const char *const WEAPON_TYPES = "weapon_types";
 const char *const ARMOR_TYPES = "armor_types";
 const char *const EQUIP_TYPES = "equip_types";
+const char *const MAPS = "maps";
 
 String table(JRPGDatabase::TableKind p_kind) {
 	return JRPGDatabase::get_table_name(p_kind);
@@ -119,6 +121,7 @@ const ScalarReference SCALAR_REFERENCES[] = {
 	{ "JRPGWeaponData", "animation_id", "animations" },
 	{ "JRPGArmorData", "armor_type_id", ARMOR_TYPES },
 	{ "JRPGArmorData", "equip_type_id", EQUIP_TYPES },
+	{ "JRPGSystemData", "start_map_id", MAPS },
 	// Troop pages are not entries: collect_entry adds this one only while the page's actor HP condition is on.
 	{ "JRPGTroopPage", "actor_id", "actors" },
 };
@@ -272,6 +275,7 @@ String label(const String &p_name) {
 		{ "weapon_types", "Weapon type" },
 		{ "armor_types", "Armor type" },
 		{ "equip_types", "Equipment type" },
+		{ "maps", "Map" },
 	};
 	for (const auto &pair : LABELS) {
 		if (p_name == pair[0]) {
@@ -335,6 +339,7 @@ Array JRPGReferenceScanner::collect_references(const Ref<JRPGDatabase> &p_databa
 		for (int i = 0; i < party.size(); i++) {
 			c.add(vformat("starting_party[%d]", i), table(JRPGDatabase::TABLE_ACTORS), party[i]);
 		}
+		c.add("start_map_id", MAPS, system->get_start_map_id());
 	}
 	return c.refs;
 }
@@ -363,13 +368,18 @@ Array JRPGReferenceScanner::find_uses_from(const Ref<JRPGDatabase> &p_database, 
 	return uses;
 }
 
-Array JRPGReferenceScanner::find_dangling(const Ref<JRPGDatabase> &p_database) {
+Array JRPGReferenceScanner::find_dangling(const Ref<JRPGDatabase> &p_database, const Ref<JRPGMapList> &p_maps) {
 	Array dangling;
 	const Array refs = collect_references(p_database);
 	for (const Variant &v : refs) {
 		Dictionary r = v;
 		bool blank = false;
-		if (!target_exists(p_database, r["target"], r["target_id"], blank)) {
+		if (String(r["target"]) == MAPS) {
+			if (p_maps.is_null() || p_maps->has_map(r["target_id"])) {
+				continue; // Not judged without a map list; a listed map always has a name.
+			}
+			r["problem"] = "missing";
+		} else if (!target_exists(p_database, r["target"], r["target_id"], blank)) {
 			r["problem"] = "missing";
 		} else if (blank) {
 			r["problem"] = "blank";
@@ -396,6 +406,9 @@ String JRPGReferenceScanner::get_id_target(const Object *p_object, const String 
 PackedStringArray JRPGReferenceScanner::get_target_names(const Ref<JRPGDatabase> &p_database, const String &p_target) {
 	PackedStringArray names;
 	ERR_FAIL_COND_V(p_database.is_null(), names);
+	if (p_target == MAPS) {
+		return names;
+	}
 	const JRPGDatabase::TableKind kind = JRPGDatabase::find_table_kind(p_target);
 	if (kind != JRPGDatabase::TABLE_MAX) {
 		const Ref<JRPGTable> table = p_database->get_table(kind);
@@ -432,7 +445,7 @@ void JRPGReferenceScanner::_bind_methods() {
 	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("collect_references", "database"), &JRPGReferenceScanner::collect_references);
 	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("find_uses", "database", "target", "id"), &JRPGReferenceScanner::find_uses);
 	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("find_uses_from", "database", "target", "first_id"), &JRPGReferenceScanner::find_uses_from);
-	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("find_dangling", "database"), &JRPGReferenceScanner::find_dangling);
+	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("find_dangling", "database", "maps"), &JRPGReferenceScanner::find_dangling, DEFVAL(Ref<JRPGMapList>()));
 	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("describe", "reference"), &JRPGReferenceScanner::describe);
 	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("get_id_target", "object", "property"), &JRPGReferenceScanner::get_id_target);
 	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("get_target_names", "database", "target"), &JRPGReferenceScanner::get_target_names);

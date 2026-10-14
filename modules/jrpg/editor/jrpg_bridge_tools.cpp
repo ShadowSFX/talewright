@@ -758,6 +758,17 @@ void tool_db_set(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_ca
 		p_call->fail(reason + " Nothing was changed.");
 		return;
 	}
+	const JRPGSystemData *system = Object::cast_to<JRPGSystemData>(record.ptr());
+	if (system && (converted.has("start_map_id") || converted.has("start_cell"))) {
+		// The start position the call leaves, checked against the map list and the map's size (task 8.3.2).
+		const int map_id = converted.get("start_map_id", system->get_start_map_id());
+		const Vector2i cell = converted.get("start_cell", system->get_start_cell());
+		const bool listed = map_id == 0 || JRPGMapEditing::get_map_list()->has_map(map_id);
+		if ((listed || !bool(p_args.get("allow_broken_references", false))) && JRPGMapEditing::check_start_position(map_id, cell, &reason) != OK) {
+			p_call->fail(vformat("Refused start position: %s Set start_map_id (a map jrpg_map_list lists) and start_cell together; nothing was changed.", reason));
+			return;
+		}
+	}
 	if (editing->set_record_properties(table, id, converted) != OK) {
 		p_call->fail("The values were refused; see the editor log. Nothing was changed.");
 		return;
@@ -767,7 +778,7 @@ void tool_db_set(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_ca
 	const String source = Object::cast_to<JRPGSystemData>(record.ptr()) ? String("system") : table;
 	const bool types = Object::cast_to<JRPGTypesData>(record.ptr());
 	PackedStringArray dangling;
-	for (const Variant &v : JRPGReferenceScanner::find_dangling(editing->get_database())) {
+	for (const Variant &v : JRPGReferenceScanner::find_dangling(editing->get_database(), JRPGMapEditing::get_map_list())) {
 		const Dictionary reference = v;
 		if ((String(reference["source"]) == source && int(reference["source_id"]) == id) || (types && converted.has(reference["target"]))) {
 			dangling.push_back(JRPGReferenceScanner::describe(reference) + " (" + String(reference["problem"]) + ")");
@@ -1630,6 +1641,8 @@ void tool_map_delete(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 	Dictionary result;
 	result["deleted"] = id;
 	result["scene_in_trash"] = scene;
+	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
+	result["broken_references"] = editing && editing->get_database().is_valid() ? describe_uses(JRPGReferenceScanner::find_uses(editing->get_database(), "maps", id)) : PackedStringArray();
 	result["undoable"] = false;
 	p_call->complete_data(result);
 }
@@ -1835,7 +1848,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool get;
 	get.name = "jrpg_db_get";
 	get.title = "Read a JRPG database entry";
-	get.description = "Returns an entry's editable properties (or System, Types, Terms data) as JSON, with id_targets naming the table or type list each ID property points into, readable traits and effects as the form lists them (\"Element Rate: Fire × 150%\"), the sub-resource path and whether its file has unsaved changes.";
+	get.description = U"Returns an entry's editable properties (or System, Types, Terms data) as JSON, with id_targets naming the table or type list each ID property points into, readable traits and effects as the form lists them (\"Element Rate: Fire × 150%\"), the sub-resource path and whether its file has unsaved changes.";
 	get.input_schema = ClaudeBridgeMCP::object_schema(record_properties, PackedStringArray({ "table" }));
 	get.func = &tool_db_get;
 	r_mcp.register_tool(get);
@@ -1843,7 +1856,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool set;
 	set.name = "jrpg_db_set";
 	set.title = "Edit a JRPG database entry";
-	set.description = "Sets properties of an entry (or System, Types, Terms data) as one undoable editor action, like editing them in the Database section's form. Values use JSON; math and engine types use Godot literal strings such as \"Color(1, 0, 0, 1)\". A key may be a path into sub-resources (\"battle_rules/tp_max\", \"pages/0/turn_end\"); a sub-resource or a list of them may be given as dictionaries of their data, as jrpg_db_get shows them; a resource with a file of its own is a res:// path. Every value is checked first, list elements included: nothing changes unless all are valid. A type list may only shrink while no data uses the removed IDs, unless allow_broken_references is true. The result lists the references of this record that now point at missing or empty entries (for type lists, the data that points at removed or empty types). Save with jrpg_db_save.";
+	set.description = "Sets properties of an entry (or System, Types, Terms data) as one undoable editor action, like editing them in the Database section's form. Values use JSON; math and engine types use Godot literal strings such as \"Color(1, 0, 0, 1)\". A key may be a path into sub-resources (\"battle_rules/tp_max\", \"pages/0/turn_end\"); a sub-resource or a list of them may be given as dictionaries of their data, as jrpg_db_get shows them; a resource with a file of its own is a res:// path. Every value is checked first, list elements included: nothing changes unless all are valid. A type list may only shrink while no data uses the removed IDs, unless allow_broken_references is true. The System start position (start_map_id, start_cell, start_direction) must name a map jrpg_map_list lists (0: not set; another id only with allow_broken_references) and a cell inside that map. The result lists the references of this record that now point at missing or empty entries (for type lists, the data that points at removed or empty types). Save with jrpg_db_save.";
 	Dictionary set_properties = record_properties.duplicate();
 	Dictionary values_property = schema_property("object", "Property names (or paths) and new values, e.g. {\"name\": \"Fire\", \"mp_cost\": 5}.");
 	set_properties["values"] = values_property;
@@ -1983,7 +1996,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool map_delete;
 	map_delete.name = "jrpg_map_delete";
 	map_delete.title = "Delete a map";
-	map_delete.description = "Deletes a map: its entry in the map tree (the maps under it move up) and its scene file, moved to the system trash. Not undoable; refused while the map's scene is open in the editor. Data that names the map (the System's start map, transfer events) is then reported as broken by the reference checks.";
+	map_delete.description = "Deletes a map: its entry in the map tree (the maps under it move up) and its scene file, moved to the system trash. Not undoable; refused while the map's scene is open in the editor. Data that names the map (the System's start map, transfer events) is then reported as broken by the reference checks; the result lists it (broken_references).";
 	Dictionary map_delete_properties;
 	map_delete_properties["map_id"] = map_id_property;
 	map_delete.input_schema = ClaudeBridgeMCP::object_schema(map_delete_properties, PackedStringArray({ "map_id" }));

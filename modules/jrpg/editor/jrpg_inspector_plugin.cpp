@@ -102,6 +102,12 @@ bool JRPGInspectorPlugin::parse_property(Object *p_object, const Variant::Type p
 		add_property_editor(p_path, editor, false, TTR("TileSet"));
 		return true;
 	}
+	if (Object::cast_to<JRPGSystemData>(p_object) && JRPGEditorPropertyStartPosition::get_properties().has(p_path)) {
+		if (p_path == "start_map_id") { // The first of the three: the row takes its place.
+			add_property_editor_for_multiple_properties(TTR("Player"), JRPGEditorPropertyStartPosition::get_properties(), memnew(JRPGEditorPropertyStartPosition));
+		}
+		return true;
+	}
 	if (Object::cast_to<JRPGTilesetData>(p_object) && p_path == "palette") {
 		add_property_editor(p_path, memnew(JRPGEditorPropertyTiles), false, TTR("Tiles"));
 		return true;

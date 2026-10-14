@@ -60,6 +60,9 @@ void JRPGPicker::_list_choices() {
 		const Dictionary choice = v;
 		add_item(choice["text"]);
 		set_item_metadata(-1, choice["id"]);
+		if (choice.has("indent")) {
+			get_popup()->set_item_indent(get_item_count() - 1, choice["indent"]);
+		}
 		if (int64_t(choice["id"]) == value) {
 			selected = get_item_count() - 1;
 		}

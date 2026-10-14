@@ -4,8 +4,8 @@
 		Finds every use of a JRPG database ID and reports references to missing or cleared entries.
 	</brief_description>
 	<description>
-		Scans the [JRPGDatabase] tables, type lists and system data for ID references: traits, effects, learnings, drops, enemy actions, troop members and page conditions, actor classes and initial equipment, skill, weapon and armor types, elements, animations and the starting party.
-		Each reference is a [Dictionary] with [code]source[/code], [code]source_id[/code], [code]path[/code], [code]target[/code] and [code]target_id[/code]. [code]source[/code] and [code]target[/code] are table names (see [method JRPGDatabase.get_table_name]) or type lists ([code]elements[/code], [code]skill_types[/code], [code]weapon_types[/code], [code]armor_types[/code], [code]equip_types[/code]); System data references have the source [code]system[/code] and source ID 0. IDs 0 and below mean "none" and are never references.
+		Scans the [JRPGDatabase] tables, type lists and system data for ID references: traits, effects, learnings, drops, enemy actions, troop members and page conditions, actor classes and initial equipment, skill, weapon and armor types, elements, animations, the starting party and the start map.
+		Each reference is a [Dictionary] with [code]source[/code], [code]source_id[/code], [code]path[/code], [code]target[/code] and [code]target_id[/code]. [code]source[/code] and [code]target[/code] are table names (see [method JRPGDatabase.get_table_name]) or type lists ([code]elements[/code], [code]skill_types[/code], [code]weapon_types[/code], [code]armor_types[/code], [code]equip_types[/code]); [code]maps[/code] is the target of map IDs, which the project's [JRPGMapList] holds. System data references have the source [code]system[/code] and source ID 0. IDs 0 and below mean "none" and are never references.
 		The database editor uses it to warn before clearing an entry or shrinking a table, and to list dangling references.
 	</description>
 	<tutorials>
@@ -28,8 +28,9 @@
 		<method name="find_dangling" qualifiers="static">
 			<return type="Array" />
 			<param index="0" name="database" type="JRPGDatabase" />
+			<param index="1" name="maps" type="JRPGMapList" default="null" />
 			<description>
-				Returns the references whose target does not exist, with [code]problem[/code] set to [code]missing[/code] (beyond the table or type list), or whose target was cleared, with [code]problem[/code] set to [code]blank[/code] (an entry or type without a name).
+				Returns the references whose target does not exist, with [code]problem[/code] set to [code]missing[/code] (beyond the table or type list, or a map that [param maps] does not list), or whose target was cleared, with [code]problem[/code] set to [code]blank[/code] (an entry or type without a name). Map references, such as the System's start map, are judged only when [param maps] is given.
 			</description>
 		</method>
 		<method name="find_uses" qualifiers="static">
@@ -70,7 +71,7 @@
 			<param index="0" name="database" type="JRPGDatabase" />
 			<param index="1" name="target" type="String" />
 			<description>
-				Returns the names of the entries of a table, or the names of a type list, from [param database]. Index [code]i[/code] holds the name of ID [code]i + 1[/code]; an empty name is an empty entry.
+				Returns the names of the entries of a table, or the names of a type list, from [param database]. Index [code]i[/code] holds the name of ID [code]i + 1[/code]; an empty name is an empty entry. Returns an empty array for [code]"maps"[/code]: map IDs have gaps, and [JRPGMapList] holds the map names.
 			</description>
 		</method>
 	</methods>

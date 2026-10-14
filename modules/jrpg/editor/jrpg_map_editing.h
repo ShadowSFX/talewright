@@ -35,6 +35,7 @@
 #include "core/object/ref_counted.h"
 
 class JRPGMap;
+class JRPGMapData;
 class JRPGMapList;
 
 // Map authoring (spec 05, D-006, D-012; task 8.1.3, extended by 8.4 and 8.8): creating map scenes and painting their
@@ -74,4 +75,13 @@ public:
 	static Error set_map_properties(JRPGMap *p_map, const Dictionary &p_values, String *r_message = nullptr);
 	// Whether a map property can be set with set_map_properties.
 	static bool is_settable_property(const PropertyInfo &p_property);
+
+	// The data of map p_map_id in its scene open in the editor (unsaved edits included), or null when it is not open.
+	static Ref<JRPGMapData> get_open_map_data(int p_map_id);
+	// The size in cells of map p_map_id: from its open scene, else from its file; (0, 0) when the map is not listed or
+	// its scene holds no map data.
+	static Vector2i get_map_size(int p_map_id);
+	// Checks a System start position (task 8.3.2): p_map_id is 0 (not set) or a listed map, and p_cell is inside that
+	// map. r_message says what is wrong.
+	static Error check_start_position(int p_map_id, const Vector2i &p_cell, String *r_message = nullptr);
 };

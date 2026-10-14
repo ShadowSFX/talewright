@@ -60,8 +60,9 @@ protected:
 	void _notification(int p_what);
 
 public:
-	// p_choices returns what the picker offers as [{id, text}]; p_label returns the text of one ID (also for a value
-	// that is not among the choices, such as a missing ID, which stays selected until the user picks another).
+	// p_choices returns what the picker offers as [{id, text, indent (optional: a tree level)}]; p_label returns the text
+	// of one ID (also for a value that is not among the choices, such as a missing ID, which stays selected until the
+	// user picks another).
 	void setup(const Callable &p_choices, const Callable &p_label);
 	// Shows p_value without listing the choices.
 	void set_value(int64_t p_value);

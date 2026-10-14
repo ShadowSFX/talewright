@@ -144,7 +144,7 @@ void JRPGEnemyData::_bind_methods() {
 	ClassDB::bind_static_method("JRPGEnemyData", D_METHOD("make_action", "skill_id", "condition", "param1", "param2", "rating"), &JRPGEnemyData::make_action);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "battler", PROPERTY_HINT_FILE, "*.png,*.webp"), "set_battler", "get_battler");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "hue", PROPERTY_HINT_RANGE, "0,360,1,suffix:°"), "set_hue", "get_hue");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "hue", PROPERTY_HINT_RANGE, U"0,360,1,suffix:°"), "set_hue", "get_hue");
 	ADD_PROPERTY(PropertyInfo(Variant::PACKED_INT32_ARRAY, "params"), "set_params", "get_params");
 	ADD_GROUP("Rewards", "");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "exp", PROPERTY_HINT_RANGE, "0,9999999,1"), "set_exp", "get_exp");

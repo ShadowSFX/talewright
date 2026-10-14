@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.3.1 Map list authoring API and bridge tools",
+  "last_completed": "8.3.2 Start map checks and start position picker",
   "tasks": [
     {
       "id": "0",
@@ -2895,7 +2895,7 @@
       "test_strategy": "Doctests + jrpg_bridge_checks.py.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "a80ed0a213",
       "notes": ""
     },
     {
@@ -2912,9 +2912,25 @@
         "The System form sets the start position with a map picker (map, cell, direction)"
       ],
       "test_strategy": "Doctests + bridge.",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_reference_scanner.{h,cpp}",
+        "modules/jrpg/doc_classes/JRPGReferenceScanner.xml",
+        "modules/jrpg/editor/jrpg_map_editing.{h,cpp}",
+        "modules/jrpg/editor/jrpg_system_editors.{h,cpp}",
+        "modules/jrpg/editor/jrpg_inspector_plugin.cpp",
+        "modules/jrpg/editor/jrpg_picker.{h,cpp}",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/core/jrpg_enemy_data.cpp",
+        "modules/jrpg/tests/test_jrpg_reference_scanner.h",
+        "modules/jrpg/tests/test_jrpg_system_editors.h",
+        "modules/jrpg/tests/test_jrpg_schema.h",
+        "talewright/tools/static_checks.py",
+        "talewright/tools/jrpg_bridge_checks.py",
+        "talewright/docs/claude_bridge.md",
+        "plan/evidence/jrpg/8.3.2-*"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -2994,13 +3010,14 @@
       "id": "8.4.3",
       "parent": "8.4",
       "title": "Shadow, region, event modes and auto-layer",
-      "description": "Shadow pen, region painting, event mode (create/move/delete events on grid), auto layer selection by tile kind.",
+      "description": "Shadow pen, region painting, event mode (create/move/delete events on grid), auto layer selection by tile kind. Event mode also places the player start: Set Start Position Here on a cell sets the System start map, cell and direction as one undo action (the System form row of 8.3.2 picks them without the canvas).",
       "dependencies": [
         "8.4.2"
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "Bridge-driven edit of each mode"
+        "Bridge-driven edit of each mode",
+        "Set Start Position Here on the canvas sets the System start position (map, cell), undoable, and the System form row shows it"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],

@@ -38,8 +38,10 @@
 #include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_enemy_data.h"
+#include "modules/jrpg/core/jrpg_map_list.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_skill_data.h"
+#include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_traits.h"
 #include "modules/jrpg/core/jrpg_troop_data.h"
 #include "modules/jrpg/core/jrpg_types_data.h"
@@ -292,6 +294,36 @@ TEST_CASE("[JRPG][ReferenceScanner] ID properties name the table or type list th
 	CHECK(JRPGReferenceScanner::get_target_names(db, "nope").is_empty());
 	CHECK(JRPGReferenceScanner::get_target_names(Ref<JRPGDatabase>(), "classes").is_empty());
 	ERR_PRINT_ON;
+}
+
+TEST_CASE("[JRPG][ReferenceScanner] The System start map is checked against the map list") {
+	Ref<JRPGDatabase> db = make_clean_database();
+	Ref<JRPGMapList> maps;
+	maps.instantiate();
+	const int town = maps->add_map("Town", "res://jrpg/maps/map_0001.tscn");
+	maps->add_map("Inn", "res://jrpg/maps/map_0002.tscn", town);
+	db->get_system()->set_start_map_id(town);
+	CHECK(has_reference(JRPGReferenceScanner::collect_references(db), "system", 0, "start_map_id", "maps", town));
+	CHECK(JRPGReferenceScanner::find_dangling(db, maps).is_empty());
+	CHECK(JRPGReferenceScanner::find_uses(db, "maps", town).size() == 1);
+	CHECK(JRPGReferenceScanner::get_id_target(db->get_system().ptr(), "start_map_id") == "maps");
+	CHECK(JRPGReferenceScanner::get_target_label("maps") == "Map");
+	CHECK(JRPGReferenceScanner::get_target_names(db, "maps").is_empty()); // Ids with gaps: the map list names them.
+
+	// The start map is deleted: reported with its location once a map list is given, not judged without one.
+	maps->remove_map(town);
+	const Array dangling = JRPGReferenceScanner::find_dangling(db, maps);
+	REQUIRE(dangling.size() == 1);
+	CHECK(String(Dictionary(dangling[0])["problem"]) == "missing");
+	CHECK(JRPGReferenceScanner::describe(dangling[0]) == "System, start_map_id: map 1");
+	CHECK(JRPGReferenceScanner::find_dangling(db).is_empty());
+
+	// Map ids are never reused: a new map does not bring the start map back.
+	CHECK(maps->add_map("Town", "res://jrpg/maps/map_0003.tscn") == 3);
+	CHECK(JRPGReferenceScanner::find_dangling(db, maps).size() == 1);
+	db->get_system()->set_start_map_id(0); // Not set: no reference at all.
+	CHECK(JRPGReferenceScanner::find_uses(db, "maps", town).is_empty());
+	CHECK(JRPGReferenceScanner::find_dangling(db, maps).is_empty());
 }
 
 } // namespace TestJRPGReferenceScanner

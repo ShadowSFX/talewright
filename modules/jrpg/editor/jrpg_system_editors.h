@@ -35,6 +35,7 @@
 
 class Button;
 class ConfirmationDialog;
+class EditorSpinSlider;
 class GridContainer;
 class JRPGPicker;
 class Label;
@@ -93,6 +94,55 @@ public:
 	virtual void update_property() override;
 
 	JRPGEditorPropertyTypeList();
+};
+
+// The System's start position (task 8.3.2): one row for start_map_id, start_cell and start_direction, added with
+// EditorInspectorPlugin::add_property_editor_for_multiple_properties (editor/inspector/editor_inspector.cpp:1771-1777).
+// The map picker lists the project's maps in tree order; picking a map keeps the cell inside it, in the same undo
+// action (multiple_properties_changed, editor/inspector/editor_inspector.cpp:5657-5681). The cell is bounded by the
+// map's size; a deleted map or a cell outside the map is shown, never silently changed.
+class JRPGEditorPropertyStartPosition : public EditorProperty {
+	GDCLASS(JRPGEditorPropertyStartPosition, EditorProperty);
+
+	JRPGPicker *map_picker = nullptr;
+	Button *open_button = nullptr;
+	EditorSpinSlider *cell_x = nullptr;
+	EditorSpinSlider *cell_y = nullptr;
+	Button *directions[4] = {};
+	Label *status = nullptr;
+	bool status_is_warning = false;
+	bool updating = false;
+	// The size of a map whose scene is not open, read from its file once: read again when the map changes or the form is
+	// shown again. An open map's size is read live.
+	int sized_map_id = -1;
+	Vector2i map_size;
+	// The three values and the map size last shown. EditorInspector refreshes a row whose cache went stale
+	// (editor/inspector/editor_inspector.cpp:6050-6056); EditorProperty's own cache holds one property.
+	Array shown;
+	Vector2i shown_size;
+
+	static Array _map_choices();
+	static String _map_text(int64_t p_map_id);
+	Vector2i _get_map_size(int p_map_id);
+	void _set_status(const String &p_text, bool p_warning);
+	void _map_picked(int p_index);
+	void _cell_changed(double p_value);
+	void _direction_pressed(int p_direction);
+	void _open_map();
+
+protected:
+	virtual void _set_read_only(bool p_read_only) override;
+	void _notification(int p_what);
+
+public:
+	// The properties the row edits, as given to add_property_editor_for_multiple_properties.
+	static Vector<String> get_properties();
+	virtual void gui_input(const Ref<InputEvent> &p_event) override;
+	virtual void update_property() override;
+	virtual void update_cache() override;
+	virtual bool is_cache_valid() const override;
+
+	JRPGEditorPropertyStartPosition();
 };
 
 // One group of terms (basic statuses, parameters, commands, messages): a field per known term, its default wording as

@@ -373,6 +373,24 @@ def run(checks: Checks) -> None:
         "jrpg_map_delete: refused while the map is open", c.refused("jrpg_map_delete", {"map_id": second["map_id"]})
     )
     third = c.call("jrpg_map_create", {"name": "Third", "open": False})
+
+    # The System start position names a listed map and a cell inside it (task 8.3.2).
+    def start() -> Any:
+        p = c.call("jrpg_db_get", {"table": "system"})["properties"]
+        return [p["start_map_id"], p["start_cell"], p["start_direction"]]
+
+    place = {"start_map_id": third["map_id"], "start_cell": "Vector2i(5, 4)", "start_direction": 3}
+    c.round_trip(
+        "jrpg_db_set (start position)", start, lambda: c.call("jrpg_db_set", {"table": "system", "values": place})
+    )
+    c.check(
+        "jrpg_db_set: refuses a start map the map list lacks",
+        c.refused("jrpg_db_set", {"table": "system", "values": {"start_map_id": 99}}),
+    )
+    c.check(
+        "jrpg_db_set: refuses a start cell outside the start map",
+        c.refused("jrpg_db_set", {"table": "system", "values": {"start_cell": "Vector2i(20, 0)"}}),
+    )
     deleted = c.call("jrpg_map_delete", {"map_id": third["map_id"]})
     c.check(
         "jrpg_map_delete: the entry and the scene file are gone",
@@ -381,6 +399,18 @@ def run(checks: Checks) -> None:
         and not (c.project / "jrpg" / "maps" / "map_0003.tscn").exists(),
         json.dumps(deleted)[:200],
     )
+    c.check(
+        "jrpg_map_delete: reports the start map it broke",
+        deleted.get("broken_references") == ["System, start_map_id: map 3"],
+        json.dumps(deleted)[:200],
+    )
+    reported = c.call("jrpg_db_set", {"table": "system", "values": {"start_direction": 2}})
+    c.check(
+        "jrpg_db_set: reports the deleted start map",
+        reported.get("dangling_references") == ["System, start_map_id: map 3 (missing)"],
+        json.dumps(reported)[:300],
+    )
+    c.call("jrpg_db_set", {"table": "system", "values": {"start_map_id": 0}})
     c.check(
         "jrpg_map_create: ids are not reused after a delete",
         c.call("jrpg_map_create", {"name": "Fourth", "open": False}).get("map_id") == 4,

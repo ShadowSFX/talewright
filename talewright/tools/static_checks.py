@@ -4,7 +4,8 @@
 CI runs `prek run --files <changed files>` with the repository's .pre-commit-config.yaml. This script runs the same
 hooks on the files a push would bring (default: everything that differs from origin/talewright, committed or not,
 plus untracked files), then the fork's own checks: Talewright license headers (Godot's copyright-headers hook skips
-the fork modules), the jrpg core include boundary, the upstream-patch ledger, clang's diagnostics on the fork's
+the fork modules), ASCII-only narrow string literals (non-ASCII text goes in U"..." literals: String(const char *)
+reads Latin-1), the jrpg core include boundary, the upstream-patch ledger, clang's diagnostics on the fork's
 C++ (talewright/tools/clang_check.py; skipped when clang-tidy or compile_commands.json is missing), and clangd-tidy on
 the changed C/C++ files, as CI's "Style checks via clangd-tidy" step runs it (every file analyzed on its own, so
 headers must include what they use; any diagnostic fails, CI's default --fail-on-severity hint). Install it with
@@ -40,6 +41,28 @@ CPP_SUFFIXES = (".h", ".hpp", ".cpp", ".inc")
 
 # Fork C++ must not use these without their standard header; the engine has portable equivalents.
 PORTABILITY = {"std::size(": "std_size( (core/typedefs.h)"}
+
+
+def non_ascii_narrow_literals(line: str) -> list[str]:
+    """Narrow string literals ("...", no u8/u/U/L prefix) of one source line, outside // comments, holding non-ASCII
+    text: String(const char *) reads them as Latin-1 (core/string/ustring.h), so "×" shows as "Ã\x97"."""
+    found, i, n = [], 0, len(line)
+    while i < n:
+        if line.startswith("//", i):
+            break
+        quote = line[i]
+        if quote in "\"'":
+            j = i + 1
+            while j < n and line[j] != quote:
+                j += 2 if line[j] == "\\" else 1
+            literal = line[i : j + 1]
+            prefixed = i > 0 and (line[i - 1].isalnum() or line[i - 1] == "_")
+            if quote == '"' and not prefixed and any(ord(c) > 127 for c in literal):
+                found.append(literal)
+            i = j + 1
+            continue
+        i += 1
+    return found
 
 
 def git(root: Path, *args: str) -> str:
@@ -179,6 +202,18 @@ def main() -> int:
     for finding in portability:
         print("   ", finding)
     ok &= not portability
+
+    # Non-ASCII text in a narrow literal turns into Latin-1 mojibake in the editor and in bridge messages: use U"...".
+    literals = [
+        f'{f}:{number}: {literal[:60]} -> U"..."'
+        for f in cpp
+        for number, line in enumerate((root / f).read_text(encoding="utf-8").splitlines(), 1)
+        for literal in non_ascii_narrow_literals(line)
+    ]
+    print(("[PASS]" if not literals else "[FAIL]") + f" ASCII-only narrow string literals ({len(cpp)} files)")
+    for finding in literals:
+        print("   ", finding)
+    ok &= not literals
 
     for name, cmd in (
         ("jrpg core include boundary", [sys.executable, "modules/jrpg/tests/check_core_includes.py"]),

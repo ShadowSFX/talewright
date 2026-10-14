@@ -34,12 +34,15 @@
 #ifdef TOOLS_ENABLED
 
 #include "core/object/callable_mp.h"
+#include "scene/gui/button.h"
+#include "scene/gui/label.h"
 #include "scene/main/scene_tree.h"
 #include "scene/main/window.h"
 #include "tests/test_macros.h"
 
 #include "modules/jrpg/core/jrpg_armor_data.h"
 #include "modules/jrpg/core/jrpg_enemy_data.h"
+#include "modules/jrpg/core/jrpg_map_list.h"
 #include "modules/jrpg/core/jrpg_state_data.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_terms_data.h"
@@ -47,6 +50,7 @@
 #include "modules/jrpg/core/jrpg_types_data.h"
 #include "modules/jrpg/core/jrpg_weapon_data.h"
 #include "modules/jrpg/editor/jrpg_database_editing.h"
+#include "modules/jrpg/editor/jrpg_map_editing.h"
 #include "modules/jrpg/editor/jrpg_system_editors.h"
 
 namespace TestJRPGSystemEditors {
@@ -140,6 +144,73 @@ TEST_CASE("[SceneTree][JRPG][SystemEditors] Showing the party, type lists and te
 	editor->setup(JRPGTermsData::COMMANDS);
 	CHECK(changes_when_shown(editor, terms.ptr(), "commands") == 0);
 	CHECK(terms->get_group(JRPGTermsData::COMMANDS) == commands);
+}
+
+static Array start_changes;
+
+static void record_start_change(const StringName &p_property, const Variant &p_value, const StringName &p_field, bool p_changing) {
+	start_changes.push_back(Array({ p_property, p_value }));
+}
+
+TEST_CASE("[SceneTree][JRPG][SystemEditors] The start position row shows its state and edits one property at a time") {
+	CHECK(JRPGEditorPropertyStartPosition::get_properties() == Vector<String>({ "start_map_id", "start_cell", "start_direction" }));
+	// Doctests run without a project: the map list is empty.
+	REQUIRE(JRPGMapEditing::get_map_list()->get_map_ids().is_empty());
+	CHECK(JRPGMapEditing::check_start_position(0, Vector2i(99, 99)) == OK); // Not set: nothing to check.
+	ERR_PRINT_OFF;
+	CHECK(JRPGMapEditing::check_start_position(4, Vector2i()) == ERR_DOES_NOT_EXIST);
+	ERR_PRINT_ON;
+	CHECK(JRPGMapEditing::get_map_size(4) == Vector2i());
+
+	Ref<JRPGSystemData> system;
+	system.instantiate();
+	system->set_start_cell(Vector2i(3, 2));
+	JRPGEditorPropertyStartPosition *editor = memnew(JRPGEditorPropertyStartPosition);
+	ERR_PRINT_OFF; // No editor settings in doctests: controls report them missing and use defaults.
+	SceneTree::get_singleton()->get_root()->add_child(editor);
+	editor->set_object_and_property(system.ptr(), "start_map_id");
+	start_changes.clear();
+	editor->connect("property_changed", callable_mp_static(&record_start_change));
+	editor->update_property();
+	const TypedArray<Node> labels = editor->find_children("*", "Label", true, false);
+	REQUIRE(labels.size() == 1);
+	const Label *status = Object::cast_to<Label>(labels[0]);
+	CHECK(status->get_text() == "This project has no maps yet. Create one in the Map section.");
+	Vector<Button *> directions;
+	for (const Variant &v : editor->find_children("*", "Button", true, false)) {
+		Button *button = Object::cast_to<Button>(v);
+		if (button && button->get_button_group().is_valid()) { // The four facing buttons.
+			directions.push_back(button);
+		}
+	}
+	REQUIRE(directions.size() == 4);
+	CHECK(directions[JRPGSystemData::DIRECTION_DOWN]->is_pressed());
+	CHECK(directions[0]->is_disabled()); // No map to place the player on.
+
+	// A start map that no longer exists stays as it is, with a warning.
+	system->set_start_map_id(7);
+	system->set_start_direction(JRPGSystemData::DIRECTION_LEFT);
+	editor->update_property();
+	CHECK(status->get_text() == "Map 7 no longer exists. Choose another map.");
+	CHECK(directions[JRPGSystemData::DIRECTION_LEFT]->is_pressed());
+	CHECK_FALSE(directions[JRPGSystemData::DIRECTION_DOWN]->is_pressed());
+	CHECK(start_changes.is_empty()); // Showing never edits.
+	CHECK(system->get_start_map_id() == 7);
+
+	// A change made elsewhere (the bridge, undo) makes the row stale for the inspector's refresh, whichever value changed.
+	editor->update_cache();
+	CHECK(editor->is_cache_valid());
+	system->set_start_cell(Vector2i(4, 2));
+	CHECK_FALSE(editor->is_cache_valid());
+	editor->update_cache();
+	CHECK(editor->is_cache_valid());
+
+	// Facing: a press edits start_direction alone.
+	directions[JRPGSystemData::DIRECTION_RIGHT]->emit_signal(SceneStringName(pressed));
+	REQUIRE(start_changes.size() == 1);
+	CHECK(Array(start_changes[0]) == Array({ StringName("start_direction"), int(JRPGSystemData::DIRECTION_RIGHT) }));
+	ERR_PRINT_ON;
+	memdelete(editor);
 }
 
 } // namespace TestJRPGSystemEditors
