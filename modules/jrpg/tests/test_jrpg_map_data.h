@@ -32,6 +32,7 @@
 #pragma once
 
 #include "core/io/dir_access.h"
+#include "core/io/file_access.h"
 #include "core/io/resource_loader.h"
 #include "core/io/resource_saver.h"
 #include "core/object/callable_mp.h"
@@ -311,17 +312,14 @@ TEST_CASE("[SceneTree][JRPG][MapData] Map data is read from a scene's SceneState
 
 	// Epic 8 review A11: an inherited scene's root is its base's JRPGMap (it stores no type of its own) and its map
 	// data comes from the base unless it stores its own; the scan leaves such a scene out (it shows the base's map).
-	const Ref<PackedScene> base = ResourceLoader::load(town);
-	REQUIRE(base.is_valid());
-	Node *inheriting = base->instantiate(PackedScene::GEN_EDIT_STATE_MAIN_INHERITED);
-	REQUIRE(inheriting);
-	inheriting->set_scene_inherited_state(base->get_state());
-	Ref<PackedScene> variant;
-	variant.instantiate();
-	REQUIRE(variant->pack(inheriting) == OK);
-	memdelete(inheriting);
+	// Written as the editor saves one (a root that instances the base scene, scene/resources/resource_format_text.cpp:
+	// 219-239), so the case also runs without the editor's edit states.
 	const String variant_path = folder.path_join("town_variant.tscn");
-	REQUIRE(ResourceSaver::save(variant, variant_path) == OK);
+	{
+		Ref<FileAccess> file = FileAccess::open(variant_path, FileAccess::WRITE);
+		REQUIRE(file.is_valid());
+		file->store_string(vformat("[gd_scene format=3]\n\n[ext_resource type=\"PackedScene\" path=\"%s\" id=\"1_base\"]\n\n[node name=\"Town\" instance=ExtResource(\"1_base\")]\n", town.c_escape()));
+	}
 	const Ref<PackedScene> variant_loaded = ResourceLoader::load(variant_path, "", ResourceFormatLoader::CACHE_MODE_IGNORE);
 	REQUIRE(variant_loaded.is_valid());
 	CHECK(variant_loaded->get_state()->get_node_type(0) == StringName());

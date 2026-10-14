@@ -80,6 +80,9 @@ and move on to the next ready task.
   It adds `--site-dir=talewright/tools/site_scons` (vswhere shim: SCons would otherwise pick a VS instance
   without a compiler on this machine), `d3d12=no`, the SCons cache and the AccessKit path, stops processes
   locking that target's binaries, and logs to `talewright/build_logs/`. Full editor build ≈6 min, no-op ≈0.4 min.
+- Doctests as CI's release templates run them (no editor code; D-048), before every push:
+  `python talewright/tools/build.py template-tests` then
+  `bin/godot.windows.template_release.x86_64.tests.console.exe --headless --test` (log to a file).
 - Regression smoke after every epic: `python talewright/tools/smoke_samples.py` (plain_2d/plain_3d editor
   open, run, export + exported run; full log in `talewright/build_logs/smoke-*.log`).
 - JRPG core boundary (run before committing jrpg changes): `python modules/jrpg/tests/check_core_includes.py`.

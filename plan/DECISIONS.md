@@ -702,3 +702,20 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   eraser still clears the top-most tile. Explicit layers are unchanged.
 - **Why:** terrain art with soft edges looks right without extra authoring; the base terrain stays a single fill.
 - **Reversal:** `JRPGMapStroke::add_auto` and `read_auto_area`.
+
+## D-048 — The doctests also run in a release template before each push
+- **Context:** CI builds its Linux templates with `dev_mode=yes` (`.github/workflows/linux_builds.yml:12-14`, which
+  turns tests on, `SConstruct:667-671`) and runs `--test` in them (`:243-247`). Those builds have no editor code, so
+  a doctest that needs it (the 8.9.2 inherited-scene case used `PackedScene::GEN_EDIT_STATE_MAIN_INHERITED`, which
+  refuses outside tool builds, `scene/resources/packed_scene.cpp:2509`) crashed the template's test run after the
+  editor build had passed every test locally. `clang_check.py` compiles the tests without `TOOLS_ENABLED` but never
+  runs them.
+- **Options:** guard every such case with `TOOLS_ENABLED` and rely on review; write cases that work in both builds;
+  run the doctests in a test-enabled release template locally.
+- **Choice:** `talewright/tools/build.py template-tests` builds `bin/godot.windows.template_release.x86_64.tests*.exe`
+  (`dev_mode=yes`, own objects through `extra_suffix`), and before each push its `--headless --test` run must pass,
+  as the editor's does. Cases prefer data written the way the engine saves it (the inherited scene is now a text
+  scene file) over editor-only construction; cases that need the editor stay inside `TOOLS_ENABLED`.
+- **Why:** the failure is only visible in a build CI makes and this machine did not; one more incremental build
+  before a push costs minutes, a red CI run costs a push and a fix commit.
+- **Reversal:** drop the profile and the step; CI still catches these failures, after the push.

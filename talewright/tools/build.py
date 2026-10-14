@@ -6,6 +6,7 @@ Usage (from the repository root):
     python talewright/tools/build.py editor-vanilla    # editor with every Talewright module disabled
     python talewright/tools/build.py template_release
     python talewright/tools/build.py template_debug
+    python talewright/tools/build.py template-tests    # release template with the doctests, as CI runs them
     python talewright/tools/build.py editor -- extra_scons_arg=value ...
 Options:
     -j N          parallel jobs (default: CPU count)
@@ -44,6 +45,9 @@ PROFILES = {
     # Own binary name and object files (SConstruct:258,630-633,1051), so checking vanilla never replaces the editor.
     "editor-vanilla": [*COMMON, "target=editor", "dev_mode=yes", "extra_suffix=vanilla"],
     "template_release": [*COMMON, "target=template_release"],
+    # The doctests as CI runs them in its release templates (dev_mode=yes, so tests=yes; no editor code, D-048):
+    # bin/godot.windows.template_release.x86_64.tests.console.exe --headless --test. Own objects and binary.
+    "template-tests": [*COMMON, "target=template_release", "dev_mode=yes", "extra_suffix=tests"],
     "template_debug": [*COMMON, "target=template_debug"],
 }
 
@@ -60,9 +64,9 @@ def existing_talewright_modules() -> list[Any]:
 def stop_locking_processes(stem: str) -> list[Any]:
     """Stop processes running this build's binaries from bin/ (they lock the link output on Windows, LNK1104).
 
-    Only `bin/<stem>*` executables are stopped (stem = `godot.windows.<target>`, plus `.x86_64.vanilla` for the
-    vanilla profile), so building a template or the vanilla editor does not kill a running editor. Returns the
-    stopped process names.
+    Only `bin/<stem>*` executables are stopped (stem = `godot.windows.<target>`, plus `.x86_64.<extra_suffix>` for
+    the vanilla and template-tests profiles), so building a template or the vanilla editor does not kill a running
+    editor. Returns the stopped process names.
     """
     if os.name != "nt":
         return []
@@ -120,7 +124,8 @@ def main() -> int:
 
     if not args.no_kill:
         target = next(a.split("=", 1)[1] for a in PROFILES[args.profile] if a.startswith("target="))
-        stem = f"godot.windows.{target}" + (".x86_64.vanilla" if args.profile == "editor-vanilla" else "")
+        suffix = next((a.split("=", 1)[1] for a in PROFILES[args.profile] if a.startswith("extra_suffix=")), "")
+        stem = f"godot.windows.{target}" + (f".x86_64.{suffix}" if suffix else "")
         stopped = stop_locking_processes(stem)
         if stopped:
             print("stopped processes locking bin/:", ", ".join(stopped), flush=True)

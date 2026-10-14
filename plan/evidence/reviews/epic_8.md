@@ -76,3 +76,8 @@ case messages, accessibility names, empty states); `call_args_from_json`.
 - Full test suite: 1581 cases, all pass.
 - Static checks: ALL PASS (prek hooks, headers, include boundary, clang, GCC, clangd-tidy).
 - Bridge checks: 167/167.
+- First push (2d73d97756): CI run 38593870675 failed in four template jobs (Windows MSVC and MinGW, Linux Mono
+  release and debug). The 8.9.2 inherited-scene doctest built its scene with an editor-only edit state, and CI runs
+  the doctests in its release templates too. Fixed: the doctest writes the inherited scene as a text scene file; the
+  `template-tests` build profile now runs the doctests in a release template locally before each push (D-048):
+  1471/1471 pass there, and the editor's map data tests pass.
