@@ -102,6 +102,24 @@ def content_hash(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else ""
 
 
+def shebang_modes(root: Path, files: list[str]) -> list[str]:
+    """Files that start with a shebang but are not mode 100755 in the git index."""
+    listed = subprocess.run(["git", "ls-files", "-s", "--", *files], cwd=root, capture_output=True, text=True).stdout
+    modes = {line.split("	", 1)[1]: line.split()[0] for line in listed.splitlines() if "	" in line}
+    problems = []
+    for f in files:
+        path = root / f
+        if not path.is_file():
+            continue
+        with path.open("rb") as handle:
+            if handle.read(2) != b"#!":
+                continue
+        if modes.get(f) != "100755":
+            mode = modes.get(f, "not added yet")
+            problems.append(f"{f}: has a shebang but git mode is {mode}; run git add --chmod=+x {f}")
+    return problems
+
+
 def main() -> int:
     if isinstance(sys.stdout, io.TextIOWrapper):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -134,6 +152,14 @@ def main() -> int:
         )
         for f in rewritten:
             print("   ", f)
+
+    # CI's "check that scripts with shebangs are executable" reads the git file mode, which Windows checkouts do not
+    # show: a script added on Windows is not executable unless added with --chmod=+x (CI run 38525200924).
+    modes = shebang_modes(root, files)
+    print(("[PASS]" if not modes else "[FAIL]") + " executable scripts (git file mode)")
+    for problem in modes:
+        print("   ", problem)
+    ok &= not modes
 
     cpp = [f for f in files if f.startswith(FORK_MODULES) and f.endswith(CPP_SUFFIXES)]
     if cpp:
