@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 01:09 -0600
+- **Updated:** 2026-10-14 01:13 -0600
 - **Current task:** none
-- **Last completed:** 7.1.1 Generated tiles and autotile templates
-- **Next task:** 7.1.2 Generated characters, faces, enemies, battlebacks, icons, window skin
-- **Done leaf tasks:** 83
+- **Last completed:** 7.1.2.1 Generated character sheets and faces
+- **Next task:** 7.1.2.2 Generated enemy battlers and battlebacks
+- **Done leaf tasks:** 84
 <!-- status:end -->
 
 ## Log
@@ -227,4 +227,7 @@
 | 2026-10-14 00:54 -0600 | 6.7.5 | started: Epic 6 review close-out (containers: 6.7 pending->in_progress, 6 pending->in_progress) |  |
 | 2026-10-14 00:56 -0600 | 6.7.5 | done: Epic 6 review close-out — Epic 6 review: all 33 findings fixed (6.7.1 data integrity: nested sub-resources tracked, structured values checked with reasons, nested paths, type cuts guarded, referenced blanks kept, Save clears the title; 6.7.2 database UI: typed maximum, JRPGPicker, condition-shaped action values D-033, exact record dialog, in-place rows; 6.7.3 bridge UI tools: user reachability (edited scene, modal dialogs), clicks via gui_input, click-accurate selection, masked secrets, unique tool names; 6.7.4 addon/setup/hints/tests/docs: jrpg_bridge_checks.py 39 end-to-end undo/setup checks, tool and dialog doctests, CRLF hashes, addon prune, strict static checks); smoke ALL PASS with rebuilt template, bridge absent from template, core_diff 0 unlisted; record in plan/evidence/reviews/epic_6.md (containers: 6.7 in_progress->done, 6 in_progress->done) | 8e16c19757 |
 | 2026-10-14 00:58 -0600 | 7.1.1 | started: Generated tiles and autotile templates (containers: 7.1 pending->in_progress, 7 pending->in_progress) |  |
-| 2026-10-14 01:09 -0600 | 7.1.1 | done: Generated tiles and autotile templates — Deterministic asset generator (talewright/tools/generate_assets.py + asset_gen/): 48 px tiles (D-034); blob autotile sheets in the spec 05 format (grass, dirt path, sand; water animated in 3 frames) with tile-periodic textures and edge waves so neighbours join seamlessly; 4x4 wall sheets (stone, brick, wood, roof); outdoor and building object sheets (ground fills, decorations, two-tile trees and lamp, props, door, windows, furniture); manifest.json of pixel hashes and --check; CC0 entry in talewright/assets/LICENSES.md; guide talewright/docs/assets.md; evidence plan/evidence/assets/7.1.1-* (containers: 7.1 in_progress->pending, 7 in_progress->pending) | pending |
+| 2026-10-14 01:09 -0600 | 7.1.1 | done: Generated tiles and autotile templates — Deterministic asset generator (talewright/tools/generate_assets.py + asset_gen/): 48 px tiles (D-034); blob autotile sheets in the spec 05 format (grass, dirt path, sand; water animated in 3 frames) with tile-periodic textures and edge waves so neighbors join seamlessly; 4x4 wall sheets (stone, brick, wood, roof); outdoor and building object sheets (ground fills, decorations, two-tile trees and lamp, props, door, windows, furniture); manifest.json of pixel hashes and --check; CC0 entry in talewright/assets/LICENSES.md; guide talewright/docs/assets.md; evidence plan/evidence/assets/7.1.1-* (containers: 7.1 in_progress->pending, 7 in_progress->pending) | 5ae44ffd2f |
+| 2026-10-14 01:10 -0600 | - | imported 3 new / 1 updated tasks | |
+| 2026-10-14 01:10 -0600 | 7.1.2.1 | started: Generated character sheets and faces (containers: 7.1.2 pending->in_progress, 7.1 pending->in_progress, 7 pending->in_progress) |  |
+| 2026-10-14 01:13 -0600 | 7.1.2.1 | done: Generated character sheets and faces — Six original characters (hero, mage, knight, villager man and woman, merchant) as spec 05 sheets (4 rows up/right/down/left x 4 walk frames of 48x48, column 0 standing; left mirrors right) drawn from distance-field parts with lighting and outlines, plus 144x144 face portraits; hair split behind/in front of the head; deterministic (22 images match manifest); evidence plan/evidence/assets/7.1.2.1-characters-and-faces.png (containers: 7.1.2 in_progress->pending, 7.1 in_progress->pending, 7 in_progress->pending) | pending |

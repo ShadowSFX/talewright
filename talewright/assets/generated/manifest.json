@@ -33,6 +33,90 @@
       ],
       "pixels_sha256": "e4953f4a81f9fb62bcad77c66fae12ebe5a843ffe2cebeda2f29fa1df3e73e56"
     },
+    "characters/hero.png": {
+      "size": [
+        192,
+        192
+      ],
+      "pixels_sha256": "f5701945cf0b968950c6a09632c585d47ca76046c14b844b2a1cc5545e602790"
+    },
+    "characters/knight.png": {
+      "size": [
+        192,
+        192
+      ],
+      "pixels_sha256": "758b62df25ef071a542111137bea5196382817ef7ace2791ddb3a2dbd11c8e7c"
+    },
+    "characters/mage.png": {
+      "size": [
+        192,
+        192
+      ],
+      "pixels_sha256": "72416ea72bf43dd41996383643a77215733a913e694ccc7451ff775ce85c12a3"
+    },
+    "characters/merchant.png": {
+      "size": [
+        192,
+        192
+      ],
+      "pixels_sha256": "ebf122566524d73ab7a1097d756afffaa7be2c2e66627aa85f290f5765d6a29a"
+    },
+    "characters/villager_man.png": {
+      "size": [
+        192,
+        192
+      ],
+      "pixels_sha256": "d86414bc0ad52c3d9813ee4072719b2bac00f649092597f3107ff079146544e1"
+    },
+    "characters/villager_woman.png": {
+      "size": [
+        192,
+        192
+      ],
+      "pixels_sha256": "b77408f3067e5bb41b71f28819174f31ab029dd987b6d80f7ce16d1d1907f5b2"
+    },
+    "faces/hero.png": {
+      "size": [
+        144,
+        144
+      ],
+      "pixels_sha256": "3df23e5e1dccbe93fb98bfca2fa60c2d916154c549fd174ab043e8ad9f330eda"
+    },
+    "faces/knight.png": {
+      "size": [
+        144,
+        144
+      ],
+      "pixels_sha256": "9625b67bac2d5f447291e58a52fe981fa13a08dd895dbdf44f55388ff5850cf3"
+    },
+    "faces/mage.png": {
+      "size": [
+        144,
+        144
+      ],
+      "pixels_sha256": "49363be361cf6bfae43f14188fb492604fe19754f1ec0febfa317c7eea9fc645"
+    },
+    "faces/merchant.png": {
+      "size": [
+        144,
+        144
+      ],
+      "pixels_sha256": "161d77a374aadb67e126f792237771bea0f541e6df7fd9f257849db53554f952"
+    },
+    "faces/villager_man.png": {
+      "size": [
+        144,
+        144
+      ],
+      "pixels_sha256": "0aa3abcfb40c510d8e26b5efae394d3d47787002567c91e43bdd931f6ad52015"
+    },
+    "faces/villager_woman.png": {
+      "size": [
+        144,
+        144
+      ],
+      "pixels_sha256": "ce3da5032ca52742ecb44dfecb96dc900f7f367b1d8a8b374d303851a6e84e44"
+    },
     "tiles/buildings.png": {
       "size": [
         384,

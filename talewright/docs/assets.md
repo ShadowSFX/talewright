@@ -22,6 +22,8 @@ Tiles are 48 × 48 pixels (D-034).
 | `walls/stone_wall.png`, `brick_wall.png`, `wood_wall.png`, `roof.png` | Wall faces and a roof: 4 × 4 sheets indexed by the 4-neighbour mask (N 1, E 2, S 4, W 8) |
 | `tiles/outdoor.png` | 8 × 4 tiles: ground fills (grass, dark grass, dirt, sand, cobblestone, wood floor, stone tiles, water); flowers, rocks, grass tuft, mushrooms, leaves, puddle, cracks; a round tree and a pine (crown above, trunk below), a lamp post (two tiles), signpost, bush, stump, barrel, crate, chest, pot, fences, stone steps |
 | `tiles/buildings.png` | Door, windows (dark and lit), flower box, table, chair, rug, parquet, a bookshelf and a bed (two tiles each), stone tiles |
+| `characters/<name>.png` | Six characters (hero, mage, knight, villager_man, villager_woman, merchant): 192 × 192 sheets of 48 × 48 frames, rows facing up, right, down, left and 4 walk frames each, column 0 standing (spec 05) |
+| `faces/<name>.png` | A 144 × 144 portrait of each character |
 
 Terrain textures repeat every tile, and autotile edges are shaped by waves that repeat every tile too, so
 neighboring tiles join without seams. Autotiles draw only their terrain: the area outside it is transparent, so a

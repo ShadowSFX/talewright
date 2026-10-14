@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "7.1.1 Generated tiles and autotile templates",
+  "last_completed": "7.1.2.1 Generated character sheets and faces",
   "tasks": [
     {
       "id": "0",
@@ -2407,7 +2407,7 @@
       ],
       "test_strategy": "Run twice, compare hashes; view samples.",
       "files": [],
-      "commit": "pending",
+      "commit": "5ae44ffd2f",
       "notes": "",
       "status": "done"
     },
@@ -2415,7 +2415,7 @@
       "id": "7.1.2",
       "parent": "7.1",
       "title": "Generated characters, faces, enemies, battlebacks, icons, window skin",
-      "description": "Original sprite sheets (4 dirs x 3 frames), faces, enemy sprites, battlebacks, icon set, window skin.",
+      "description": "Original character sheets (spec 05 format: 4 directions x 4 walk frames, column 0 standing), faces, enemy battlers, battlebacks, icon set, window skin. Split into 7.1.2.1-7.1.2.3.",
       "dependencies": [
         "7.1.1"
       ],
@@ -2426,8 +2426,65 @@
       "test_strategy": "Run twice; screenshots.",
       "files": [],
       "commit": "",
-      "notes": "",
+      "notes": "Spec 05 (Talewright character format) governs over the original '4 dirs x 3 frames' wording: 4 frames, column 0 standing, rows up/right/down/left.",
       "status": "pending"
+    },
+    {
+      "id": "7.1.2.1",
+      "parent": "7.1.2",
+      "title": "Generated character sheets and faces",
+      "description": "Six original characters (hero, mage, knight, villager man and woman, merchant): 48x48-frame sheets with rows up, right, down, left and 4 walk frames (column 0 standing, spec 05), and a 144x144 face portrait for each.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Sheets follow spec 05 (4 rows x 4 columns, frame = image / grid)",
+        "Deterministic hashes (generate_assets.py --check)",
+        "Covered by the CC0 entry"
+      ],
+      "test_strategy": "Run twice and compare hashes; a contact sheet of every direction and frame viewed for legibility.",
+      "status": "done",
+      "files": [],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "7.1.2.2",
+      "parent": "7.1.2",
+      "title": "Generated enemy battlers and battlebacks",
+      "description": "Original front-view enemy battlers (the starter Moss Blob and a few more) on transparent backgrounds, and battleback pairs (ground and backdrop, 1280x720) for grassland, forest and cave.",
+      "dependencies": [
+        "7.1.2.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Deterministic hashes",
+        "Covered by the CC0 entry"
+      ],
+      "test_strategy": "Run twice and compare hashes; a composed battle preview viewed.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "7.1.2.3",
+      "parent": "7.1.2",
+      "title": "Generated icon set and window skin",
+      "description": "A 32x32 icon set (16 per row: items, weapons, armors, elements, states, buffs) indexed by icon_index, and a window skin (nine-slice frame, cursor, arrows) documented for the window widgets.",
+      "dependencies": [
+        "7.1.2.2"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Deterministic hashes",
+        "Icon index table documented",
+        "Covered by the CC0 entry"
+      ],
+      "test_strategy": "Run twice and compare hashes; icon sheet and a sample window viewed.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "7.1.3",
