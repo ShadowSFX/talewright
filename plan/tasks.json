@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.2.2.1 Command base, packed lists and registry (core)",
+  "last_completed": "9.2.2.2 Script commands",
   "tasks": [
     {
       "id": "0",
@@ -3794,7 +3794,7 @@
         "modules/jrpg/tests/test_jrpg_command_list.h",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "9bb6ee2785",
       "notes": ""
     },
     {
@@ -3812,9 +3812,18 @@
         "A script command whose script is gone loads as an unknown command"
       ],
       "test_strategy": "Doctests with a GDScript command (GDScript module present).",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_event_command.h",
+        "modules/jrpg/core/jrpg_event_command.cpp",
+        "modules/jrpg/core/jrpg_command_list.h",
+        "modules/jrpg/core/jrpg_command_list.cpp",
+        "modules/jrpg/doc_classes/JRPGEventCommand.xml",
+        "modules/jrpg/doc_classes/JRPGCommandRegistry.xml",
+        "modules/jrpg/tests/test_jrpg_script_commands.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

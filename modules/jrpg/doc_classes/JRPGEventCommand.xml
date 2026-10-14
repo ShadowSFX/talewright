@@ -6,15 +6,84 @@
 	<description>
 		The base of every event command. Its parameters are the subclass's stored properties; a branch command also has child [JRPGCommandList]s, named by [method get_child_list_names]. Commands are never saved one by one: the list that holds them packs them ([method pack]) and builds them again from that ([method unpack]).
 		A subclass says what it is through the metadata methods: [method get_code] (stable, since saved lists hold it), [method get_category], [method get_display_name] and [method get_summary] for the event editor, [method get_authority] (who runs it online), [method get_usable_in], [method can_wait] and [method get_id_parameters] (the parameters that are database IDs, for the reference checks). Command classes are registered with [JRPGCommandRegistry].
+		A script class with a global class name ([code]class_name[/code]) extending [JRPGEventCommand] is a script command: its code is its class name, its exported variables are its parameters, it answers the metadata questions through the virtual methods ([method _get_category], [method _get_display_name], ...) and runs through [method _execute]; without them it is a plugin command that does nothing.
 		Authority: each command declares its own ([method get_authority]).
 	</description>
 	<tutorials>
 	</tutorials>
 	<methods>
+		<method name="_can_wait" qualifiers="virtual const">
+			<return type="bool" />
+			<description>
+				Override in a script command to say it can make the interpreter wait (see [method can_wait]).
+			</description>
+		</method>
+		<method name="_execute" qualifiers="virtual">
+			<return type="int" />
+			<param index="0" name="context" type="Object" />
+			<description>
+				Override in a script command to run it. [param context] is what the interpreter gives. Return [constant EXECUTE_CONTINUE] to go on to the next command, or [constant EXECUTE_WAIT] to be run again at the next step (a command that waits for something).
+			</description>
+		</method>
+		<method name="_get_authority" qualifiers="virtual const">
+			<return type="int" />
+			<description>
+				Override in a script command to give its [enum Authority] (see [method get_authority]).
+			</description>
+		</method>
+		<method name="_get_category" qualifiers="virtual const">
+			<return type="int" />
+			<description>
+				Override in a script command to give its [enum Category] (see [method get_category]).
+			</description>
+		</method>
+		<method name="_get_child_list_names" qualifiers="virtual const">
+			<return type="PackedStringArray" />
+			<description>
+				Override in a script command that has child lists (see [method get_child_list_names]).
+			</description>
+		</method>
+		<method name="_get_code" qualifiers="virtual const">
+			<return type="StringName" />
+			<description>
+				Override in a script command to give a code other than its global class name (see [method get_code]).
+			</description>
+		</method>
+		<method name="_get_display_name" qualifiers="virtual const">
+			<return type="String" />
+			<description>
+				Override in a script command to give its name in the event editor.
+			</description>
+		</method>
+		<method name="_get_id_parameters" qualifiers="virtual const">
+			<return type="Dictionary" />
+			<description>
+				Override in a script command to name its parameters that hold database IDs (see [method get_id_parameters]).
+			</description>
+		</method>
+		<method name="_get_summary" qualifiers="virtual const">
+			<return type="String" />
+			<description>
+				Override in a script command to give its one-line summary.
+			</description>
+		</method>
+		<method name="_get_usable_in" qualifiers="virtual const">
+			<return type="int" />
+			<description>
+				Override in a script command to say where it can be used, as [enum Usable] flags.
+			</description>
+		</method>
 		<method name="can_wait" qualifiers="const">
 			<return type="bool" />
 			<description>
 				Returns [code]true[/code] when the command can make the interpreter wait (a message, a wait, a move route to finish).
+			</description>
+		</method>
+		<method name="execute">
+			<return type="int" enum="JRPGEventCommand.ExecuteResult" />
+			<param index="0" name="context" type="Object" />
+			<description>
+				Runs the command with the interpreter's [param context] and returns whether to go on ([constant EXECUTE_CONTINUE]) or run it again at the next step ([constant EXECUTE_WAIT]). A command that does nothing goes on.
 			</description>
 		</method>
 		<method name="get_authority" qualifiers="const">
@@ -160,6 +229,12 @@
 		</constant>
 		<constant name="USABLE_EVERYWHERE" value="7" enum="Usable" is_bitfield="true">
 			The command can be used in every kind of event.
+		</constant>
+		<constant name="EXECUTE_CONTINUE" value="0" enum="ExecuteResult">
+			The command is done: the interpreter goes on to the next one.
+		</constant>
+		<constant name="EXECUTE_WAIT" value="1" enum="ExecuteResult">
+			The command waits: the interpreter runs it again at the next step.
 		</constant>
 	</constants>
 </class>

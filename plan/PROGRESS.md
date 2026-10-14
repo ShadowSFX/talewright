@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 15:03 -0600
+- **Updated:** 2026-10-14 15:11 -0600
 - **Current task:** none
-- **Last completed:** 9.2.2.1 Command base, packed lists and registry (core)
-- **Next task:** 9.2.2.2 Script commands
-- **Done leaf tasks:** 136
+- **Last completed:** 9.2.2.2 Script commands
+- **Next task:** 9.2.2.3 Command lists on pages, troop pages and common events; reference scanning
+- **Done leaf tasks:** 137
 <!-- status:end -->
 
 ## Log
@@ -359,4 +359,6 @@
 | 2026-10-14 14:53 -0600 | 9.2.1 | done: Command storage benchmark — Spec 03 storage benchmark (release template, medians of 3): 10 000 typed command sub-resources save 69 ms, load 102 ms text / 31 ms binary (over the 30 ms gate); packed nested arrays save 13 ms, load 33 ms text / 13 ms binary, typed objects rebuilt in 5 ms, text re-save byte-identical. D-007 reversed as planned (D-058): commands stored packed behind JRPGCommandList with the typed API; evidence plan/evidence/jrpg/9.2.1-command-storage-benchmark.md; benchmark doctests skipped by default (--no-skip runs them); spec 03 and 9.2.2 notes updated. Full 1630/1630, static checks pass. | d0e3013034 |
 | 2026-10-14 14:54 -0600 | - | imported 3 new / 1 updated tasks | |
 | 2026-10-14 14:54 -0600 | 9.2.2.1 | started: Command base, packed lists and registry (core) (containers: 9.2.2 pending->in_progress, 9.2 pending->in_progress, 9 pending->in_progress) |  |
-| 2026-10-14 15:03 -0600 | 9.2.2.1 | done: Command base, packed lists and registry (core) — Command model core (D-058 amended): JRPGEventCommand (stored-property parameters, child lists, metadata: code, 16+plugin categories, display name, summary, authority SERVER/CLIENT/BOTH, usable-in flags, can_wait, database-id parameters; pack/unpack refusing script and engine properties, warning on unknown parameters), JRPGUnknownCommand (kept and saved back exactly), JRPGCommandList (packed data, lazy build, packs on read, insert/remove, 64-bit content hash over the packed text), JRPGCommandRegistry (code -> class, one instance per class for metadata, create, unpack_command with one warning per unknown code). Doctests: nested round trip byte for byte with typed objects equal, hash follows changes at any depth, registry metadata without instances, bad data left out. Template 1519/1519, full 1633/1633, static checks pass. (containers: 9.2.2 in_progress->pending, 9.2 in_progress->pending, 9 in_progress->pending) | pending |
+| 2026-10-14 15:03 -0600 | 9.2.2.1 | done: Command base, packed lists and registry (core) — Command model core (D-058 amended): JRPGEventCommand (stored-property parameters, child lists, metadata: code, 16+plugin categories, display name, summary, authority SERVER/CLIENT/BOTH, usable-in flags, can_wait, database-id parameters; pack/unpack refusing script and engine properties, warning on unknown parameters), JRPGUnknownCommand (kept and saved back exactly), JRPGCommandList (packed data, lazy build, packs on read, insert/remove, 64-bit content hash over the packed text), JRPGCommandRegistry (code -> class, one instance per class for metadata, create, unpack_command with one warning per unknown code). Doctests: nested round trip byte for byte with typed objects equal, hash follows changes at any depth, registry metadata without instances, bad data left out. Template 1519/1519, full 1633/1633, static checks pass. (containers: 9.2.2 in_progress->pending, 9.2 in_progress->pending, 9 in_progress->pending) | 9bb6ee2785 |
+| 2026-10-14 15:03 -0600 | 9.2.2.2 | started: Script commands (containers: 9.2.2 pending->in_progress, 9.2 pending->in_progress, 9 pending->in_progress) |  |
+| 2026-10-14 15:11 -0600 | 9.2.2.2 | done: Script commands — Script commands (D-059): GDVIRTUAL metadata overrides (_get_code/_get_category/_get_display_name/_get_summary/_get_authority/_get_usable_in/_can_wait/_get_id_parameters/_get_child_list_names) and _execute(context) on JRPGEventCommand; execute() returns EXECUTE_CONTINUE or EXECUTE_WAIT (run again next step); a script command's code is its global class name, its exported variables its parameters, category PLUGIN by default; JRPGCommandRegistry registers script commands from ScriptServer's global class list (on the first unknown code or refresh_script_commands) and instantiates them referenced before attaching the script. Doctests with a GDScript command: discovered, metadata, parameters round-trip through a list, executed (wait then continue); a removed script loads as an unknown command and saves back. Template 1521/1521, full 1635/1635, static checks pass. (containers: 9.2.2 in_progress->pending, 9.2 in_progress->pending, 9 in_progress->pending) | pending |

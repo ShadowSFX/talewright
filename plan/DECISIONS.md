@@ -984,3 +984,21 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   change at any depth changes it. `JRPGCommandRegistry` maps codes to classes and keeps one instance per class for
   metadata.
 - **Reversal:** store `JRPGEventCommand` sub-resources in `JRPGCommandList` directly (the benchmark's typed case).
+
+## D-059 — Script commands and how a command runs
+- **Context:** task 9.2.2.2 needs plugin/script commands (D-007: script classes extending `JRPGEventCommand`, found
+  through the global class list) and a way for any command to run before the interpreter exists (task 9.3).
+- **Options:** script commands registered by a plugin manifest, or found by class name; a command reports waits as a
+  wait kind the interpreter handles, or runs again until it is done.
+- **Choice:** a script class with a global class name extending `JRPGEventCommand` is a command whose code is that
+  name (`_get_code` may give another); its exported variables are its parameters (packed like built-in ones); it
+  answers metadata through virtual methods (`_get_category`, `_get_display_name`, `_get_summary`, `_get_authority`,
+  `_get_usable_in`, `_can_wait`, `_get_id_parameters`, `_get_child_list_names`) and is a plugin command (category
+  PLUGIN, server authority) without them. The registry looks for script commands in `ScriptServer`'s global class list
+  the first time a code is not known, and again on `refresh_script_commands()` (the event editor calls it after
+  scripts change); a code whose script is gone loads as an unknown command and saves back unchanged. A command runs
+  through `execute(context)` returning `EXECUTE_CONTINUE` (go on) or `EXECUTE_WAIT` (run it again at the next
+  simulation step): the interpreter (9.3) gives the context, and a command that waits keeps checking for itself.
+- **Why:** no manifest to keep in sync; scripts look like any other command to lists, the editor and the server; the
+  run-again contract keeps waiting commands self-contained and serializable (the interpreter only saves the index).
+- **Reversal:** `JRPGCommandRegistry::refresh_script_commands` and `JRPGEventCommand::execute`.

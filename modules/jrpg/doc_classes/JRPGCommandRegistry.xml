@@ -43,11 +43,24 @@
 				Returns [code]true[/code] when a class is registered under [param code].
 			</description>
 		</method>
+		<method name="refresh_script_commands" qualifiers="static">
+			<return type="int" />
+			<description>
+				Forgets the script commands and finds them again in the project's global class list (after command scripts were added, renamed or removed); returns how many there are. It also runs once on its own, the first time a code is not known.
+			</description>
+		</method>
 		<method name="register_command" qualifiers="static">
 			<return type="void" />
 			<param index="0" name="class_name" type="StringName" />
 			<description>
 				Registers the command class [param class_name] under the code its instances report. A class already under that code is replaced, with an error.
+			</description>
+		</method>
+		<method name="register_script_command" qualifiers="static">
+			<return type="bool" />
+			<param index="0" name="script" type="Script" />
+			<description>
+				Registers [param script] (a script extending [JRPGEventCommand]) under the code its instances report; returns [code]false[/code] when it is not a command script.
 			</description>
 		</method>
 		<method name="unpack_command" qualifiers="static">

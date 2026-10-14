@@ -74,12 +74,19 @@ public:
 	int64_t get_content_hash() const;
 };
 
+class Script;
+
 // Which command class each code stands for (spec 03, "Command metadata"). Built-in command classes register at module
-// start; script commands join in task 9.2.2.2. One instance of each class answers the metadata questions.
+// start; script commands (script classes extending JRPGEventCommand with a global class name) are found in the
+// project's global class list, the first time a code is not known or when refresh_script_commands() is called. One
+// instance of each class answers the metadata questions.
 class JRPGCommandRegistry : public Object {
 	GDCLASS(JRPGCommandRegistry, Object);
 
 	static HashMap<StringName, Ref<JRPGEventCommand>> templates; // By code.
+	static bool scripts_scanned;
+
+	static Ref<JRPGEventCommand> _instantiate(const Ref<JRPGEventCommand> &p_template);
 
 protected:
 	static void _bind_methods();
@@ -89,6 +96,12 @@ public:
 	// already under that code is replaced, with an error.
 	static void register_command(const StringName &p_class);
 	static void unregister_command(const StringName &p_code);
+	// Registers the script p_script (extending JRPGEventCommand) under the code its instances report; false when it is
+	// not a command script.
+	static bool register_script_command(const Ref<Script> &p_script);
+	// Forgets the script commands and finds them again in the global class list (after scripts were added, renamed or
+	// removed). Returns how many there are.
+	static int refresh_script_commands();
 	// Forgets every command class (module end).
 	static void clear();
 	static bool has_command(const StringName &p_code);
