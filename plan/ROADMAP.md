@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 84, in_progress: 0, done: 184, blocked: 0, deferred: 3 (of 271)
+**Totals:** pending: 83, in_progress: 0, done: 185, blocked: 0, deferred: 3 (of 271)
 
 ## [x] 0 Bootstrap and task system
 
@@ -210,9 +210,9 @@ Pages, conditions, triggers, command model with authority, interpreter with pres
   - [x] **9.2.2** Command model, registry, authority, script commands (P1) _(deps: 9.2.1)_
     - [x] **9.2.2.1** Command base, packed lists and registry (core) (P1) _(commit: 9bb6ee2785)_
     - [x] **9.2.2.2** Script commands (P1) _(deps: 9.2.2.1; commit: 17d4aab673)_
-    - [x] **9.2.2.3** Command lists on pages, troop pages and common events; reference scanning (P1) _(deps: 9.2.2.2; commit: pending)_
+    - [x] **9.2.2.3** Command lists on pages, troop pages and common events; reference scanning (P1) _(deps: 9.2.2.2; commit: 67569cf0c1)_
 - [ ] **9.3** Interpreter (P1) _(deps: 9.2)_
-  - [ ] **9.3.1** Interpreter frames, waits, labels, budgets (P1)
+  - [x] **9.3.1** Interpreter frames, waits, labels, budgets (P1) _(commit: pending)_
   - [ ] **9.3.2** Common events and map processes (P1) _(deps: 9.3.1)_
   - [ ] **9.3.3** Interpreter serialization and resume rules (P1) _(deps: 9.3.2)_
 - [ ] **9.4** Presentation port + local port (P1) _(deps: 9.3)_

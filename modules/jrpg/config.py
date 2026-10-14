@@ -40,6 +40,7 @@ def get_doc_classes():
         "JRPGFormulaBattler",
         "JRPGGameState",
         "JRPGGoldWindow",
+        "JRPGInterpreter",
         "JRPGItemData",
         "JRPGManagedAddon",
         "JRPGMap",

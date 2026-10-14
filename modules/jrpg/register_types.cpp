@@ -52,6 +52,7 @@
 #include "modules/jrpg/core/jrpg_event_state.h"
 #include "modules/jrpg/core/jrpg_formula.h"
 #include "modules/jrpg/core/jrpg_game_state.h"
+#include "modules/jrpg/core/jrpg_interpreter.h"
 #include "modules/jrpg/core/jrpg_item_data.h"
 #include "modules/jrpg/core/jrpg_map_cell_cache.h"
 #include "modules/jrpg/core/jrpg_map_data.h"
@@ -177,6 +178,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGUnknownCommand);
 		GDREGISTER_CLASS(JRPGCommandList);
 		GDREGISTER_ABSTRACT_CLASS(JRPGCommandRegistry); // Static methods only.
+		GDREGISTER_CLASS(JRPGInterpreter);
 		GDREGISTER_CLASS(JRPGReferenceScanner);
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotile); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotileResolver);

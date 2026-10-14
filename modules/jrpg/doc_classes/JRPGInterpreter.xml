@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGInterpreter" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Runs event commands, one simulation step at a time.
+	</brief_description>
+	<description>
+		Runs a [JRPGCommandList] with a stack of frames, each a list and the index of the next command in it. A branch command pushes the child list it takes ([method push_list]); when that list ends, the interpreter goes on after the branch. A loop frame starts its list again when it ends, until a command breaks out ([method break_loop]). [method jump_to_label] looks for the label in the current list, then in the lists around it.
+		Time is counted in 60 Hz simulation steps: [method step] runs commands until one waits ([method wait_steps], or a command that returns [constant JRPGEventCommand.EXECUTE_WAIT] and runs again at the next step), the commands end, or the step's budget is spent ([constant MAX_COMMANDS_PER_STEP] commands, [constant MAX_JUMPS_PER_STEP] loop restarts and jumps), in which case it goes on at the next step. Commands receive the interpreter as their context, and read and change the game state through [method get_game_state]. Nothing depends on the frame rate or the wall clock.
+		Authority: server. Online, the zone runs interpreters; presentation goes to the clients.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="break_loop">
+			<return type="bool" />
+			<description>
+				Leaves the innermost running loop (and any list inside it); the list around it goes on after the loop command. Returns [code]false[/code], with nothing changed, when no loop is running.
+			</description>
+		</method>
+		<method name="clear">
+			<return type="void" />
+			<description>
+				Drops everything under way: the interpreter is idle.
+			</description>
+		</method>
+		<method name="exit">
+			<return type="void" />
+			<description>
+				Ends the run (Exit Event Processing).
+			</description>
+		</method>
+		<method name="get_current_command" qualifiers="const">
+			<return type="JRPGEventCommand" />
+			<description>
+				Returns the command being run or the next one to run, or [code]null[/code] when idle.
+			</description>
+		</method>
+		<method name="get_depth" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns how many frames are running ([code]1[/code]: only the list it started with).
+			</description>
+		</method>
+		<method name="get_game_state" qualifiers="const">
+			<return type="JRPGGameState" />
+			<description>
+				Returns the game state the commands read and change.
+			</description>
+		</method>
+		<method name="get_indexes" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<description>
+				Returns the index of the next command in each frame, outermost first: where the run is.
+			</description>
+		</method>
+		<method name="get_owner" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the name of what runs it, used in warnings.
+			</description>
+		</method>
+		<method name="get_wait_left" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns how many more simulation steps the interpreter waits before the next command.
+			</description>
+		</method>
+		<method name="is_running" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] while commands are left to run.
+			</description>
+		</method>
+		<method name="jump_to_label">
+			<return type="bool" />
+			<param index="0" name="label" type="String" />
+			<description>
+				Goes on after the label [param label] (see [method JRPGEventCommand.get_label]) in the current list or a list around it. Returns [code]false[/code], with a warning, when there is no such label there; the run then goes on after the jump.
+			</description>
+		</method>
+		<method name="push_list">
+			<return type="void" />
+			<param index="0" name="list" type="JRPGCommandList" />
+			<param index="1" name="loop" type="bool" default="false" />
+			<description>
+				Runs [param list] next, then goes on after the current command. With [param loop], the list starts again each time it ends. An empty branch ([code]null[/code]) does nothing.
+			</description>
+		</method>
+		<method name="start">
+			<return type="void" />
+			<param index="0" name="list" type="JRPGCommandList" />
+			<param index="1" name="state" type="JRPGGameState" />
+			<param index="2" name="owner" type="String" default="&quot;&quot;" />
+			<description>
+				Starts running [param list] from its first command, with [param state] as the game state. Anything under way is dropped. [param owner] names it in warnings.
+			</description>
+		</method>
+		<method name="step">
+			<return type="int" enum="JRPGInterpreter.StepResult" />
+			<description>
+				Runs one simulation step and tells how it ended.
+			</description>
+		</method>
+		<method name="wait_steps">
+			<return type="void" />
+			<param index="0" name="steps" type="int" />
+			<description>
+				Waits [param steps] simulation steps after the current one before the next command.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="STEP_FINISHED" value="0" enum="StepResult">
+			No commands are left: the interpreter is idle.
+		</constant>
+		<constant name="STEP_WAITING" value="1" enum="StepResult">
+			A wait or a waiting command stops the run until a later step.
+		</constant>
+		<constant name="STEP_YIELDED" value="2" enum="StepResult">
+			The step's budget is spent: the run goes on at the next step.
+		</constant>
+		<constant name="MAX_COMMANDS_PER_STEP" value="10000">
+			The most commands one step runs.
+		</constant>
+		<constant name="MAX_JUMPS_PER_STEP" value="1000">
+			The most loop restarts and jumps one step makes.
+		</constant>
+		<constant name="RUNAWAY_WARNING_STEPS" value="60">
+			Steps in a row that spend their whole budget before a warning: a loop that never waits.
+		</constant>
+	</constants>
+</class>

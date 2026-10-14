@@ -122,6 +122,8 @@ public:
 	virtual PackedStringArray get_child_list_names() const;
 	// Runs the command; p_context is what the interpreter gives (task 9.3). Commands that do nothing go on.
 	virtual ExecuteResult execute(Object *p_context);
+	// The name of the label this command marks (the Label command), or empty: JRPGInterpreter::jump_to_label looks for it.
+	virtual String get_label() const { return String(); }
 
 	// The command as a list stores it: [code, {parameter: value}, {child list name: packed list}].
 	virtual Array pack() const;
@@ -153,5 +155,7 @@ public:
 	virtual String get_summary() const override;
 	virtual Array pack() const override { return packed.duplicate(true); }
 	virtual void unpack(const Array &p_packed) override { packed = p_packed.duplicate(true); }
+	// Skipped, with one warning per code.
+	virtual ExecuteResult execute(Object *p_context) override;
 	Array get_packed() const { return packed.duplicate(true); }
 };

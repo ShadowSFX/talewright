@@ -36,6 +36,7 @@
 
 #include "core/object/class_db.h"
 #include "core/object/script_language.h"
+#include "core/templates/hash_set.h"
 
 StringName JRPGEventCommand::get_code() const {
 	StringName code;
@@ -191,6 +192,7 @@ void JRPGEventCommand::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("unpack", "packed"), &JRPGEventCommand::unpack);
 	ClassDB::bind_method(D_METHOD("get_parameter_names"), &JRPGEventCommand::get_parameter_names);
 	ClassDB::bind_method(D_METHOD("execute", "context"), &JRPGEventCommand::execute);
+	ClassDB::bind_method(D_METHOD("get_label"), &JRPGEventCommand::get_label);
 
 	GDVIRTUAL_BIND(_get_code)
 	GDVIRTUAL_BIND(_get_category)
@@ -238,6 +240,16 @@ StringName JRPGUnknownCommand::get_code() const {
 
 String JRPGUnknownCommand::get_display_name() const {
 	return vformat("Unknown command (%s)", get_code());
+}
+
+JRPGEventCommand::ExecuteResult JRPGUnknownCommand::execute(Object *p_context) {
+	static HashSet<StringName> warned;
+	const StringName code = get_code();
+	if (!warned.has(code)) {
+		warned.insert(code);
+		WARN_PRINT(vformat("JRPG: command %s is not known (a plugin that was removed?); it is skipped.", code));
+	}
+	return EXECUTE_CONTINUE;
 }
 
 String JRPGUnknownCommand::get_summary() const {

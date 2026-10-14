@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.2.2.3 Command lists on pages, troop pages and common events; reference scanning",
+  "last_completed": "9.3.1 Interpreter frames, waits, labels, budgets",
   "tasks": [
     {
       "id": "0",
@@ -3858,7 +3858,7 @@
         "modules/jrpg/tests/test_jrpg_core_regressions.h",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "67569cf0c1",
       "notes": ""
     },
     {
@@ -3890,9 +3890,20 @@
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "priority": 1,
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_interpreter.h",
+        "modules/jrpg/core/jrpg_interpreter.cpp",
+        "modules/jrpg/core/jrpg_event_command.h",
+        "modules/jrpg/core/jrpg_event_command.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGInterpreter.xml",
+        "modules/jrpg/doc_classes/JRPGEventCommand.xml",
+        "modules/jrpg/tests/test_jrpg_interpreter.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

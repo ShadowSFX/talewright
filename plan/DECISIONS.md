@@ -1009,3 +1009,21 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   scenes the core cannot load, are scanned per map (`collect_map_references`, `find_dangling_in_map`) by the tools
   that load map data.
 - **Reversal:** `JRPGCommandRegistry::refresh_script_commands` and `JRPGEventCommand::execute`.
+
+## D-060 — The interpreter: frames, waits, labels, budgets
+- **Context:** task 9.3.1 needs the interpreter of spec 03 (D-007) over packed command lists (D-058) and the
+  run-again command contract (D-059). The help does not say how a wait is counted, what Jump to Label may reach, or
+  what happens to an event that loops without waiting.
+- **Options:** a flat program counter over an indented list (the reference's runtime) or frames over the list tree;
+  labels resolved at load or looked up when jumping; endless loops cut, frozen or spread over steps.
+- **Choice:** `JRPGInterpreter` (core) keeps a frame stack `{list, index, loop}`; a branch command calls `push_list`
+  and the parent's index advances past it once it returns, so a finished child resumes after its branch. Loop frames
+  restart their list (counted as a jump); `break_loop` leaves the innermost loop. `jump_to_label` looks for a command
+  whose `get_label()` matches in the current list, then in each enclosing list (outward), and resumes after it; a
+  label elsewhere is not reached (one warning, the run goes on). `wait_steps(n)` waits n simulation steps after the
+  current one (the reference's wait count); a command returning `EXECUTE_WAIT` runs again at the next step. A step
+  runs at most 10 000 commands and 1 000 loop restarts or jumps, then yields and goes on at the next step; 60 such
+  steps in a row give one warning. Commands get the interpreter as their context and the game state through it.
+- **Why:** frames match the tree storage (D-007, D-058) and make saving a position a list of indexes (9.3.3); lookups
+  when jumping need no index to keep in sync with edits; spreading runaway loops over steps never freezes the game.
+- **Reversal:** `JRPGInterpreter::step`, `jump_to_label` and the budget constants.

@@ -122,6 +122,12 @@
 				Returns a dictionary [code]{parameter name: table name}[/code] of the parameters that hold database IDs, for the reference checks ([JRPGReferenceScanner]).
 			</description>
 		</method>
+		<method name="get_label" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the name of the label this command marks, or an empty string. [method JRPGInterpreter.jump_to_label] looks for it.
+			</description>
+		</method>
 		<method name="get_parameter_names" qualifiers="const">
 			<return type="PackedStringArray" />
 			<description>
