@@ -39,6 +39,7 @@
 #include "tests/test_macros.h"
 
 #include "modules/jrpg/core/jrpg_map_data.h"
+#include "modules/jrpg/core/jrpg_map_shapes.h"
 #include "modules/jrpg/editor/jrpg_map_canvas.h"
 #include "modules/jrpg/editor/jrpg_map_edit_session.h"
 #include "modules/jrpg/editor/jrpg_map_editing.h"
@@ -190,6 +191,28 @@ TEST_CASE("[SceneTree][JRPG][MapCanvas] A stroke paints as it goes, ends as one 
 	CHECK(stroke->add_auto({ spot, Vector2i(-1, 0) }, 0, false) == 0); // Nothing left; outside the map: skipped.
 	CHECK(stroke->end("Draw with Pencil") == 0); // Back where it started: nothing to undo.
 
+	// A 2 x 2 stamp: the pencil puts the whole stamp down on the grid of its first cell; shapes tile it from their
+	// corner; a 0 leaves its cell as it is.
+	const PackedInt32Array square({ 11, 12, 13, 14 });
+	REQUIRE(stroke->begin(map, JRPGMapData::LAYER_GROUND_DETAIL, 11) == OK);
+	CHECK(stroke->add_stamp({ Vector2i(1, 1) }, Vector2i(2, 2), square, Vector2i(1, 1), true, false) == 4);
+	CHECK((data->get_cell(1, Vector2i(1, 1)) == 11 && data->get_cell(1, Vector2i(2, 1)) == 12 && data->get_cell(1, Vector2i(1, 2)) == 13 && data->get_cell(1, Vector2i(2, 2)) == 14));
+	CHECK(stroke->add_stamp({ Vector2i(4, 2) }, Vector2i(2, 2), square, Vector2i(1, 1), true, false) == 4); // The block (3..4, 1..2).
+	CHECK((data->get_cell(1, Vector2i(3, 1)) == 11 && data->get_cell(1, Vector2i(4, 1)) == 12 && data->get_cell(1, Vector2i(3, 2)) == 13 && data->get_cell(1, Vector2i(4, 2)) == 14));
+	stroke->cancel();
+	REQUIRE(stroke->begin(map, JRPGMapData::LAYER_GROUND_DETAIL, 11) == OK);
+	CHECK(stroke->add_stamp(JRPGMapShapes::rectangle(Vector2i(0, 0), Vector2i(2, 1)), Vector2i(2, 2), square, Vector2i(0, 0), false, false) == 6);
+	CHECK((data->get_cell(1, Vector2i(2, 0)) == 11 && data->get_cell(1, Vector2i(2, 1)) == 13 && data->get_cell(1, Vector2i(1, 1)) == 14));
+	CHECK(stroke->add_stamp({ Vector2i(5, 3) }, Vector2i(2, 1), PackedInt32Array({ 0, 9 }), Vector2i(5, 3), false, false) == 0); // A gap.
+	CHECK(stroke->add_stamp({ Vector2i(5, 3) }, Vector2i(2, 2), square, Vector2i(5, 3), true, true) == 1); // Auto: plain tiles to Objects.
+	CHECK(data->get_cell(JRPGMapData::LAYER_OBJECTS, Vector2i(5, 3)) == 11);
+	stroke->cancel();
+	ERR_PRINT_OFF;
+	CHECK(stroke->begin(map, 0, 1) == OK);
+	CHECK(stroke->add_stamp({ Vector2i() }, Vector2i(2, 2), PackedInt32Array({ 1 }), Vector2i(), true, false) == 0); // A size that does not match.
+	stroke->cancel();
+	ERR_PRINT_ON;
+
 	String message;
 	CHECK(JRPGMapEditing::set_start_position(map, Vector2i(), &message) == ERR_DOES_NOT_EXIST); // Not a listed map.
 	CHECK(JRPGMapEditing::set_start_position(nullptr, Vector2i(), &message) == ERR_UNCONFIGURED);
@@ -265,8 +288,10 @@ TEST_CASE("[SceneTree][JRPG][MapCanvas] The canvas tools draw what the mouse doe
 
 	// Right click picks a tile: the current layer's, else the top-most one there (and its layer).
 	click(canvas, MouseButton::RIGHT, at(2, 0), true);
+	click(canvas, MouseButton::RIGHT, at(2, 0), false);
 	CHECK((session->get_layer() == JRPGMapData::LAYER_UPPER && session->get_value() == 5));
 	click(canvas, MouseButton::RIGHT, at(0, 0), true);
+	click(canvas, MouseButton::RIGHT, at(0, 0), false);
 	CHECK((session->get_layer() == JRPGMapData::LAYER_GROUND && session->get_value() == 3));
 
 	// The automatic layer: without a tileset every tile is a plain one, stacking on the two upper layers; picking keeps
@@ -282,6 +307,7 @@ TEST_CASE("[SceneTree][JRPG][MapCanvas] The canvas tools draw what the mouse doe
 	CHECK((cell(JRPGMapData::LAYER_OBJECTS, 0, 3) == 4 && cell(JRPGMapData::LAYER_UPPER, 0, 3) == 8));
 	session->set_value(1);
 	click(canvas, MouseButton::RIGHT, at(0, 3), true);
+	click(canvas, MouseButton::RIGHT, at(0, 3), false);
 	CHECK((session->get_value() == 8 && session->get_layer() == JRPGMapEditSession::LAYER_AUTO));
 	session->set_tool(JRPGMapEditSession::TOOL_ERASER);
 	click(canvas, MouseButton::LEFT, at(0, 3), true);
@@ -289,6 +315,22 @@ TEST_CASE("[SceneTree][JRPG][MapCanvas] The canvas tools draw what the mouse doe
 	CHECK((cell(JRPGMapData::LAYER_OBJECTS, 0, 3) == 4 && cell(JRPGMapData::LAYER_UPPER, 0, 3) == 0));
 	session->set_layer(JRPGMapData::LAYER_GROUND);
 	CHECK_FALSE(canvas->set_start_position_here(Vector2i(0, 3))); // A map outside the map list cannot be the start.
+
+	// A right drag picks a stamp from the map (the current layer's tiles); the pencil then puts it down whole, and the
+	// hovered outline covers it. A single tile again replaces the stamp.
+	session->set_layer(JRPGMapData::LAYER_GROUND);
+	click(canvas, MouseButton::RIGHT, at(1, 1), true);
+	move(canvas, at(2, 2));
+	click(canvas, MouseButton::RIGHT, at(2, 2), false);
+	REQUIRE(session->has_stamp());
+	CHECK(session->get_stamp_size() == Vector2i(2, 2));
+	CHECK(session->get_stamp() == PackedInt32Array({ 4, 4, 4, 4 }));
+	session->set_tool(JRPGMapEditSession::TOOL_PENCIL);
+	click(canvas, MouseButton::LEFT, at(0, 2), true);
+	click(canvas, MouseButton::LEFT, at(0, 2), false);
+	CHECK((cell(0, 0, 2) == 4 && cell(0, 1, 2) == 4 && cell(0, 0, 3) == 4 && cell(0, 1, 3) == 4));
+	session->set_value(3);
+	CHECK_FALSE(session->has_stamp());
 
 	// Escape takes a stroke back; so does a right click during it.
 	session->set_tool(JRPGMapEditSession::TOOL_PENCIL);

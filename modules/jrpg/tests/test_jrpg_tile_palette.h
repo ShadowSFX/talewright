@@ -106,6 +106,51 @@ TEST_CASE("[SceneTree][JRPG][TilePalette] Without a map the palette says what to
 	memdelete(panel);
 }
 
+TEST_CASE("[SceneTree][JRPG][TilePalette] Choosing tiles: a click one tile, a rectangle a stamp") {
+	ERR_PRINT_OFF; // No editor theme in doctests.
+	JRPGTilePalette *panel = memnew(JRPGTilePalette);
+	SceneTree::get_singleton()->get_root()->add_child(panel);
+	Ref<JRPGMapEditSession> session;
+	session.instantiate();
+	panel->set_session(session);
+	// A 3 x 2 props sheet with a gap at (2, 1): indexes 1-5.
+	Array palette;
+	for (const Vector2i &at : { Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(0, 1), Vector2i(1, 1) }) {
+		palette.push_back(entry("Props", 0, "plain", at));
+	}
+	palette.push_back(entry("Grass", 1, "autotile", Vector2i()));
+	panel->set_sheets(JRPGTilePalette::make_sheets(palette, Ref<TileSet>()));
+	REQUIRE(panel->get_sheet_count() == 2);
+	CHECK(panel->get_current_sheet() == 0);
+
+	session->set_tool(JRPGMapEditSession::TOOL_ERASER);
+	CHECK(panel->choose_rect(Vector2i(1, 0), Vector2i(1, 0))); // A click.
+	CHECK((session->get_value() == 2 && !session->has_stamp() && session->get_tool() == JRPGMapEditSession::TOOL_PENCIL));
+	CHECK(panel->get_stamp_rect() == Rect2i()); // A single tile: outlined as one.
+	CHECK(panel->choose_rect(Vector2i(2, 1), Vector2i(1, 0))); // A drag, either way round.
+	CHECK(session->get_stamp_size() == Vector2i(2, 2));
+	CHECK(session->get_stamp() == PackedInt32Array({ 2, 3, 5, 0 })); // The gap leaves its cell as it is.
+	CHECK(panel->get_stamp_rect() == Rect2i(1, 0, 2, 2));
+	session->set_tool(JRPGMapEditSession::TOOL_RECTANGLE);
+	CHECK(panel->get_stamp_rect() == Rect2i(1, 0, 2, 2)); // Another tool keeps it.
+	session->set_stamp(Vector2i(2, 1), PackedInt32Array({ 1, 2 })); // Picked on the map: not outlined here.
+	CHECK(panel->get_stamp_rect() == Rect2i());
+	CHECK(panel->choose_rect(Vector2i(1, 0), Vector2i(2, 1)));
+	CHECK_FALSE(panel->choose_rect(Vector2i(2, 1), Vector2i(2, 1))); // The gap alone holds no tile.
+	CHECK(panel->choose_rect(Vector2i(-3, -3), Vector2i(9, 9))); // Clipped to the sheet.
+	CHECK(session->get_stamp_size() == Vector2i(3, 2));
+	panel->set_current_sheet(1);
+	CHECK(panel->get_stamp_rect() == Rect2i()); // Outlined on its own tab only.
+	panel->set_current_sheet(0);
+	CHECK(panel->get_stamp_rect() == Rect2i(0, 0, 3, 2));
+
+	// A tile of the other sheet, chosen elsewhere (the eyedropper), opens its tab.
+	session->set_value(6);
+	CHECK(panel->get_current_sheet() == 1);
+	ERR_PRINT_ON;
+	memdelete(panel);
+}
+
 } // namespace TestJRPGTilePalette
 
 #endif // TOOLS_ENABLED

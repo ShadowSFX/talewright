@@ -135,8 +135,11 @@ void JRPGTilePalette::refresh() {
 	}
 	const String uid = tileset_data.is_valid() ? tileset_data->get_tileset_uid() : String();
 	const Ref<TileSet> tileset = !uid.is_empty() && ResourceLoader::exists(uid) ? ResourceLoader::load(uid) : Ref<Resource>();
-	sheets = tileset.is_valid() ? make_sheets(tileset_data->get_palette(), tileset) : Vector<Sheet>();
+	set_sheets(tileset.is_valid() ? make_sheets(tileset_data->get_palette(), tileset) : Vector<Sheet>());
+}
 
+void JRPGTilePalette::set_sheets(const Vector<Sheet> &p_sheets) {
+	sheets = p_sheets;
 	const int keep = tabs->get_current_tab();
 	tabs->clear_tabs();
 	for (const Sheet &sheet : sheets) {
@@ -159,6 +162,23 @@ const JRPGTilePalette::Sheet *JRPGTilePalette::_current_sheet() const {
 
 int JRPGTilePalette::get_current_sheet() const {
 	return _current_sheet() ? tabs->get_current_tab() : -1;
+}
+
+void JRPGTilePalette::set_current_sheet(int p_sheet) {
+	ERR_FAIL_INDEX(p_sheet, sheets.size());
+	if (p_sheet != tabs->get_current_tab()) {
+		tabs->set_current_tab(p_sheet); // Through _tab_changed.
+	}
+}
+
+Rect2i JRPGTilePalette::get_stamp_rect() const {
+	const bool shown = stamp_sheet >= 0 && stamp_sheet == get_current_sheet() && session.is_valid() && session->has_stamp();
+	return shown ? stamp_rect : Rect2i();
+}
+
+String JRPGTilePalette::get_sheet_name(int p_sheet) const {
+	ERR_FAIL_INDEX_V(p_sheet, sheets.size(), String());
+	return sheets[p_sheet].name;
 }
 
 int JRPGTilePalette::get_cell_size() const {
@@ -207,6 +227,50 @@ bool JRPGTilePalette::choose(int p_index) {
 	return false;
 }
 
+bool JRPGTilePalette::read_rect(int p_sheet, const Vector2i &p_from, const Vector2i &p_to, Rect2i &r_rect, PackedInt32Array &r_values) const {
+	if (p_sheet < 0 || p_sheet >= sheets.size()) {
+		return false;
+	}
+	const Sheet &sheet = sheets[p_sheet];
+	const Vector2i from = p_from.min(p_to).maxi(0);
+	const Vector2i to = p_from.max(p_to).min(sheet.size - Vector2i(1, 1));
+	if (to.x < from.x || to.y < from.y) {
+		return false;
+	}
+	r_rect = Rect2i(from, to - from + Vector2i(1, 1));
+	r_values.resize(r_rect.size.x * r_rect.size.y);
+	r_values.fill(0); // Grid cells without a tile leave the map as it is.
+	bool any = false;
+	for (const Slot &slot : sheet.slots) {
+		if (r_rect.has_point(slot.at)) {
+			r_values.set((slot.at.y - from.y) * r_rect.size.x + (slot.at.x - from.x), slot.index);
+			any = true;
+		}
+	}
+	return any;
+}
+
+bool JRPGTilePalette::choose_rect(const Vector2i &p_from, const Vector2i &p_to) {
+	Rect2i rect;
+	PackedInt32Array values;
+	if (!read_rect(get_current_sheet(), p_from, p_to, rect, values)) {
+		return false;
+	}
+	if (values.size() == 1) {
+		return choose(values[0]); // A click.
+	}
+	const JRPGMapEditSession::Tool tool = session->get_tool();
+	if (tool == JRPGMapEditSession::TOOL_ERASER || tool == JRPGMapEditSession::TOOL_EYEDROPPER || tool == JRPGMapEditSession::TOOL_SHADOW) {
+		session->set_tool(JRPGMapEditSession::TOOL_PENCIL);
+	}
+	session->set_stamp(rect.size, values);
+	stamp_sheet = tabs->get_current_tab(); // After set_stamp: its brush_changed clears what it does not know.
+	stamp_rect = rect;
+	stamp_chosen = values;
+	grid->queue_redraw();
+	return true;
+}
+
 String JRPGTilePalette::get_tooltip_at(const Vector2 &p_pos) const {
 	const int at = get_slot_at(p_pos);
 	if (at < 0) {
@@ -223,6 +287,9 @@ String JRPGTilePalette::get_tooltip_at(const Vector2 &p_pos) const {
 }
 
 void JRPGTilePalette::_brush_changed() {
+	if (session.is_null() || !session->has_stamp() || session->get_stamp_size() != stamp_rect.size || session->get_stamp() != stamp_chosen) {
+		stamp_sheet = -1; // A single tile now, or a stamp from elsewhere (picked on the map): not from a sheet.
+	}
 	// A tile picked on the map (the eyedropper) opens its sheet.
 	const int value = session.is_valid() ? session->get_value() : 0;
 	for (int i = 0; i < sheets.size() && value > 0; i++) {
@@ -263,7 +330,9 @@ void JRPGTilePalette::_update_note() {
 	} else {
 		String tile = TTR("nothing (erasing)");
 		const int value = session->get_value();
-		if (value > 0) {
+		if (session->has_stamp()) {
+			tile = vformat(TTR(U"a %d × %d stamp"), session->get_stamp_size().x, session->get_stamp_size().y);
+		} else if (value > 0) {
 			tile = vformat("%04d", value);
 			for (const Sheet &sheet : sheets) {
 				for (const Slot &slot : sheet.slots) {
@@ -318,30 +387,52 @@ void JRPGTilePalette::_grid_draw() {
 			grid->draw_rect(rect, Color(1, 1, 1, 0.15));
 		}
 	}
-	for (const Slot &slot : sheet->slots) {
-		if (slot.index == drawn) {
-			grid->draw_rect(Rect2(Vector2(slot.at) * cell, Vector2(cell, cell)).grow(-1), get_theme_color(SNAME("accent_color"), EditorStringName(Editor)), false, Math::round(2 * EDSCALE));
+	const Color accent = get_theme_color(SNAME("accent_color"), EditorStringName(Editor));
+	const float line = Math::round(2 * EDSCALE);
+	if (dragging) {
+		const Vector2i from = drag_from.min(drag_to);
+		grid->draw_rect(Rect2(Vector2(from) * cell, Vector2((drag_to - drag_from).abs() + Vector2i(1, 1)) * cell).grow(-1), accent, false, line);
+	} else if (get_stamp_rect().has_area()) {
+		grid->draw_rect(Rect2(Vector2(stamp_rect.position) * cell, Vector2(stamp_rect.size) * cell).grow(-1), accent, false, line);
+	} else if (session.is_valid() && !session->has_stamp()) {
+		for (const Slot &slot : sheet->slots) {
+			if (slot.index == drawn) {
+				grid->draw_rect(Rect2(Vector2(slot.at) * cell, Vector2(cell, cell)).grow(-1), accent, false, line);
+			}
 		}
 	}
 }
 
 void JRPGTilePalette::_grid_input(const Ref<InputEvent> &p_event) {
+	const Sheet *sheet = _current_sheet();
+	if (!sheet) {
+		return;
+	}
+	const Ref<InputEventMouse> mouse = p_event;
+	const Vector2i cell = mouse.is_valid() ? Vector2i((mouse->get_position() / get_cell_size()).floor()).clamp(Vector2i(), sheet->size - Vector2i(1, 1)) : Vector2i();
 	const Ref<InputEventMouseMotion> motion = p_event;
 	if (motion.is_valid()) {
 		const int at = get_slot_at(motion->get_position());
-		if (at != hovered) {
+		if (at != hovered || (dragging && cell != drag_to)) {
 			hovered = at;
+			drag_to = dragging ? cell : drag_to;
 			grid->queue_redraw();
 		}
 		return;
 	}
+	// A click chooses a tile; a drag over several chooses them as a stamp.
 	const Ref<InputEventMouseButton> button = p_event;
-	if (button.is_valid() && button->is_pressed() && button->get_button_index() == MouseButton::LEFT) {
-		const int at = get_slot_at(button->get_position());
-		if (at >= 0) {
-			choose(_current_sheet()->slots[at].index);
-			grid->accept_event();
+	if (button.is_valid() && button->get_button_index() == MouseButton::LEFT) {
+		if (button->is_pressed()) {
+			dragging = true;
+			drag_from = cell;
+			drag_to = cell;
+		} else if (dragging) {
+			dragging = false;
+			choose_rect(drag_from, drag_to);
 		}
+		grid->queue_redraw();
+		grid->accept_event();
 	}
 }
 

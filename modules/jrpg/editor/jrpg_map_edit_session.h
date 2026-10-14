@@ -81,6 +81,8 @@ private:
 	int layer = LAYER_AUTO; // JRPGMapData::Layer, or LAYER_AUTO.
 	int value = 1; // Palette index of the tile drawn.
 	int region = 1; // Region ID painted in Regions mode, 1-255.
+	Vector2i stamp_size; // A multi-tile stamp (task 8.5.2), or none (size 0, 0): then the tile drawn is value.
+	PackedInt32Array stamp;
 
 	void _scene_changed();
 
@@ -110,8 +112,15 @@ public:
 	Tool get_tool() const { return tool; }
 	void set_layer(int p_layer);
 	int get_layer() const { return layer; }
+	// The tile drawn; a single tile replaces a stamp.
 	void set_value(int p_value);
 	int get_value() const { return value; }
+	// A stamp of p_size palette indexes, row by row (0: a cell the stamp leaves as it is); the tile drawn becomes its first
+	// tile. A 1 x 1 stamp is a single tile.
+	void set_stamp(const Vector2i &p_size, const PackedInt32Array &p_values);
+	bool has_stamp() const { return !stamp.is_empty(); }
+	Vector2i get_stamp_size() const { return stamp_size; }
+	PackedInt32Array get_stamp() const { return stamp; }
 	void set_region(int p_region);
 	int get_region() const { return region; }
 	// Whether p_tool draws in p_mode (the shadow pen only on tiles; nothing in Events mode).

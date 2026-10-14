@@ -62,6 +62,13 @@ TEST_CASE("[SceneTree][JRPG][Workspace] The workspace builds and follows its bru
 	CHECK(session->get_tool() == JRPGMapEditSession::TOOL_SHADOW);
 	session->set_region(12);
 	CHECK(session->get_region() == 12);
+	// Stamps: a 1 x 1 stamp or one without a tile is a single tile; the tile drawn is the stamp's first.
+	session->set_stamp(Vector2i(2, 1), PackedInt32Array({ 0, 5 }));
+	CHECK((session->has_stamp() && session->get_value() == 5));
+	session->set_stamp(Vector2i(1, 1), PackedInt32Array({ 8 }));
+	CHECK((!session->has_stamp() && session->get_value() == 8));
+	session->set_stamp(Vector2i(2, 1), PackedInt32Array({ 0, 0 }));
+	CHECK((!session->has_stamp() && session->get_value() == 0));
 	ERR_PRINT_OFF;
 	session->set_region(0); // Regions are 1-255.
 	ERR_PRINT_ON;

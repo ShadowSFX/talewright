@@ -47,6 +47,7 @@
 #include "editor/file_system/editor_file_system.h"
 #include "scene/resources/packed_scene.h"
 
+#include "modules/jrpg/core/jrpg_autotile_resolver.h"
 #include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_map_list.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
@@ -541,6 +542,49 @@ int JRPGMapStroke::add_auto(const Vector<Vector2i> &p_cells, int p_value, bool p
 		if (!cells[layer].is_empty()) {
 			changed += set_values(layer, cells[layer], values[layer]);
 		}
+	}
+	return changed;
+}
+
+int JRPGMapStroke::add_stamp(const Vector<Vector2i> &p_cells, const Vector2i &p_size, const PackedInt32Array &p_stamp, const Vector2i &p_anchor, bool p_blocks, bool p_automatic) {
+	ERR_FAIL_COND_V(!is_active(), 0);
+	ERR_FAIL_COND_V(p_size.x < 1 || p_size.y < 1 || p_stamp.size() != p_size.x * p_size.y, 0);
+	const auto stamp_at = [&](const Vector2i &p_cell) {
+		return p_stamp[Math::posmod(p_cell.y - p_anchor.y, p_size.y) * p_size.x + Math::posmod(p_cell.x - p_anchor.x, p_size.x)];
+	};
+	// The cells drawn: each cell, or the whole block of the stamp grid it falls in.
+	Vector<Vector2i> cells;
+	HashSet<Vector2i> seen;
+	for (const Vector2i &cell : p_cells) {
+		const Vector2i origin = p_blocks ? cell - Vector2i(Math::posmod(cell.x - p_anchor.x, p_size.x), Math::posmod(cell.y - p_anchor.y, p_size.y)) : cell;
+		const Vector2i extent = p_blocks ? p_size : Vector2i(1, 1);
+		for (int y = 0; y < extent.y; y++) {
+			for (int x = 0; x < extent.x; x++) {
+				const Vector2i at = origin + Vector2i(x, y);
+				if (!seen.has(at) && data->has_cell(at) && stamp_at(at) != 0) {
+					seen.insert(at);
+					cells.push_back(at);
+				}
+			}
+		}
+	}
+	if (!p_automatic) {
+		PackedInt32Array values;
+		for (const Vector2i &cell : cells) {
+			values.push_back(stamp_at(cell));
+		}
+		return set_values(target, cells, values);
+	}
+	// The automatic layer: each tile by its kind.
+	const JRPGMap *target_map = ObjectDB::get_instance<JRPGMap>(map);
+	HashMap<int, Vector<Vector2i>> by_value;
+	for (const Vector2i &cell : cells) {
+		by_value[stamp_at(cell)].push_back(cell);
+	}
+	int changed = 0;
+	for (const KeyValue<int, Vector<Vector2i>> &kv : by_value) {
+		const bool ground_kind = target_map && target_map->get_palette_kind(kv.key) != JRPGAutotileResolver::KIND_PLAIN;
+		changed += add_auto(kv.value, kv.key, ground_kind);
 	}
 	return changed;
 }

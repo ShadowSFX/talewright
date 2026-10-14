@@ -152,6 +152,11 @@ public:
 	// hold at most two tiles, older below: a new tile goes on top and the oldest drops out, and painting the tile
 	// already on top changes nothing. p_value 0 erases the cell's top-most tile. Returns how many values changed.
 	int add_auto(const Vector<Vector2i> &p_cells, int p_value, bool p_ground_kind);
+	// Draws a multi-tile stamp (task 8.5.2): p_stamp holds p_size cells of palette indexes row by row (0: the cell is
+	// left as it is), tiled from p_anchor over p_cells, on the stroke's tile layer or, when p_automatic, each tile on the
+	// layer its kind belongs to. p_blocks: each cell brings the whole stamp-sized block it falls in (a pencil puts the
+	// whole stamp down where it clicks). Returns how many values changed.
+	int add_stamp(const Vector<Vector2i> &p_cells, const Vector2i &p_size, const PackedInt32Array &p_stamp, const Vector2i &p_anchor, bool p_blocks, bool p_automatic);
 	// Files the stroke as one undo action named p_name (none when nothing changed); returns how many cells changed,
 	// all targets together.
 	int end(const String &p_name);

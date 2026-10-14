@@ -88,6 +88,12 @@ private:
 	JRPGTilePaletteGrid *grid = nullptr;
 	Label *note = nullptr;
 	int hovered = -1; // Slot of the current sheet under the mouse.
+	bool dragging = false; // Selecting a rectangle of tiles (a stamp).
+	Vector2i drag_from;
+	Vector2i drag_to;
+	int stamp_sheet = -1; // Where the session's stamp was selected, to outline it.
+	Rect2i stamp_rect;
+	PackedInt32Array stamp_chosen; // What was selected there: a stamp from elsewhere (the map) is not outlined.
 	bool refresh_queued = false;
 
 	void _queue_refresh();
@@ -110,14 +116,26 @@ public:
 	void set_session(const Ref<JRPGMapEditSession> &p_session);
 	// Reads the open map's tileset again.
 	void refresh();
+	// Shows p_sheets (refresh makes them from the open map's tileset; tests give their own).
+	void set_sheets(const Vector<Sheet> &p_sheets);
 	// The pixels a tile takes in the grid now.
 	int get_cell_size() const;
 	// The slot of the current sheet at p_pos (grid coordinates), or -1.
 	int get_slot_at(const Vector2 &p_pos) const;
 	// Makes palette index p_index the tile drawn (as a click on it does): false when no sheet has it.
 	bool choose(int p_index);
+	// Makes the tiles of the current sheet between two grid cells a stamp (as a drag over them does): false when they
+	// hold no tile.
+	bool choose_rect(const Vector2i &p_from, const Vector2i &p_to);
+	// The tiles of sheet p_sheet between two grid cells (either way round, clipped to the sheet): their rectangle and
+	// palette indexes row by row, 0 where the grid has no tile. False when the rectangle holds none.
+	bool read_rect(int p_sheet, const Vector2i &p_from, const Vector2i &p_to, Rect2i &r_rect, PackedInt32Array &r_values) const;
 	int get_sheet_count() const { return sheets.size(); }
+	String get_sheet_name(int p_sheet) const;
 	int get_current_sheet() const;
+	void set_current_sheet(int p_sheet);
+	// The stamp drawn as outlined in the current sheet: empty when it was not selected there.
+	Rect2i get_stamp_rect() const;
 	String get_tooltip_at(const Vector2 &p_pos) const;
 
 	JRPGTilePalette();

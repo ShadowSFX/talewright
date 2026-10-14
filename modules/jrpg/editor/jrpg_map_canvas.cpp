@@ -301,8 +301,62 @@ void JRPGMapCanvas::_database_changed() {
 	overlay->queue_redraw(); // The start position may have moved.
 }
 
+bool JRPGMapCanvas::pick_stamp(const Vector2i &p_from, const Vector2i &p_to) {
+	const JRPGMap *map = _get_map();
+	if (!map || map->get_map_data().is_null()) {
+		return false;
+	}
+	const Ref<JRPGMapData> map_data = map->get_map_data();
+	const Vector2i from = p_from.min(p_to).maxi(0);
+	const Vector2i to = p_from.max(p_to).min(map_data->get_size() - Vector2i(1, 1));
+	if (to.x < from.x || to.y < from.y) {
+		return false;
+	}
+	const int layer = session->get_layer();
+	PackedInt32Array values;
+	bool any = false;
+	for (int y = from.y; y <= to.y; y++) {
+		for (int x = from.x; x <= to.x; x++) {
+			int value = 0;
+			if (layer == JRPGMapEditSession::LAYER_AUTO) {
+				for (int l = JRPGMapData::LAYER_COUNT - 1; l >= 0 && value == 0; l--) {
+					value = map_data->get_cell(l, Vector2i(x, y));
+				}
+			} else {
+				value = map_data->get_cell(layer, Vector2i(x, y));
+			}
+			any = any || value != 0;
+			values.push_back(value);
+		}
+	}
+	if (!any) {
+		return false;
+	}
+	const JRPGMapEditSession::Tool tool = session->get_tool();
+	if (tool == JRPGMapEditSession::TOOL_ERASER || tool == JRPGMapEditSession::TOOL_EYEDROPPER || tool == JRPGMapEditSession::TOOL_SHADOW) {
+		session->set_tool(JRPGMapEditSession::TOOL_PENCIL); // Picked to be drawn.
+	}
+	session->set_stamp(to - from + Vector2i(1, 1), values);
+	return true;
+}
+
+void JRPGMapCanvas::_finish_pick() {
+	picking = false;
+	if (pick_anchor == pick_last) {
+		pick_tile(pick_anchor);
+	} else {
+		pick_stamp(pick_anchor, pick_last);
+	}
+	overlay->queue_redraw();
+}
+
 void JRPGMapCanvas::_stroke_cells(const Vector<Vector2i> &p_cells) {
-	if (stroke_auto) {
+	if (stroke_stamp) {
+		// Tiled from where the stroke starts (a shape: its top left corner); the pencil puts down whole stamps.
+		const bool shape = stroke_tool == JRPGMapEditSession::TOOL_RECTANGLE || stroke_tool == JRPGMapEditSession::TOOL_ELLIPSE;
+		const Vector2i anchor = shape ? stroke_anchor.min(stroke_last) : stroke_anchor;
+		stroke->add_stamp(p_cells, session->get_stamp_size(), session->get_stamp(), anchor, stroke_tool == JRPGMapEditSession::TOOL_PENCIL, stroke_auto);
+	} else if (stroke_auto) {
 		stroke->add_auto(p_cells, stroke_value, stroke_ground_kind);
 	} else {
 		stroke->add(p_cells);
@@ -330,6 +384,7 @@ void JRPGMapCanvas::_begin_stroke(const Vector2 &p_point) {
 	stroke_auto = !regions && stroke_tool != JRPGMapEditSession::TOOL_SHADOW && session->get_layer() == JRPGMapEditSession::LAYER_AUTO;
 	stroke_ground_kind = stroke_auto && map->get_palette_kind(value) != JRPGAutotileResolver::KIND_PLAIN;
 	stroke_value = value;
+	stroke_stamp = !regions && session->has_stamp() && stroke_tool != JRPGMapEditSession::TOOL_ERASER && stroke_tool != JRPGMapEditSession::TOOL_SHADOW;
 	// The automatic layer writes to the layers its rules pick; the stroke's own layer is then only nominal.
 	const int target = regions ? JRPGMapStroke::TARGET_REGIONS : (stroke_tool == JRPGMapEditSession::TOOL_SHADOW ? JRPGMapStroke::TARGET_SHADOWS : (stroke_auto ? int(JRPGMapData::LAYER_GROUND) : session->get_layer()));
 	stroke.instantiate();
@@ -430,11 +485,21 @@ void JRPGMapCanvas::handle_input(const Ref<InputEvent> &p_event) {
 		overlay->accept_event();
 		return;
 	}
+	if (button.is_valid() && button->get_button_index() == MouseButton::RIGHT && !button->is_pressed()) {
+		if (picking) {
+			_finish_pick(); // A click picks a tile, a drag a stamp.
+		}
+		overlay->accept_event();
+		return;
+	}
 	if (button.is_valid() && button->get_button_index() == MouseButton::RIGHT && button->is_pressed()) {
 		if (stroke.is_valid()) {
 			_cancel_stroke();
 		} else if (session->get_mode() == JRPGMapEditSession::MODE_TILES) {
-			pick_tile(cell);
+			picking = true;
+			pick_anchor = cell;
+			pick_last = cell;
+			overlay->queue_redraw();
 		} else if (session->get_mode() == JRPGMapEditSession::MODE_REGIONS) {
 			pick_region(cell);
 		} else if (map->get_map_data()->has_cell(cell)) {
@@ -448,8 +513,10 @@ void JRPGMapCanvas::handle_input(const Ref<InputEvent> &p_event) {
 		return;
 	}
 	const Ref<InputEventKey> key = p_event;
-	if (key.is_valid() && key->is_pressed() && key->get_keycode() == Key::ESCAPE && stroke.is_valid()) {
+	if (key.is_valid() && key->is_pressed() && key->get_keycode() == Key::ESCAPE && (stroke.is_valid() || picking)) {
 		_cancel_stroke();
+		picking = false;
+		overlay->queue_redraw();
 		overlay->accept_event();
 		return;
 	}
@@ -457,6 +524,10 @@ void JRPGMapCanvas::handle_input(const Ref<InputEvent> &p_event) {
 	if (motion.is_valid()) {
 		const Vector2i size = map->get_map_data()->get_size();
 		_set_hovered(cell.x >= 0 && cell.y >= 0 && cell.x < size.x && cell.y < size.y ? cell : Vector2i(-1, -1));
+		if (picking && cell != pick_last) {
+			pick_last = cell;
+			overlay->queue_redraw();
+		}
 		_continue_stroke(mouse->get_position());
 	}
 }
@@ -541,8 +612,18 @@ void JRPGMapCanvas::_draw_overlay() {
 			i = end;
 		}
 	}
+	if (picking) {
+		// The cells a right-drag picks.
+		Color pick_fill = get_theme_color(SNAME("accent_color"), EditorStringName(Editor));
+		pick_fill.a = 0.2;
+		const Rect2 picked(offset + Vector2(pick_anchor.min(pick_last)) * cell, Vector2((pick_anchor - pick_last).abs() + Vector2i(1, 1)) * cell);
+		overlay->draw_rect(picked, pick_fill);
+		overlay->draw_rect(picked, get_theme_color(SNAME("accent_color"), EditorStringName(Editor)), false, Math::round(2 * EDSCALE));
+	}
 	if (hovered.x >= 0) {
-		const Rect2 hovered_rect(offset + Vector2(hovered) * cell, cell);
+		// Under the pencil, a stamp's whole footprint.
+		const bool stamp = session->has_stamp() && session->get_mode() == JRPGMapEditSession::MODE_TILES && session->get_tool() == JRPGMapEditSession::TOOL_PENCIL && stroke.is_null();
+		const Rect2 hovered_rect(offset + Vector2(hovered) * cell, stamp ? Vector2(session->get_stamp_size()) * cell : cell);
 		overlay->draw_rect(hovered_rect, get_theme_color(SNAME("accent_color"), EditorStringName(Editor)), false, Math::round(2 * EDSCALE));
 	}
 }
@@ -563,6 +644,25 @@ Dictionary JRPGMapCanvas::get_state() const {
 	brush["layer"] = session->get_layer();
 	brush["value"] = session->get_value();
 	brush["region"] = session->get_region();
+	// A stamp as its size and its rows of palette indexes (what jrpg_map_stroke takes); null for a single tile.
+	Variant stamp_size;
+	Variant stamp_rows;
+	if (session->has_stamp()) {
+		const Vector2i size = session->get_stamp_size();
+		const PackedInt32Array values = session->get_stamp();
+		Array rows;
+		for (int y = 0; y < size.y; y++) {
+			Array row;
+			for (int x = 0; x < size.x; x++) {
+				row.push_back(values[y * size.x + x]);
+			}
+			rows.push_back(row);
+		}
+		stamp_size = Array({ size.x, size.y });
+		stamp_rows = rows;
+	}
+	brush["stamp_size"] = stamp_size;
+	brush["stamp"] = stamp_rows;
 	state["brush"] = brush;
 	if (map_data.is_valid()) {
 		const Vector2i cell_size = map->get_cell_size();

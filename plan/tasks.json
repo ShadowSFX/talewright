@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.5.1 Palette panel",
+  "last_completed": "8.5.2 Multi-tile stamps",
   "tasks": [
     {
       "id": "0",
@@ -3151,15 +3151,15 @@
       "dependencies": [
         "8.4"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "8.5.1 and 8.5.2 done"
       ],
       "test_strategy": "Bridge.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "8.5.1",
@@ -3188,7 +3188,7 @@
         "talewright/docs/claude_bridge.md",
         "plan/evidence/jrpg/8.5.1-*"
       ],
-      "commit": "pending",
+      "commit": "3014929d32",
       "notes": ""
     },
     {
@@ -3205,9 +3205,22 @@
         "Undo restores the layers exactly"
       ],
       "test_strategy": "Doctests + jrpg_bridge_checks + bridge screenshots.",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/editor/jrpg_map_editing.{h,cpp}",
+        "modules/jrpg/editor/jrpg_map_edit_session.{h,cpp}",
+        "modules/jrpg/editor/jrpg_map_canvas.{h,cpp}",
+        "modules/jrpg/editor/jrpg_tile_palette.{h,cpp}",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/tests/test_jrpg_map_canvas.h",
+        "modules/jrpg/tests/test_jrpg_tile_palette.h",
+        "modules/jrpg/tests/test_jrpg_workspace_shell.h",
+        "talewright/docs/claude_bridge.md",
+        "talewright/tools/jrpg_bridge_checks.py",
+        "plan/specs/05_maps_tiles.md",
+        "plan/evidence/jrpg/8.5.2-*"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

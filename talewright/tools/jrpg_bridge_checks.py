@@ -538,6 +538,65 @@ def run(checks: Checks) -> None:
     stroke("pencil", "auto", [[9, 7]], 1)  # The grass autotile: the ground, not the stack.
     c.check("jrpg_map_stroke: an autotile replaces the ground tile", stack() == [1, 5, 0], json.dumps(stack()))
 
+    # Multi-tile stamps (task 8.5.2): a 2 x 2 stamp from the pencil lands whole at its first cell, a 0 leaving its cell
+    # as it is; a rectangle tiles the stamp from its corner; each stroke is one undo action.
+    def upper(cells: list[list[int]]) -> Any:
+        rows = c.call("jrpg_map_get", {"layer": "upper"})["cells"]
+        return [rows[y][x] for x, y in cells]
+
+    square = [[5, 9], [19, 0]]
+    stamp_args = {"tool": "pencil", "layer": "upper", "points": [[6, 5]], "stamp": square}
+    c.round_trip("jrpg_map_stroke (a 2 x 2 stamp)", hashes, lambda: c.call("jrpg_map_stroke", stamp_args))
+    c.check(
+        "jrpg_map_stroke: the stamp paints its tiles in place",
+        upper([[6, 5], [7, 5], [6, 6], [7, 6]]) == [5, 9, 19, 0],
+        json.dumps(upper([[6, 5], [7, 5], [6, 6], [7, 6]])),
+    )
+    tiled = {"tool": "rectangle", "layer": "upper", "points": [[2, 3], [0, 0]], "stamp": square}
+    c.round_trip("jrpg_map_stroke (a stamp tiling a rectangle)", hashes, lambda: c.call("jrpg_map_stroke", tiled))
+    c.check(
+        "jrpg_map_stroke: a rectangle repeats the stamp from its corner",
+        upper([[0, 0], [1, 0], [2, 0], [0, 1], [2, 2], [1, 3]]) == [5, 9, 5, 19, 5, 0],
+        json.dumps(upper([[0, 0], [1, 0], [2, 0], [0, 1], [2, 2], [1, 3]])),
+    )
+    c.check(
+        "jrpg_map_stroke: refuses a stamp for the eraser or the regions",
+        c.refused("jrpg_map_stroke", {"tool": "eraser", "layer": "upper", "points": [[0, 0]], "stamp": square})
+        and c.refused("jrpg_map_stroke", {"tool": "pencil", "layer": "regions", "points": [[0, 0]], "stamp": square}),
+    )
+    c.check(
+        "jrpg_map_stroke: refuses ragged or empty stamps",
+        c.refused("jrpg_map_stroke", {"tool": "pencil", "layer": 0, "points": [[0, 0]], "stamp": [[1, 2], [3]]})
+        and c.refused("jrpg_map_stroke", {"tool": "pencil", "layer": 0, "points": [[0, 0]], "stamp": [[0, 0]]}),
+    )
+    brush = c.call("jrpg_map_view", {"tool": "pencil", "stamp": square}).get("brush", {})
+    c.check(
+        "jrpg_map_view: sets a stamp as the brush",
+        brush.get("stamp_size") == [2, 2] and brush.get("value") == 5,
+        json.dumps(brush),
+    )
+    brush = c.call("jrpg_map_view", {"value": 3}).get("brush", {})
+    c.check("jrpg_map_view: a single tile replaces the stamp", brush.get("stamp_size") is None, json.dumps(brush))
+    # The Palette panel as the mouse uses it: a click chooses one tile, a drag a stamp (its first tile drawn first).
+    one = c.call("jrpg_map_view", {"palette_sheet": "Props", "palette_select": [[0, 0]]})
+    dragged = c.call("jrpg_map_view", {"palette_select": [[1, 1], [0, 0]]})
+    c.check(
+        "jrpg_map_view: a palette click chooses a tile, a drag a stamp",
+        one["palette"]["current_sheet"] == one["palette"]["sheet_names"].index("Props")
+        and one["brush"].get("stamp_size") is None
+        and dragged["brush"].get("stamp_size") == [2, 2]
+        and dragged["brush"].get("value") == one["brush"].get("value")
+        and (dragged["brush"].get("stamp") or [[0]])[0][0] == one["brush"].get("value"),
+        json.dumps([one["brush"], dragged["brush"], dragged["palette"]]),
+    )
+    kept = c.call("jrpg_map_view", {"grid": True}).get("brush", {})
+    c.check("jrpg_map_view: changing the view keeps the stamp", kept.get("stamp_size") == [2, 2], json.dumps(kept))
+    c.check(
+        "jrpg_map_view: refuses a palette tab or cell that does not exist",
+        c.refused("jrpg_map_view", {"palette_sheet": "Nowhere"})
+        and c.refused("jrpg_map_view", {"palette_select": [[99, 99]]}),
+    )
+
     def start_position() -> Any:
         system = c.record("system", 0)
         return [system["start_map_id"], system["start_cell"]]

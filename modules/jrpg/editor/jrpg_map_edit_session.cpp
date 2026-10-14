@@ -124,6 +124,25 @@ void JRPGMapEditSession::set_layer(int p_layer) {
 void JRPGMapEditSession::set_value(int p_value) {
 	ERR_FAIL_COND(p_value < 0);
 	value = p_value;
+	stamp_size = Vector2i();
+	stamp.clear();
+	emit_signal(SNAME("brush_changed"));
+}
+
+void JRPGMapEditSession::set_stamp(const Vector2i &p_size, const PackedInt32Array &p_values) {
+	ERR_FAIL_COND(p_size.x < 1 || p_size.y < 1 || p_values.size() != p_size.x * p_size.y);
+	int first = 0;
+	for (const int index : p_values) {
+		ERR_FAIL_COND(index < 0);
+		first = first != 0 ? first : index;
+	}
+	if (p_size == Vector2i(1, 1) || first == 0) {
+		set_value(first); // One tile, or nothing to stamp.
+		return;
+	}
+	value = first;
+	stamp_size = p_size;
+	stamp = p_values;
 	emit_signal(SNAME("brush_changed"));
 }
 

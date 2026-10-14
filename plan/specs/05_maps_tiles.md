@@ -195,6 +195,10 @@ sweep). All numbers are fields of `JRPGSystemData`.
 Modes: map (pencil, rectangle, ellipse, flood fill, shadow pen, eraser, eyedropper), region, event. Auto-layer
 selection by tile kind (D-040: autotiles and walls replace Ground; plain tiles stack on Objects and Upper, two at
 most, the oldest dropping out; the eraser clears the top-most tile) or explicit layer. Events mode: Set Start Position
-Here (8.4.3.2); event placement comes with the event editor (9.7, D-039). One brush stroke = one undo action with a compact before/after
+Here (8.4.3.2); event placement comes with the event editor (9.7, D-039). Multi-tile stamps (8.5.2): a drag over the
+Palette panel, or a right-drag on the map (the current layer's tiles; with Auto each cell's top-most tile), selects a
+rectangle of tiles; the pencil puts whole stamps down on a grid anchored at the stroke's first cell, rectangle and
+ellipse repeat the stamp from their top-left corner and fill from its start cell; a cell without a tile leaves the map
+as it is; with Auto each tile goes to the layer of its kind. One brush stroke = one undo action with a compact before/after
 patch of the touched layers/cells. The canvas renders the edited map scene through a SubViewport sharing its World2D.
 Spike first (task 8.1): open → paint → undo → save → reopen → run, verified through the bridge.

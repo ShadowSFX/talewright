@@ -85,6 +85,10 @@ class JRPGMapCanvas : public Control {
 	bool shadow_on = false; // What the shadow pen's stroke sets: the opposite of the first quarter it touched.
 	bool stroke_auto = false; // Drawn with the automatic layer (JRPGMapStroke::add_auto).
 	bool stroke_ground_kind = false; // The automatic layer's tile is an autotile or wall kind.
+	bool stroke_stamp = false; // Drawn with the session's multi-tile stamp.
+	bool picking = false; // The right button is down: a click picks a tile, a drag picks a stamp.
+	Vector2i pick_anchor;
+	Vector2i pick_last;
 	int stroke_value = 0;
 	PopupMenu *cell_menu = nullptr; // Events mode's right-click menu.
 	Vector2i menu_cell;
@@ -109,6 +113,7 @@ class JRPGMapCanvas : public Control {
 	void _cancel_stroke();
 	Vector<Vector2i> _shape_cells() const;
 	void _stroke_cells(const Vector<Vector2i> &p_cells);
+	void _finish_pick();
 	void _cell_menu_pressed(int p_id);
 	void _database_changed();
 
@@ -137,6 +142,9 @@ public:
 	bool pick_tile(const Vector2i &p_cell);
 	// Sets the region painted to p_cell's (false when it has none).
 	bool pick_region(const Vector2i &p_cell);
+	// Makes the cells between two corners a stamp (RM-MAP-016): the current layer's tiles, or with the automatic layer
+	// each cell's top-most tile. False when they hold no tile.
+	bool pick_stamp(const Vector2i &p_from, const Vector2i &p_to);
 	// Set Start Position Here (Events mode's right-click menu): the System start map and cell become this map's p_cell,
 	// as one undo action. False, with a warning, when the map cannot be the start map.
 	bool set_start_position_here(const Vector2i &p_cell);

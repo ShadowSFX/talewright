@@ -159,6 +159,9 @@ void tool_workspace_state(const Dictionary &p_args, const Ref<ClaudeBridgeToolCa
 
 bool int_arg(const Dictionary &p_args, const String &p_key, int64_t p_default, const Ref<ClaudeBridgeToolCall> &p_call, int64_t &r_value);
 int map_layer(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call);
+bool stamp_arg(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, Vector2i &r_size, PackedInt32Array &r_values);
+bool cell_list(const Dictionary &p_args, const String &p_key, const Ref<ClaudeBridgeToolCall> &p_call, Vector<Vector2i> &r_cells);
+bool whole_number(const Variant &p_value, int64_t &r_value);
 
 void tool_map_view(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
 	JRPGWorkspaceShell *shell = JRPGWorkspaceShell::get_singleton();
@@ -208,10 +211,53 @@ void tool_map_view(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_
 		p_call->fail("\"value\" is a palette index (0 or more) and \"region\" a region ID (1-255).");
 		return;
 	}
+	Vector2i stamp_size;
+	PackedInt32Array stamp;
+	if (p_args.has("stamp") && !stamp_arg(p_args, p_call, stamp_size, stamp)) {
+		return;
+	}
+	// The Palette panel: a tab, then tiles chosen there as a click or a drag over its grid would.
+	JRPGTilePalette *tiles = shell->get_palette();
+	int sheet = tiles->get_current_sheet();
+	if (p_args.has("palette_sheet")) {
+		const Variant named = p_args["palette_sheet"];
+		int64_t number = -1;
+		sheet = whole_number(named, number) && number >= 0 && number < tiles->get_sheet_count() ? int(number) : -1;
+		for (int i = 0; i < tiles->get_sheet_count() && sheet < 0; i++) {
+			sheet = tiles->get_sheet_name(i) == String(named) ? i : -1;
+		}
+		if (sheet < 0) {
+			p_call->fail("\"palette_sheet\" is a tab of the Palette panel: its number from 0 or its name (palette.sheet_names).");
+			return;
+		}
+	}
+	Vector<Vector2i> chosen;
+	if (p_args.has("palette_select")) {
+		if (!cell_list(p_args, "palette_select", p_call, chosen)) {
+			return;
+		}
+		Rect2i rect;
+		PackedInt32Array values;
+		if (chosen.is_empty() || chosen.size() > 2 || !tiles->read_rect(sheet, chosen[0], chosen[chosen.size() - 1], rect, values)) {
+			p_call->fail("\"palette_select\" chooses tiles of the Palette tab as a click ([[x, y]]) or a drag ([[x, y], [x, y]]) over its grid would; there is no tile there.");
+			return;
+		}
+	}
 	session->set_tool(tool);
 	session->set_layer(brush_layer);
-	session->set_value(int(MIN(brush_value, int64_t(INT32_MAX))));
+	if (p_args.has("value")) {
+		session->set_value(int(MIN(brush_value, int64_t(INT32_MAX)))); // A single tile: no stamp any more.
+	}
+	if (!stamp.is_empty()) {
+		session->set_stamp(stamp_size, stamp);
+	}
 	session->set_region(int(brush_region));
+	if (p_args.has("palette_sheet") || !chosen.is_empty()) {
+		tiles->set_current_sheet(sheet); // The tab checked above: a value given may have opened another.
+	}
+	if (!chosen.is_empty()) {
+		tiles->choose_rect(chosen[0], chosen[chosen.size() - 1]);
+	}
 	Vector2i center;
 	if (p_args.has("center_cell")) {
 		const Array cell = p_args["center_cell"].get_type() == Variant::ARRAY ? Array(p_args["center_cell"]) : Array();
@@ -236,8 +282,12 @@ void tool_map_view(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_
 	}
 	Dictionary state = canvas->get_state();
 	Dictionary palette;
-	JRPGTilePalette *tiles = shell->get_palette();
 	palette["sheets"] = tiles->get_sheet_count();
+	PackedStringArray names;
+	for (int i = 0; i < tiles->get_sheet_count(); i++) {
+		names.push_back(tiles->get_sheet_name(i));
+	}
+	palette["sheet_names"] = names;
 	palette["current_sheet"] = tiles->get_current_sheet();
 	state["palette"] = palette;
 	p_call->complete_data(state);
@@ -1572,6 +1622,31 @@ bool cell_list(const Dictionary &p_args, const String &p_key, const Ref<ClaudeBr
 	return valid;
 }
 
+// "stamp": rows of palette indexes ([[1, 2], [3, 4]]), all as long; false after failing the call.
+bool stamp_arg(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, Vector2i &r_size, PackedInt32Array &r_values) {
+	const Variant rows_value = p_args.get("stamp", Variant());
+	const Array rows = rows_value.get_type() == Variant::ARRAY ? Array(rows_value) : Array();
+	bool valid = !rows.is_empty();
+	bool any = false;
+	for (const Variant &row_value : rows) {
+		const Array row = row_value.get_type() == Variant::ARRAY ? Array(row_value) : Array();
+		valid = valid && !row.is_empty() && (r_size.x == 0 || row.size() == r_size.x);
+		r_size.x = row.size();
+		for (const Variant &cell : row) {
+			int64_t index = -1;
+			valid = valid && whole_number(cell, index) && index >= 0 && index <= INT32_MAX;
+			any = any || index > 0;
+			r_values.push_back(int(CLAMP(index, int64_t(0), int64_t(INT32_MAX))));
+		}
+	}
+	r_size.y = rows.size();
+	if (!valid || !any) {
+		p_call->fail("\"stamp\" is rows of palette indexes, all of one length, such as [[1, 2], [3, 4]] (0: the cell is left as it is; at least one tile).");
+		return false;
+	}
+	return true;
+}
+
 void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
 	JRPGMap *map = edited_map(p_call);
 	if (!map) {
@@ -1588,7 +1663,23 @@ void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 		return;
 	}
 	int64_t value = 0;
-	if (tool != JRPGMapEditSession::TOOL_ERASER) {
+	Vector2i stamp_size;
+	PackedInt32Array stamp;
+	if (p_args.has("stamp")) {
+		if (!stamp_arg(p_args, p_call, stamp_size, stamp)) {
+			return;
+		}
+		if (tool == JRPGMapEditSession::TOOL_ERASER || layer >= JRPGMapData::LAYER_COUNT) {
+			p_call->fail("A stamp draws tiles: give it to the pencil, rectangle, ellipse or fill, on a tile layer or auto.");
+			return;
+		}
+		for (const int index : stamp) {
+			if (index > 0) {
+				value = index; // The stroke's own value (the automatic layer's choice): the stamp's first tile.
+				break;
+			}
+		}
+	} else if (tool != JRPGMapEditSession::TOOL_ERASER) {
 		if (!int_arg(p_args, "value", 0, p_call, value)) {
 			return;
 		}
@@ -1617,8 +1708,13 @@ void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 	const Ref<JRPGMapData> data = map->get_map_data();
 	// The automatic layer as the canvas draws with it: the tile's kind picks its layer (JRPGMapStroke::add_auto).
 	const bool ground_kind = automatic && map->get_palette_kind(int(value)) != JRPGAutotileResolver::KIND_PLAIN;
+	// The stamp's grid starts where the stroke does (a shape: at its top left corner); the pencil puts down whole stamps.
+	const bool shape = tool == JRPGMapEditSession::TOOL_RECTANGLE || tool == JRPGMapEditSession::TOOL_ELLIPSE;
+	const Vector2i anchor = shape ? points[0].min(points[1]) : points[0];
 	const auto draw = [&](const Vector<Vector2i> &p_cells) {
-		if (automatic) {
+		if (!stamp.is_empty()) {
+			stroke->add_stamp(p_cells, stamp_size, stamp, anchor, tool == JRPGMapEditSession::TOOL_PENCIL, automatic);
+		} else if (automatic) {
 			stroke->add_auto(p_cells, int(value), ground_kind);
 		} else {
 			stroke->add(p_cells);
@@ -2078,7 +2174,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool map_stroke;
 	map_stroke.name = "jrpg_map_stroke";
 	map_stroke.title = "Draw on the map";
-	map_stroke.description = "Draws one stroke on the edited map with a map canvas tool, as one undo action of the map scene: pencil (the path through points, joined by straight lines), rectangle and ellipse (filled, between two corner points), fill (the area of matching cells around the one point), eraser (the pencil drawing 0). layer is a tile layer, auto (the layer the tile's kind belongs to, as the canvas's Auto: autotiles and walls replace the ground, other tiles stack on the two upper layers, at most two per cell, the oldest dropping out; the eraser clears the top-most tile), regions or shadows; value is the palette index, the region ID (1-255) or the shadowed quarters of each cell (1-15: 1 top left, 2 top right, 4 bottom left, 8 bottom right; the canvas's shadow pen toggles single quarters instead). Points outside the map are allowed; only cells inside are drawn. Returns the cells changed and each layer's SHA-256 (layer_sha256), which undo restores exactly.";
+	map_stroke.description = "Draws one stroke on the edited map with a map canvas tool, as one undo action of the map scene: pencil (the path through points, joined by straight lines), rectangle and ellipse (filled, between two corner points), fill (the area of matching cells around the one point), eraser (the pencil drawing 0). layer is a tile layer, auto (the layer the tile's kind belongs to, as the canvas's Auto: autotiles and walls replace the ground, other tiles stack on the two upper layers, at most two per cell, the oldest dropping out; the eraser clears the top-most tile), regions or shadows; value is the palette index, the region ID (1-255) or the shadowed quarters of each cell (1-15: 1 top left, 2 top right, 4 bottom left, 8 bottom right; the canvas's shadow pen toggles single quarters instead). A stamp (rows of palette indexes) draws several tiles at once, as a rectangle of tiles chosen in the Palette panel. Points outside the map are allowed; only cells inside are drawn. Returns the cells changed and each layer's SHA-256 (layer_sha256), which undo restores exactly.";
 	Dictionary map_stroke_properties;
 	Dictionary tool_property = schema_property("string", "The tool.");
 	tool_property["enum"] = Array({ "pencil", "rectangle", "ellipse", "fill", "eraser" });
@@ -2086,6 +2182,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	map_stroke_properties["layer"] = schema_property("string", "ground, ground_detail, objects, upper (or 0-3), auto, regions or shadows.");
 	map_stroke_properties["value"] = schema_property("integer", "Palette index, region ID or shadow quarters (not for the eraser).");
 	map_stroke_properties["points"] = schema_property("array", "[x, y] cells: the path (pencil, eraser), two corners (rectangle, ellipse) or the start cell (fill).");
+	map_stroke_properties["stamp"] = schema_property("array", "A multi-tile stamp instead of value: rows of palette indexes ([[1, 2], [3, 4]]; 0 leaves a cell as it is). The pencil puts the whole stamp down on a grid that starts at the first point; shapes and fill tile it from their start.");
 	map_stroke.input_schema = ClaudeBridgeMCP::object_schema(map_stroke_properties, PackedStringArray({ "tool", "layer", "points" }));
 	map_stroke.read_only = false;
 	map_stroke.destructive = false; // Undoable.
@@ -2118,7 +2215,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool map_view;
 	map_view.name = "jrpg_map_view";
 	map_view.title = "View the map canvas";
-	map_view.description = "Reads, and optionally changes, the view of the JRPG workspace's map canvas (the Map section; jrpg_workspace_select shows it), which draws the map open in the editor: fit=true shows the whole map, zoom sets the scale (1 = one screen pixel per map pixel, 1/32 to 8), center_cell puts a cell in the middle, grid shows or hides the cell grid; tool, layer, value and region set the brush the canvas tools draw with (as the toolbar and the Palette panel do). Applied in that order. Returns map_id, scene, zoom, center_cell, visible_cells ([x, y, width, height], clipped to the map), grid, hovered_cell, the brush (mode, tool, layer: -1 auto, value, region) and the Palette panel (sheets, current_sheet). Each map tab keeps its own view.";
+	map_view.description = "Reads, and optionally changes, the view of the JRPG workspace's map canvas (the Map section; jrpg_workspace_select shows it), which draws the map open in the editor: fit=true shows the whole map, zoom sets the scale (1 = one screen pixel per map pixel, 1/32 to 8), center_cell puts a cell in the middle, grid shows or hides the cell grid; tool, layer, value (one tile), stamp (several: rows of palette indexes) and region set the brush the canvas tools draw with (as the toolbar and the Palette panel do); palette_sheet opens a Palette tab and palette_select chooses tiles there as a click or a drag would. Applied in that order. Returns map_id, scene, zoom, center_cell, visible_cells ([x, y, width, height], clipped to the map), grid, hovered_cell, the brush (mode, tool, layer: -1 auto, value, region; stamp_size and stamp, the rows jrpg_map_stroke takes, or null) and the Palette panel (sheets, sheet_names, current_sheet). Each map tab keeps its own view.";
 	Dictionary map_view_properties;
 	map_view_properties["fit"] = schema_property("boolean", "Show the whole map, centered.");
 	map_view_properties["zoom"] = schema_property("number", "Scale, 1/32 to 8.");
@@ -2128,6 +2225,9 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	map_view_properties["layer"] = schema_property("string", "The layer the tools draw on: auto, ground, ground_detail, objects, upper (or 0-3).");
 	map_view_properties["value"] = schema_property("integer", "The palette index drawn (as choosing it in the Palette panel).");
 	map_view_properties["region"] = schema_property("integer", "The region ID painted in Regions mode, 1-255.");
+	map_view_properties["stamp"] = schema_property("array", "A multi-tile stamp to draw with (rows of palette indexes), as a rectangle chosen in the Palette panel.");
+	map_view_properties["palette_sheet"] = schema_property("string", "Opens a tab of the Palette panel: its number from 0 or its name.");
+	map_view_properties["palette_select"] = schema_property("array", "Chooses tiles in the Palette tab as the mouse would: [[x, y]] a click on that cell of its grid (one tile), [[x, y], [x, y]] a drag between two cells (a stamp).");
 	map_view.input_schema = ClaudeBridgeMCP::object_schema(map_view_properties);
 	map_view.read_only = false;
 	map_view.destructive = false; // Only changes what the editor shows.

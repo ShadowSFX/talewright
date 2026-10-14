@@ -1,0 +1,23 @@
+# 8.5.2 bridge verification: multi-tile stamps
+## a drag over the Outdoor tab (the two trees, 2 x 2 cells of its grid) chooses a stamp; the palette outlines it
+  brush: {'tool': 'pencil', 'layer': -1, 'value': 20, 'stamp_size': [2, 2], 'stamp': [[20, 21], [28, 29]]} | palette tab: Outdoor
+  note: 'Drawing with a 2 × 2 stamp on the layer its kind belongs to. Right-click a tile on the map to draw with it.'
+  screenshot: plan/evidence/jrpg/8.5.2-palette-drag.png
+## the pencil along a row puts whole stamps down, on the grid of its first cell (one undo action)
+  stroke: pencil auto changed 16 | undoable True
+  layers: before db20577a6ea8539c | after 1c5be831a424673c | undone db20577a6ea8539c | redone 1c5be831a424673c
+  undo restores the layers exactly: yes
+## a rectangle repeats a stamp from its corner (the two flower tiles, a 2 x 1 drag)
+  brush: {'tool': 'pencil', 'layer': -1, 'value': 12, 'stamp_size': [2, 1], 'stamp': [[12, 13]]} | palette tab: Outdoor
+  stroke: rectangle auto changed 12 | undoable True
+## the Buildings tab: the bookshelf and the bed (2 x 2), put down with a single click
+  brush: {'tool': 'pencil', 'layer': -1, 'value': 44, 'stamp_size': [2, 2], 'stamp': [[44, 45], [47, 48]]} | palette tab: Buildings
+  note: 'Drawing with a 2 × 2 stamp on the layer its kind belongs to. Right-click a tile on the map to draw with it.'
+  stroke: pencil auto changed 4 | undoable True
+  screenshot: plan/evidence/jrpg/8.5.2-strokes.png
+## one tile chosen again (a click in the palette) replaces the stamp
+  brush: {'tool': 'pencil', 'layer': -1, 'value': 38, 'stamp_size': None, 'stamp': None} | palette tab: Buildings
+  note: 'Drawing with 0038  Buildings on the layer its kind belongs to. Right-click a tile on the map to draw with it.'
+## errors
+    "errors": 0,
+    "warnings": 0,
