@@ -660,6 +660,9 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   marker showing its facing. The transfer fade also runs on the simulation steps (D-041).
 - **Why:** deterministic movement (servers, replays), the reference's grid feel, small maps framed like the
   reference's centered small maps.
+- **Amended (epic 10 review B4):** the player takes no new step while any control has the focus (a message, a list, a
+  screen): the keys belong to the focused control then, as Godot's own `ui_*` navigation would also move between
+  focusable controls. A HUD button that should not stop walking uses `FOCUS_NONE` or `FOCUS_CLICK`.
 - **Reversal:** `JRPGSceneManager::_simulation_step` and `_update_camera_limits` hold these rules.
 
 ## D-045 — Character sheets: plain images by default, the importer for other layouts
@@ -765,8 +768,19 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   audio server from its creation (`scene/audio/audio_stream_player_internal.cpp:365`).
 - **Why:** focus is Godot's own notion of the active control; the list's own press detection behaves the same in
   games, doctests and bridge runs, and never lets one press act on two windows.
+- **Amended (epic 10 review A1, A2, A4, A13, A14, A15; task 10.4.1.1):** a key down when the focus comes in is
+  blocked (neither a press nor a repeat) until it is released. The viewport's focus keys (`ui_focus_next`,
+  `ui_focus_prev`, `ui_up` and the other directions, `scene/main/viewport.cpp:2382-2424`) are accepted by a focused
+  window, so they never move the focus away. After a long frame a held key repeats once and the next repeat is an
+  interval after now (no burst of repeats). The click that gives a list the focus only moves the cursor (a mouse button
+  down at focus-enter); choosing takes a second click. A right click anywhere cancels while the list has the focus
+  (`unhandled_input`, so a control under the pointer that takes the click keeps it). The page actions follow
+  `page_mode`: scroll (default), a `page_requested` signal (menus switch actors with them, RM-TST-015) or not taken.
+  A window takes clicks only on the part that shows (`has_point`); closed, it and its children take none
+  (`MOUSE_BEHAVIOR_DISABLED`) and it lets go of the focus. An answered choice window is `FOCUS_NONE` until the next
+  choices. Dragging and touch scrolling (RM-MNU-017) are left to epic 28 (menus completion).
 - **Reversal:** `JRPGSelectableList::_process_input` (presses and repeats), `_move_cursor` (wrapping), `gui_input`
-  (mouse).
+  (mouse), `unhandled_input` (right click); `JRPGInputReader::reset`/`update` (blocked keys, repeats).
 
 ## D-051 — Message control codes: expanded in core, parsed into operations
 - **Context:** task 10.2.1 needs the Show Text codes (RM-MSG-001..019). The help lists them and their effect but not
@@ -809,6 +823,12 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   (`scene/main/node.h:536-537`).
 - **Why:** `RichTextLabel` cannot place text at an absolute position and its BBCode would need escaping; drawing runs
   ourselves keeps the reveal, waits and positions exact and testable.
+- **Amended (epic 10 review B5, B10, B12; task 10.4.1.1):** the message window can take the focus only while a
+  message is under way (`FOCUS_ALL` from `show_message` to the end, `FOCUS_NONE` otherwise), so a finished message
+  never steals clicks or the focus from choices beside it. While under way, a left or right click anywhere a control
+  does not take it reads the message (OK and cancel both skip or continue). The reveal counts frames: a frame within
+  0.05 of a whole number of 60ths counts exactly that many letters (no 0-then-2 jitter), and one frame reveals at most
+  `MAX_LETTERS_PER_FRAME` = 4 (after a hitch the text catches up a few letters at a time).
 - **Reversal:** `JRPGMessageWindow::_layout` (layout), `_advance` (reveal, waits), `_press` (skipping); the palette is
   `get_default_text_colors`.
 

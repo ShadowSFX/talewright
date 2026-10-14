@@ -164,6 +164,8 @@ public:
 	AudioStreamPlayer *get_sound_player() const { return sound_player; }
 
 	virtual Size2 get_minimum_size() const override;
+	// Clicks land only on the part that shows: all of it when open, the opening band meanwhile, none when closed.
+	virtual bool has_point(const Point2 &p_point) const override;
 
 	JRPGWindow();
 	~JRPGWindow(); // Out of line: JRPGDatabase is only declared here.

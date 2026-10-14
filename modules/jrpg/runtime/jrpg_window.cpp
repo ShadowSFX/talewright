@@ -38,6 +38,7 @@
 #include "core/io/resource_uid.h"
 #include "core/object/class_db.h"
 #include "scene/audio/audio_stream_player.h"
+#include "scene/main/viewport.h"
 #include "scene/resources/image_texture.h"
 #include "scene/theme/theme_db.h"
 #include "servers/audio/audio_server.h"
@@ -130,6 +131,14 @@ void JRPGWindow::_set_openness(double p_openness) {
 		return;
 	}
 	openness = clamped;
+	// Closed, the window takes no clicks (its children neither: epic 10 review A3) and keeps no focus.
+	set_mouse_behavior_recursive(openness <= 0.0 ? MOUSE_BEHAVIOR_DISABLED : MOUSE_BEHAVIOR_INHERITED);
+	if (openness <= 0.0 && is_inside_tree()) {
+		const Control *focused = get_viewport()->gui_get_focus_owner();
+		if (focused && (focused == this || is_ancestor_of(focused))) {
+			get_viewport()->gui_release_focus();
+		}
+	}
 	queue_redraw();
 }
 
@@ -251,6 +260,10 @@ void JRPGWindow::play_sound(JRPGSystemData::Sound p_sound) {
 	sound_player->set_pitch_scale(MAX(cue->get_pitch(), 1) / 100.0);
 	sound_player->set_stream(stream);
 	sound_player->play();
+}
+
+bool JRPGWindow::has_point(const Point2 &p_point) const {
+	return is_open() ? Container::has_point(p_point) : get_open_rect().has_point(p_point);
 }
 
 Size2 JRPGWindow::get_minimum_size() const {

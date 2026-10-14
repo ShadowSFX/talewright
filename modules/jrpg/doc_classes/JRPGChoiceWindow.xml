@@ -4,7 +4,7 @@
 		The choice window: the choices beside the message window, the default one selected, cancel refused, a choice or a branch.
 	</brief_description>
 	<description>
-		Shows choices as Show Choices does: a [JRPGSelectableList] as wide as the widest choice, beside the message window named by [member message_window] (above a message in the lower part of the screen, below one at the top; at the bottom of the screen without a message), at the left, middle or right. Choices may hold control codes for colors, icons and sizes. Blank choices are not shown, and [signal choice_made] reports the index a choice had among those given. The cursor starts on the default choice. Cancel is refused ([constant CANCEL_DISALLOWED]), picks a choice, or is a branch of its own ([constant CANCEL_BRANCH]). After a choice the window lets go of the focus, so a second press chooses nothing.
+		Shows choices as Show Choices does: a [JRPGSelectableList] as wide as the widest choice, beside the message window named by [member message_window] (above a message in the lower part of the screen, below one at the top; at the bottom of the screen without a message), at the left, middle or right. Choices may hold control codes for colors, icons and sizes. Blank choices are not shown, and [signal choice_made] reports the index a choice had among those given. The cursor starts on the default choice. Cancel is refused ([constant CANCEL_DISALLOWED]), picks a choice, or is a branch of its own ([constant CANCEL_BRANCH]). After a choice the window lets go of the focus and cannot take it again (not even by a click) until [method show_choices], so a second press chooses nothing.
 		Authority: client. Online, the server checks the index it receives.
 	</description>
 	<tutorials>

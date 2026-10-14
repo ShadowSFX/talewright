@@ -33,8 +33,10 @@
 
 #include "jrpg_message_window.h"
 
+#include "core/input/input.h"
 #include "core/input/input_event.h"
 #include "core/object/class_db.h"
+#include "scene/main/viewport.h"
 #include "scene/resources/font.h"
 #include "scene/resources/text_line.h"
 #include "scene/theme/theme_db.h"
@@ -302,8 +304,12 @@ void JRPGSelectableList::_process_input(double p_delta) {
 		return;
 	}
 	const bool page_next = input_reader.is_fresh(JRPGInputReader::ACTION_PAGE_NEXT);
-	if (page_next || input_reader.is_fresh(JRPGInputReader::ACTION_PAGE_PREV)) {
-		_page(page_next ? 1 : -1);
+	if (page_mode != PAGE_NONE && (page_next || input_reader.is_fresh(JRPGInputReader::ACTION_PAGE_PREV))) {
+		if (page_mode == PAGE_SIGNAL) {
+			emit_signal(SNAME("page_requested"), page_next ? 1 : -1);
+		} else {
+			_page(page_next ? 1 : -1);
+		}
 		return;
 	}
 	for (int move = 0; move < MOVE_COUNT; move++) {
@@ -318,7 +324,9 @@ void JRPGSelectableList::_process_input(double p_delta) {
 
 void JRPGSelectableList::gui_input(const Ref<InputEvent> &p_event) {
 	ERR_FAIL_COND(p_event.is_null());
-	if (input_reader.handle_event(p_event, has_focus())) {
+	const int action = input_reader.handle_event(p_event, has_focus());
+	const bool page_action = action == JRPGInputReader::ACTION_PAGE_PREV || action == JRPGInputReader::ACTION_PAGE_NEXT;
+	if (action >= 0 && !(page_action && page_mode == PAGE_NONE)) {
 		accept_event();
 		return;
 	}
@@ -337,11 +345,13 @@ void JRPGSelectableList::gui_input(const Ref<InputEvent> &p_event) {
 	switch (button->get_button_index()) {
 		case MouseButton::LEFT: {
 			const int index = get_item_at_position(button->get_position());
-			if (index >= 0 && index == selected) {
+			// The click that gave the focus only moves the cursor (epic 10 review A4): choosing takes a second click.
+			if (index >= 0 && index == selected && !focused_by_click) {
 				_choose();
 			} else {
 				_select_by_player(index);
 			}
+			focused_by_click = false;
 			accept_event();
 		} break;
 		case MouseButton::RIGHT: {
@@ -412,14 +422,27 @@ void JRPGSelectableList::_draw_coded_text(const String &p_text, const Rect2 &p_a
 	}
 }
 
+void JRPGSelectableList::unhandled_input(const Ref<InputEvent> &p_event) {
+	const Ref<InputEventMouseButton> button = p_event;
+	if (button.is_valid() && button->is_pressed() && button->get_button_index() == MouseButton::RIGHT && has_focus() && is_open()) {
+		_cancel();
+		get_viewport()->set_input_as_handled();
+	}
+}
+
 void JRPGSelectableList::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_FOCUS_ENTER: {
 			input_reader.reset(); // Keys down now are not new for this list.
+			// A mouse button down now means a click gave the focus (the viewport focuses before gui_input).
+			focused_by_click = Input::get_singleton() && Input::get_singleton()->is_mouse_button_pressed(MouseButton::LEFT);
+			set_process_unhandled_input(true);
 			_update_process();
 			queue_redraw();
 		} break;
 		case NOTIFICATION_FOCUS_EXIT: {
+			focused_by_click = false;
+			set_process_unhandled_input(false);
 			_update_process();
 			queue_redraw();
 		} break;
@@ -495,6 +518,8 @@ void JRPGSelectableList::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_cancellable"), &JRPGSelectableList::is_cancellable);
 	ClassDB::bind_method(D_METHOD("get_item_rect", "index"), &JRPGSelectableList::get_item_rect);
 	ClassDB::bind_method(D_METHOD("get_item_at_position", "position"), &JRPGSelectableList::get_item_at_position);
+	ClassDB::bind_method(D_METHOD("set_page_mode", "mode"), &JRPGSelectableList::set_page_mode);
+	ClassDB::bind_method(D_METHOD("get_page_mode"), &JRPGSelectableList::get_page_mode);
 	ClassDB::bind_static_method("JRPGSelectableList", D_METHOD("ensure_default_theme"), &JRPGSelectableList::ensure_default_theme);
 
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "items", PROPERTY_HINT_ARRAY_TYPE, "Dictionary"), "set_items", "get_items");
@@ -502,12 +527,17 @@ void JRPGSelectableList::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "selected", PROPERTY_HINT_RANGE, "-1,9999,1"), "set_selected", "get_selected");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "top_row", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NONE), "set_top_row", "get_top_row");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "cancellable"), "set_cancellable", "is_cancellable");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "page_mode", PROPERTY_HINT_ENUM, "Scroll,Signal,None"), "set_page_mode", "get_page_mode");
 
 	ADD_SIGNAL(MethodInfo("cursor_moved", PropertyInfo(Variant::INT, "index")));
 	ADD_SIGNAL(MethodInfo("item_chosen", PropertyInfo(Variant::INT, "index")));
 	ADD_SIGNAL(MethodInfo("item_refused", PropertyInfo(Variant::INT, "index")));
 	ADD_SIGNAL(MethodInfo("cancelled"));
+	ADD_SIGNAL(MethodInfo("page_requested", PropertyInfo(Variant::INT, "direction")));
 
+	BIND_ENUM_CONSTANT(PAGE_SCROLL);
+	BIND_ENUM_CONSTANT(PAGE_SIGNAL);
+	BIND_ENUM_CONSTANT(PAGE_NONE);
 	BIND_CONSTANT(REPEAT_DELAY_FRAMES);
 	BIND_CONSTANT(REPEAT_INTERVAL_FRAMES);
 	BIND_CONSTANT(DEFAULT_ITEM_HEIGHT);

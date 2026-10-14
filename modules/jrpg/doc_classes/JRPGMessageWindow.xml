@@ -5,7 +5,7 @@
 	</brief_description>
 	<description>
 		Shows a message as Show Text does: the text, already expanded with [method JRPGMessageText.expand], appears one character a frame at 60 frames a second, with the control codes' colors ([member text_colors]), icons from the icon set, size steps and sizes, positions, waits, instant display and the gold window request ([signal gold_window_requested]). When the text has appeared the window waits for the player, with the pause mark, unless the text ends with [code]\^[/code]; [signal message_finished] is emitted when the player has read it.
-		[code]jrpg_ok[/code] or [code]jrpg_cancel[/code] while the text appears shows the rest at once, up to the next wait for the player (timed waits are skipped too); a click anywhere on the screen counts as OK. The window takes input while it has focus, as [JRPGSelectableList] does; [method show_message] gives it the focus.
+		[code]jrpg_ok[/code] or [code]jrpg_cancel[/code] while the text appears shows the rest at once, up to the next wait for the player (timed waits are skipped too); a click anywhere on the screen counts too (left or right button), unless a control under it takes the click. The window takes input while it has focus, as [JRPGSelectableList] does; it can take the focus only while a message is under way ([method show_message] gives it the focus, and it lets go when the player has read the message). After a long frame the text catches up at most [constant MAX_LETTERS_PER_FRAME] characters a frame.
 		A face is drawn on the left, and the text starts beside it. The speaker's name shows in a small window above the message, or below it when the message is at the top of the screen. The window places itself at the top, middle or bottom of the screen, full width and [constant LINES] lines high, on its frame, on a dimmed band or on nothing.
 		Authority: client. Online, the server sends the text's key and arguments.
 	</description>
@@ -97,7 +97,6 @@
 		</method>
 	</methods>
 	<members>
-		<member name="focus_mode" type="int" setter="set_focus_mode" getter="get_focus_mode" overrides="Control" enum="Control.FocusMode" default="2" />
 		<member name="text_colors" type="PackedColorArray" setter="set_text_colors" getter="get_text_colors" default="PackedColorArray(1, 1, 1, 1, 0.56078434, 0.76862746, 1, 1, 1, 0.5411765, 0.45882353, 1, 0.56078434, 0.8784314, 0.5411765, 1, 0.7882353, 0.65882355, 1, 1, 1, 0.81960785, 0.4, 1, 0.43529412, 0.8901961, 0.8392157, 1, 0.7058824, 0.7058824, 0.7058824, 1, 0.47843137, 0.47843137, 0.47843137, 1, 0.30980393, 0.4862745, 1, 1, 0.8980392, 0.28235295, 0.37254903, 1, 0.24705882, 0.68235296, 0.35686275, 1, 0.56078434, 0.41960785, 1, 1, 0.9490196, 0.6627451, 0.23137255, 1, 0.18431373, 0.70980394, 0.6784314, 1, 0.14901961, 0.14901961, 0.14901961, 1, 0.61960787, 0.7882353, 1, 1, 1, 0.8784314, 0.4, 1, 1, 0.3529412, 0.3529412, 1, 0.20784314, 0.20784314, 0.20784314, 1, 0.9490196, 0.5803922, 0.36862746, 1, 1, 0.8117647, 0.47843137, 1, 0.36862746, 0.63529414, 0.9490196, 1, 0.50980395, 0.8235294, 1, 1, 0.64705884, 0.9098039, 0.45490196, 1, 0.9098039, 0.47058824, 0.47058824, 1, 0.84313726, 0.6509804, 0.9019608, 1, 0.6509804, 0.84313726, 0.9019608, 1, 0.41960785, 0.83137256, 0.6156863, 1, 0.7372549, 0.9411765, 0.56078434, 1, 0.76862746, 0.76862746, 1, 1, 1, 0.76862746, 0.8862745, 1)">
 			The colors of the [code]\C[n][/code] code; color 0 is normal text. An empty array gives [method get_default_text_colors].
 		</member>
@@ -159,6 +158,9 @@
 		</constant>
 		<constant name="TEXT_COLOR_COUNT" value="32">
 			How many colors the default palette has.
+		</constant>
+		<constant name="MAX_LETTERS_PER_FRAME" value="4">
+			The most characters that appear in one frame, so the text catches up gradually after a long frame.
 		</constant>
 	</constants>
 	<theme_items>

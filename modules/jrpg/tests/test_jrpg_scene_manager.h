@@ -38,6 +38,7 @@
 #include "scene/2d/camera_2d.h"
 #include "scene/2d/node_2d.h"
 #include "scene/audio/audio_stream_player.h"
+#include "scene/gui/control.h"
 #include "scene/main/scene_tree.h"
 #include "scene/main/window.h"
 #include "scene/resources/2d/tile_set.h"
@@ -500,6 +501,28 @@ TEST_CASE("[SceneTree][JRPG][SceneManager] The player walks with the direction a
 	}
 	CHECK((!m->is_transferring() && player->get_cell() == Vector2i(5, 3)));
 	CHECK(f.state()->get_player_direction() == JRPGSystemData::DIRECTION_LEFT);
+}
+
+TEST_CASE("[SceneTree][JRPG][SceneManager] The player does not walk while a control has the focus") {
+	// Epic 10 review B4: a message, a list or a screen reads the keys then.
+	Fixture f;
+	add_meadow(f);
+	JRPGSceneManager *m = f.manager;
+	REQUIRE(m->start_new_game(5) == OK);
+	JRPGPlayer *player = m->get_player();
+	Control *menu = memnew(Control);
+	menu->set_focus_mode(Control::FOCUS_ALL);
+	SceneTree::get_singleton()->get_root()->add_child(menu);
+	menu->grab_focus();
+	hold("jrpg_right", true);
+	m->run_steps(30);
+	CHECK((player->get_cell() == Vector2i(1, 1) && !player->is_moving()));
+	menu->release_focus();
+	m->run_steps(1);
+	CHECK(player->get_cell() == Vector2i(2, 1)); // Free again: the held key walks.
+	hold("jrpg_right", false);
+	m->run_steps(30);
+	memdelete(menu);
 }
 
 TEST_CASE("[SceneTree][JRPG][SceneManager] A map can turn dashing off; the camera stays inside the map") {

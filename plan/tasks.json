@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "10.3 Screen stack (GDScript managed addon)",
+  "last_completed": "10.4.1.1 Epic 10 review: input and focus",
   "tasks": [
     {
       "id": "0",
@@ -4189,13 +4189,13 @@
       ],
       "test_strategy": "Doctest.",
       "files": [],
-      "commit": "pending",
+      "commit": "ee6e62c0ff",
       "notes": ""
     },
     {
       "id": "10.4",
       "title": "Epic review: messages/UI",
-      "description": "Reviewer subagent.",
+      "description": "Reviewer subagents (two, fresh context): part A windows and lists (JRPGWindow, JRPGSelectableList, JRPGInputReader, built-in skin, choice/number/gold windows), part B message text, message window, screen stack, bridge checks and decisions D-048..D-054. Split into 10.4.1 (reviews and fixes) and 10.4.2 (close: review log, smoke, core diff, full tests, static checks, push with CI watched).",
       "parent": "10",
       "dependencies": [
         "10.3"
@@ -4203,9 +4203,118 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Findings fixed"
+        "10.4.1 and 10.4.2 done"
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "10.4.1",
+      "parent": "10.4",
+      "title": "Epic 10 review: findings fixed",
+      "priority": 1,
+      "dependencies": [],
+      "description": "Run the two reviewers on 86701dc67f..HEAD and fix or answer every finding with tests. Findings recorded in plan/evidence/reviews/epic_10.md (part A 21, part B 19). Split into 10.4.1.1 (input and focus), 10.4.1.2 (drawing, theme and data), 10.4.1.3 (screen stack and checks).",
+      "acceptance_criteria": [
+        "10.4.1.1, 10.4.1.2 and 10.4.1.3 done"
+      ],
+      "test_strategy": "Doctests + jrpg_bridge_checks.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "10.4.1.1",
+      "parent": "10.4.1",
+      "title": "Epic 10 review: input and focus",
+      "priority": 1,
+      "dependencies": [],
+      "description": "Part A 1-4, 13-15 and part B 4, 5, 10, 12: keys held at focus, ui_* focus keys, closed windows and clicks, click-to-focus without choosing, right click, page mode, repeat catch-up, player input while a window has the focus, message window focus and clicks, reveal snapping.",
+      "acceptance_criteria": [
+        "Each finding fixed or answered in the review log, with a doctest"
+      ],
+      "test_strategy": "Doctests + bridge checks.",
+      "status": "done",
+      "files": [
+        "modules/jrpg/runtime/jrpg_input_reader.h",
+        "modules/jrpg/runtime/jrpg_input_reader.cpp",
+        "modules/jrpg/runtime/jrpg_window.h",
+        "modules/jrpg/runtime/jrpg_window.cpp",
+        "modules/jrpg/runtime/jrpg_selectable_list.h",
+        "modules/jrpg/runtime/jrpg_selectable_list.cpp",
+        "modules/jrpg/runtime/jrpg_choice_window.cpp",
+        "modules/jrpg/runtime/jrpg_number_input_window.cpp",
+        "modules/jrpg/runtime/jrpg_message_window.h",
+        "modules/jrpg/runtime/jrpg_message_window.cpp",
+        "modules/jrpg/runtime/jrpg_scene_manager.cpp",
+        "modules/jrpg/doc_classes/JRPGWindow.xml",
+        "modules/jrpg/doc_classes/JRPGSelectableList.xml",
+        "modules/jrpg/doc_classes/JRPGChoiceWindow.xml",
+        "modules/jrpg/doc_classes/JRPGMessageWindow.xml",
+        "modules/jrpg/tests/test_jrpg_window_input.h",
+        "modules/jrpg/tests/test_jrpg_scene_manager.h",
+        "plan/evidence/reviews/epic_10.md",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "10.4.1.2",
+      "parent": "10.4.1",
+      "title": "Epic 10 review: drawing, theme and data",
+      "priority": 1,
+      "dependencies": [
+        "10.4.1.1"
+      ],
+      "description": "Part A 5-12, 16-21 and part B 6-9, 11, 15, 18, 19.",
+      "acceptance_criteria": [
+        "Each finding fixed or answered in the review log, with a doctest",
+        "Goldens regenerated on purpose where the drawing changes"
+      ],
+      "test_strategy": "Doctests + bridge goldens.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "10.4.1.3",
+      "parent": "10.4.1",
+      "title": "Epic 10 review: screen stack and checks",
+      "priority": 1,
+      "dependencies": [
+        "10.4.1.2"
+      ],
+      "description": "Part B 1-3, 13, 14, 16, 17: pop with a fade, re-entrancy, covered screens and clicks, process modes and focus kept, screens freed from outside, bridge check robustness, signal checks.",
+      "acceptance_criteria": [
+        "Each finding fixed or answered in the review log, with a doctest"
+      ],
+      "test_strategy": "Doctests + bridge checks.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "10.4.2",
+      "parent": "10.4",
+      "title": "Close epic 10",
+      "priority": 1,
+      "dependencies": [
+        "10.4.1"
+      ],
+      "description": "Review log plan/evidence/reviews/epic_10.md, PROGRESS entry, plain_2d/plain_3d smoke with a rebuilt release template, core_diff_check, full tests (editor and release template) and static checks, push talewright with CI watched.",
+      "acceptance_criteria": [
+        "Smoke ALL PASS",
+        "core_diff_check 0 unlisted",
+        "CI green on the push"
+      ],
+      "test_strategy": "Smoke, checks, CI.",
+      "status": "pending",
       "files": [],
       "commit": "",
       "notes": ""
@@ -5093,12 +5202,13 @@
       "status": "pending",
       "priority": 3,
       "acceptance_criteria": [
-        "Every gap-map row of this area implemented and tested, or deferred with reason"
+        "Every gap-map row of this area implemented and tested, or deferred with reason",
+        "Touch and drag for windows (epic 10 review A13; RM-TST-016, RM-MNU-017): lists scroll by dragging or swiping from inside the window, the number input takes taps (digits up/down, OK) and the touch buttons of RM-MNU-017 exist"
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
-      "notes": ""
+      "notes": "Epic 10 review A13: right click anywhere cancels a focused list (done in 10.4.1.1); drag/swipe scrolling and number input by mouse or touch were left for this epic."
     },
     {
       "id": "29",

@@ -61,6 +61,7 @@ void JRPGChoiceWindow::show_choices(const PackedStringArray &p_choices, int p_de
 	placement = p_placement;
 	set_frame_visible(p_background == JRPGMessageWindow::BACKGROUND_WINDOW);
 	answered = false;
+	set_focus_mode(FOCUS_ALL);
 	_place();
 	if (is_inside_tree()) {
 		grab_focus();
@@ -113,7 +114,7 @@ void JRPGChoiceWindow::_on_item_chosen(int p_item) {
 		return;
 	}
 	answered = true;
-	release_focus(); // A second press before the game closes the window chooses nothing.
+	set_focus_mode(FOCUS_NONE); // Lets go of the focus; a click cannot take it back before the next choices.
 	emit_signal(SNAME("choice_made"), shown_indexes[p_item]);
 }
 
@@ -122,7 +123,7 @@ void JRPGChoiceWindow::_on_cancelled() {
 		return;
 	}
 	answered = true;
-	release_focus();
+	set_focus_mode(FOCUS_NONE);
 	emit_signal(SNAME("choice_made"), cancel_choice); // CANCEL_BRANCH, or the choice cancel picks.
 }
 

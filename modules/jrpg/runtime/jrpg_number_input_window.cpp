@@ -121,7 +121,7 @@ void JRPGNumberInputWindow::_process_input(double p_delta) {
 }
 
 void JRPGNumberInputWindow::gui_input(const Ref<InputEvent> &p_event) {
-	if (input_reader.handle_event(p_event, has_focus())) {
+	if (input_reader.handle_event(p_event, has_focus()) >= 0) {
 		accept_event(); // The viewport's ui_* navigation never takes the focus away.
 	}
 }

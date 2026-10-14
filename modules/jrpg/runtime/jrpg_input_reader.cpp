@@ -38,6 +38,8 @@
 namespace {
 
 const char *const ACTION_NAMES[] = { "jrpg_up", "jrpg_down", "jrpg_left", "jrpg_right", "jrpg_ok", "jrpg_cancel", "jrpg_page_prev", "jrpg_page_next" };
+// The viewport's focus navigation (scene/main/viewport.cpp:2382-2424): taken by a focused window, so the focus stays.
+const char *const FOCUS_ACTIONS[] = { "ui_focus_next", "ui_focus_prev", "ui_up", "ui_down", "ui_left", "ui_right" };
 
 } // namespace
 
@@ -55,15 +57,25 @@ bool JRPGInputReader::is_pressed(Action p_action) {
 void JRPGInputReader::reset() {
 	for (int action = 0; action < ACTION_MAX; action++) {
 		was_pressed[action] = is_pressed(Action(action));
+		blocked[action] = was_pressed[action];
 		pressed_event[action] = false;
 		fresh[action] = false;
 		repeated[action] = false;
+		held_time[action] = 0;
 	}
 }
 
 void JRPGInputReader::update(double p_delta) {
 	for (int action = 0; action < ACTION_MAX; action++) {
 		const bool down = is_pressed(Action(action));
+		if (blocked[action]) {
+			blocked[action] = down; // Read again once released.
+			fresh[action] = false;
+			repeated[action] = false;
+			was_pressed[action] = down;
+			pressed_event[action] = false;
+			continue;
+		}
 		fresh[action] = pressed_event[action] || (down && !was_pressed[action]);
 		repeated[action] = fresh[action];
 		if (fresh[action]) {
@@ -74,7 +86,8 @@ void JRPGInputReader::update(double p_delta) {
 			// A hair of tolerance, so 24 steps of 1/60 s reach 24 frames.
 			if (held_time[action] + CMP_EPSILON >= next_repeat[action]) {
 				repeated[action] = true;
-				next_repeat[action] += REPEAT_INTERVAL_FRAMES / 60.0;
+				// One repeat per frame, the next one an interval after now (no catch-up after a long frame).
+				next_repeat[action] = MAX(next_repeat[action], held_time[action]) + REPEAT_INTERVAL_FRAMES / 60.0;
 			}
 		}
 		was_pressed[action] = down;
@@ -82,18 +95,23 @@ void JRPGInputReader::update(double p_delta) {
 	}
 }
 
-bool JRPGInputReader::handle_event(const Ref<InputEvent> &p_event, bool p_keep_press) {
+int JRPGInputReader::handle_event(const Ref<InputEvent> &p_event, bool p_keep_press) {
 	const InputMap *map = InputMap::get_singleton();
 	if (p_event.is_null() || !map) {
-		return false;
+		return -1;
 	}
 	for (int action = 0; action < ACTION_MAX; action++) {
 		if (map->has_action(ACTION_NAMES[action]) && p_event->is_action(ACTION_NAMES[action])) {
-			if (p_keep_press && p_event->is_action_pressed(ACTION_NAMES[action])) {
+			if (p_keep_press && p_event->is_action_pressed(ACTION_NAMES[action]) && !blocked[action]) {
 				pressed_event[action] = true;
 			}
-			return true;
+			return action;
 		}
 	}
-	return false;
+	for (const char *focus_action : FOCUS_ACTIONS) {
+		if (map->has_action(focus_action) && p_event->is_action(focus_action)) {
+			return FOCUS_NAVIGATION;
+		}
+	}
+	return -1;
 }

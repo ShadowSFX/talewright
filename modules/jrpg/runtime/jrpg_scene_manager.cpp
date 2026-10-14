@@ -451,8 +451,11 @@ void JRPGSceneManager::_simulation_step() {
 	}
 	// Read every step, so the direction pressed last wins even when it was pressed during a step.
 	const int direction = player->read_direction();
-	if (direction < 0 || transferring || mover->is_moving() || cell_cache.is_null()) {
-		return; // No moving while the screen fades.
+	// No moving while the screen fades, nor while a control has the focus: a message, a list or a screen reads the
+	// keys then (epic 10 review B4).
+	const bool interface_active = is_inside_tree() && get_viewport()->gui_get_focus_owner() != nullptr;
+	if (direction < 0 || transferring || interface_active || mover->is_moving() || cell_cache.is_null()) {
+		return;
 	}
 	const Ref<JRPGMapData> map_data = map->get_map_data();
 	const bool dash = player->is_dash_held() && map_data.is_valid() && !map_data->is_disable_dash();

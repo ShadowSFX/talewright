@@ -60,6 +60,18 @@ public:
 private:
 	static constexpr int MOVE_COUNT = JRPGInputReader::ACTION_RIGHT + 1; // The reader's four moves come first.
 
+public:
+	// What the page actions do (RM-TST-015: they also switch actors on menu screens).
+	enum PageMode {
+		PAGE_SCROLL, // Move a page of rows.
+		PAGE_SIGNAL, // Emit page_requested; the list stays as it is.
+		PAGE_NONE, // Not taken: they reach the screen's _unhandled_input.
+	};
+
+private:
+	PageMode page_mode = PAGE_SCROLL;
+	bool focused_by_click = false; // The click being handled is the one that gave the focus.
+
 	Array items; // Dictionaries: text, enabled, icon, right_text.
 	int columns = 1;
 	int selected = -1;
@@ -94,9 +106,13 @@ protected:
 	static void _bind_methods();
 	virtual void _update_theme_item_cache() override;
 	virtual bool _needs_process() const override;
+	// A right click anywhere cancels while the list has the focus (RM-INP-001; epic 10 review A13).
+	virtual void unhandled_input(const Ref<InputEvent> &p_event) override;
 
 public:
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
+	void set_page_mode(PageMode p_mode) { page_mode = p_mode; }
+	PageMode get_page_mode() const { return page_mode; }
 
 	// Adds the list's defaults (item height, spacing, colors, cursor margins) to Godot's default theme, as
 	// JRPGWindow::ensure_default_skin does for the skin.
@@ -130,3 +146,5 @@ public:
 
 	JRPGSelectableList();
 };
+
+VARIANT_ENUM_CAST(JRPGSelectableList::PageMode);

@@ -251,6 +251,7 @@ void JRPGMessageWindow::show_message(const String &p_text, const Ref<Texture2D> 
 	active = true;
 	set_pause_visible(false);
 	_apply_placement();
+	set_focus_mode(FOCUS_ALL); // Only while a message is under way (epic 10 review B5).
 	if (is_inside_tree()) {
 		grab_focus();
 		set_process_unhandled_input(true);
@@ -268,6 +269,7 @@ void JRPGMessageWindow::_finish() {
 	skipping = false;
 	set_pause_visible(false);
 	set_process_unhandled_input(false);
+	set_focus_mode(FOCUS_NONE); // A finished message takes no clicks or focus (choices may be shown beside it).
 	_update_process();
 	emit_signal(SNAME("message_finished"));
 }
@@ -299,7 +301,14 @@ void JRPGMessageWindow::_advance() {
 		}
 		wait_left = 0;
 	}
+	// Frames close to 1/60 s count as exactly one letter, so slight jitter does not give 0 then 2 letters; after a long
+	// frame the text catches up a few letters at a time (epic 10 review B12).
 	budget += delta * 60.0;
+	const double whole = Math::round(budget);
+	if (Math::abs(budget - whole) < 0.05) {
+		budget = whole;
+	}
+	budget = MIN(budget, double(MAX_LETTERS_PER_FRAME));
 	while (true) {
 		while (next_event < events.size() && events[next_event].at == shown) {
 			const Event event = events[next_event++];
@@ -358,20 +367,23 @@ void JRPGMessageWindow::_advance() {
 }
 
 void JRPGMessageWindow::gui_input(const Ref<InputEvent> &p_event) {
-	if (input_reader.handle_event(p_event, has_focus())) {
-		accept_event();
+	if (input_reader.handle_event(p_event, has_focus()) >= 0) {
+		accept_event(); // Its actions, and the focus keys: the focus stays while the message is under way.
 		return;
 	}
 	const Ref<InputEventMouseButton> button = p_event;
-	if (button.is_valid() && button->is_pressed() && button->get_button_index() == MouseButton::LEFT && has_focus()) {
+	const bool click = button.is_valid() && button->is_pressed() && (button->get_button_index() == MouseButton::LEFT || button->get_button_index() == MouseButton::RIGHT);
+	if (click && active) {
 		_press();
 		accept_event();
 	}
 }
 
 void JRPGMessageWindow::unhandled_input(const Ref<InputEvent> &p_event) {
+	// A click anywhere a control does not stop it: left as OK, right as cancel, both read the message (RM-INP-001).
 	const Ref<InputEventMouseButton> button = p_event;
-	if (button.is_valid() && button->is_pressed() && button->get_button_index() == MouseButton::LEFT && has_focus()) {
+	const bool click = button.is_valid() && button->is_pressed() && (button->get_button_index() == MouseButton::LEFT || button->get_button_index() == MouseButton::RIGHT);
+	if (click && active) {
 		_press();
 		get_viewport()->set_input_as_handled();
 	}
@@ -477,6 +489,7 @@ void JRPGMessageWindow::_bind_methods() {
 	BIND_CONSTANT(FACE_SIZE);
 	BIND_CONSTANT(FACE_SPACING);
 	BIND_CONSTANT(TEXT_COLOR_COUNT);
+	BIND_CONSTANT(MAX_LETTERS_PER_FRAME);
 
 	BIND_THEME_ITEM(Theme::DATA_TYPE_FONT, JRPGMessageWindow, font);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_FONT_SIZE, JRPGMessageWindow, font_size);
@@ -485,7 +498,7 @@ void JRPGMessageWindow::_bind_methods() {
 }
 
 JRPGMessageWindow::JRPGMessageWindow() {
-	set_focus_mode(FOCUS_ALL);
+	set_focus_mode(FOCUS_NONE); // Focusable while a message is under way.
 	text_colors = get_default_text_colors();
 	name_box = memnew(JRPGWindow);
 	name_box->set_name("NameBox");

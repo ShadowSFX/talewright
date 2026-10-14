@@ -71,6 +71,7 @@ public:
 	static constexpr int FACE_SIZE = 144;
 	static constexpr int FACE_SPACING = 20; // Between the face and the text.
 	static constexpr int TEXT_COLOR_COUNT = 32;
+	static constexpr int MAX_LETTERS_PER_FRAME = 4; // After a long frame the text catches up a few letters at a time.
 
 private:
 	// A run of text, or an icon (one character of the reveal), placed in the text area.

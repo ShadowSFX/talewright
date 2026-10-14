@@ -4,7 +4,7 @@
 		A game window: a tinted back, a border, and contents inside a padding, opening and closing from its middle.
 	</brief_description>
 	<description>
-		A window of the game's interface, such as a menu or a message box. It draws a back tinted by [member tone] and a nine-slice border over it, and lays its children out inside the padding, as [PanelContainer] does. [member openness] opens it from the middle: while it opens or closes, the frame is squashed into the band it opens through and the children show through that band only; closed, it draws nothing. [method open] and [method close] take [constant OPEN_FRAMES] frames at 60 frames a second and end with [signal opened] or [signal closed].
+		A window of the game's interface, such as a menu or a message box. It draws a back tinted by [member tone] and a nine-slice border over it, and lays its children out inside the padding, as [PanelContainer] does. [member openness] opens it from the middle: while it opens or closes, the frame is squashed into the band it opens through and the children show through that band only; closed, it draws nothing. Clicks land only on the part that shows; a closed window and its children take no clicks and keep no focus. [method open] and [method close] take [constant OPEN_FRAMES] frames at 60 frames a second and end with [signal opened] or [signal closed].
 		The skin comes from the theme items below, so a project theme or theme overrides replace it as for any control. Talewright's built-in skin is added to the default theme the first time a window needs it, so windows draw without any project file.
 		Authority: client. Windows only show what the game decides.
 	</description>

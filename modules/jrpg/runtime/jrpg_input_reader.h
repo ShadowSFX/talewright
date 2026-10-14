@@ -37,7 +37,8 @@ class InputEvent;
 
 // The game's actions as a focused window reads them (D-050): a press is new when the action was up the frame before
 // (Input's state, so presses made from code count too) or arrived as a GUI event while the window had focus (a tap
-// shorter than a frame). A key already down when the focus comes in is not new: it belongs to whatever gave the focus.
+// shorter than a frame). A key already down when the focus comes in is not new and does not repeat: it belongs to
+// whatever gave the focus, until it is released (epic 10 review A1).
 // Projects without the JRPG actions (not set up) read none, without an error each frame.
 // A held action repeats (RM-INP-004): on the press, again REPEAT_DELAY_FRAMES frames later, then every
 // REPEAT_INTERVAL_FRAMES (at 60 frames a second, counted in time).
@@ -69,15 +70,19 @@ public:
 	// A new press, or a repeat of a held one.
 	bool is_repeated(Action p_action) const { return repeated[p_action]; }
 	bool is_down(Action p_action) const { return was_pressed[p_action]; }
-	// For gui_input: whether p_event is one of the actions (the window then accepts it, so the viewport's ui_*
-	// navigation never moves the focus away); a press is kept for the next update() when p_keep_press.
-	bool handle_event(const Ref<InputEvent> &p_event, bool p_keep_press);
+	static constexpr int FOCUS_NAVIGATION = ACTION_MAX; // handle_event: one of the viewport's ui_* focus keys.
+
+	// For gui_input: which action p_event is (FOCUS_NAVIGATION for the viewport's focus keys, ui_focus_next and the
+	// like, so the window can take them and keep the focus; epic 10 review A2), or -1. A press of an action is kept
+	// for the next update() when p_keep_press.
+	int handle_event(const Ref<InputEvent> &p_event, bool p_keep_press);
 
 private:
 	bool was_pressed[ACTION_MAX] = {};
 	bool pressed_event[ACTION_MAX] = {};
 	bool fresh[ACTION_MAX] = {};
 	bool repeated[ACTION_MAX] = {};
+	bool blocked[ACTION_MAX] = {}; // Down when the focus came in: not read until released.
 	double held_time[ACTION_MAX] = {};
 	double next_repeat[ACTION_MAX] = {};
 };

@@ -4,8 +4,8 @@
 		A window listing items for the player to choose from, with a cursor, the game's controls and interface sounds.
 	</brief_description>
 	<description>
-		Shows [member items] in [member columns] and rows inside a [JRPGWindow], with the skin's cursor on the [member selected] item. The list takes the player's input while it has focus: [code]jrpg_up[/code], [code]jrpg_down[/code], [code]jrpg_left[/code] and [code]jrpg_right[/code] move the cursor (left and right with two columns or more), going round at the ends on a fresh press only, so a held key stops at the end; a held direction repeats [constant REPEAT_DELAY_FRAMES] frames after the press, then every [constant REPEAT_INTERVAL_FRAMES] (at 60 frames a second). [code]jrpg_page_prev[/code] and [code]jrpg_page_next[/code] move a page of rows; [code]jrpg_ok[/code] chooses the item under the cursor ([signal item_chosen]; a disabled item only buzzes, [signal item_refused]); [code]jrpg_cancel[/code] backs out ([signal cancelled]). A key already held when the list gets the focus is not a press for it.
-		With the mouse, pointing at an item moves the cursor there, clicking the item under the cursor chooses it, the right button cancels and the wheel scrolls.
+		Shows [member items] in [member columns] and rows inside a [JRPGWindow], with the skin's cursor on the [member selected] item. The list takes the player's input while it has focus: [code]jrpg_up[/code], [code]jrpg_down[/code], [code]jrpg_left[/code] and [code]jrpg_right[/code] move the cursor (left and right with two columns or more), going round at the ends on a fresh press only, so a held key stops at the end; a held direction repeats [constant REPEAT_DELAY_FRAMES] frames after the press, then every [constant REPEAT_INTERVAL_FRAMES] (at 60 frames a second). [code]jrpg_page_prev[/code] and [code]jrpg_page_next[/code] do what [member page_mode] says (a page of rows by default); [code]jrpg_ok[/code] chooses the item under the cursor ([signal item_chosen]; a disabled item only buzzes, [signal item_refused]); [code]jrpg_cancel[/code] backs out ([signal cancelled]). A key already held when the list gets the focus is neither a press nor a repeat for it until it is released. The viewport's focus keys ([code]ui_focus_next[/code], [code]ui_up[/code] and the like) are taken too, so the focus stays on the list.
+		With the mouse, pointing at an item moves the cursor there, clicking the item under the cursor chooses it (the click that gives the list the focus only moves the cursor), the right button cancels anywhere on the screen while the list has the focus, and the wheel scrolls. Dragging and touch scrolling are not supported yet.
 		The cursor, OK, cancel and buzzer sounds come from the System data of [member JRPGWindow.database], the project's database when none is set.
 		Authority: client. The list only reports what the player picks.
 	</description>
@@ -88,6 +88,9 @@
 		<member name="items" type="Array" setter="set_items" getter="get_items" default="[]">
 			The items, as dictionaries: [code]text[/code], [code]enabled[/code] (default [code]true[/code]), [code]icon[/code] (a [Texture2D], optional) and [code]right_text[/code] (optional).
 		</member>
+		<member name="page_mode" type="int" setter="set_page_mode" getter="get_page_mode" enum="JRPGSelectableList.PageMode" default="0">
+			What [code]jrpg_page_prev[/code] and [code]jrpg_page_next[/code] do: [constant PAGE_SCROLL] moves a page of rows, [constant PAGE_SIGNAL] emits [signal page_requested] (a menu screen switches actors), [constant PAGE_NONE] leaves them to the screen's own input handling.
+		</member>
 		<member name="selected" type="int" setter="set_selected" getter="get_selected" default="-1">
 			The item under the cursor, or [code]-1[/code]. Setting it moves the cursor at once, scrolling to show it, without a sound or a signal.
 		</member>
@@ -119,8 +122,23 @@
 				Emitted when the player chooses the disabled item [param index]; the buzzer sounds.
 			</description>
 		</signal>
+		<signal name="page_requested">
+			<param index="0" name="direction" type="int" />
+			<description>
+				Emitted when [member page_mode] is [constant PAGE_SIGNAL] and the player presses a page action: [param direction] is [code]1[/code] for the next page, [code]-1[/code] for the previous one.
+			</description>
+		</signal>
 	</signals>
 	<constants>
+		<constant name="PAGE_SCROLL" value="0" enum="PageMode">
+			The page actions move the view and the cursor by a page of rows.
+		</constant>
+		<constant name="PAGE_SIGNAL" value="1" enum="PageMode">
+			The page actions emit [signal page_requested]; the list stays as it is.
+		</constant>
+		<constant name="PAGE_NONE" value="2" enum="PageMode">
+			The page actions are not taken, so they reach the screen's [method Node._unhandled_input].
+		</constant>
 		<constant name="REPEAT_DELAY_FRAMES" value="24">
 			Frames a direction is held before it repeats.
 		</constant>
