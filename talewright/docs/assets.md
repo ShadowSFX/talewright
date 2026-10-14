@@ -24,6 +24,8 @@ Tiles are 48 × 48 pixels (D-034).
 | `tiles/buildings.png` | Door, windows (dark and lit), flower box, table, chair, rug, parquet, a bookshelf and a bed (two tiles each), stone tiles |
 | `characters/<name>.png` | Six characters (hero, mage, knight, villager_man, villager_woman, merchant): 192 × 192 sheets of 48 × 48 frames, rows facing up, right, down, left and 4 walk frames each, column 0 standing (spec 05) |
 | `faces/<name>.png` | A 144 × 144 portrait of each character |
+| `enemies/<name>.png` | Front-view battlers on transparent backgrounds: moss_blob (the starter Moss Blob), cave_bat, mushroom_imp, thorn_wolf, stone_golem, ember_wisp |
+| `battlebacks/<scene>_back.png`, `<scene>_ground.png` | 1280 × 720 battlebacks for grassland, forest and cave: an opaque backdrop and a ground layer in perspective, transparent above the horizon, so either half can be reused |
 
 Terrain textures repeat every tile, and autotile edges are shaped by waves that repeat every tile too, so
 neighboring tiles join without seams. Autotiles draw only their terrain: the area outside it is transparent, so a

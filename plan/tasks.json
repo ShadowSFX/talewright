@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "7.1.2.1 Generated character sheets and faces",
+  "last_completed": "7.1.2.2 Generated enemy battlers and battlebacks",
   "tasks": [
     {
       "id": "0",
@@ -2444,7 +2444,7 @@
       "test_strategy": "Run twice and compare hashes; a contact sheet of every direction and frame viewed for legibility.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "70f3604677",
       "notes": ""
     },
     {
@@ -2461,9 +2461,9 @@
         "Covered by the CC0 entry"
       ],
       "test_strategy": "Run twice and compare hashes; a composed battle preview viewed.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

@@ -33,6 +33,48 @@
       ],
       "pixels_sha256": "e4953f4a81f9fb62bcad77c66fae12ebe5a843ffe2cebeda2f29fa1df3e73e56"
     },
+    "battlebacks/cave_back.png": {
+      "size": [
+        1280,
+        720
+      ],
+      "pixels_sha256": "0d17721ba6fed3d513b432350bc0a10919432d8c1eef70207b3a90fd90961b20"
+    },
+    "battlebacks/cave_ground.png": {
+      "size": [
+        1280,
+        720
+      ],
+      "pixels_sha256": "08d0e7c9c2e5a5590aa6a371cc99d0598222b82a8c2792cb27b90d370240c280"
+    },
+    "battlebacks/forest_back.png": {
+      "size": [
+        1280,
+        720
+      ],
+      "pixels_sha256": "78cf79ca13f57cfc6ca303e76e2fe810874dcc33e04ec9e66cbb9137de9094c1"
+    },
+    "battlebacks/forest_ground.png": {
+      "size": [
+        1280,
+        720
+      ],
+      "pixels_sha256": "ef11560cf91831102e383e96e3508eb8090eea9146ee6615cd00ee8cd540e3d9"
+    },
+    "battlebacks/grassland_back.png": {
+      "size": [
+        1280,
+        720
+      ],
+      "pixels_sha256": "55ab962e9cff2069c76df380a5937fe6727a6f2f9e7c6d01c77749725702aa94"
+    },
+    "battlebacks/grassland_ground.png": {
+      "size": [
+        1280,
+        720
+      ],
+      "pixels_sha256": "e17bf8720f5ef834f1f88cb4cd3083526f4916103bdf4702146d63a6f4178b36"
+    },
     "characters/hero.png": {
       "size": [
         192,
@@ -74,6 +116,48 @@
         192
       ],
       "pixels_sha256": "b77408f3067e5bb41b71f28819174f31ab029dd987b6d80f7ce16d1d1907f5b2"
+    },
+    "enemies/cave_bat.png": {
+      "size": [
+        176,
+        116
+      ],
+      "pixels_sha256": "4afa1196c52ff2fc1d9f68226c811a8a44eb56414ff4f9044b07f0b57199aa7e"
+    },
+    "enemies/ember_wisp.png": {
+      "size": [
+        120,
+        152
+      ],
+      "pixels_sha256": "14307308ab492bd71db46e2a8013a88354081439ffd15c82cc42e60e9e38a1a4"
+    },
+    "enemies/moss_blob.png": {
+      "size": [
+        136,
+        104
+      ],
+      "pixels_sha256": "4ef8e48992585e12df45d0fdcb93846eba442d301aed933b082676fcf5a5ecca"
+    },
+    "enemies/mushroom_imp.png": {
+      "size": [
+        116,
+        136
+      ],
+      "pixels_sha256": "6c1ec642cfa84c81cbfe99c5371f5f7c861182a344ac0746e7ecb1000f3e1874"
+    },
+    "enemies/stone_golem.png": {
+      "size": [
+        168,
+        192
+      ],
+      "pixels_sha256": "90630352bce9f12dd214514db5951ce49c5aba719c06dbc3b8ea62cdcfb2bf2d"
+    },
+    "enemies/thorn_wolf.png": {
+      "size": [
+        176,
+        140
+      ],
+      "pixels_sha256": "36873f7867a73d254b68ff2a4a315f89fd19ddde735bde6a09f3f56442a2c8f8"
     },
     "faces/hero.png": {
       "size": [

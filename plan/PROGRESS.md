@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 01:13 -0600
+- **Updated:** 2026-10-14 01:16 -0600
 - **Current task:** none
-- **Last completed:** 7.1.2.1 Generated character sheets and faces
-- **Next task:** 7.1.2.2 Generated enemy battlers and battlebacks
-- **Done leaf tasks:** 84
+- **Last completed:** 7.1.2.2 Generated enemy battlers and battlebacks
+- **Next task:** 7.1.2.3 Generated icon set and window skin
+- **Done leaf tasks:** 85
 <!-- status:end -->
 
 ## Log
@@ -230,4 +230,6 @@
 | 2026-10-14 01:09 -0600 | 7.1.1 | done: Generated tiles and autotile templates — Deterministic asset generator (talewright/tools/generate_assets.py + asset_gen/): 48 px tiles (D-034); blob autotile sheets in the spec 05 format (grass, dirt path, sand; water animated in 3 frames) with tile-periodic textures and edge waves so neighbors join seamlessly; 4x4 wall sheets (stone, brick, wood, roof); outdoor and building object sheets (ground fills, decorations, two-tile trees and lamp, props, door, windows, furniture); manifest.json of pixel hashes and --check; CC0 entry in talewright/assets/LICENSES.md; guide talewright/docs/assets.md; evidence plan/evidence/assets/7.1.1-* (containers: 7.1 in_progress->pending, 7 in_progress->pending) | 5ae44ffd2f |
 | 2026-10-14 01:10 -0600 | - | imported 3 new / 1 updated tasks | |
 | 2026-10-14 01:10 -0600 | 7.1.2.1 | started: Generated character sheets and faces (containers: 7.1.2 pending->in_progress, 7.1 pending->in_progress, 7 pending->in_progress) |  |
-| 2026-10-14 01:13 -0600 | 7.1.2.1 | done: Generated character sheets and faces — Six original characters (hero, mage, knight, villager man and woman, merchant) as spec 05 sheets (4 rows up/right/down/left x 4 walk frames of 48x48, column 0 standing; left mirrors right) drawn from distance-field parts with lighting and outlines, plus 144x144 face portraits; hair split behind/in front of the head; deterministic (22 images match manifest); evidence plan/evidence/assets/7.1.2.1-characters-and-faces.png (containers: 7.1.2 in_progress->pending, 7.1 in_progress->pending, 7 in_progress->pending) | pending |
+| 2026-10-14 01:13 -0600 | 7.1.2.1 | done: Generated character sheets and faces — Six original characters (hero, mage, knight, villager man and woman, merchant) as spec 05 sheets (4 rows up/right/down/left x 4 walk frames of 48x48, column 0 standing; left mirrors right) drawn from distance-field parts with lighting and outlines, plus 144x144 face portraits; hair split behind/in front of the head; deterministic (22 images match manifest); evidence plan/evidence/assets/7.1.2.1-characters-and-faces.png (containers: 7.1.2 in_progress->pending, 7.1 in_progress->pending, 7 in_progress->pending) | 70f3604677 |
+| 2026-10-14 01:13 -0600 | 7.1.2.2 | started: Generated enemy battlers and battlebacks (containers: 7.1.2 pending->in_progress, 7.1 pending->in_progress, 7 pending->in_progress) |  |
+| 2026-10-14 01:16 -0600 | 7.1.2.2 | done: Generated enemy battlers and battlebacks — Six original front-view enemy battlers (moss_blob for the starter Moss Blob, cave_bat, mushroom_imp, thorn_wolf, stone_golem, ember_wisp) and three 1280x720 battleback pairs (grassland, forest, cave: opaque backdrop + perspective ground transparent above the horizon); deterministic (34 images match manifest); evidence plan/evidence/assets/7.1.2.2-battles.png (containers: 7.1.2 in_progress->pending, 7.1 in_progress->pending, 7 in_progress->pending) | pending |
