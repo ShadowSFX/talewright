@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.4.2 Local port on the running map",
+  "last_completed": "9.5.1.1 Message commands: Show Text, Show Choices, Input Number",
   "tasks": [
     {
       "id": "0",
@@ -4098,7 +4098,7 @@
         "plan/evidence/jrpg/9.4.2-event-message-2.png",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "3659d5201b",
       "notes": ""
     },
     {
@@ -4123,17 +4123,87 @@
       "id": "9.5.1",
       "parent": "9.5",
       "title": "Message and flow commands",
-      "description": "Show Text, Show Choices, Input Number, Conditional Branch, Loop/Break, Label/Jump, Common Event, Comment, Exit.",
+      "description": "Show Text, Show Choices, Input Number, Conditional Branch, Loop/Break, Label/Jump, Common Event, Comment, Exit. Split into 9.5.1.1 (message commands), 9.5.1.2 (Conditional Branch) and 9.5.1.3 (loop, labels, common event, comment, exit).",
       "dependencies": [],
       "priority": 1,
       "acceptance_criteria": [
-        "One doctest per command"
+        "9.5.1.1, 9.5.1.2 and 9.5.1.3 done"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
       "commit": "",
       "notes": "",
       "status": "pending"
+    },
+    {
+      "id": "9.5.1.1",
+      "parent": "9.5.1",
+      "title": "Message commands: Show Text, Show Choices, Input Number",
+      "priority": 1,
+      "dependencies": [],
+      "description": "The first built-in commands, registered with JRPGCommandRegistry: Show Text (RM-CMD-001: text with control codes, face, speaker name, background, position; text_key per D-026, assigned by the authoring tools, the local port translating it when a translation exists), Show Choices (RM-CMD-002: up to six choices, blank ones hidden, background, position, default, cancel = disallowed / branch / a choice; one child list per choice and one for cancel; the branch of the answer runs), Input Number (RM-CMD-003: variable, 1-8 digits; the answer is stored in the variable). A Show Text directly followed by Show Choices or Input Number does not wait for the player at its end: the choices or the number show beside it. Metadata (category, display name, summary, authority, usable in, can wait, ID parameters, child lists).",
+      "acceptance_criteria": [
+        "One doctest per command (fake presenter): Show Text asks with its parameters and goes on when read; Show Choices runs the chosen branch, the cancel branch, or the choice cancel maps to; Input Number stores the number",
+        "Commands pack and unpack through a command list (registry codes); a message before choices does not wait"
+      ],
+      "test_strategy": "Doctests [JRPG].",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_message_commands.h",
+        "modules/jrpg/core/jrpg_message_commands.cpp",
+        "modules/jrpg/core/jrpg_interpreter.h",
+        "modules/jrpg/core/jrpg_interpreter.cpp",
+        "modules/jrpg/runtime/jrpg_local_port.h",
+        "modules/jrpg/runtime/jrpg_local_port.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGShowTextCommand.xml",
+        "modules/jrpg/doc_classes/JRPGShowChoicesCommand.xml",
+        "modules/jrpg/doc_classes/JRPGInputNumberCommand.xml",
+        "modules/jrpg/doc_classes/JRPGInterpreter.xml",
+        "modules/jrpg/tests/test_jrpg_message_commands.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "9.5.1.2",
+      "parent": "9.5.1",
+      "title": "Conditional Branch",
+      "priority": 1,
+      "dependencies": [
+        "9.5.1.1"
+      ],
+      "description": "Conditional Branch (RM-CMD-010) with an else branch option and the conditions the slice's systems support: switch, variable (compared with a constant or another variable), self switch, timer, actor (in party, name, class, skill, weapon, armor, state), character facing (player or an event of the map), gold, items, weapons and armors (optionally counting equipped ones), button (pressed, triggered, repeated) and script (a formula). Conditions whose systems do not exist yet (enemies in battle, vehicles) are false with one warning until those epics add them.",
+      "acceptance_criteria": [
+        "One doctest per condition kind, both outcomes, the else branch",
+        "Missing targets (a dangling actor, an event not on the map) are false with a warning"
+      ],
+      "test_strategy": "Doctests [JRPG].",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.5.1.3",
+      "parent": "9.5.1",
+      "title": "Loop, Break Loop, Label, Jump to Label, Common Event, Comment, Exit",
+      "priority": 1,
+      "dependencies": [
+        "9.5.1.1"
+      ],
+      "description": "Loop (RM-CMD-011, a child list run again and again), Break Loop (RM-CMD-012), Exit Event Processing (RM-CMD-013), Common Event (RM-CMD-014, JRPGInterpreter.call_common_event), Label (RM-CMD-015) and Jump to Label (RM-CMD-016, labels on the same page), Comment (RM-CMD-017, does nothing; free text), as registered built-in commands with metadata.",
+      "acceptance_criteria": [
+        "One doctest per command",
+        "Each packs and unpacks through a command list; a saved run inside a Loop resumes"
+      ],
+      "test_strategy": "Doctests [JRPG].",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "9.5.2",
@@ -4275,7 +4345,7 @@
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
       "commit": "",
-      "notes": "",
+      "notes": "From 9.5.1.1 (D-065): text-bearing commands (Show Text, Show Choices) get text_key = '<owner>.k<random>' when the editor creates them (owner: map<m>.ev<e>, ce<n>, troop<t>.p<p>); keys survive edits and moves.",
       "status": "pending"
     },
     {
@@ -4312,7 +4382,7 @@
       "test_strategy": "Bridge.",
       "files": [],
       "commit": "",
-      "notes": ""
+      "notes": "From 9.5.1.1 (D-065): authoring tools that create Show Text / Show Choices commands assign their text_key as the event editor does ('<owner>.k<random>')."
     },
     {
       "id": "9.9",

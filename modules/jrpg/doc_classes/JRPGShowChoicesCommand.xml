@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGShowChoicesCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: lets the player pick one of up to six choices, and runs its branch.
+	</brief_description>
+	<description>
+		Asks the player to pick one of [member choices] through the presentation port (a [code]"choices"[/code] request, see [JRPGLocalPort]); blank choices are not shown. The commands of the choice picked then run ([method get_branch]), and the event goes on after this command.
+		Pressing cancel is refused, runs [member cancel_branch], or picks a choice, as [member cancel] says. Without an answer (nothing presents the request), what cancel does happens, or the default choice is taken when cancel is refused. An answer that is not one of the choices runs no branch, with a warning.
+		Authority: both (it presents, and the branch taken changes what the event does).
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_branch" qualifiers="const">
+			<return type="JRPGCommandList" />
+			<param index="0" name="choice" type="int" />
+			<description>
+				Returns the commands that run when choice [param choice] (0 to 5) is picked.
+			</description>
+		</method>
+		<method name="set_branch">
+			<return type="void" />
+			<param index="0" name="choice" type="int" />
+			<param index="1" name="list" type="JRPGCommandList" />
+			<description>
+				Sets the commands that run when choice [param choice] (0 to 5) is picked.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="background" type="int" setter="set_background" getter="get_background" enum="JRPGShowTextCommand.Background" default="0">
+			The choice window's background.
+		</member>
+		<member name="branch_1" type="JRPGCommandList" setter="set_branch" getter="get_branch">
+			The commands of the first choice.
+		</member>
+		<member name="branch_2" type="JRPGCommandList" setter="set_branch" getter="get_branch">
+			The commands of the second choice.
+		</member>
+		<member name="branch_3" type="JRPGCommandList" setter="set_branch" getter="get_branch">
+			The commands of the third choice.
+		</member>
+		<member name="branch_4" type="JRPGCommandList" setter="set_branch" getter="get_branch">
+			The commands of the fourth choice.
+		</member>
+		<member name="branch_5" type="JRPGCommandList" setter="set_branch" getter="get_branch">
+			The commands of the fifth choice.
+		</member>
+		<member name="branch_6" type="JRPGCommandList" setter="set_branch" getter="get_branch">
+			The commands of the sixth choice.
+		</member>
+		<member name="cancel" type="int" setter="set_cancel" getter="get_cancel" default="-2">
+			What cancel does: [constant CANCEL_DISALLOWED], [constant CANCEL_BRANCH], or the index of the choice it picks (0 to 5).
+		</member>
+		<member name="cancel_branch" type="JRPGCommandList" setter="set_cancel_branch" getter="get_cancel_branch">
+			The commands that run when cancel is pressed and [member cancel] is [constant CANCEL_BRANCH].
+		</member>
+		<member name="choices" type="PackedStringArray" setter="set_choices" getter="get_choices" default="PackedStringArray()">
+			The choices' texts, with control codes; up to [constant MAX_CHOICES]. A blank choice is not shown.
+		</member>
+		<member name="default_choice" type="int" setter="set_default_choice" getter="get_default_choice" default="0">
+			The choice the cursor starts on (0 to 5), or [code]-1[/code] for none.
+		</member>
+		<member name="placement" type="int" setter="set_placement" getter="get_placement" enum="JRPGShowChoicesCommand.Placement" default="2">
+			Where the choice window shows beside the message window: left, middle or right.
+		</member>
+		<member name="text_key" type="String" setter="set_text_key" getter="get_text_key" default="&quot;&quot;">
+			The key the choices are translated through: choice [i]n[/i] through [code]"&lt;text_key&gt;.&lt;n&gt;"[/code], counting from 1.
+		</member>
+	</members>
+	<constants>
+		<constant name="PLACEMENT_LEFT" value="0" enum="Placement">
+			At the left.
+		</constant>
+		<constant name="PLACEMENT_MIDDLE" value="1" enum="Placement">
+			In the middle.
+		</constant>
+		<constant name="PLACEMENT_RIGHT" value="2" enum="Placement">
+			At the right.
+		</constant>
+		<constant name="MAX_CHOICES" value="6">
+			The most choices a command holds.
+		</constant>
+		<constant name="CANCEL_DISALLOWED" value="-2">
+			Cancel does nothing: the player must pick a choice.
+		</constant>
+		<constant name="CANCEL_BRANCH" value="-1">
+			Cancel runs [member cancel_branch]. Also the answer that stands for cancel.
+		</constant>
+	</constants>
+</class>

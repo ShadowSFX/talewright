@@ -59,6 +59,7 @@
 #include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_map_list.h"
 #include "modules/jrpg/core/jrpg_map_shapes.h"
+#include "modules/jrpg/core/jrpg_message_commands.h"
 #include "modules/jrpg/core/jrpg_message_text.h"
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_mover.h"
@@ -184,6 +185,13 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGInterpreter);
 		GDREGISTER_CLASS(JRPGEventRunner);
 		GDREGISTER_CLASS(JRPGPresentationPort);
+		// The built-in event commands (task 9.5), known to command lists by their codes.
+		GDREGISTER_CLASS(JRPGShowTextCommand);
+		GDREGISTER_CLASS(JRPGShowChoicesCommand);
+		GDREGISTER_CLASS(JRPGInputNumberCommand);
+		JRPGCommandRegistry::register_command(JRPGShowTextCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGShowChoicesCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGInputNumberCommand::get_class_static());
 		GDREGISTER_CLASS(JRPGReferenceScanner);
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotile); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotileResolver);

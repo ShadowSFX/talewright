@@ -60,6 +60,12 @@
 				Returns the index of the next command in each frame, outermost first: where the run is.
 			</description>
 		</method>
+		<method name="get_next_command" qualifiers="const">
+			<return type="JRPGEventCommand" />
+			<description>
+				Returns the command after the current one in the same list, or [code]null[/code] where the list ends.
+			</description>
+		</method>
 		<method name="get_owner" qualifiers="const">
 			<return type="String" />
 			<description>

@@ -35,6 +35,7 @@
 #include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
 #include "core/object/object.h"
+#include "core/string/translation_server.h"
 #include "scene/resources/texture.h"
 
 #include "modules/jrpg/core/jrpg_database.h"
@@ -91,6 +92,15 @@ String JRPGLocalPort::_expand(const String &p_text) const {
 	return game_state.is_valid() ? JRPGMessageText::expand(p_text, game_state) : p_text;
 }
 
+String JRPGLocalPort::_translated(const String &p_key, const String &p_source) {
+	TranslationServer *server = TranslationServer::get_singleton();
+	if (p_key.is_empty() || !server) {
+		return p_source;
+	}
+	const String translated = server->translate(StringName(p_key));
+	return translated == p_key ? p_source : translated; // No translation: the source text.
+}
+
 void JRPGLocalPort::set_windows(JRPGMessageWindow *p_message, JRPGChoiceWindow *p_choices, JRPGNumberInputWindow *p_number, JRPGGoldWindow *p_gold) {
 	if (JRPGMessageWindow *old = _message_window()) {
 		old->disconnect(SNAME("message_finished"), callable_mp(this, &JRPGLocalPort::_on_message_finished));
@@ -138,7 +148,11 @@ void JRPGLocalPort::show_request(int p_id, const StringName &p_kind, const Dicti
 					WARN_PRINT(vformat("JRPG: the face %s of a message cannot be loaded; the message shows without it.", face_path));
 				}
 			}
-			window->show_message(_expand(p_params.get("text", String())), face, _expand(p_params.get("speaker", String())),
+			String text = _translated(p_params.get("text_key", String()), p_params.get("text", String()));
+			if (bool(p_params.get("no_wait", false))) {
+				text += "\\^"; // Ends as soon as it is shown: choices or a number follow beside it.
+			}
+			window->show_message(_expand(text), face, _expand(p_params.get("speaker", String())),
 					JRPGMessageWindow::Background(read_int(p_params, "background", JRPGMessageWindow::BACKGROUND_WINDOW, 0, JRPGMessageWindow::BACKGROUND_TRANSPARENT)),
 					JRPGMessageWindow::Placement(read_int(p_params, "placement", JRPGMessageWindow::PLACEMENT_BOTTOM, 0, JRPGMessageWindow::PLACEMENT_BOTTOM)));
 			return;
@@ -147,9 +161,11 @@ void JRPGLocalPort::show_request(int p_id, const StringName &p_kind, const Dicti
 		if (JRPGChoiceWindow *window = _choice_window()) {
 			PackedStringArray choices;
 			const Variant given = p_params.get("choices", Variant());
+			const String key = p_params.get("text_key", String());
 			if (given.get_type() == Variant::ARRAY || given.get_type() == Variant::PACKED_STRING_ARRAY) {
-				for (const String &choice : PackedStringArray(given)) {
-					choices.push_back(_expand(choice));
+				const PackedStringArray sources = given;
+				for (int i = 0; i < sources.size(); i++) {
+					choices.push_back(_expand(_translated(key.is_empty() ? key : key + "." + itos(i + 1), sources[i])));
 				}
 			}
 			window->show_choices(choices, read_int(p_params, "default", 0, -1, INT32_MAX), read_int(p_params, "cancel", JRPGChoiceWindow::CANCEL_DISALLOWED, JRPGChoiceWindow::CANCEL_DISALLOWED, INT32_MAX),

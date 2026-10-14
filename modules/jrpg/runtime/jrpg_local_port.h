@@ -44,11 +44,14 @@ class JRPGNumberInputWindow;
 
 // The presentation port of a game played here (spec 03 "Local port"; task 9.4.2, D-064): shows the events' requests in
 // the epic 10 windows and answers them when the player is done.
-// - "message" {text, face, speaker, background, placement}: the text (control codes; \V, \N, \P and \G expanded with the
-//   game state) in the message window, the face (a texture path; an AtlasTexture picks one face of a sheet) on its
-//   left and the speaker's name above; answered with true once read. A \$ in the text shows the gold window.
-// - "choices" {choices, default, cancel, placement, background}: the choice window beside the message window; answered
-//   with the index chosen (JRPGChoiceWindow::CANCEL_BRANCH for the cancel branch), then it closes.
+// - "message" {text, text_key, face, speaker, background, placement, no_wait}: the text (translated through text_key
+//   when the project has a translation, D-026; control codes, \V, \N, \P and \G expanded with the game state) in the
+//   message window, the face (a texture path; an AtlasTexture picks one face of a sheet) on its left and the speaker's
+//   name above; answered with true once read, or as soon as it is shown with no_wait (choices follow beside it). A \$
+//   in the text shows the gold window.
+// - "choices" {choices, text_key, default, cancel, placement, background}: the choice window beside the message window
+//   (choice n translated through "<text_key>.<n>"); answered with the index chosen (JRPGChoiceWindow::CANCEL_BRANCH for
+//   the cancel branch), then it closes.
 // - "number" {digits, value}: the number input window beside the message window; answered with the number, then it
 //   closes.
 // The message window stays open while requests that sit beside it follow one another; one that no request uses any
@@ -70,6 +73,8 @@ class JRPGLocalPort : public JRPGPresentationPort {
 	JRPGNumberInputWindow *_number_window() const;
 	JRPGGoldWindow *_gold_window() const;
 	String _expand(const String &p_text) const;
+	// p_source, or its translation through p_key when the project has one (D-026).
+	static String _translated(const String &p_key, const String &p_source);
 	void _on_message_finished();
 	void _on_choice_made(int p_index);
 	void _on_number_entered(int p_value);

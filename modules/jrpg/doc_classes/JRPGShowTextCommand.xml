@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGShowTextCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: shows a message for the player to read.
+	</brief_description>
+	<description>
+		Asks the player to read [member text] through the presentation port (a [code]"message"[/code] request, see [JRPGLocalPort]), with an optional face on the left and a speaker name above, then goes on once it was read. The text may hold control codes (see [JRPGMessageText]). When the next command is Show Choices or Input Number, the message does not wait for the player at its end: they show beside it.
+		Authority: client (it only presents).
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="background" type="int" setter="set_background" getter="get_background" enum="JRPGShowTextCommand.Background" default="0">
+			The message window's background: a window, a dimmed band or nothing.
+		</member>
+		<member name="face" type="String" setter="set_face" getter="get_face" default="&quot;&quot;">
+			The path of the texture drawn on the left of the message; an [AtlasTexture] picks one face of a sheet. Empty: no face.
+		</member>
+		<member name="placement" type="int" setter="set_placement" getter="get_placement" enum="JRPGShowTextCommand.Placement" default="2">
+			Where the message window shows: at the top, in the middle or at the bottom of the screen.
+		</member>
+		<member name="speaker" type="String" setter="set_speaker" getter="get_speaker" default="&quot;&quot;">
+			The name shown above the message. Empty: no name box.
+		</member>
+		<member name="text" type="String" setter="set_text" getter="get_text" default="&quot;&quot;">
+			The text, with control codes. Four lines fit in the window.
+		</member>
+		<member name="text_key" type="String" setter="set_text_key" getter="get_text_key" default="&quot;&quot;">
+			The key the text is translated through ("map3.ev7.k9f2c1"). The authoring tools give it when they create the command; when the project has a translation for it, the player reads the translation.
+		</member>
+	</members>
+	<constants>
+		<constant name="BACKGROUND_WINDOW" value="0" enum="Background">
+			The message window's frame and background.
+		</constant>
+		<constant name="BACKGROUND_DIM" value="1" enum="Background">
+			A translucent dark band.
+		</constant>
+		<constant name="BACKGROUND_TRANSPARENT" value="2" enum="Background">
+			No background: the text alone.
+		</constant>
+		<constant name="PLACEMENT_TOP" value="0" enum="Placement">
+			At the top of the screen.
+		</constant>
+		<constant name="PLACEMENT_MIDDLE" value="1" enum="Placement">
+			In the middle of the screen.
+		</constant>
+		<constant name="PLACEMENT_BOTTOM" value="2" enum="Placement">
+			At the bottom of the screen.
+		</constant>
+	</constants>
+</class>

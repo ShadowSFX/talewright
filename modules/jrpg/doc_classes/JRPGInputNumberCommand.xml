@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGInputNumberCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: lets the player enter a number and stores it in a variable.
+	</brief_description>
+	<description>
+		Asks the player for a number of [member digits] digits through the presentation port (a [code]"number"[/code] request starting from the variable's value, see [JRPGLocalPort]) and stores it in variable [member variable_id], kept within the digits asked for. Without an answer the variable stays as it is.
+		Authority: both (it presents, and changes a variable).
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="digits" type="int" setter="set_digits" getter="get_digits" default="1">
+			How many digits the number has: 1 to [constant MAX_DIGITS].
+		</member>
+		<member name="variable_id" type="int" setter="set_variable_id" getter="get_variable_id" default="1">
+			The variable the number goes to.
+		</member>
+	</members>
+	<constants>
+		<constant name="MAX_DIGITS" value="8">
+			The most digits a number can have.
+		</constant>
+	</constants>
+</class>

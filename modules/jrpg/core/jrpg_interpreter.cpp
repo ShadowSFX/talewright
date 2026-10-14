@@ -259,6 +259,15 @@ Ref<JRPGEventCommand> JRPGInterpreter::get_current_command() const {
 	return frame.index < frame.list->get_command_count() ? frame.list->get_command(frame.index) : Ref<JRPGEventCommand>();
 }
 
+Ref<JRPGEventCommand> JRPGInterpreter::get_next_command() const {
+	if (frames.is_empty()) {
+		return Ref<JRPGEventCommand>();
+	}
+	const Frame &top = frames[frames.size() - 1];
+	const int next = top.index + 1;
+	return next < top.list->get_command_count() ? top.list->get_command(next) : Ref<JRPGEventCommand>();
+}
+
 PackedInt32Array JRPGInterpreter::get_indexes() const {
 	PackedInt32Array indexes;
 	for (const Frame &frame : frames) {
@@ -364,6 +373,7 @@ void JRPGInterpreter::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("wait_steps", "steps"), &JRPGInterpreter::wait_steps);
 	ClassDB::bind_method(D_METHOD("get_wait_left"), &JRPGInterpreter::get_wait_left);
 	ClassDB::bind_method(D_METHOD("get_current_command"), &JRPGInterpreter::get_current_command);
+	ClassDB::bind_method(D_METHOD("get_next_command"), &JRPGInterpreter::get_next_command);
 	ClassDB::bind_method(D_METHOD("get_depth"), &JRPGInterpreter::get_depth);
 	ClassDB::bind_method(D_METHOD("get_indexes"), &JRPGInterpreter::get_indexes);
 	ClassDB::bind_method(D_METHOD("set_port", "port"), &JRPGInterpreter::set_port);

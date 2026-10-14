@@ -147,6 +147,8 @@ public:
 	int get_wait_left() const { return wait_left; }
 	// The command being run, or the next one to run; null when idle.
 	Ref<JRPGEventCommand> get_current_command() const;
+	// The command after that one in the same list, or null where the list ends (Show Text looks for choices after it).
+	Ref<JRPGEventCommand> get_next_command() const;
 	// How deep the frame stack is (1: the list started with).
 	int get_depth() const { return frames.size(); }
 	// The index of the next command in each frame, outermost first (where the run is).
