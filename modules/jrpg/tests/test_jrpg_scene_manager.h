@@ -31,7 +31,10 @@
 
 #pragma once
 
+#include "core/input/input.h"
+#include "core/input/input_map.h"
 #include "core/io/resource_saver.h"
+#include "scene/2d/camera_2d.h"
 #include "scene/2d/node_2d.h"
 #include "scene/audio/audio_stream_player.h"
 #include "scene/main/scene_tree.h"
@@ -49,8 +52,11 @@
 #include "modules/jrpg/core/jrpg_game_state.h"
 #include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_map_list.h"
+#include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
+#include "modules/jrpg/core/jrpg_table.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
+#include "modules/jrpg/runtime/jrpg_player.h"
 #include "modules/jrpg/runtime/jrpg_scene_manager.h"
 #include "modules/jrpg/tests/jrpg_test_warnings.h"
 
@@ -394,6 +400,139 @@ TEST_CASE("[SceneTree][JRPG][SceneManager] Autostart begins a new game once the 
 	SceneTree::get_singleton()->process(0);
 	CHECK((continuing->get_game_state() == saved && continuing->get_map_id() == 2));
 	memdelete(continuing);
+}
+
+// A 6 x 4 meadow with a wall down column 3, on tileset 1 (palette 1 open ground, 2 a blocked wall); the player starts
+// at (1, 1).
+static void add_meadow(Fixture &f, bool p_disable_dash = false) {
+	Ref<JRPGTable> tilesets;
+	tilesets.instantiate();
+	tilesets->set_entry_class("JRPGTilesetData");
+	tilesets->set_maximum(1);
+	const Ref<JRPGTilesetData> tileset = tilesets->get_entry(1);
+	tileset->set_flags(PackedInt32Array({ 0, 0, JRPGTilesetData::pack_flags(JRPGTilesetData::PASS_BLOCKED, 0, 0, 0, 0) }));
+	f.db->set_table(JRPGDatabase::TABLE_TILESETS, tilesets);
+	Ref<JRPGMapData> meadow = map_data(Vector2i(6, 4), 1);
+	meadow->set_tileset_id(1);
+	meadow->set_disable_dash(p_disable_dash);
+	for (int y = 0; y < 4; y++) {
+		for (int x = 0; x < 6; x++) {
+			meadow->paint(JRPGMapData::LAYER_GROUND, PackedInt32Array({ meadow->get_cell_index(Vector2i(x, y)) }), PackedInt32Array({ x == 3 ? 2 : 1 }));
+		}
+	}
+	REQUIRE(f.list->add_map_with_id(9, "Meadow", save_map(p_disable_dash ? "Calm" : "Meadow", meadow)) == OK);
+	f.db->get_system()->set_start_map_id(9);
+	f.db->get_system()->set_start_cell(Vector2i(1, 1));
+}
+
+static void hold(const char *p_action, bool p_pressed) {
+	if (!InputMap::get_singleton()->has_action(p_action)) {
+		InputMap::get_singleton()->add_action(p_action);
+	}
+	if (p_pressed) {
+		Input::get_singleton()->action_press(p_action);
+	} else {
+		Input::get_singleton()->action_release(p_action);
+	}
+}
+
+TEST_CASE("[SceneTree][JRPG][SceneManager] The player walks with the direction actions, stops at walls and dashes") {
+	Fixture f;
+	add_meadow(f);
+	JRPGSceneManager *m = f.manager;
+	REQUIRE(m->start_new_game(5) == OK);
+	JRPGPlayer *player = m->get_player();
+	REQUIRE(player);
+	CHECK(player->get_parent() == m->get_map());
+	CHECK((player->get_cell() == Vector2i(1, 1) && player->get_position() == Vector2(72, 72))); // The middle of the cell.
+	CHECK(player->get_z_index() == JRPGMap::Z_CHARACTERS);
+
+	// Holding right: the step starts at once (the cell is the next one), takes 20 steps, then the wall stops it.
+	hold("jrpg_right", true);
+	m->run_steps(1);
+	CHECK((player->is_moving() && player->get_cell() == Vector2i(2, 1)));
+	CHECK(f.state()->get_player_cell() == Vector2i(2, 1));
+	m->run_steps(10);
+	CHECK(player->get_position().is_equal_approx(Vector2(96, 72))); // Halfway.
+	m->run_steps(10);
+	CHECK((!player->is_moving() && player->get_position() == Vector2(120, 72)));
+	CHECK(f.state()->get_steps() == 1);
+	m->run_steps(60); // The wall.
+	CHECK((player->get_cell() == Vector2i(2, 1) && f.state()->get_steps() == 1));
+	CHECK(f.state()->get_player_direction() == JRPGSystemData::DIRECTION_RIGHT);
+
+	// Up pressed while right is held: the direction pressed last wins; frames run the steps as the clock says.
+	hold("jrpg_up", true);
+	for (int i = 0; i < 21; i++) {
+		SceneTree::get_singleton()->process(1.0 / 60.0);
+	}
+	CHECK((player->get_cell() == Vector2i(2, 0) && !player->is_moving()));
+	hold("jrpg_up", false);
+	hold("jrpg_right", false);
+	m->run_steps(1);
+	CHECK(f.state()->get_player_direction() == JRPGSystemData::DIRECTION_UP); // Released: it stands facing up.
+
+	// Dashing: one speed level faster, 10 steps a cell. Released before the step ends, the player stops there (held,
+	// it walks on).
+	hold("jrpg_left", true);
+	hold("jrpg_dash", true);
+	m->run_steps(10);
+	CHECK((player->get_cell() == Vector2i(1, 0) && player->is_moving()));
+	hold("jrpg_left", false);
+	hold("jrpg_dash", false);
+	m->run_steps(1);
+	CHECK((player->get_cell() == Vector2i(1, 0) && !player->is_moving()));
+	CHECK(f.state()->get_steps() == 3);
+
+	// No steps while a transfer fades; the player arrives where the transfer says.
+	REQUIRE(m->transfer(9, Vector2i(5, 3), JRPGSystemData::DIRECTION_LEFT, JRPGSceneManager::FADE_BLACK) == OK);
+	hold("jrpg_down", true);
+	m->run_steps(10);
+	CHECK(player->get_cell() == Vector2i(1, 0));
+	hold("jrpg_down", false);
+	for (int i = 0; i < 40; i++) {
+		SceneTree::get_singleton()->process(1.0 / 60.0);
+	}
+	CHECK((!m->is_transferring() && player->get_cell() == Vector2i(5, 3)));
+	CHECK(f.state()->get_player_direction() == JRPGSystemData::DIRECTION_LEFT);
+}
+
+TEST_CASE("[SceneTree][JRPG][SceneManager] A map can turn dashing off; the camera stays inside the map") {
+	Fixture f;
+	add_meadow(f, true);
+	JRPGSceneManager *m = f.manager;
+	REQUIRE(m->start_new_game(5) == OK);
+	JRPGPlayer *player = m->get_player();
+	hold("jrpg_down", true);
+	hold("jrpg_dash", true);
+	m->run_steps(11);
+	CHECK(player->is_moving()); // Normal speed: 20 steps a cell.
+	hold("jrpg_down", false);
+	hold("jrpg_dash", false);
+	m->run_steps(10);
+	CHECK((player->get_cell() == Vector2i(1, 2) && !player->is_moving()));
+
+	// The meadow (288 x 192 pixels) is smaller than the screen: the camera keeps it in the middle.
+	const Vector2 view = m->get_viewport()->get_visible_rect().size;
+	Camera2D *camera = player->get_camera();
+	for (int axis = 0; axis < 2; axis++) {
+		const real_t extent = axis == 0 ? 288 : 192;
+		const Side low = axis == 0 ? SIDE_LEFT : SIDE_TOP;
+		const Side high = axis == 0 ? SIDE_RIGHT : SIDE_BOTTOM;
+		if (extent < view[axis]) {
+			CHECK(camera->get_limit(low) == int(Math::floor((extent - view[axis]) / 2)));
+			CHECK(camera->get_limit(high) - camera->get_limit(low) == int(Math::ceil(view[axis])));
+		} else {
+			CHECK((camera->get_limit(low) == 0 && camera->get_limit(high) == int(extent)));
+		}
+	}
+	// Town (5 x 4) is also small; on a map larger than the screen the limits are its edges.
+	Ref<JRPGMapData> plain = map_data(Vector2i(100, 80), 1);
+	REQUIRE(f.list->add_map_with_id(10, "Plain", save_map("Plain", plain)) == OK);
+	REQUIRE(m->transfer(10, Vector2i(50, 40), JRPGSceneManager::DIRECTION_RETAIN, JRPGSceneManager::FADE_NONE) == OK);
+	CHECK(player->get_parent() == m->get_map()); // The player went along.
+	CHECK((camera->get_limit(SIDE_LEFT) == 0 && camera->get_limit(SIDE_RIGHT) == 4800));
+	CHECK((camera->get_limit(SIDE_TOP) == 0 && camera->get_limit(SIDE_BOTTOM) == 3840));
 }
 
 } // namespace TestJRPGSceneManager

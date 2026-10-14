@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGPlayer" inherits="Node2D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The player's character on the current map, with the camera that follows it.
+	</brief_description>
+	<description>
+		The [JRPGSceneManager] places one player on the current map and moves it once per simulation step: the [JRPGMover] returned by [method get_mover] decides each step from the map's cell cache, and the node is drawn where the mover says, between the map's lower tiles and its overhead tiles.
+		The player moves with the [code]jrpg_up[/code], [code]jrpg_down[/code], [code]jrpg_left[/code] and [code]jrpg_right[/code] actions; when several are held, the one pressed last wins. Holding [code]jrpg_dash[/code] makes it one speed level faster, unless the map turns dashing off. The [Camera2D] returned by [method get_camera] follows it within the map's bounds.
+		Until the character has a sprite it draws a marker that shows the way it faces.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_camera" qualifiers="const">
+			<return type="Camera2D" />
+			<description>
+				Returns the camera that follows the player.
+			</description>
+		</method>
+		<method name="get_cell" qualifiers="const">
+			<return type="Vector2i" />
+			<description>
+				Returns the cell the player stands on, or is stepping to.
+			</description>
+		</method>
+		<method name="get_cell_size" qualifiers="const">
+			<return type="Vector2i" />
+			<description>
+				Returns the size of the map's cells, in pixels.
+			</description>
+		</method>
+		<method name="get_direction" qualifiers="const">
+			<return type="int" enum="JRPGSystemData.Direction" />
+			<description>
+				Returns the way the player faces.
+			</description>
+		</method>
+		<method name="get_mover" qualifiers="const">
+			<return type="JRPGMover" />
+			<description>
+				Returns the mover that holds the player's cell, facing, speed and the step under way.
+			</description>
+		</method>
+		<method name="is_moving" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] while the player is stepping to the next cell.
+			</description>
+		</method>
+		<method name="place">
+			<return type="void" />
+			<param index="0" name="cell" type="Vector2i" />
+			<param index="1" name="direction" type="int" enum="JRPGSystemData.Direction" />
+			<description>
+				Places the player on [param cell] facing [param direction] at once, ending any step under way.
+			</description>
+		</method>
+		<method name="set_cell_size">
+			<return type="void" />
+			<param index="0" name="size" type="Vector2i" />
+			<description>
+				Sets the size of the map's cells, in pixels, and moves the player to match.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="z_index" type="int" setter="set_z_index" getter="get_z_index" overrides="CanvasItem" default="1" />
+	</members>
+</class>

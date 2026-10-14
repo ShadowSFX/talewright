@@ -71,6 +71,7 @@
 #include "modules/jrpg/core/jrpg_weapon_data.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 #include "modules/jrpg/runtime/jrpg_map_files.h"
+#include "modules/jrpg/runtime/jrpg_player.h"
 #include "modules/jrpg/runtime/jrpg_scene_manager.h"
 
 #ifdef TOOLS_ENABLED
@@ -154,6 +155,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_ABSTRACT_CLASS(JRPGMapShapes); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGMapFiles); // Static methods only.
 		GDREGISTER_CLASS(JRPGMap);
+		GDREGISTER_CLASS(JRPGPlayer);
 		GDREGISTER_CLASS(JRPGSceneManager);
 		GDREGISTER_CLASS(JRPGGameState);
 	}

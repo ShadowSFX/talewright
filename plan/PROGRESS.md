@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 08:03 -0600
+- **Updated:** 2026-10-14 08:18 -0600
 - **Current task:** none
-- **Last completed:** 8.6.2.1 Cell-step mover (core)
-- **Next task:** 8.6.2.2 Player, game loop and camera
-- **Done leaf tasks:** 113
+- **Last completed:** 8.6.2.2 Player, game loop and camera
+- **Next task:** 8.7 Character sprites
+- **Done leaf tasks:** 114
 <!-- status:end -->
 
 ## Log
@@ -300,4 +300,6 @@
 | 2026-10-14 07:42 -0600 | 8.6.2 | started: Player movement, passability, dash, camera (containers: 8.6 pending->in_progress, 8 pending->in_progress) |  |
 | 2026-10-14 07:43 -0600 | - | imported 2 new / 1 updated tasks (containers: 8.6.2 in_progress->pending, 8.6 in_progress->pending, 8 in_progress->pending) | |
 | 2026-10-14 07:43 -0600 | 8.6.2.1 | started: Cell-step mover (core) (containers: 8.6.2 pending->in_progress, 8.6 pending->in_progress, 8 pending->in_progress) |  |
-| 2026-10-14 08:03 -0600 | 8.6.2.1 | done: Cell-step mover (core) — JRPGMover (core, D-042): a character's cell, facing and step under way, advanced one 60 Hz simulation step at a time; steps per cell 160 >> (speed - 1) (dash: one level up, capped); a step starts only when the map cell cache allows it (sides, blocked cells, star tiles never deciding, looping edges) or through (edges still stop it); a blocked step only turns; the cell is the destination from the step's start, get_position() draws it evenly on the way (from outside the side across a looping edge). Doctests: the hand-written passability matrix (every direction from every walkable cell of a fixture with rock, an empty cell, a star tile, a cliff lip and a ledge), through, speeds, dash, drawn positions, looping edges. Class docs. Full suite 1566 twice (after the 8.6.1.2 file-system fix, 37c1b3fdd2), static checks ALL PASS. (containers: 8.6.2 in_progress->pending, 8.6 in_progress->pending, 8 in_progress->pending) | pending |
+| 2026-10-14 08:03 -0600 | 8.6.2.1 | done: Cell-step mover (core) — JRPGMover (core, D-042): a character's cell, facing and step under way, advanced one 60 Hz simulation step at a time; steps per cell 160 >> (speed - 1) (dash: one level up, capped); a step starts only when the map cell cache allows it (sides, blocked cells, star tiles never deciding, looping edges) or through (edges still stop it); a blocked step only turns; the cell is the destination from the step's start, get_position() draws it evenly on the way (from outside the side across a looping edge). Doctests: the hand-written passability matrix (every direction from every walkable cell of a fixture with rock, an empty cell, a star tile, a cliff lip and a ledge), through, speeds, dash, drawn positions, looping edges. Class docs. Full suite 1566 twice (after the 8.6.1.2 file-system fix, 37c1b3fdd2), static checks ALL PASS. (containers: 8.6.2 in_progress->pending, 8.6 in_progress->pending, 8 in_progress->pending) | 33e3f04d29 |
+| 2026-10-14 08:03 -0600 | 8.6.2.2 | started: Player, game loop and camera (containers: 8.6.2 pending->in_progress, 8.6 pending->in_progress, 8 pending->in_progress) |  |
+| 2026-10-14 08:18 -0600 | 8.6.2.2 | done: Player, game loop and camera — JRPGPlayer (runtime, inside the current map at Z_CHARACTERS, moved along on transfers, Camera2D, a facing marker until 8.7 sprites) and the scene manager's game loop (D-044): 60 steps a second on the game state's JRPGSimClock (run_steps for tools); each step advances the player's JRPGMover, then reads the direction actions (the one pressed last among those held; dash one level up unless the map disables it; no steps while a transfer fades); the game state's position follows every step and turn, steps counted on arrival; camera limits at the map's edges, one screen centered on a smaller axis, free on a looping one (follows viewport size changes). Unplaced players freed on NOTIFICATION_PREDELETE (Node frees children there). Doctests: walk, wall, last-pressed direction, frames vs steps, dash, map without dash, no steps during a fade, camera limits for small and large maps. Bridge (running game, plan/evidence/jrpg/8.6.2.2-*): the player walks east and stops at water set blocked, dashes, the camera scrolls a 30x20 map and centers an 8x6 one. 1568 tests, jrpg_bridge_checks 156/156, static checks ALL PASS. (containers: 8.6.2 in_progress->done, 8.6 in_progress->done, 8 in_progress->pending) | pending |

@@ -631,3 +631,21 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** no core patch; the editor behaves as before (an EditorNode always exists there), doctests never touch a
   dangling pointer.
 - **Reversal:** if upstream clears the singleton in the destructor, the helper can return the singleton directly.
+
+## D-044 — Player input, the game loop and the camera
+- **Context:** task 8.6.2.2 puts the player on the map. The help does not say which of several held directions wins,
+  whether the player moves during a transfer's fade, when a step counts, or where the camera sits on a map smaller
+  than the screen.
+- **Options:** fixed direction priority vs the direction pressed last; real-time movement per frame vs the simulation
+  clock; Camera2D smoothing vs exact following.
+- **Choice:** `JRPGSceneManager` runs the game loop on the game state's `JRPGSimClock` (60 steps a second whatever
+  the frame rate, at most 4 per frame); each step advances the player's `JRPGMover`, then reads the direction
+  actions: of those held, the one pressed last (tracked every step, so a direction pressed during a step wins when
+  it ends); no new step while a transfer fades. A step counts (`JRPGGameState.increase_steps`) when the player
+  arrives; the game state's position follows every step and turn. `JRPGPlayer` lives inside the current map (moved
+  along on transfers) at `Z_CHARACTERS`, drawn at the cell's middle, with a `Camera2D` without smoothing whose limits
+  are the map's edges, or one screen centered on the map on an axis where the map is smaller, or none on a looping
+  axis. Until sprites (8.7) it draws a marker showing its facing.
+- **Why:** deterministic movement (servers, replays), the reference's grid feel, small maps framed like the
+  reference's centered small maps.
+- **Reversal:** `JRPGSceneManager::_simulation_step` and `_update_camera_limits` hold these rules.

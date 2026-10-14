@@ -40,13 +40,18 @@ class JRPGAudioCue;
 class JRPGDatabase;
 class JRPGGameState;
 class JRPGMap;
+class JRPGMapCellCache;
 class JRPGMapData;
 class JRPGMapList;
+class JRPGPlayer;
 class PackedScene;
 
 // Plays a game's maps (task 8.6.1, D-041): holds the game state while a game runs, shows the current map (an instance
 // of its scene, found through the map list) as its first child, moves the player between maps (transfer, through a
-// fade) and plays each map's autoplay music. A game scene has one, usually as its root; it starts a new game from the
+// fade) and plays each map's autoplay music. It runs the game's fixed-step loop on the game state's simulation clock
+// (task 8.6.2.2): each step moves the player (JRPGPlayer, inside the current map) as the direction actions say, keeping
+// the game state's player position and step count; the player's camera stays inside the map (a map smaller than the
+// screen is centered). A game scene has one, usually as its root; it starts a new game from the
 // System start position when it enters a running game's tree (autostart), or continues a loaded game (resume).
 // Authority (D-007): server. In a single-player game the manager decides transfers itself; online, the zone server
 // decides them and the client's manager only applies what it is told (the network port calls transfer()).
@@ -72,6 +77,8 @@ private:
 	Ref<JRPGGameState> game_state;
 	JRPGMap *map = nullptr; // The current map's scene instance.
 	int map_id = 0;
+	Ref<JRPGMapCellCache> cell_cache; // The current map's, for movement.
+	JRPGPlayer *player = nullptr; // Inside the current map; outside the tree before the first map.
 	AudioStreamPlayer *bgm_player = nullptr;
 	AudioStreamPlayer *bgs_player = nullptr;
 	CanvasLayer *fade_layer = nullptr;
@@ -103,6 +110,10 @@ private:
 	void _set_fade(double p_amount);
 	void _process_transfer(double p_delta);
 	void _autostart();
+	void _run_simulation(double p_delta);
+	void _simulation_step();
+	void _sync_player();
+	void _update_camera_limits();
 
 protected:
 	void _notification(int p_what);
@@ -140,6 +151,10 @@ public:
 	Ref<JRPGGameState> get_game_state() const { return game_state; }
 	JRPGMap *get_map() const { return map; }
 	int get_map_id() const { return map_id; }
+	JRPGPlayer *get_player() const { return player; }
+	Ref<JRPGMapCellCache> get_cell_cache() const { return cell_cache; }
+	// Runs p_steps simulation steps now, as frames would (tests, tools).
+	void run_steps(int p_steps);
 	AudioStreamPlayer *get_bgm_player() const { return bgm_player; }
 	AudioStreamPlayer *get_bgs_player() const { return bgs_player; }
 	// How opaque the fade is now, 0-1.

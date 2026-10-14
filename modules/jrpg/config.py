@@ -40,6 +40,7 @@ def get_doc_classes():
         "JRPGMapShapes",
         "JRPGMover",
         "JRPGProjectSetup",
+        "JRPGPlayer",
         "JRPGRandom",
         "JRPGRandomStreams",
         "JRPGReferenceScanner",

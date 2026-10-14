@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.6.2.1 Cell-step mover (core)",
+  "last_completed": "8.6.2.2 Player, game loop and camera",
   "tasks": [
     {
       "id": "0",
@@ -3231,7 +3231,7 @@
       "dependencies": [
         "8.2"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Passability matrix doctest",
@@ -3239,8 +3239,8 @@
       ],
       "test_strategy": "Doctests + bridge.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "8.6.1",
@@ -3337,9 +3337,9 @@
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
-      "commit": "",
-      "notes": "",
-      "status": "pending"
+      "commit": "children",
+      "notes": "Closed automatically when all children closed.",
+      "status": "done"
     },
     {
       "id": "8.6.2.1",
@@ -3363,7 +3363,7 @@
         "plan/DECISIONS.md",
         "plan/specs/05_maps_tiles.md"
       ],
-      "commit": "pending",
+      "commit": "33e3f04d29",
       "notes": ""
     },
     {
@@ -3381,9 +3381,19 @@
         "The game state's player position and step count follow the walk (doctest + bridge)"
       ],
       "test_strategy": "Doctests (game loop with simulated input) + bridge verification with screenshots.",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/runtime/jrpg_player.{h,cpp}",
+        "modules/jrpg/runtime/jrpg_scene_manager.{h,cpp}",
+        "modules/jrpg/tests/test_jrpg_scene_manager.h",
+        "modules/jrpg/doc_classes/JRPGPlayer.xml",
+        "modules/jrpg/doc_classes/JRPGSceneManager.xml",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "plan/DECISIONS.md",
+        "plan/evidence/jrpg/8.6.2.2-*"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

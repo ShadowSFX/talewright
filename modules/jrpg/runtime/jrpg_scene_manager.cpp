@@ -37,20 +37,26 @@
 #include "core/math/random_pcg.h"
 #include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
+#include "scene/2d/camera_2d.h"
 #include "scene/audio/audio_stream_player.h"
 #include "scene/gui/color_rect.h"
 #include "scene/main/canvas_layer.h"
+#include "scene/main/viewport.h"
 #include "scene/resources/packed_scene.h"
 #include "servers/audio/audio_stream.h"
 
 #include "modules/jrpg/core/jrpg_audio_cue.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_game_state.h"
+#include "modules/jrpg/core/jrpg_map_cell_cache.h"
 #include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_map_list.h"
+#include "modules/jrpg/core/jrpg_mover.h"
+#include "modules/jrpg/core/jrpg_sim_clock.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 #include "modules/jrpg/runtime/jrpg_map_files.h"
+#include "modules/jrpg/runtime/jrpg_player.h"
 
 void JRPGSceneManager::set_database_path(const String &p_path) {
 	database_path = p_path;
@@ -121,6 +127,7 @@ void JRPGSceneManager::_begin(const Ref<JRPGGameState> &p_state) {
 	transferring = false; // A new or loaded game ends any transfer under way.
 	pending = Transfer();
 	_set_fade(0);
+	set_process_internal(true); // The game loop.
 }
 
 Error JRPGSceneManager::resume(const Ref<JRPGGameState> &p_state) {
@@ -193,7 +200,6 @@ Error JRPGSceneManager::transfer(int p_map_id, const Vector2i &p_cell, int p_dir
 	transferring = true;
 	fade_rect->set_color(p_fade == FADE_WHITE ? Color(1, 1, 1, 0) : Color(0, 0, 0, 0));
 	_set_fade(0);
-	set_process_internal(true);
 	return OK;
 }
 
@@ -249,6 +255,9 @@ Error JRPGSceneManager::_enter(const Transfer &p_transfer) {
 			WARN_PRINT(vformat("JRPG: the transfer to map %d was refused: its scene's root is not a JRPGMap. The player stays where they are.", p_transfer.map_id));
 			return ERR_INVALID_DATA;
 		}
+		if (player->get_parent()) {
+			player->get_parent()->remove_child(player); // The player goes along.
+		}
 		if (map) {
 			// Freed at the end of the frame: an event of the old map may be the one asking for this transfer.
 			remove_child(map);
@@ -259,9 +268,15 @@ Error JRPGSceneManager::_enter(const Transfer &p_transfer) {
 		move_child(entered, 0); // Under everything else the game scene shows.
 		map = entered;
 		map_id = p_transfer.map_id;
+		const Ref<JRPGMapData> entered_data = map->get_map_data();
+		cell_cache = entered_data.is_valid() ? JRPGMapCellCache::compile(entered_data, map->find_tileset_data()) : Ref<JRPGMapCellCache>();
+		map->add_child(player);
+		player->set_cell_size(map->get_cell_size());
 	}
 	const JRPGSystemData::Direction direction = p_transfer.direction == DIRECTION_RETAIN ? game_state->get_player_direction() : JRPGSystemData::Direction(p_transfer.direction);
 	game_state->set_player_position(p_transfer.map_id, p_transfer.cell, direction);
+	player->place(p_transfer.cell, direction);
+	_update_camera_limits();
 	const Ref<JRPGMapData> map_data = map->get_map_data();
 	game_state->set_events_map(p_transfer.map_id, map_data.is_valid() ? map_data->get_revision() : 0);
 	_play_map_audio(map_data);
@@ -320,7 +335,6 @@ double JRPGSceneManager::get_fade_amount() const {
 
 void JRPGSceneManager::_process_transfer(double p_delta) {
 	if (!transferring) {
-		set_process_internal(false);
 		return;
 	}
 	pending.time += p_delta;
@@ -340,7 +354,6 @@ void JRPGSceneManager::_process_transfer(double p_delta) {
 		const int arrived = map_id; // The map shown: the one asked for, unless its scene failed at the darkest point.
 		transferring = false;
 		pending = Transfer();
-		set_process_internal(false);
 		emit_signal(SNAME("transfer_finished"), arrived);
 	}
 }
@@ -353,10 +366,89 @@ void JRPGSceneManager::_notification(int p_what) {
 				callable_mp(this, &JRPGSceneManager::_autostart).call_deferred();
 			}
 		} break;
+		case NOTIFICATION_ENTER_TREE: {
+			get_viewport()->connect(SNAME("size_changed"), callable_mp(this, &JRPGSceneManager::_update_camera_limits));
+		} break;
+		case NOTIFICATION_EXIT_TREE: {
+			get_viewport()->disconnect(SNAME("size_changed"), callable_mp(this, &JRPGSceneManager::_update_camera_limits));
+		} break;
+		case NOTIFICATION_PREDELETE: {
+			// Before Node frees the children (scene/main/node.cpp:282-313): a player never placed on a map is no child.
+			if (player && !player->get_parent()) {
+				memdelete(player);
+			}
+			player = nullptr;
+		} break;
 		case NOTIFICATION_INTERNAL_PROCESS: {
-			_process_transfer(get_process_delta_time());
+			const double delta = get_process_delta_time();
+			_process_transfer(delta);
+			_run_simulation(delta);
 		} break;
 	}
+}
+
+void JRPGSceneManager::_run_simulation(double p_delta) {
+	if (game_state.is_null() || !map) {
+		return;
+	}
+	const Ref<JRPGSimClock> clock = game_state->get_clock();
+	const int due = clock->advance(p_delta);
+	run_steps(due);
+}
+
+void JRPGSceneManager::run_steps(int p_steps) {
+	ERR_FAIL_COND_MSG(game_state.is_null() || !map, "JRPGSceneManager: no game is running.");
+	for (int i = 0; i < p_steps; i++) {
+		_simulation_step();
+		game_state->get_clock()->step();
+	}
+	player->update_position();
+}
+
+void JRPGSceneManager::_simulation_step() {
+	const Ref<JRPGMover> mover = player->get_mover();
+	if (mover->advance()) {
+		game_state->increase_steps(); // Arrived on a new cell.
+		_sync_player();
+	}
+	// Read every step, so the direction pressed last wins even when it was pressed during a step.
+	const int direction = player->read_direction();
+	if (direction < 0 || transferring || mover->is_moving() || cell_cache.is_null()) {
+		return; // No moving while the screen fades.
+	}
+	const Ref<JRPGMapData> map_data = map->get_map_data();
+	const bool dash = player->is_dash_held() && map_data.is_valid() && !map_data->is_disable_dash();
+	mover->move(JRPGSystemData::Direction(direction), cell_cache, dash);
+	_sync_player(); // Its new cell, or only its new facing when the step was not allowed.
+}
+
+void JRPGSceneManager::_sync_player() {
+	game_state->set_player_position(map_id, player->get_cell(), player->get_direction());
+}
+
+void JRPGSceneManager::_update_camera_limits() {
+	if (!map || !is_inside_tree() || map->get_map_data().is_null()) {
+		return;
+	}
+	// The camera stays inside the map; on an axis where the map is smaller than the screen it stays in the middle,
+	// and on a looping axis it is free.
+	const Ref<JRPGMapData> map_data = map->get_map_data();
+	const Vector2 extent = Vector2(map_data->get_size() * map->get_cell_size());
+	const Vector2 view = get_viewport()->get_visible_rect().size;
+	const JRPGMapData::ScrollType scroll = map_data->get_scroll_type();
+	const bool loops[2] = { scroll == JRPGMapData::SCROLL_LOOP_HORIZONTAL || scroll == JRPGMapData::SCROLL_LOOP_BOTH, scroll == JRPGMapData::SCROLL_LOOP_VERTICAL || scroll == JRPGMapData::SCROLL_LOOP_BOTH };
+	Camera2D *camera = player->get_camera();
+	for (int axis = 0; axis < 2; axis++) {
+		int low = -10000000; // Camera2D's own defaults: no limit.
+		int high = 10000000;
+		if (!loops[axis]) {
+			low = extent[axis] >= view[axis] ? 0 : int(Math::floor((extent[axis] - view[axis]) / 2));
+			high = extent[axis] >= view[axis] ? int(extent[axis]) : low + int(Math::ceil(view[axis]));
+		}
+		camera->set_limit(axis == 0 ? SIDE_LEFT : SIDE_TOP, low);
+		camera->set_limit(axis == 0 ? SIDE_RIGHT : SIDE_BOTTOM, high);
+	}
+	camera->reset_smoothing();
 }
 
 void JRPGSceneManager::_autostart() {
@@ -384,6 +476,9 @@ void JRPGSceneManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_game_state"), &JRPGSceneManager::get_game_state);
 	ClassDB::bind_method(D_METHOD("get_map"), &JRPGSceneManager::get_map);
 	ClassDB::bind_method(D_METHOD("get_map_id"), &JRPGSceneManager::get_map_id);
+	ClassDB::bind_method(D_METHOD("get_player"), &JRPGSceneManager::get_player);
+	ClassDB::bind_method(D_METHOD("get_cell_cache"), &JRPGSceneManager::get_cell_cache);
+	ClassDB::bind_method(D_METHOD("run_steps", "steps"), &JRPGSceneManager::run_steps);
 	ClassDB::bind_method(D_METHOD("get_bgm_player"), &JRPGSceneManager::get_bgm_player);
 	ClassDB::bind_method(D_METHOD("get_bgs_player"), &JRPGSceneManager::get_bgs_player);
 	ClassDB::bind_method(D_METHOD("get_fade_amount"), &JRPGSceneManager::get_fade_amount);
@@ -423,4 +518,7 @@ JRPGSceneManager::JRPGSceneManager() {
 	fade_rect->set_color(Color(0, 0, 0, 0));
 	fade_rect->set_visible(false);
 	fade_layer->add_child(fade_rect);
+
+	player = memnew(JRPGPlayer);
+	player->set_name("Player");
 }

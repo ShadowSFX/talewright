@@ -1,0 +1,20 @@
+# 8.6.2.2 bridge verification: the player walks, a wall stops it, the camera stays inside the map
+  water set blocked, changed: True
+## Play From Start: the player on the Shore at the start position (4, 10)
+  player on Shore: cell Vector2i(4, 10), facing 2, moving False
+  camera limits (left, top, right, bottom): [0, 0, 1440, 960]
+  game screenshot: plan/evidence/jrpg/8.6.2.2-start.png
+## hold right for 2.5 s: the player walks east along the path until the water stops it at x = 9
+  player on Shore: cell Vector2i(9, 10), facing 1, moving False
+  game screenshot: plan/evidence/jrpg/8.6.2.2-at-the-water.png
+## hold up for 1 s (3 cells at normal speed); down for 0.5 s, then down with dash for 0.5 s (twice as fast)
+  player on Shore: cell Vector2i(9, 6), facing 0, moving False
+  player on Shore: cell Vector2i(9, 12), facing 2, moving False
+## the Pond (8 x 6 cells, smaller than the window): the camera keeps it in the middle
+  player on Pond: cell Vector2i(1, 1), facing 2, moving False
+  camera limits (left, top, right, bottom): [-384, -180, 768, 468]
+  player on Pond: cell Vector2i(3, 1), facing 1, moving False
+  game screenshot: plan/evidence/jrpg/8.6.2.2-pond.png
+## errors
+    "errors": 0,
+    "warnings": 0,

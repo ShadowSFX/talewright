@@ -5,6 +5,7 @@
 	</brief_description>
 	<description>
 		A game scene has one scene manager, usually as its root. While a game runs it holds the game state ([JRPGGameState]), shows the current map as an instance of its scene (found through the map list, under the manager's other children), moves the player between maps with [method transfer], fading through black or white, and plays each map's autoplay BGM and BGS.
+		While a game runs it runs the game's loop at a fixed 60 steps a second on the game state's simulation clock: each step moves the player ([method get_player]) as the direction actions say, keeps the game state's player position, and counts the steps taken. The player's camera stays inside the map; a map smaller than the screen stays in the middle of it.
 		When it enters a running game's tree (not in the editor) with [member autostart] on, it starts a new game at the System start position, after every [method Node._ready] call: a script that continues a loaded game there with [method resume] comes first.
 		A transfer that cannot happen (a map the map list lacks, a scene that cannot load or is not a map, a cell outside the map) leaves the player where they are, prints one warning and returns an error.
 		Authority: in a single-player game the manager decides transfers itself; online, the server decides them and the client's manager only applies what it is told.
@@ -22,6 +23,12 @@
 			<return type="AudioStreamPlayer" />
 			<description>
 				Returns the player of the map's background sound (ambience).
+			</description>
+		</method>
+		<method name="get_cell_cache" qualifiers="const">
+			<return type="JRPGMapCellCache" />
+			<description>
+				Returns the current map's cell cache: what each cell means for movement.
 			</description>
 		</method>
 		<method name="get_database" qualifiers="const">
@@ -60,6 +67,12 @@
 				Returns the map list maps are found through: the one given with [method set_map_list], or the one loaded from [member map_list_path] once a map is needed.
 			</description>
 		</method>
+		<method name="get_player" qualifiers="const">
+			<return type="JRPGPlayer" />
+			<description>
+				Returns the player's character, inside the current map once a game runs.
+			</description>
+		</method>
 		<method name="is_transferring" qualifiers="const">
 			<return type="bool" />
 			<description>
@@ -71,6 +84,13 @@
 			<param index="0" name="game_state" type="JRPGGameState" />
 			<description>
 				Continues [param game_state], a loaded game, attaching the database to it when it has none: shows its map at its player position, without a fade. Saved states of events the map no longer has are dropped, and a map edited since the save is reported with one warning. When the saved map or position no longer exists, the game continues at the System start position with one warning.
+			</description>
+		</method>
+		<method name="run_steps">
+			<return type="void" />
+			<param index="0" name="steps" type="int" />
+			<description>
+				Runs [param steps] simulation steps now, as that many sixtieths of a second of frames would: the player steps as the held actions say. Fails when no game runs.
 			</description>
 		</method>
 		<method name="set_database">
