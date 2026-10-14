@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGMapCellCache" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		What each cell of a map means for movement, compiled from its tiles and regions.
+	</brief_description>
+	<description>
+		Movement, pathfinding, events and servers read one word per cell from the cache instead of four tile layers and a palette. The cache is compiled from a [JRPGMapData] and its tileset's baked flags ([member JRPGTilesetData.flags]):
+		- the passage and the sides a cell cannot be entered from or left toward come from the top-most painted tile that is neither transparent nor overhead (overhead tiles never decide). A cell where no tile decides (nothing painted, or only transparent and overhead tiles) is blocked: there is nothing to walk on;
+		- overhead, ladder, bush, counter and damage floor hold when any tile of the cell has them;
+		- the terrain tag is the top-most nonzero one; the region comes from the map.
+		A step toward a direction is allowed when the cell can be left on that side, the next cell can be entered from the opposite side, and the next cell is not blocked. On a looping axis the next cell wraps around; past another edge there is none.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="can_step" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="cell" type="Vector2i" />
+			<param index="1" name="direction" type="int" enum="JRPGMapCellCache.Direction" />
+			<description>
+				Returns [code]true[/code] if a character on [param cell] can step toward [param direction].
+			</description>
+		</method>
+		<method name="compile" qualifiers="static">
+			<return type="JRPGMapCellCache" />
+			<param index="0" name="map" type="JRPGMapData" />
+			<param index="1" name="tileset" type="JRPGTilesetData" />
+			<description>
+				Returns the cache of [param map] drawn with [param tileset]'s baked flags. A tileset without baked flags gives every painted cell an open passage and no flags.
+			</description>
+		</method>
+		<method name="get_neighbor" qualifiers="const">
+			<return type="Vector2i" />
+			<param index="0" name="cell" type="Vector2i" />
+			<param index="1" name="direction" type="int" enum="JRPGMapCellCache.Direction" />
+			<description>
+				Returns the cell next to [param cell] toward [param direction], wrapped around on a looping axis, or [code](-1, -1)[/code] past an edge that does not loop.
+			</description>
+		</method>
+		<method name="get_no_entry" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="cell" type="Vector2i" />
+			<description>
+				Returns the sides (north 1, east 2, south 4, west 8) [param cell] cannot be entered from.
+			</description>
+		</method>
+		<method name="get_no_exit" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="cell" type="Vector2i" />
+			<description>
+				Returns the sides (north 1, east 2, south 4, west 8) [param cell] cannot be left toward.
+			</description>
+		</method>
+		<method name="get_pass_mode" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="cell" type="Vector2i" />
+			<description>
+				Returns [constant JRPGTilesetData.PASS_OPEN] or [constant JRPGTilesetData.PASS_BLOCKED] for [param cell].
+			</description>
+		</method>
+		<method name="get_region" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="cell" type="Vector2i" />
+			<description>
+				Returns the region of [param cell] (0 to 255).
+			</description>
+		</method>
+		<method name="get_size" qualifiers="const">
+			<return type="Vector2i" />
+			<description>
+				Returns the map's size in cells.
+			</description>
+		</method>
+		<method name="get_terrain_tag" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="cell" type="Vector2i" />
+			<description>
+				Returns the terrain tag of [param cell] (0 to 15).
+			</description>
+		</method>
+		<method name="get_word" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="cell" type="Vector2i" />
+			<description>
+				Returns the word of [param cell]. Outside the map, a blocked cell.
+			</description>
+		</method>
+		<method name="get_words" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<description>
+				Returns every cell's word, row by row: the [method JRPGTilesetData.pack_flags] layout with the region in bits 24 to 31.
+			</description>
+		</method>
+		<method name="has_cell" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="cell" type="Vector2i" />
+			<description>
+				Returns [code]true[/code] if [param cell] is inside the map.
+			</description>
+		</method>
+		<method name="has_flag" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="cell" type="Vector2i" />
+			<param index="1" name="flag" type="int" />
+			<description>
+				Returns [code]true[/code] if [param cell] has [param flag]: one of [constant JRPGTilesetData.FLAG_OVERHEAD], [constant JRPGTilesetData.FLAG_LADDER], [constant JRPGTilesetData.FLAG_BUSH], [constant JRPGTilesetData.FLAG_COUNTER] or [constant JRPGTilesetData.FLAG_DAMAGE].
+			</description>
+		</method>
+		<method name="update_cells">
+			<return type="void" />
+			<param index="0" name="map" type="JRPGMapData" />
+			<param index="1" name="tileset" type="JRPGTilesetData" />
+			<param index="2" name="cells" type="PackedInt32Array" />
+			<description>
+				Compiles the cells at positions [param cells] (as [method JRPGMapData.get_cell_index] gives them) again, after a paint. The map must keep its size.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="DIR_NORTH" value="0" enum="Direction">
+			Up.
+		</constant>
+		<constant name="DIR_EAST" value="1" enum="Direction">
+			Right.
+		</constant>
+		<constant name="DIR_SOUTH" value="2" enum="Direction">
+			Down.
+		</constant>
+		<constant name="DIR_WEST" value="3" enum="Direction">
+			Left.
+		</constant>
+		<constant name="REGION_SHIFT" value="24">
+			The bit where the region starts in a cell's word.
+		</constant>
+	</constants>
+</class>

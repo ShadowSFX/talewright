@@ -169,6 +169,12 @@ top-most tile whose pass mode is not "transparent" (documented stacking: overhea
 RM-MAP-020). A step from A to B in direction d is allowed when A's exit on side d and B's entry on the opposite side
 are both open and B is not blocked. Used by movement, pathfinding (`AStarGrid2D`-compatible or own A*), events and MMO servers
 (server data compiler). Rebuilt when map tiles or the tileset change.
+Implementation (8.2, `JRPGMapCellCache`, D-037): one word per cell in the `pack_flags` layout plus the region in bits
+24–31. Overhead tiles are skipped when finding the deciding tile, like transparent ones; a cell where no tile decides
+(nothing painted, or only transparent and overhead tiles) is blocked; overhead, ladder, bush, counter and damage are
+the OR of the cell's tiles; the terrain tag is the top-most nonzero one (RM-TIL-013). `can_step` applies the rule
+above; a looping axis wraps the next cell, another edge has none. `update_cells` recompiles painted cells; a resize
+needs a new `compile`. Fixtures in `modules/jrpg/tests/test_jrpg_map_cell_cache.h` hold the hand-written table.
 
 ## Movement (core `JRPGMover`, runtime animates)
 Cell steps advanced by the fixed 60 Hz simulation step (spec 03). Speed levels follow the documented labeling

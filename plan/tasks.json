@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.1.3 Map scene spike",
+  "last_completed": "8.2 Map cell cache compiler",
   "tasks": [
     {
       "id": "0",
@@ -2840,7 +2840,7 @@
       "test_strategy": "Bridge.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "2cf119671a",
       "notes": ""
     },
     {
@@ -2851,14 +2851,14 @@
       "dependencies": [
         "8.1"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "For every fixture cell the cached flags and the allowed steps in 4 directions equal a hand-written expected table"
       ],
       "test_strategy": "Doctests.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

@@ -32,6 +32,7 @@ def get_doc_classes():
         "JRPGItemData",
         "JRPGManagedAddon",
         "JRPGMap",
+        "JRPGMapCellCache",
         "JRPGMapData",
         "JRPGMapEditing",
         "JRPGMapFiles",

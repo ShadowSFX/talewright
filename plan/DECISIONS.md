@@ -527,3 +527,15 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   are not saved with the scene (no owner).
 - **Why:** every requirement of D-006 held on the first try; the fallback would only lose per-map undo and scene tabs.
 - **Reversal:** the 2D-editor plugin route of D-006, with the same `JRPGMapData`.
+
+## D-037 — Cell rules the documentation leaves open
+- **Context:** the map cell cache (task 8.2) needs a passage for every cell and a stacking rule for every flag. The
+  reference documents that the later layer decides between passable and impassable tiles, that a ☆ tile never blocks
+  and an impassable tile under it wins (RM-MAP-020, RM-TIL-007), and that the top-most nonzero terrain tag wins
+  (RM-TIL-013). It says nothing about a cell no tile decides, nor how ladder, bush, counter and damage stack.
+- **Options:** an undecided cell open or blocked; flags from the deciding tile only, the top-most tile, or any tile.
+- **Choice:** a cell where no tile decides (nothing painted, or only transparent and overhead tiles) is blocked;
+  overhead, ladder, bush, counter and damage hold when any tile of the cell has them.
+- **Why:** an unpainted cell has nothing to stand on, so walking into the void is never a surprise; a bush or damage
+  decoration on an upper layer works over any ground without editing the ground tile.
+- **Reversal:** `JRPGMapCellCache::_compile_cell` (one place) and the fixture table of its doctest.
