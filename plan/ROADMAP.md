@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 149, in_progress: 0, done: 57, blocked: 0, deferred: 3 (of 209)
+**Totals:** pending: 147, in_progress: 0, done: 59, blocked: 0, deferred: 3 (of 209)
 
 ## [x] 0 Bootstrap and task system
 
@@ -86,9 +86,9 @@ modules/jrpg with pure-logic core (no Node dependency), database, game state, RN
 - [x] **5.1** Module skeleton and dynamic workspace (P1)
   - [x] **5.1.1** Module skeleton (P1) _(commit: ebd8ac64d8)_
   - [x] **5.1.2** jrpg/enabled + dynamic workspace (P1) _(deps: 5.1.1; commit: 43a0aa1607)_
-- [ ] **5.2** Database core (P1) _(deps: 5.1)_
-  - [x] **5.2.1** Entry/table/manifest classes (P1) _(commit: pending)_
-  - [ ] **5.2.2** Schema versioning and byte-identical persistence (P1) _(deps: 5.2.1)_
+- [x] **5.2** Database core (P1) _(deps: 5.1)_
+  - [x] **5.2.1** Entry/table/manifest classes (P1) _(commit: 43ba9d9de0)_
+  - [x] **5.2.2** Schema versioning and byte-identical persistence (P1) _(deps: 5.2.1; commit: pending)_
 - [ ] **5.3** Database tables (slice fields) (P1) _(deps: 5.2, 2.1)_
   - [ ] **5.3.1** Actors, classes, types, terms, system (P1)
   - [ ] **5.3.2** Skills, items, weapons, armors (P1) _(deps: 5.3.1)_

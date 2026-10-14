@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "5.2.1 Entry/table/manifest classes",
+  "last_completed": "5.2.2 Schema versioning and byte-identical persistence",
   "tasks": [
     {
       "id": "0",
@@ -1181,7 +1181,7 @@
       "dependencies": [
         "5.1"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Save -> load -> save byte-identical",
@@ -1189,8 +1189,8 @@
       ],
       "test_strategy": "Doctests.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "5.2.1",
@@ -1218,7 +1218,7 @@
         "doc/classes/ProjectSettings.xml",
         "plan/UPSTREAM_PATCHES.md"
       ],
-      "commit": "pending",
+      "commit": "43ba9d9de0",
       "notes": "",
       "status": "done"
     },
@@ -1236,10 +1236,21 @@
         "Old-version fixture migrates"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
-      "files": [],
-      "commit": "",
+      "files": [
+        "modules/jrpg/core/jrpg_schema.h",
+        "modules/jrpg/core/jrpg_schema.cpp",
+        "modules/jrpg/core/jrpg_entry.h",
+        "modules/jrpg/core/jrpg_entry.cpp",
+        "modules/jrpg/core/jrpg_table.h",
+        "modules/jrpg/core/jrpg_table.cpp",
+        "modules/jrpg/core/jrpg_database.h",
+        "modules/jrpg/core/jrpg_database.cpp",
+        "modules/jrpg/doc_classes/",
+        "modules/jrpg/tests/test_jrpg_schema.h"
+      ],
+      "commit": "pending",
       "notes": "",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "5.3",

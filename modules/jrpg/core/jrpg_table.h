@@ -42,7 +42,7 @@ class JRPGTable : public Resource {
 	GDCLASS(JRPGTable, Resource);
 
 	StringName entry_class = "JRPGEntry";
-	int schema_version = 1;
+	int schema_version = 1; // CURRENT_SCHEMA_VERSION for new tables; the saved value for loaded ones.
 	Vector<Ref<JRPGEntry>> entries;
 
 	Ref<JRPGEntry> _create_entry() const;
@@ -55,6 +55,8 @@ protected:
 public:
 	// Generous safety limit against accidental huge resizes; real projects stay far below it.
 	static constexpr int MAX_ENTRIES = 100000;
+	// Data format version written by this build. Raise it together with a JRPGSchema migration step.
+	static constexpr int CURRENT_SCHEMA_VERSION = 1;
 
 	void set_entry_class(const StringName &p_class);
 	StringName get_entry_class() const { return entry_class; }
@@ -74,4 +76,8 @@ public:
 	Ref<JRPGEntry> get_entry(int p_id) const;
 	bool has_entry(int p_id) const { return p_id >= 1 && p_id <= entries.size(); }
 	void clear_entry(int p_id);
+
+	// Runs the migration steps from schema_version up to CURRENT_SCHEMA_VERSION. Called automatically when a
+	// loaded table receives its entries; harmless when the table is current.
+	void upgrade();
 };

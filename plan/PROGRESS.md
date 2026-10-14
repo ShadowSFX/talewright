@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 18:14 -0600
+- **Updated:** 2026-10-13 18:22 -0600
 - **Current task:** none
-- **Last completed:** 5.2.1 Entry/table/manifest classes
-- **Next task:** 5.2.2 Schema versioning and byte-identical persistence
-- **Done leaf tasks:** 49
+- **Last completed:** 5.2.2 Schema versioning and byte-identical persistence
+- **Next task:** 5.3.1 Actors, classes, types, terms, system
+- **Done leaf tasks:** 50
 <!-- status:end -->
 
 ## Log
@@ -121,4 +121,7 @@
 | 2026-10-13 18:07 -0600 | 5.1.2 | done: jrpg/enabled + dynamic workspace — jrpg/enabled (GLOBAL_DEF_BASIC, default off; doctest) + JRPGBootstrapPlugin adds/removes the JRPG main screen on settings_changed without restart (EditorNode::add/remove_editor_plugin, view freed with the plugin); JRPG tab icon (original message-window glyph via module icons); empty-state view designed with frontend-design in editor theme only (framed message-window panel with continue mark, disabled Set up JRPG project, Turn off JRPG workspace, guide link, readable column width, wrapping actions); bridge tool project_settings_set (existing settings, literal allow-list, reset, save). Verified via bridge: off -> no tab; set on -> tab appears live; off -> tab removed live, Script selected, no errors; restart with setting on -> tab at startup (plan/evidence/jrpg/5.1.2-*.png); full suite 1404/1404. Not verified: clicking Turn off / guide link (same set+save path as the tool), narrow-width layout (containers: 5.1 in_progress->done, 5 in_progress->pending) | 43a0aa1607 |
 | 2026-10-13 18:14 -0600 | - | imported 0 new / 1 updated tasks | |
 | 2026-10-13 18:14 -0600 | 5.2.1 | started: Entry/table/manifest classes (containers: 5.2 pending->in_progress, 5 pending->in_progress) |  |
-| 2026-10-13 18:14 -0600 | 5.2.1 | done: Entry/table/manifest classes — Core JRPGEntry (id = slot + 1 assigned by the table and never stored; name/note; kind_from_class; in-place reset_to_defaults with deep-copied container defaults), JRPGTable (entry_class guarded, set_maximum grow/shrink at the end, clear_entry in place, get_entry 0/out-of-range = none, null slots filled, Kind_N scene-unique ids reimposed on every change so duplicates are repaired; MAX_ENTRIES 100000), JRPGDatabase manifest (12 tables as indexed properties, TableKind enum). Class reference in modules/jrpg/doc_classes (doctool rerun gives no diff) + ProjectSettings.xml entry for jrpg/enabled (ledger row 3, needed by CI doc-test). 6 doctests incl. save/load: sub_resource ids Entry_N, id not stored. Full suite 1410/1410; online authority: shared data (both) (containers: 5.2 in_progress->pending, 5 in_progress->pending) | pending |
+| 2026-10-13 18:14 -0600 | 5.2.1 | done: Entry/table/manifest classes — Core JRPGEntry (id = slot + 1 assigned by the table and never stored; name/note; kind_from_class; in-place reset_to_defaults with deep-copied container defaults), JRPGTable (entry_class guarded, set_maximum grow/shrink at the end, clear_entry in place, get_entry 0/out-of-range = none, null slots filled, Kind_N scene-unique ids reimposed on every change so duplicates are repaired; MAX_ENTRIES 100000), JRPGDatabase manifest (12 tables as indexed properties, TableKind enum). Class reference in modules/jrpg/doc_classes (doctool rerun gives no diff) + ProjectSettings.xml entry for jrpg/enabled (ledger row 3, needed by CI doc-test). 6 doctests incl. save/load: sub_resource ids Entry_N, id not stored. Full suite 1410/1410; online authority: shared data (both) (containers: 5.2 in_progress->pending, 5 in_progress->pending) | 43ba9d9de0 |
+| 2026-10-13 18:16 -0600 | 5.2.2 | started: Schema versioning and byte-identical persistence (containers: 5.2 pending->in_progress, 5 pending->in_progress) |  |
+| 2026-10-13 18:22 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 18:22 -0600 | 5.2.2 | done: Schema versioning and byte-identical persistence — JRPGSchema core registry: property renames (JRPGEntry::_set, one hop via ClassDB::set_property) and versioned migration steps; JRPGTable/JRPGDatabase CURRENT_SCHEMA_VERSION, upgrade() (tables auto-upgrade once entries load; newer data kept with a warning), JRPGDatabase::load_database(path) loads + upgrades. Doctests: table save->load->save byte-identical (unicode, multi-line note, cleared entry), manifest with an external table file re-saves byte-identically (ext ids seeded by path), v0 fixture with a renamed property migrates through a registered step, newer schema kept. Docs filled, doctool stable; full suite 1414/1414 (containers: 5.2 in_progress->done, 5 in_progress->pending) | pending |

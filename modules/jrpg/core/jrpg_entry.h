@@ -46,6 +46,8 @@ class JRPGEntry : public Resource {
 protected:
 	static void _bind_methods();
 	void _validate_property(PropertyInfo &p_property) const;
+	// Renamed properties from older files load into their new names (JRPGSchema::register_rename).
+	bool _set(const StringName &p_name, const Variant &p_value);
 
 public:
 	// "Item" for JRPGItemData, "Entry" for JRPGEntry: the prefix of scene-unique ids (Item_42) and of translation

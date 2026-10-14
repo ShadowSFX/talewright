@@ -31,6 +31,8 @@
 
 #include "jrpg_entry.h"
 
+#include "jrpg_schema.h"
+
 #include "core/object/class_db.h"
 
 String JRPGEntry::kind_from_class(const StringName &p_class) {
@@ -79,6 +81,18 @@ void JRPGEntry::reset_to_defaults() {
 		set(pi.name, (def.get_type() == Variant::ARRAY || def.get_type() == Variant::DICTIONARY) ? def.duplicate(true) : def);
 	}
 	emit_changed();
+}
+
+bool JRPGEntry::_set(const StringName &p_name, const Variant &p_value) {
+	// Only reached for names the class does not have (Object::set tries ClassDB setters first).
+	const StringName renamed = JRPGSchema::get_renamed_property(this, p_name);
+	if (renamed == StringName() || renamed == p_name) {
+		return false;
+	}
+	bool valid = false;
+	// One hop only: ClassDB::set_property never calls _set again, so a bad rename table cannot recurse.
+	ClassDB::set_property(this, renamed, p_value, &valid);
+	return valid;
 }
 
 void JRPGEntry::_validate_property(PropertyInfo &p_property) const {

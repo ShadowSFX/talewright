@@ -31,6 +31,8 @@
 
 #include "jrpg_table.h"
 
+#include "jrpg_schema.h"
+
 #include "core/object/class_db.h"
 
 Ref<JRPGEntry> JRPGTable::_create_entry() const {
@@ -84,6 +86,24 @@ void JRPGTable::set_entries(const TypedArray<JRPGEntry> &p_entries) {
 		entries.push_back(e);
 	}
 	_assign_ids();
+	// While loading, entry_class and schema_version are set before entries (property order), so the data is
+	// complete here and an old table can be upgraded in one place.
+	if (schema_version < CURRENT_SCHEMA_VERSION) {
+		upgrade();
+	}
+	emit_changed();
+}
+
+void JRPGTable::upgrade() {
+	if (schema_version > CURRENT_SCHEMA_VERSION) {
+		WARN_PRINT_ONCE(vformat("JRPGTable \"%s\" was saved by a newer Talewright (schema %d, this build knows %d); some data may not load.", get_path(), schema_version, CURRENT_SCHEMA_VERSION));
+		return;
+	}
+	if (schema_version == CURRENT_SCHEMA_VERSION) {
+		return;
+	}
+	JRPGSchema::migrate(this, get_class_static(), schema_version, CURRENT_SCHEMA_VERSION);
+	schema_version = CURRENT_SCHEMA_VERSION;
 	emit_changed();
 }
 
@@ -144,10 +164,12 @@ void JRPGTable::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_entry", "id"), &JRPGTable::get_entry);
 	ClassDB::bind_method(D_METHOD("has_entry", "id"), &JRPGTable::has_entry);
 	ClassDB::bind_method(D_METHOD("clear_entry", "id"), &JRPGTable::clear_entry);
+	ClassDB::bind_method(D_METHOD("upgrade"), &JRPGTable::upgrade);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "entry_class"), "set_entry_class", "get_entry_class");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "schema_version"), "set_schema_version", "get_schema_version");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "entries", PROPERTY_HINT_ARRAY_TYPE, JRPGEntry::get_class_static()), "set_entries", "get_entries");
 
 	BIND_CONSTANT(MAX_ENTRIES);
+	BIND_CONSTANT(CURRENT_SCHEMA_VERSION);
 }

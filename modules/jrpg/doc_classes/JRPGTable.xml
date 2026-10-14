@@ -50,6 +50,12 @@
 				Sets the number of entries. New entries are added at the end with default values; when the table shrinks, entries are removed from the end. Other data that still refers to removed IDs then refers to "none".
 			</description>
 		</method>
+		<method name="upgrade">
+			<return type="void" />
+			<description>
+				Upgrades a table saved by an older version of Talewright to the current format by running its migration steps, then sets [member schema_version] to [constant CURRENT_SCHEMA_VERSION]. Loading a table calls it automatically once its entries are loaded. A table saved by a newer version is left unchanged and a warning is printed.
+			</description>
+		</method>
 	</methods>
 	<members>
 		<member name="entries" type="JRPGEntry[]" setter="set_entries" getter="get_entries" default="[]">
@@ -65,6 +71,9 @@
 	<constants>
 		<constant name="MAX_ENTRIES" value="100000">
 			The largest number of entries a table accepts.
+		</constant>
+		<constant name="CURRENT_SCHEMA_VERSION" value="1">
+			The table format version written by this version of Talewright.
 		</constant>
 	</constants>
 </class>

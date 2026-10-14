@@ -37,12 +37,25 @@
 				Returns the name of the table [param kind], which is also its property name and file name.
 			</description>
 		</method>
+		<method name="load_database" qualifiers="static">
+			<return type="JRPGDatabase" />
+			<param index="0" name="path" type="String" />
+			<description>
+				Loads the database manifest at [param path] and calls [method upgrade] on it. Use it instead of a plain resource load so older databases are upgraded.
+			</description>
+		</method>
 		<method name="set_table">
 			<return type="void" />
 			<param index="0" name="kind" type="int" enum="JRPGDatabase.TableKind" />
 			<param index="1" name="table" type="JRPGTable" />
 			<description>
 				Sets the table of the given [param kind].
+			</description>
+		</method>
+		<method name="upgrade">
+			<return type="void" />
+			<description>
+				Upgrades the manifest and every table to the current format (see [method JRPGTable.upgrade]).
 			</description>
 		</method>
 	</methods>
@@ -126,6 +139,9 @@
 		</constant>
 		<constant name="TABLE_MAX" value="12" enum="TableKind">
 			Number of table kinds.
+		</constant>
+		<constant name="CURRENT_SCHEMA_VERSION" value="1">
+			The database manifest format version written by this version of Talewright.
 		</constant>
 	</constants>
 </class>

@@ -74,6 +74,13 @@ public:
 	void set_table(TableKind p_kind, const Ref<JRPGTable> &p_table);
 	Ref<JRPGTable> get_table(TableKind p_kind) const;
 	Ref<JRPGTable> get_table_by_name(const String &p_name) const;
+
+	// Data format version written by this build. Raise it together with a JRPGSchema migration step.
+	static constexpr int CURRENT_SCHEMA_VERSION = 1;
+	// Runs the migration steps of the manifest and of every table. Code that opens a database uses
+	// load_database(), which calls it.
+	void upgrade();
+	static Ref<JRPGDatabase> load_database(const String &p_path);
 };
 
 VARIANT_ENUM_CAST(JRPGDatabase::TableKind);

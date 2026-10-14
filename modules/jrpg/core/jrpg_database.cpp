@@ -31,6 +31,9 @@
 
 #include "jrpg_database.h"
 
+#include "jrpg_schema.h"
+
+#include "core/io/resource_loader.h"
 #include "core/object/class_db.h"
 
 static const char *TABLE_NAMES[JRPGDatabase::TABLE_MAX] = {
@@ -81,6 +84,28 @@ Ref<JRPGTable> JRPGDatabase::get_table_by_name(const String &p_name) const {
 	return kind == TABLE_MAX ? Ref<JRPGTable>() : tables[kind];
 }
 
+void JRPGDatabase::upgrade() {
+	if (schema_version > CURRENT_SCHEMA_VERSION) {
+		WARN_PRINT_ONCE(vformat("JRPGDatabase \"%s\" was saved by a newer Talewright (schema %d, this build knows %d); some data may not load.", get_path(), schema_version, CURRENT_SCHEMA_VERSION));
+	} else if (schema_version < CURRENT_SCHEMA_VERSION) {
+		JRPGSchema::migrate(this, get_class_static(), schema_version, CURRENT_SCHEMA_VERSION);
+		schema_version = CURRENT_SCHEMA_VERSION;
+		emit_changed();
+	}
+	for (const Ref<JRPGTable> &table : tables) {
+		if (table.is_valid()) {
+			table->upgrade();
+		}
+	}
+}
+
+Ref<JRPGDatabase> JRPGDatabase::load_database(const String &p_path) {
+	Ref<JRPGDatabase> db = ResourceLoader::load(p_path, get_class_static());
+	ERR_FAIL_COND_V_MSG(db.is_null(), db, "Cannot load the JRPG database: " + p_path);
+	db->upgrade();
+	return db;
+}
+
 void JRPGDatabase::_bind_methods() {
 	ClassDB::bind_static_method("JRPGDatabase", D_METHOD("get_table_name", "kind"), &JRPGDatabase::get_table_name);
 	ClassDB::bind_static_method("JRPGDatabase", D_METHOD("find_table_kind", "name"), &JRPGDatabase::find_table_kind);
@@ -89,6 +114,8 @@ void JRPGDatabase::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_table", "kind", "table"), &JRPGDatabase::set_table);
 	ClassDB::bind_method(D_METHOD("get_table", "kind"), &JRPGDatabase::get_table);
 	ClassDB::bind_method(D_METHOD("get_table_by_name", "name"), &JRPGDatabase::get_table_by_name);
+	ClassDB::bind_method(D_METHOD("upgrade"), &JRPGDatabase::upgrade);
+	ClassDB::bind_static_method("JRPGDatabase", D_METHOD("load_database", "path"), &JRPGDatabase::load_database);
 
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "schema_version"), "set_schema_version", "get_schema_version");
 	ADD_GROUP("Tables", "");
@@ -109,4 +136,5 @@ void JRPGDatabase::_bind_methods() {
 	BIND_ENUM_CONSTANT(TABLE_TILESETS);
 	BIND_ENUM_CONSTANT(TABLE_COMMON_EVENTS);
 	BIND_ENUM_CONSTANT(TABLE_MAX);
+	BIND_CONSTANT(CURRENT_SCHEMA_VERSION);
 }
