@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 141, in_progress: 0, done: 65, blocked: 0, deferred: 3 (of 209)
+**Totals:** pending: 139, in_progress: 0, done: 67, blocked: 0, deferred: 3 (of 209)
 
 ## [x] 0 Bootstrap and task system
 
@@ -93,10 +93,10 @@ modules/jrpg with pure-logic core (no Node dependency), database, game state, RN
   - [x] **5.3.1** Actors, classes, types, terms, system (P1) _(commit: 2ec147be91)_
   - [x] **5.3.2** Skills, items, weapons, armors (P1) _(deps: 5.3.1; commit: 57cc51f10a)_
   - [x] **5.3.3** Enemies, troops, states, animations stub, tilesets data, common events (P1) _(deps: 5.3.2; commit: 390a77cfee)_
-- [ ] **5.4** RNG, parameters, traits, formulas (P1) _(deps: 5.3)_
+- [x] **5.4** RNG, parameters, traits, formulas (P1) _(deps: 5.3)_
   - [x] **5.4.1** JRPGRandom (PCG32) (P1) _(commit: 00d2e575a7)_
-  - [x] **5.4.2** Traits, effects, parameters, stat cache, EXP curve (P1) _(deps: 5.4.1; commit: pending)_
-  - [ ] **5.4.3** JRPGFormula (P1) _(deps: 5.4.2)_
+  - [x] **5.4.2** Traits, effects, parameters, stat cache, EXP curve (P1) _(deps: 5.4.1; commit: d05cbf6650)_
+  - [x] **5.4.3** JRPGFormula (P1) _(deps: 5.4.2; commit: pending)_
 - [ ] **5.5** Game state core (P1) _(deps: 5.4)_
   - [ ] **5.5.1** JRPGGameState core (P1)
   - [ ] **5.5.2** Runtime actor state (P1) _(deps: 5.5.1)_

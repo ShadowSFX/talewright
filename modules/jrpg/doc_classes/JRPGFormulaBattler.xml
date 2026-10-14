@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGFormulaBattler" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The user or target of a damage formula.
+	</brief_description>
+	<description>
+		A read-only view of a battler for [JRPGFormula]. A formula reads its values as properties ([code]a.atk[/code], [code]b.def[/code]...) and can call [method is_state_affected] and [method is_actor]. Battle code fills the values before evaluating a formula.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_value" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="name" type="StringName" />
+			<description>
+				Returns the value [param name], or 0 if it was never set.
+			</description>
+		</method>
+		<method name="is_actor" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] if the battler is an actor rather than an enemy.
+			</description>
+		</method>
+		<method name="is_state_affected" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="state_id" type="int" />
+			<description>
+				Returns [code]true[/code] if the battler has state [param state_id].
+			</description>
+		</method>
+		<method name="set_actor">
+			<return type="void" />
+			<param index="0" name="actor" type="bool" />
+			<description>
+				Sets whether the battler is an actor.
+			</description>
+		</method>
+		<method name="set_states">
+			<return type="void" />
+			<param index="0" name="state_ids" type="PackedInt32Array" />
+			<description>
+				Sets the battler's current state IDs.
+			</description>
+		</method>
+		<method name="set_value">
+			<return type="void" />
+			<param index="0" name="name" type="StringName" />
+			<param index="1" name="value" type="int" />
+			<description>
+				Sets the value [param name], one of [code]atk[/code], [code]def[/code], [code]mat[/code], [code]mdf[/code], [code]agi[/code], [code]luk[/code], [code]mhp[/code], [code]mmp[/code], [code]hp[/code], [code]mp[/code], [code]tp[/code] and [code]level[/code].
+			</description>
+		</method>
+	</methods>
+</class>

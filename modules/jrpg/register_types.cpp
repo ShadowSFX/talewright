@@ -43,6 +43,7 @@
 #include "modules/jrpg/core/jrpg_enemy_data.h"
 #include "modules/jrpg/core/jrpg_entry.h"
 #include "modules/jrpg/core/jrpg_equip_data.h"
+#include "modules/jrpg/core/jrpg_formula.h"
 #include "modules/jrpg/core/jrpg_item_data.h"
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_random.h"
@@ -76,6 +77,9 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGRandom);
 		GDREGISTER_CLASS(JRPGRandomStreams);
 		GDREGISTER_CLASS(JRPGStatBlock);
+		GDREGISTER_CLASS(JRPGFormulaBattler);
+		GDREGISTER_CLASS(JRPGFormula);
+		GDREGISTER_INTERNAL_CLASS(JRPGFormulaContext);
 		GDREGISTER_CLASS(JRPGEntry);
 		GDREGISTER_CLASS(JRPGTable);
 		GDREGISTER_CLASS(JRPGAudioCue);

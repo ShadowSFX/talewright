@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGFormula" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A damage formula such as a.atk * 4 - b.def * 2.
+	</brief_description>
+	<description>
+		Evaluates a skill or item formula with Godot's [Expression]. [code]a[/code] is the user and [code]b[/code] the target (see [JRPGFormulaBattler]), and [code]v[n][/code] reads game variable [code]n[/code]. Formulas may also use the functions [code]abs[/code], [code]min[/code], [code]max[/code], [code]clamp[/code], [code]floor[/code], [code]ceil[/code], [code]round[/code], [code]sqrt[/code] and [code]sign[/code], plus [code]iff(condition, if_true, if_false)[/code] and [code]roll(low, high)[/code], which draws from the battle random stream. Any other name is refused when the formula is set, so formulas stay deterministic and cannot call engine functions. When both operands are integers, [code]/[/code] divides as integers ([code]7 / 2[/code] is 3); write [code]7.0 / 2[/code] for 3.5.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="check_identifiers" qualifiers="static">
+			<return type="String" />
+			<param index="0" name="text" type="String" />
+			<description>
+				Returns an empty string if every name in [param text] is allowed in a formula, otherwise a message naming the first one that is not.
+			</description>
+		</method>
+		<method name="evaluate">
+			<return type="int" />
+			<param index="0" name="a" type="JRPGFormulaBattler" />
+			<param index="1" name="b" type="JRPGFormulaBattler" />
+			<param index="2" name="variables" type="Array" />
+			<param index="3" name="random" type="JRPGRandom" />
+			<description>
+				Evaluates the formula with user [param a], target [param b], the game [param variables] (index = variable ID) and the battle [param random] stream, and returns the result rounded to an integer (half away from zero). Empty or invalid formulas, runtime errors, NaN and infinity give 0; runtime problems print one warning per formula.
+			</description>
+		</method>
+		<method name="get_error" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns why the formula is invalid, or an empty string.
+			</description>
+		</method>
+		<method name="get_text" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the formula text.
+			</description>
+		</method>
+		<method name="is_valid" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] if the formula text is set and passed the checks and parsing.
+			</description>
+		</method>
+		<method name="set_text">
+			<return type="int" enum="Error" />
+			<param index="0" name="text" type="String" />
+			<description>
+				Sets and checks the formula text. Returns [constant @GlobalScope.ERR_PARSE_ERROR] when it uses a name that is not allowed or cannot be parsed.
+			</description>
+		</method>
+	</methods>
+</class>

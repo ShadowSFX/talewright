@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 18:50 -0600
+- **Updated:** 2026-10-13 18:53 -0600
 - **Current task:** none
-- **Last completed:** 5.4.2 Traits, effects, parameters, stat cache, EXP curve
-- **Next task:** 5.4.3 JRPGFormula
-- **Done leaf tasks:** 55
+- **Last completed:** 5.4.3 JRPGFormula
+- **Next task:** 5.5.1 JRPGGameState core
+- **Done leaf tasks:** 56
 <!-- status:end -->
 
 ## Log
@@ -139,4 +139,7 @@
 | 2026-10-13 18:46 -0600 | 5.4.1 | done: JRPGRandom (PCG32) — JRPGRandom over the vendored PCG32 (thirdparty/misc/pcg.h): seed(seed, sequence), next_u32, unbiased range incl. full 32-bit span and inverted-range guard (pcg32_boundedrand_r divides by bound), chance_bp, pick_weighted, Fisher-Yates shuffle, exact get/set_state with odd-increment check; JRPGRandomStreams: battle, map_ai, encounter, loot, misc as distinct PCG sequences, serialize/deserialize (missing streams kept, malformed reported). 5 doctests: reference vectors for seed 42/sequence 54 (checked with an independent implementation), boundaries + 25% chance over 100k draws, chi-square 100k draws range(0,5) < 20.52, weighted pick/shuffle, stream independence + state round trip. Core boundary checker now also limits angle-bracket thirdparty includes. Full suite 1434/1434 (containers: 5.4 in_progress->pending, 5 in_progress->pending) | 00d2e575a7 |
 | 2026-10-13 18:47 -0600 | 5.4.2 | started: Traits, effects, parameters, stat cache, EXP curve (containers: 5.4 pending->in_progress, 5 pending->in_progress) |  |
 | 2026-10-13 18:50 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-13 18:50 -0600 | 5.4.2 | done: Traits, effects, parameters, stat cache, EXP curve — jrpg_traits.h: Talewright trait/effect codes (own numbering grouped by tab), XParam/SParam/special flags/party abilities, JRPGMath::mul_bp (int64, half away from zero). JRPGStatBlock: params = (base + equipment) x each Param trait (rounded per factor) x buff factor (10000 + level x buff_step_bp) clamped to HP >= 1, others >= 0 and the rules' upper limits; buff levels capped at +-buff_max_levels with cancel semantics; ex-params = trait sums (base 0), sp-params = trait products (base 10000); generic trait_product_bp/trait_sum/trait_set/has_trait; dirty-flag cache. 5 doctests with hand-worked values (120 -> 180 -> 162 -> 243, 33 x 1.5 = 49.5 -> 50, clamps, project limit, 3-level 15 % buffs, 200 % x 95 % = 190 % element rate). EXP table criterion covered by the 5.3.1 hand-computed test (35/107/211/343). Full suite 1439/1439 (containers: 5.4 in_progress->pending, 5 in_progress->pending) | pending |
+| 2026-10-13 18:50 -0600 | 5.4.2 | done: Traits, effects, parameters, stat cache, EXP curve — jrpg_traits.h: Talewright trait/effect codes (own numbering grouped by tab), XParam/SParam/special flags/party abilities, JRPGMath::mul_bp (int64, half away from zero). JRPGStatBlock: params = (base + equipment) x each Param trait (rounded per factor) x buff factor (10000 + level x buff_step_bp) clamped to HP >= 1, others >= 0 and the rules' upper limits; buff levels capped at +-buff_max_levels with cancel semantics; ex-params = trait sums (base 0), sp-params = trait products (base 10000); generic trait_product_bp/trait_sum/trait_set/has_trait; dirty-flag cache. 5 doctests with hand-worked values (120 -> 180 -> 162 -> 243, 33 x 1.5 = 49.5 -> 50, clamps, project limit, 3-level 15 % buffs, 200 % x 95 % = 190 % element rate). EXP table criterion covered by the 5.3.1 hand-computed test (35/107/211/343). Full suite 1439/1439 (containers: 5.4 in_progress->pending, 5 in_progress->pending) | d05cbf6650 |
+| 2026-10-13 18:50 -0600 | 5.4.3 | started: JRPGFormula (containers: 5.4 pending->in_progress, 5 pending->in_progress) |  |
+| 2026-10-13 18:53 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 18:53 -0600 | 5.4.3 | done: JRPGFormula — JRPGFormula: lexical identifier allow-list checked before Expression::parse (inputs a/b/v, battler values, is_state_affected/is_actor, deterministic utilities abs/min/max/clamp/floor/ceil/round/sqrt/sign, helpers iff/roll, true/false/and/or/not; strings, node paths, dictionaries refused), Expression executed with const_calls_only; result to int64 rounded half away from zero; empty/invalid formula, runtime error, NaN/inf -> 0 with one warning per formula. JRPGFormulaBattler proxy (values via _get, const is_state_affected/is_actor); internal JRPGFormulaContext with const iff() and roll() drawing from the given battle stream. 4 doctests: battler values, v[n], integer vs float division, utilities, iff/is_state_affected/is_actor, roll() in stream order, parse/runtime errors (division by zero, non-number variable, missing variable, NaN) -> 0, refusal of randi/randf/instance_from_id/str_to_var/pow/a.free()/a.get_value/v.clear()/OS/strings/dictionaries. Full suite 1443/1443 (containers: 5.4 in_progress->done, 5 in_progress->pending) | pending |
