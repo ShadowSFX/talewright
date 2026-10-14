@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "6.5.2.3 Actor initial equipment and slice field check",
+  "last_completed": "6.5.3.1 Parameter grids, enemy drops and actions, troop members",
   "tasks": [
     {
       "id": "0",
@@ -2123,7 +2123,7 @@
         "plan/evidence/jrpg/6.5.2.3-actor-equipment.png"
       ],
       "status": "done",
-      "commit": "pending",
+      "commit": "e5fe6b28ea",
       "notes": "Slice-field coverage: a doctest asserts every spec 02 slice field of actors, classes, skills and items is editable stored data (the form's inspector and jrpg_db_set both rest on that); the live run lists each table's form labels and types one field per table with undo. Hidden fields (an item's damage fields while it deals no damage) are now data for the bridge, so damage type and formula can be set in one call. Icon index stays a number until the icon set exists (assets, epic 7)."
     },
     {
@@ -2136,14 +2136,67 @@
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "Every slice field of weapons, armors, enemies, troops, states, system, types and terms is editable through the form and through the bridge, with undo",
-        "System start position can be set from a map picker"
+        "Every slice field of weapons, armors, enemies, troops, states, system, types and terms is editable through the form and through the bridge, with undo"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
       "commit": "",
-      "notes": "",
+      "notes": "The second criterion (System start position from a map picker) moved to 8.3: maps and the map list do not exist before epic 8. Until then the start map is an ID field.",
       "status": "pending"
+    },
+    {
+      "id": "6.5.3.1",
+      "parent": "6.5.3",
+      "title": "Parameter grids, enemy drops and actions, troop members",
+      "description": "Weapon/armor parameter bonuses and enemy parameters as labeled fields with their ranges; enemy drops (kind, item/weapon/armor, 1 in N) and action patterns (skill, condition, parameters, rating) and troop members (enemy, position, hidden) as record lists.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Parameter bonuses and enemy parameters, drops, actions and troop members are editable through the form, with undo"
+      ],
+      "test_strategy": "Doctests (limits, record specs) + editor_ui_* run.",
+      "files": [
+        "modules/jrpg/core/jrpg_enemy_data.h",
+        "modules/jrpg/core/jrpg_enemy_data.cpp",
+        "modules/jrpg/core/jrpg_equip_data.h",
+        "modules/jrpg/core/jrpg_equip_data.cpp",
+        "modules/jrpg/editor/jrpg_param_editor.h",
+        "modules/jrpg/editor/jrpg_param_editor.cpp",
+        "modules/jrpg/editor/jrpg_list_editors.h",
+        "modules/jrpg/editor/jrpg_list_editors.cpp",
+        "modules/jrpg/editor/jrpg_curve_editor.cpp",
+        "modules/jrpg/editor/jrpg_inspector_plugin.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/tests/test_jrpg_list_editors.h",
+        "plan/specs/02_database_model.md",
+        "plan/evidence/jrpg/6.5.3.1-bridge-params-lists.txt",
+        "plan/evidence/jrpg/6.5.3.1-enemy-form.png",
+        "plan/evidence/jrpg/6.5.3.1-troop-form.png"
+      ],
+      "status": "done",
+      "commit": "pending",
+      "notes": "Bug found by the live run and fixed: opening an enemy changed Max HP 150 to 1 (Range::set_min clamps and emits value_changed, scene/gui/range.cpp:224-232); updating guards in the parameter grid and the curve dialog, plus a doctest checked by mutation (it fails without the guard). SignalWatcher cannot watch 4-argument signals such as property_changed (tests/signal_watcher.cpp:66-81): the doctest counts with a static callback. [Editor] doctests write .gdignore into the repository root (editor/file_system/editor_paths.cpp:269-273): fork doctests use [SceneTree] with ERR_PRINT_OFF instead. Viewing every table now provably changes nothing."
+    },
+    {
+      "id": "6.5.3.2",
+      "parent": "6.5.3",
+      "title": "System party, type lists and slice field check",
+      "description": "System starting party as actor pickers; type lists (elements, skill/weapon/armor/equipment types) with numbered rows that keep IDs (rename, add at the end, remove the last with a reference warning); slice-field check over weapons, armors, enemies, troops, states, system, types and terms.",
+      "dependencies": [
+        "6.5.3.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Every slice field of weapons, armors, enemies, troops, states, system, types and terms is editable through the form and through the bridge, with undo"
+      ],
+      "test_strategy": "Doctests + editor_ui_* run over the eight tables.",
+      "files": [
+        "modules/jrpg/editor/jrpg_type_list_editor.h",
+        "modules/jrpg/editor/jrpg_type_list_editor.cpp"
+      ],
+      "status": "pending",
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "6.6",
@@ -2434,7 +2487,8 @@
       "priority": 1,
       "acceptance_criteria": [
         "Bridge-driven create/rename",
-        "JRPGReferenceScanner checks the System start map against the map list and reports a deleted start map with its location (task 5.6 deferral)"
+        "JRPGReferenceScanner checks the System start map against the map list and reports a deleted start map with its location (task 5.6 deferral)",
+        "The System form sets the start position with a map picker (map, cell, direction) (moved from 6.5.3)"
       ],
       "test_strategy": "Bridge.",
       "files": [],

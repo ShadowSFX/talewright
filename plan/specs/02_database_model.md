@@ -106,6 +106,10 @@ Full field lists per table follow the inventory slices (03/04/05). The vertical 
   level 1 and 99 values and a growth shape (`JRPGCurves::generate`: t^(2^(-growth/5)), editor-side; the saved curve
   is plain integers). Actor initial equipment (6.5.2.3) is one picker per equipment type (slot i = type i + 1):
   weapons in slot 1, and in slot 2 with Dual Wield on the actor or its class; armors of the slot's type elsewhere.
+- Parameter arrays (weapon and armor bonuses, enemy parameters) are eight labeled number fields limited to the
+  class's ranges (`JRPGEquipData` / `JRPGEnemyData::get_param_limits`); enemy drops (at most 3), enemy actions
+  and troop members (at most 8) are record lists. Form editors never report a change while only showing a value
+  (`Range::set_min` clamps and emits, scene/gui/range.cpp:224-232): viewing every table changes nothing.
 - Data properties are the stored ones (not engine `resource_*`), whether or not the inspector shows them right now
   (an item's damage fields are hidden while it deals no damage): the bridge reads and sets them all; derived ones
   (a class's EXP table) are read-only.

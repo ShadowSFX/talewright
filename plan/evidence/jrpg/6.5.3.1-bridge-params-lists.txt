@@ -1,0 +1,28 @@
+# 6.5.3.1 bridge verification: parameter grids, enemy drops and actions, troop members
+## weapon 1 parameter bonuses: set Attack to 12 in the grid, then undo
+PackedInt32Array(0, 0, 10, 0, 0, 0, 0, 0)
+PackedInt32Array(0, 0, 12, 0, 0, 0, 0, 0)
+PackedInt32Array(0, 0, 10, 0, 0, 0, 0, 0)
+## enemy 1: parameters, then Add Drop (Kind Weapon refills the list), Short Sword, 1 in 8
+PackedInt32Array(150, 0, 22, 12, 10, 10, 12, 10) [{'data_id': 1, 'denominator': 4, 'kind': 1}] [{'condition_type': 0, 'param1': 0, 'param2': 0, 'rating': 5, 'skill_id': 1}]
+drop choices: ['0001  Short Sword', '0002', '0003']
+[{'data_id': 1, 'denominator': 4, 'kind': 1}, {'kind': 2, 'data_id': 1, 'denominator': 8}]
+## Add Action: Guard when HP is 0-5000 bp, rating 7
+[{'condition_type': 0, 'param1': 0, 'param2': 0, 'rating': 5, 'skill_id': 1}, {'skill_id': 2, 'condition_type': 2, 'param1': 0, 'param2': 5000, 'rating': 7}]
+[image saved] plan/evidence/jrpg/6.5.3.1-enemy-form.png
+## undo the action, then the drop
+1
+1
+## troop 1: Add Member (Moss Blob at 300, 250, hidden at start), then undo
+[{'enemy_id': 1, 'hidden': False, 'x': 320, 'y': 260}, {'enemy_id': 1, 'hidden': False, 'x': 480, 'y': 260}]
+[{'enemy_id': 1, 'hidden': False, 'x': 320, 'y': 260}, {'enemy_id': 1, 'hidden': False, 'x': 480, 'y': 260}, {'enemy_id': 1, 'x': 300, 'y': 250, 'hidden': True}]
+[image saved] plan/evidence/jrpg/6.5.3.1-troop-form.png
+[{'enemy_id': 1, 'hidden': False, 'x': 320, 'y': 260}, {'enemy_id': 1, 'hidden': False, 'x': 480, 'y': 260}]
+## errors
+    "errors": 0,
+    "warnings": 0,
+## (fresh editor) a first run of this transcript showed Max HP 150 turning into 1 when the enemy form opened: Range::set_min clamps and emits value_changed (scene/gui/range.cpp:224-232); fixed with an updating guard and a doctest
+## viewing entry 1 of every table and System, Types, Terms changes nothing
+  "unsaved_paths": []
+}
+(git: no changed files)

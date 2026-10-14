@@ -70,6 +70,8 @@ protected:
 	virtual PackedStringArray _get_columns() const { return PackedStringArray(); }
 	virtual PackedStringArray _describe(const Dictionary &p_row) const { return PackedStringArray(); }
 	virtual void _popup_row_editor(const Dictionary &p_row) {}
+	// The most rows the list may hold (0: no limit); Add is disabled at the limit.
+	virtual int _get_max_rows() const { return 0; }
 	// Called by the subclass when its dialog is confirmed: adds the row or replaces the one being edited.
 	void _apply_row(const Dictionary &p_row);
 	void _setup_list(const String &p_add_text, const String &p_empty_text);
@@ -112,6 +114,7 @@ struct Spec {
 	const char *property = "";
 	const char *noun = ""; // "Learning": "Add Learning", "Edit Learning".
 	const char *empty_text = "";
+	int max_rows = 0; // 0: no limit.
 	Vector<Field> fields;
 };
 
@@ -158,6 +161,7 @@ protected:
 	virtual PackedStringArray _get_columns() const override;
 	virtual PackedStringArray _describe(const Dictionary &p_row) const override;
 	virtual void _popup_row_editor(const Dictionary &p_row) override;
+	virtual int _get_max_rows() const override { return spec ? spec->max_rows : 0; }
 
 public:
 	void setup(const JRPGRecordSpecs::Spec *p_spec);

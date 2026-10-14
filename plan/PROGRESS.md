@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 22:36 -0600
+- **Updated:** 2026-10-13 22:52 -0600
 - **Current task:** none
-- **Last completed:** 6.5.2.3 Actor initial equipment and slice field check
-- **Next task:** 6.5.3 Weapons, armors, enemies, troops, states, system, types, terms forms
-- **Done leaf tasks:** 74
+- **Last completed:** 6.5.3.1 Parameter grids, enemy drops and actions, troop members
+- **Next task:** 6.5.3.2 System party, type lists and slice field check
+- **Done leaf tasks:** 75
 <!-- status:end -->
 
 ## Log
@@ -203,4 +203,8 @@
 | 2026-10-13 22:32 -0600 | 6.5.1 | CI run 38510290436 failed on macOS: std::size needs <iterator> under libc++ (MSVC pulls it in). Fixed with the engine's std_size (core/typedefs.h:158); static_checks.py now rejects std::size( in fork C++. | |
 | 2026-10-13 22:32 -0600 | 6.5.2.3 | started: Actor initial equipment and slice field check (containers: 6.5.2 pending->in_progress, 6.5 pending->in_progress, 6 pending->in_progress) |  |
 | 2026-10-13 22:36 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-13 22:36 -0600 | 6.5.2.3 | done: Actor initial equipment and slice field check — Actor initial equipment as named slot pickers (Weapon, Shield, Head, Body, Accessory from Types; weapons in slot 1 and in slot 2 with dual wield from actor or class; armors filtered by equipment type; foreign values kept and marked); data properties now include stored fields the inspector hides (bridge sets damage type + formula in one call); slice-field doctest for actors, classes, skills, items; verified live: slot pick + undo, form labels for every slice field, typed nickname/MP cost/price + undo per table, errors 0; full suite 1495/1495 (containers: 6.5.2 in_progress->done, 6.5 in_progress->pending, 6 in_progress->pending) | pending |
+| 2026-10-13 22:36 -0600 | 6.5.2.3 | done: Actor initial equipment and slice field check — Actor initial equipment as named slot pickers (Weapon, Shield, Head, Body, Accessory from Types; weapons in slot 1 and in slot 2 with dual wield from actor or class; armors filtered by equipment type; foreign values kept and marked); data properties now include stored fields the inspector hides (bridge sets damage type + formula in one call); slice-field doctest for actors, classes, skills, items; verified live: slot pick + undo, form labels for every slice field, typed nickname/MP cost/price + undo per table, errors 0; full suite 1495/1495 (containers: 6.5.2 in_progress->done, 6.5 in_progress->pending, 6 in_progress->pending) | e5fe6b28ea |
+| 2026-10-13 22:37 -0600 | - | imported 2 new / 2 updated tasks | |
+| 2026-10-13 22:37 -0600 | 6.5.3.1 | started: Parameter grids, enemy drops and actions, troop members (containers: 6.5.3 pending->in_progress, 6.5 pending->in_progress, 6 pending->in_progress) |  |
+| 2026-10-13 22:52 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 22:52 -0600 | 6.5.3.1 | done: Parameter grids, enemy drops and actions, troop members — Parameter grids (weapon/armor bonuses, enemy parameters: eight labeled EditorSpinSliders within get_param_limits ranges), enemy drops (kind refills the item/weapon/armor list, at most 3) and actions (skill, condition, values, rating) and troop members (enemy, position, hidden, at most 8) as record lists; list row caps; fixed an edit-on-view bug (Range::set_min clamping) in the grid and the curve dialog with a mutation-checked doctest; verified live via editor_ui_*: grid edit, drop/action/member add + undo, viewing every table leaves nothing unsaved, errors 0; full suite 1498/1498 (containers: 6.5.3 in_progress->pending, 6.5 in_progress->pending, 6 in_progress->pending) | pending |

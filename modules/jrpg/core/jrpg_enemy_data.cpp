@@ -33,14 +33,16 @@
 
 #include "core/object/class_db.h"
 
+void JRPGEnemyData::get_param_limits(int p_param, int &r_min, int &r_max) {
+	r_min = p_param == 0 ? 1 : 0;
+	r_max = p_param == 0 ? 999999 : (p_param == 1 ? 9999 : 999);
+}
+
 static int clamp_enemy_param(int p_param, int p_value) {
-	if (p_param == 0) {
-		return CLAMP(p_value, 1, 999999);
-	}
-	if (p_param == 1) {
-		return CLAMP(p_value, 0, 9999);
-	}
-	return CLAMP(p_value, 0, 999);
+	int min_value = 0;
+	int max_value = 0;
+	JRPGEnemyData::get_param_limits(p_param, min_value, max_value);
+	return CLAMP(p_value, min_value, max_value);
 }
 
 void JRPGEnemyData::set_battler(const String &p_battler) {

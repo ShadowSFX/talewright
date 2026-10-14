@@ -77,6 +77,7 @@ public:
 	void set_hue(int p_hue);
 	int get_hue() const { return hue; }
 	// Max HP 1..999999, max MP 0..9999, others 0..999 (RM-ENM-005, RM-ENM-006).
+	static void get_param_limits(int p_param, int &r_min, int &r_max);
 	void set_params(const PackedInt32Array &p_params);
 	PackedInt32Array get_params() const { return params; }
 	int get_param(int p_param) const;

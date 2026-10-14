@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 125, in_progress: 0, done: 89, blocked: 0, deferred: 3 (of 217)
+**Totals:** pending: 126, in_progress: 0, done: 90, blocked: 0, deferred: 3 (of 219)
 
 ## [x] 0 Bootstrap and task system
 
@@ -123,8 +123,10 @@ Setup tool, managed addon, main-screen workspace, database editor, authoring API
   - [x] **6.5.2** Actors, classes, skills, items forms (P1) _(deps: 6.5.1)_
     - [x] **6.5.2.1** Class EXP curve and learnings (P1) _(commit: 581a945334)_
     - [x] **6.5.2.2** Parameter curve editor (P1) _(deps: 6.5.2.1; commit: 04dbf10e7d)_
-    - [x] **6.5.2.3** Actor initial equipment and slice field check (P1) _(deps: 6.5.2.2; commit: pending)_
+    - [x] **6.5.2.3** Actor initial equipment and slice field check (P1) _(deps: 6.5.2.2; commit: e5fe6b28ea)_
   - [ ] **6.5.3** Weapons, armors, enemies, troops, states, system, types, terms forms (P1) _(deps: 6.5.2)_
+    - [x] **6.5.3.1** Parameter grids, enemy drops and actions, troop members (P1) _(commit: pending)_
+    - [ ] **6.5.3.2** System party, type lists and slice field check (P1) _(deps: 6.5.3.1)_
 - [ ] **6.6** Database authoring API + bridge tools (P1) _(deps: 6.5)_
 - [ ] **6.7** Epic review: workspace (P1) _(deps: 6.6)_
 

@@ -45,7 +45,9 @@
 #include "scene/gui/spin_box.h"
 #include "scene/gui/tree.h"
 
+#include "modules/jrpg/core/jrpg_enemy_data.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
+#include "modules/jrpg/core/jrpg_troop_data.h"
 
 // JRPGEditorPropertyList.
 
@@ -61,7 +63,10 @@ int JRPGEditorPropertyList::_selected() const {
 
 void JRPGEditorPropertyList::_update_buttons() {
 	const bool has = _selected() >= 0;
-	add_button->set_disabled(is_read_only());
+	const int max_rows = _get_max_rows();
+	const bool full = max_rows > 0 && Array(get_edited_property_value()).size() >= max_rows;
+	add_button->set_disabled(is_read_only() || full);
+	add_button->set_tooltip_text(full ? vformat(TTR("This list holds at most %d."), max_rows) : String());
 	edit_button->set_disabled(is_read_only() || !has);
 	remove_button->set_disabled(is_read_only() || !has);
 }
@@ -218,7 +223,13 @@ Field id_field(const char *p_key, const char *p_label, const char *p_target, int
 	return f;
 }
 
-// Lists stored in spec 02's "Packed nested lists"; more join with their tables' forms (6.5.3).
+Field enum_field(const char *p_key, const char *p_label, const Vector<const char *> &p_options, int p_default) {
+	Field f = field(p_key, p_label, FIELD_ENUM, 0, p_options.size() - 1, p_default);
+	f.options = p_options;
+	return f;
+}
+
+// Lists stored in spec 02's "Packed nested lists".
 Vector<Spec> build_specs() {
 	Vector<Spec> specs;
 	Spec learnings;
@@ -230,6 +241,48 @@ Vector<Spec> build_specs() {
 	learnings.fields.push_back(id_field("skill_id", TTRC("Skill"), "skills", 1, 1));
 	learnings.fields.push_back(field("note", TTRC("Note"), FIELD_STRING));
 	specs.push_back(learnings);
+
+	// Enemy drops {kind, data_id, denominator}: a 1 in denominator chance (RM-ENM-008).
+	Spec drops;
+	drops.object_class = "JRPGEnemyData";
+	drops.property = "drops";
+	drops.noun = TTRC("Drop");
+	drops.empty_text = TTRC("No drops. Add the items, weapons or armor this enemy may leave behind.");
+	drops.max_rows = JRPGEnemyData::MAX_DROPS;
+	drops.fields.push_back(enum_field("kind", TTRC("Kind"), { TTRC("None"), TTRC("Item"), TTRC("Weapon"), TTRC("Armor") }, JRPGEnemyData::DROP_ITEM));
+	Field dropped = id_field("data_id", TTRC("Drop"), "", 1, 1);
+	dropped.target_key = "kind";
+	dropped.targets = { "", "items", "weapons", "armors" };
+	drops.fields.push_back(dropped);
+	drops.fields.push_back(field("denominator", TTRC("Chance: 1 in"), FIELD_INT, 1, 1000, 1));
+	specs.push_back(drops);
+
+	// Enemy action patterns {skill_id, condition_type, param1, param2, rating} (RM-ENM-009); HP and MP conditions
+	// are basis points.
+	Spec actions;
+	actions.object_class = "JRPGEnemyData";
+	actions.property = "actions";
+	actions.noun = TTRC("Action");
+	actions.empty_text = TTRC("No actions. Add the skills this enemy uses and when it uses them.");
+	actions.fields.push_back(id_field("skill_id", TTRC("Skill"), "skills", 1, 1));
+	actions.fields.push_back(enum_field("condition_type", TTRC("Condition"), { TTRC("Always"), TTRC("Turn"), TTRC("HP"), TTRC("MP"), TTRC("State"), TTRC("Party Level"), TTRC("Switch") }, JRPGEnemyData::CONDITION_ALWAYS));
+	actions.fields.push_back(field("param1", TTRC("Value A"), FIELD_INT, 0, 10000, 0));
+	actions.fields.push_back(field("param2", TTRC("Value B"), FIELD_INT, 0, 10000, 0));
+	actions.fields.push_back(field("rating", TTRC("Rating"), FIELD_INT, 1, 9, 5));
+	specs.push_back(actions);
+
+	// Troop members {enemy_id, x, y, hidden} (RM-TRP-006).
+	Spec members;
+	members.object_class = "JRPGTroopData";
+	members.property = "members";
+	members.noun = TTRC("Member");
+	members.empty_text = TTRC("No enemies yet. Add the enemies of this troop and where they stand.");
+	members.max_rows = JRPGTroopData::MAX_MEMBERS;
+	members.fields.push_back(id_field("enemy_id", TTRC("Enemy"), "enemies", 1, 1));
+	members.fields.push_back(field("x", TTRC("X"), FIELD_INT, 0, 4096, 400));
+	members.fields.push_back(field("y", TTRC("Y"), FIELD_INT, 0, 4096, 300));
+	members.fields.push_back(field("hidden", TTRC("Hidden at Start"), FIELD_BOOL));
+	specs.push_back(members);
 	return specs;
 }
 

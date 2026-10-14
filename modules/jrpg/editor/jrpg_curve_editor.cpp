@@ -190,6 +190,7 @@ void JRPGCurveDialog::_generate() {
 }
 
 void JRPGCurveDialog::popup_for(int p_param, const PackedInt32Array &p_curves) {
+	updating = true; // Changing the ranges below can clamp and emit value_changed (scene/gui/range.cpp:224-232).
 	param = p_param;
 	JRPGClassData::get_param_limits(JRPGClassData::Param(param), min_value, max_value);
 	values = JRPGCurves::get_param_values(p_curves, param);
@@ -202,6 +203,7 @@ void JRPGCurveDialog::popup_for(int p_param, const PackedInt32Array &p_curves) {
 	growth->set_value_no_signal(0);
 	level->set_value_no_signal(1);
 	set_title(vformat(TTR("%s Curve"), JRPGCurves::get_param_label(param)));
+	updating = false;
 	_refresh();
 	popup_centered(Size2(600, 0) * EDSCALE);
 }

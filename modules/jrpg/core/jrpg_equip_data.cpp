@@ -48,12 +48,18 @@ void JRPGEquipData::set_price(int p_price) {
 	emit_changed();
 }
 
+void JRPGEquipData::get_param_limits(int p_param, int &r_min, int &r_max) {
+	r_max = p_param < 2 ? 5000 : 500; // Max HP and max MP come first.
+	r_min = -r_max;
+}
+
 void JRPGEquipData::set_params(const PackedInt32Array &p_params) {
 	params.resize(PARAM_COUNT);
 	for (int i = 0; i < PARAM_COUNT; i++) {
-		const int value = i < p_params.size() ? p_params[i] : 0;
-		const int limit = i < 2 ? 5000 : 500; // Max HP and max MP come first.
-		params.set(i, CLAMP(value, -limit, limit));
+		int min_value = 0;
+		int max_value = 0;
+		get_param_limits(i, min_value, max_value);
+		params.set(i, CLAMP(i < p_params.size() ? p_params[i] : 0, min_value, max_value));
 	}
 	emit_changed();
 }

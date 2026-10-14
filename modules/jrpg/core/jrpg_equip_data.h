@@ -58,6 +58,8 @@ public:
 	int get_price() const { return price; }
 	// Takes up to 8 values; changes are kept within -5000..5000 for max HP/MP and -500..500 for the others
 	// (RM-WPN-008, RM-ARM-008).
+	// Bonus range per parameter: Max HP and Max MP -5000..5000, the others -500..500.
+	static void get_param_limits(int p_param, int &r_min, int &r_max);
 	void set_params(const PackedInt32Array &p_params);
 	PackedInt32Array get_params() const { return params; }
 	int get_param(int p_param) const;

@@ -35,6 +35,7 @@
 #include "jrpg_database_editing.h"
 #include "jrpg_equipment_editor.h"
 #include "jrpg_list_editors.h"
+#include "jrpg_param_editor.h"
 #include "jrpg_trait_editor.h"
 
 #include "core/object/callable_mp.h"
@@ -136,6 +137,12 @@ bool JRPGInspectorPlugin::parse_property(Object *p_object, const Variant::Type p
 			add_property_editor(p_path, editor);
 			return true;
 		}
+	}
+	int min_value = 0;
+	int max_value = 0;
+	if (p_type == Variant::PACKED_INT32_ARRAY && p_path == "params" && JRPGEditorPropertyParamArray::get_limits(p_object, 0, min_value, max_value)) {
+		add_property_editor(p_path, memnew(JRPGEditorPropertyParamArray));
+		return true;
 	}
 	if (p_type == Variant::PACKED_INT32_ARRAY && p_path == "initial_equipment" && Object::cast_to<JRPGActorData>(p_object)) {
 		add_property_editor(p_path, memnew(JRPGEditorPropertyEquipment));
