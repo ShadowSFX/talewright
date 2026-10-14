@@ -121,6 +121,10 @@ TEST_CASE("[SceneTree][JRPG][Map] The map draws every layer: autotile shapes, wa
 	TileMapLayer *objects = node->get_tile_layer(JRPGMapData::LAYER_OBJECTS, false);
 	TileMapLayer *objects_above = node->get_tile_layer(JRPGMapData::LAYER_OBJECTS, true);
 	CHECK(ground->get_tile_set() == f.tileset);
+	CHECK(node->get_cell_size() == Vector2i(48, 48)); // The TileSet's tile size...
+	f.tileset->set_tile_size(Vector2i(32, 24));
+	CHECK(node->get_cell_size() == Vector2i(32, 24)); // ...read when asked.
+	f.tileset->set_tile_size(Vector2i(48, 48));
 	CHECK(ground->get_z_index() == JRPGMap::Z_BELOW);
 	CHECK(objects_above->get_z_index() == JRPGMap::Z_ABOVE);
 	CHECK(ground->get_owner() == nullptr); // Internal: not saved with the scene.

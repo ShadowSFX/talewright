@@ -1,0 +1,99 @@
+/**************************************************************************/
+/*  jrpg_map_edit_session.cpp                                             */
+/**************************************************************************/
+/*                         This file is part of:                          */
+/*                               TALEWRIGHT                               */
+/*         a JRPG-focused fork of the Godot Engine (MIT License)          */
+/**************************************************************************/
+/* Copyright (c) 2026-present Talewright contributors.                    */
+/* Based on the Godot Engine, Copyright (c) 2014-present Godot Engine     */
+/* contributors and (c) 2007-2014 Juan Linietsky, Ariel Manzur.           */
+/*                                                                        */
+/* Permission is hereby granted, free of charge, to any person obtaining  */
+/* a copy of this software and associated documentation files (the        */
+/* "Software"), to deal in the Software without restriction, including    */
+/* without limitation the rights to use, copy, modify, merge, publish,    */
+/* distribute, sublicense, and/or sell copies of the Software, and to     */
+/* permit persons to whom the Software is furnished to do so, subject to  */
+/* the following conditions:                                              */
+/*                                                                        */
+/* The above copyright notice and this permission notice shall be         */
+/* included in all copies or substantial portions of the Software.        */
+/*                                                                        */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY   */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,   */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE      */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
+/**************************************************************************/
+
+#include "jrpg_map_edit_session.h"
+
+#include "core/object/callable_mp.h"
+#include "editor/editor_interface.h"
+#include "editor/editor_node.h"
+
+#include "modules/jrpg/runtime/jrpg_map.h"
+
+void JRPGMapEditSession::_scene_changed() {
+	update();
+}
+
+void JRPGMapEditSession::start() {
+	if (!watching && EditorNode::get_singleton()) {
+		EditorNode::get_singleton()->connect(SNAME("scene_changed"), callable_mp(this, &JRPGMapEditSession::_scene_changed));
+		watching = true;
+	}
+	update();
+}
+
+void JRPGMapEditSession::stop() {
+	if (watching && EditorNode::get_singleton()) {
+		EditorNode::get_singleton()->disconnect(SNAME("scene_changed"), callable_mp(this, &JRPGMapEditSession::_scene_changed));
+	}
+	watching = false;
+}
+
+void JRPGMapEditSession::update() {
+	const JRPGMap *map = EditorNode::get_singleton() ? Object::cast_to<JRPGMap>(EditorInterface::get_singleton()->get_edited_scene_root()) : nullptr;
+	const ObjectID object = map ? map->get_instance_id() : ObjectID();
+	if (object == map_object) {
+		return;
+	}
+	map_object = object;
+	scene_path = map ? map->get_scene_file_path() : String();
+	emit_signal(SNAME("map_changed"));
+}
+
+JRPGMap *JRPGMapEditSession::get_map() const {
+	return ObjectDB::get_instance<JRPGMap>(map_object);
+}
+
+bool JRPGMapEditSession::get_view(const String &p_scene_path, float &r_zoom, Vector2 &r_offset) const {
+	const View *view = views.getptr(p_scene_path);
+	if (!view) {
+		return false;
+	}
+	r_zoom = view->zoom;
+	r_offset = view->offset;
+	return true;
+}
+
+void JRPGMapEditSession::set_view(const String &p_scene_path, float p_zoom, const Vector2 &p_offset) {
+	if (p_scene_path.is_empty()) {
+		return; // A map never saved has no path to remember it by.
+	}
+	View &view = views[p_scene_path];
+	view.zoom = p_zoom;
+	view.offset = p_offset;
+}
+
+void JRPGMapEditSession::_bind_methods() {
+	ADD_SIGNAL(MethodInfo("map_changed"));
+}
+
+JRPGMapEditSession::~JRPGMapEditSession() {
+	stop();
+}

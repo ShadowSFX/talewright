@@ -38,6 +38,7 @@
 #include "jrpg_database_view.h"
 #include "jrpg_list_editors.h"
 #include "jrpg_managed_addon.h"
+#include "jrpg_map_canvas.h"
 #include "jrpg_map_editing.h"
 #include "jrpg_project_setup.h"
 #include "jrpg_setup_dialog.h"
@@ -144,6 +145,49 @@ Dictionary workspace_state() {
 
 void tool_workspace_state(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
 	p_call->complete_data(workspace_state());
+}
+
+void tool_map_view(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGWorkspaceShell *shell = JRPGWorkspaceShell::get_singleton();
+	if (!shell) {
+		p_call->fail("The JRPG workspace is not open: turn on the project setting jrpg/enabled (or run jrpg_setup_project).");
+		return;
+	}
+	JRPGMapCanvas *canvas = shell->get_map_canvas();
+	if (!canvas->has_map()) {
+		p_call->fail("No map is open in the editor: open one with jrpg_map_open.");
+		return;
+	}
+	if (p_args.has("zoom")) {
+		const Variant zoom = p_args["zoom"];
+		if ((zoom.get_type() != Variant::INT && zoom.get_type() != Variant::FLOAT) || !(double(zoom) > 0) || !Math::is_finite(double(zoom))) {
+			p_call->fail("\"zoom\" is a positive number (1 = one screen pixel per map pixel).");
+			return;
+		}
+	}
+	Vector2i center;
+	if (p_args.has("center_cell")) {
+		const Array cell = p_args["center_cell"].get_type() == Variant::ARRAY ? Array(p_args["center_cell"]) : Array();
+		if (cell.size() != 2 || !cell[0].is_num() || !cell[1].is_num()) {
+			p_call->fail("\"center_cell\" is [x, y].");
+			return;
+		}
+		center = Vector2i(int(cell[0]), int(cell[1]));
+	}
+	// Fit first, then zoom around the middle, then center a cell.
+	if (p_args.has("grid")) {
+		canvas->set_grid_visible(p_args["grid"]);
+	}
+	if (bool(p_args.get("fit", false))) {
+		canvas->center_view();
+	}
+	if (p_args.has("zoom")) {
+		canvas->set_zoom(float(double(p_args["zoom"])), canvas->get_size() / 2);
+	}
+	if (p_args.has("center_cell")) {
+		canvas->center_on_cell(center);
+	}
+	p_call->complete_data(canvas->get_state());
 }
 
 void tool_workspace_select(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
@@ -1771,6 +1815,21 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	select.destructive = false; // Only changes what the editor shows.
 	select.func = &tool_workspace_select;
 	r_mcp.register_tool(select);
+
+	ClaudeBridgeMCP::Tool map_view;
+	map_view.name = "jrpg_map_view";
+	map_view.title = "View the map canvas";
+	map_view.description = "Reads, and optionally changes, the view of the JRPG workspace's map canvas (the Map section; jrpg_workspace_select shows it), which draws the map open in the editor: fit=true shows the whole map, zoom sets the scale (1 = one screen pixel per map pixel, 1/32 to 8), center_cell puts a cell in the middle, grid shows or hides the cell grid. Applied in that order. Returns map_id, scene, zoom, center_cell, visible_cells ([x, y, width, height], clipped to the map), grid and hovered_cell. Each map tab keeps its own view.";
+	Dictionary map_view_properties;
+	map_view_properties["fit"] = schema_property("boolean", "Show the whole map, centered.");
+	map_view_properties["zoom"] = schema_property("number", "Scale, 1/32 to 8.");
+	map_view_properties["center_cell"] = schema_property("array", "[x, y] cell to put in the middle.");
+	map_view_properties["grid"] = schema_property("boolean", "Show the cell grid.");
+	map_view.input_schema = ClaudeBridgeMCP::object_schema(map_view_properties);
+	map_view.read_only = false;
+	map_view.destructive = false; // Only changes what the editor shows.
+	map_view.func = &tool_map_view;
+	r_mcp.register_tool(map_view);
 
 	const Dictionary table_property = schema_property("string", "Table name: actors, classes, skills, items, weapons, armors, enemies, troops, states, animations, tilesets or common_events.");
 	const Dictionary id_property = schema_property("integer", "Entry ID (1 = first entry).");

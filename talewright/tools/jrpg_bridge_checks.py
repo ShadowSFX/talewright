@@ -369,6 +369,20 @@ def run(checks: Checks) -> None:
     c.check(
         "jrpg_map_open: the map is the edited scene", c.call("jrpg_map_list").get("edited_map_id") == second["map_id"]
     )
+    c.call("jrpg_workspace_select", {"section": "Map"})
+    fitted = c.call("jrpg_map_view", {"fit": True})
+    c.check(
+        "jrpg_map_view: the canvas shows the open map whole",
+        fitted.get("map_id") == second["map_id"] and fitted.get("visible_cells") == [0, 0, 4, 3],
+        json.dumps(fitted)[:300],
+    )
+    zoomed = c.call("jrpg_map_view", {"zoom": 4, "center_cell": [1, 1], "grid": False})
+    c.check(
+        "jrpg_map_view: zoom, center and grid apply",
+        zoomed.get("zoom") == 4 and zoomed.get("center_cell") == [1, 1] and zoomed.get("grid") is False,
+        json.dumps(zoomed)[:300],
+    )
+    c.call("jrpg_map_view", {"grid": True})
     c.check(
         "jrpg_map_delete: refused while the map is open", c.refused("jrpg_map_delete", {"map_id": second["map_id"]})
     )

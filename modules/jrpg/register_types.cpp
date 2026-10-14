@@ -83,6 +83,8 @@
 #include "modules/jrpg/editor/jrpg_inspector_plugin.h"
 #include "modules/jrpg/editor/jrpg_list_editors.h"
 #include "modules/jrpg/editor/jrpg_managed_addon.h"
+#include "modules/jrpg/editor/jrpg_map_canvas.h"
+#include "modules/jrpg/editor/jrpg_map_edit_session.h"
 #include "modules/jrpg/editor/jrpg_map_editing.h"
 #include "modules/jrpg/editor/jrpg_map_tree.h"
 #include "modules/jrpg/editor/jrpg_param_editor.h"
@@ -173,6 +175,8 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_INTERNAL_CLASS(JRPGTileSheetDialog);
 		GDREGISTER_INTERNAL_CLASS(JRPGEditorPropertyTiles);
 		GDREGISTER_INTERNAL_CLASS(JRPGMapTree);
+		GDREGISTER_INTERNAL_CLASS(JRPGMapEditSession);
+		GDREGISTER_INTERNAL_CLASS(JRPGMapCanvas);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspaceShell);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspaceView);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspacePlugin);

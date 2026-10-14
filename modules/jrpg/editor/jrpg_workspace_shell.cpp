@@ -33,12 +33,10 @@
 
 #include "jrpg_database_editing.h"
 #include "jrpg_database_view.h"
-#include "jrpg_map_editing.h"
+#include "jrpg_map_canvas.h"
 #include "jrpg_map_tree.h"
 
 #include "core/object/callable_mp.h"
-#include "editor/editor_interface.h"
-#include "editor/editor_node.h"
 #include "editor/editor_string_names.h"
 #include "editor/settings/editor_settings.h"
 #include "editor/themes/editor_scale.h"
@@ -53,7 +51,6 @@
 #include "scene/resources/style_box_flat.h"
 
 #include "modules/jrpg/core/jrpg_database.h"
-#include "modules/jrpg/core/jrpg_map_list.h"
 
 JRPGWorkspaceShell *JRPGWorkspaceShell::singleton = nullptr;
 
@@ -148,26 +145,10 @@ void JRPGWorkspaceShell::refresh() {
 }
 
 void JRPGWorkspaceShell::_update_canvas() {
-	// Which map the edited scene is, if any (task 8.3.3; the canvas itself draws maps from task 8.4.1).
-	String open_name;
-	const Node *root = EditorNode::get_singleton() ? EditorInterface::get_singleton()->get_edited_scene_root() : nullptr;
-	if (root && !root->get_scene_file_path().is_empty()) {
-		const Ref<JRPGMapList> list = JRPGMapEditing::get_map_list();
-		const int id = list->find_by_scene(root->get_scene_file_path());
-		open_name = id ? String(list->get_map(id).get("name", "")) : String();
-	}
-	if (open_name.is_empty()) {
-		canvas_title->set_text(TTR("No map is open"));
-		canvas_body->set_text(TTR("Double-click a map in the Maps list to open it, or create one with New Map."));
-	} else {
-		canvas_title->set_text(vformat(TTR("%s is open"), open_name));
-		canvas_body->set_text(TTR("Drawing on this canvas is not available yet. The 2D view shows the map meanwhile."));
-	}
-	canvas_show_2d->set_visible(!open_name.is_empty());
-}
-
-void JRPGWorkspaceShell::_show_2d() {
-	EditorInterface::get_singleton()->set_main_screen_editor("2D");
+	// The edited map in the canvas, or the message while the edited scene is not a map.
+	const bool has_map = map_canvas->has_map();
+	map_canvas->set_visible(has_map);
+	canvas_center->set_visible(!has_map);
 }
 
 Label *JRPGWorkspaceShell::_make_note(const String &p_text) {
@@ -224,16 +205,6 @@ void JRPGWorkspaceShell::_notification(int p_what) {
 		case NOTIFICATION_VISIBILITY_CHANGED: {
 			if (is_visible_in_tree()) {
 				refresh();
-			}
-		} break;
-		case NOTIFICATION_ENTER_TREE: {
-			if (EditorNode::get_singleton()) {
-				EditorNode::get_singleton()->connect(SNAME("scene_changed"), callable_mp(this, &JRPGWorkspaceShell::_update_canvas));
-			}
-		} break;
-		case NOTIFICATION_EXIT_TREE: {
-			if (EditorNode::get_singleton()) {
-				EditorNode::get_singleton()->disconnect(SNAME("scene_changed"), callable_mp(this, &JRPGWorkspaceShell::_update_canvas));
 			}
 		} break;
 	}
@@ -325,7 +296,12 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 	canvas_panel->set_v_size_flags(SIZE_EXPAND_FILL);
 	canvas = canvas_panel;
 	work->add_child(canvas_panel);
-	CenterContainer *center = memnew(CenterContainer);
+	map_canvas = memnew(JRPGMapCanvas);
+	map_canvas->set_visible(false);
+	map_canvas->connect(SNAME("map_changed"), callable_mp(this, &JRPGWorkspaceShell::_update_canvas));
+	canvas_panel->add_child(map_canvas);
+	canvas_center = memnew(CenterContainer);
+	CenterContainer *center = canvas_center;
 	canvas_panel->add_child(center);
 	canvas_message = memnew(PanelContainer);
 	canvas_message->set_custom_minimum_size(Size2(280, 0) * EDSCALE); // Updated on resize.
@@ -333,15 +309,12 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 	VBoxContainer *message_box = memnew(VBoxContainer);
 	canvas_message->add_child(message_box);
 	canvas_title = memnew(Label);
+	canvas_title->set_text(TTR("No map is open"));
 	message_box->add_child(canvas_title);
 	canvas_body = memnew(Label);
+	canvas_body->set_text(TTR("Double-click a map in the Maps list to open it, or create one with New Map."));
 	canvas_body->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
 	message_box->add_child(canvas_body);
-	canvas_show_2d = memnew(Button);
-	canvas_show_2d->set_text(TTR("Show in 2D View"));
-	canvas_show_2d->set_h_size_flags(SIZE_SHRINK_BEGIN);
-	canvas_show_2d->connect(SceneStringName(pressed), callable_mp(this, &JRPGWorkspaceShell::_show_2d));
-	message_box->add_child(canvas_show_2d);
 	canvas_mark = memnew(Label);
 	canvas_mark->set_text(U"▼");
 	canvas_mark->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_RIGHT);

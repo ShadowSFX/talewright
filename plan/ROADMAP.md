@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 107, in_progress: 0, done: 131, blocked: 0, deferred: 3 (of 241)
+**Totals:** pending: 106, in_progress: 0, done: 132, blocked: 0, deferred: 3 (of 241)
 
 ## [x] 0 Bootstrap and task system
 
@@ -172,9 +172,9 @@ JRPGMap scenes, map editor canvas, cell cache, runtime map and movement.
 - [x] **8.3** Map list and properties (P1) _(deps: 8.1)_
   - [x] **8.3.1** Map list authoring API and bridge tools (P1) _(commit: a80ed0a213)_
   - [x] **8.3.2** Start map checks and start position picker (P1) _(deps: 8.3.1; commit: da64948eea)_
-  - [x] **8.3.3** Map tree and properties UI (P1) _(deps: 8.3.2; commit: pending)_
+  - [x] **8.3.3** Map tree and properties UI (P1) _(deps: 8.3.2; commit: 3d1e41f6ae)_
 - [ ] **8.4** Map canvas tools (P1) _(deps: 8.3, 7.4)_
-  - [ ] **8.4.1** Map canvas view and MapEditSession (P1)
+  - [x] **8.4.1** Map canvas view and MapEditSession (P1) _(commit: pending)_
   - [ ] **8.4.2** Drawing tools with undo patches (P1) _(deps: 8.4.1)_
   - [ ] **8.4.3** Shadow, region, event modes and auto-layer (P1) _(deps: 8.4.2)_
 - [ ] **8.5** Tile palette (P1) _(deps: 8.4)_

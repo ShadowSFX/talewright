@@ -1,0 +1,28 @@
+# 8.4.1 bridge verification: map canvas and edit session
+## World (30 x 20) painted: grass, a pond and props; it opens in the canvas, fitted
+  canvas shown: True
+  message shown: False
+  view: {'map_id': 1, 'scene': 'res://jrpg/maps/map_0001.tscn', 'zoom': 0.766, 'grid': True, 'hovered_cell': None, 'center_cell': [15, 9], 'visible_cells': [0, 0, 30, 20]}
+  screenshot: plan/evidence/jrpg/8.4.1-world-fitted.png
+## zoom 2, cell (8, 7) in the middle
+  view: {'map_id': 1, 'scene': 'res://jrpg/maps/map_0001.tscn', 'zoom': 2.0, 'grid': True, 'hovered_cell': None, 'center_cell': [8, 7], 'visible_cells': [0, 3, 18, 9]}
+  screenshot: plan/evidence/jrpg/8.4.1-world-zoomed.png
+## Town (20 x 15) in a second tab: its own fitted view
+  view: {'map_id': 2, 'scene': 'res://jrpg/maps/map_0002.tscn', 'zoom': 1.0, 'grid': True, 'hovered_cell': None, 'center_cell': [9, 7], 'visible_cells': [0, 0, 20, 15]}
+## back to World: its zoom and center come back
+  view: {'map_id': 1, 'scene': 'res://jrpg/maps/map_0001.tscn', 'zoom': 2.0, 'grid': True, 'hovered_cell': None, 'center_cell': [8, 7], 'visible_cells': [0, 3, 18, 9]}
+## a scene that is not a map: the canvas gives way to the message, and the view tool says why
+  canvas shown: False
+  message shown: True
+  view: No map is open in the editor: open one with jrpg_map_open.
+  screenshot: plan/evidence/jrpg/8.4.1-not-a-map.png
+## back to Town, then its tab closes (deleted with close_scene): the session lets go of the map
+  view: {'map_id': 2, 'scene': 'res://jrpg/maps/map_0002.tscn', 'zoom': 1.0, 'grid': True, 'hovered_cell': None, 'center_cell': [9, 7], 'visible_cells': [0, 0, 20, 15]}
+  deleted: 2
+  edited scene now: World JRPGMap
+  canvas shown: True
+  message shown: False
+  view: {'map_id': 1, 'scene': 'res://jrpg/maps/map_0001.tscn', 'zoom': 2.0, 'grid': True, 'hovered_cell': None, 'center_cell': [8, 7], 'visible_cells': [0, 3, 18, 9]}
+## errors
+    "errors": 0,
+    "warnings": 0,

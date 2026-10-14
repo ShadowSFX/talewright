@@ -52,6 +52,7 @@ public:
 	static constexpr int Z_BELOW = 0;
 	static constexpr int Z_CHARACTERS = 1;
 	static constexpr int Z_ABOVE = 2;
+	static constexpr int DEFAULT_CELL_SIZE = 48; // Pixels, until a TileSet says otherwise (D-034).
 
 private:
 	Ref<JRPGMapData> map_data;
@@ -93,6 +94,8 @@ public:
 	int get_rebuild_count() const { return rebuild_count; }
 	// The internal layer that draws p_layer's tiles below (or above) characters.
 	TileMapLayer *get_tile_layer(int p_layer, bool p_above) const;
+	// The size of one cell in the map's local coordinates: its TileSet's tile size (DEFAULT_CELL_SIZE without one).
+	Vector2i get_cell_size() const;
 
 	JRPGMap();
 	~JRPGMap();

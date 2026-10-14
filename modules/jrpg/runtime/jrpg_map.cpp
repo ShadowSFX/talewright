@@ -196,6 +196,11 @@ TileMapLayer *JRPGMap::get_tile_layer(int p_layer, bool p_above) const {
 	return p_above ? above[p_layer] : below[p_layer];
 }
 
+Vector2i JRPGMap::get_cell_size() const {
+	const Ref<TileSet> tiles = below[0] ? below[0]->get_tile_set() : Ref<TileSet>();
+	return tiles.is_valid() ? tiles->get_tile_size() : Vector2i(DEFAULT_CELL_SIZE, DEFAULT_CELL_SIZE);
+}
+
 void JRPGMap::_notification(int p_what) {
 	if (p_what == NOTIFICATION_ENTER_TREE) {
 		_queue_rebuild();
@@ -210,12 +215,14 @@ void JRPGMap::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("rebuild"), &JRPGMap::rebuild);
 	ClassDB::bind_method(D_METHOD("get_rebuild_count"), &JRPGMap::get_rebuild_count);
 	ClassDB::bind_method(D_METHOD("get_tile_layer", "layer", "above"), &JRPGMap::get_tile_layer);
+	ClassDB::bind_method(D_METHOD("get_cell_size"), &JRPGMap::get_cell_size);
 
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "map_data", PROPERTY_HINT_RESOURCE_TYPE, "JRPGMapData"), "set_map_data", "get_map_data");
 
 	BIND_CONSTANT(Z_BELOW);
 	BIND_CONSTANT(Z_CHARACTERS);
 	BIND_CONSTANT(Z_ABOVE);
+	BIND_CONSTANT(DEFAULT_CELL_SIZE);
 }
 
 JRPGMap::JRPGMap() {

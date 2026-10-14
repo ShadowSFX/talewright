@@ -9,6 +9,12 @@
 	<tutorials>
 	</tutorials>
 	<methods>
+		<method name="get_cell_size" qualifiers="const">
+			<return type="Vector2i" />
+			<description>
+				Returns the size of one map cell in the map's local coordinates: the tile size of the [TileSet] the map draws with, or [constant DEFAULT_CELL_SIZE] pixels on each side when it has none yet.
+			</description>
+		</method>
 		<method name="get_database" qualifiers="const">
 			<return type="JRPGDatabase" />
 			<description>
@@ -57,6 +63,9 @@
 		</constant>
 		<constant name="Z_ABOVE" value="2">
 			The z index of overhead tiles, drawn above characters.
+		</constant>
+		<constant name="DEFAULT_CELL_SIZE" value="48">
+			The cell size, in pixels, of a map whose tileset has no [TileSet] yet.
 		</constant>
 	</constants>
 </class>
