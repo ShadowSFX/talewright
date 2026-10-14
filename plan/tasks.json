@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.6.2.2 Player, game loop and camera",
+  "last_completed": "8.7.1 Character sheet frames and importer",
   "tasks": [
     {
       "id": "0",
@@ -3393,13 +3393,13 @@
         "plan/DECISIONS.md",
         "plan/evidence/jrpg/8.6.2.2-*"
       ],
-      "commit": "pending",
+      "commit": "472cfb9826",
       "notes": ""
     },
     {
       "id": "8.7",
       "title": "Character sprites",
-      "description": "Character sheets in the Talewright format (spec 05: one character per image, rows up/right/down/left, frames per row, optional 8 directions, y_offset/object import settings) imported to SpriteFrames; direction/pattern/walk animation, priority, through.",
+      "description": "Character sheets in the Talewright format (spec 05: one character per image, rows up/right/down/left, frames per row, optional 8 directions, y_offset/object import settings) imported to SpriteFrames; direction/pattern/walk animation, priority, through. Split into 8.7.1 (the sheet's frames: JRPGCharacterSheet and the Character Sheet importer) and 8.7.2 (the character sprite on the map). Priority and through are event-character settings: the player is always 'same as characters', and JRPGMover already moves through; events get both with their pages (9.1, 9.6).",
       "parent": "8",
       "dependencies": [
         "8.6"
@@ -3407,10 +3407,53 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Import of a generated 4x4 sheet gives 4 animations with 4 frames each and the right frame rectangles",
-        "Through the bridge: after a held right input the player's animation is the right-facing one and its frame index advances (game_node_get), with a screenshot as evidence"
+        "8.7.1 and 8.7.2 done"
       ],
       "test_strategy": "Bridge screenshots.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8.7.1",
+      "parent": "8.7",
+      "title": "Character sheet frames and importer",
+      "priority": 1,
+      "dependencies": [],
+      "description": "JRPGCharacterSheet (runtime): SpriteFrames from a sheet texture and its layout (frames per row, 4 or 8 directions, a grid of characters and the index of one, the row order, y_offset, object), one animation per direction, column 0 the standing frame; a character reference (an image, or a SpriteFrames made by the importer) resolves to SpriteFrames, plain images with the default layout. JRPGCharacterSheetImporter (editor): Import As 'Character Sheet' with those options, saving SpriteFrames.",
+      "acceptance_criteria": [
+        "Import of a generated 4x4 sheet gives 4 animations with 4 frames each and the right frame rectangles (doctest)",
+        "8 directions, a grid with an index and another row order give the right rectangles; a size that does not divide is refused with the reason (doctest)"
+      ],
+      "test_strategy": "Doctests on generated images and on the importer's output.",
+      "status": "done",
+      "files": [
+        "modules/jrpg/runtime/jrpg_character_sheet.{h,cpp}",
+        "modules/jrpg/editor/jrpg_character_sheet_importer.{h,cpp}",
+        "modules/jrpg/tests/test_jrpg_character_sheet.h",
+        "modules/jrpg/doc_classes/JRPGCharacterSheet.xml",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "8.7.2",
+      "parent": "8.7",
+      "title": "Character sprite on the map",
+      "priority": 1,
+      "dependencies": [
+        "8.7.1"
+      ],
+      "description": "JRPGCharacterSprite (runtime, an AnimatedSprite2D): a character's sheet drawn with its feet on the cell (y_offset raises it), the animation of its facing, walking through the frames while it steps and standing on frame 0; the player shows the party leader's character (the marker without one). jrpg_db_set_image accepts sheets made by the importer.",
+      "acceptance_criteria": [
+        "Through the bridge: after a held right input the player's animation is the right-facing one and its frame index advances (game_node_get), with a screenshot as evidence",
+        "Walk frames follow the step progress at every speed (doctest)"
+      ],
+      "test_strategy": "Doctests + bridge verification with screenshots.",
+      "status": "pending",
       "files": [],
       "commit": "",
       "notes": ""

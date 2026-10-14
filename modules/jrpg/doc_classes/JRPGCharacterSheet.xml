@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGCharacterSheet" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Cuts a character sheet into the animations a character is drawn with.
+	</brief_description>
+	<description>
+		A character sheet holds one character by default: a row of walk frames for each way it faces, up, right, down and left (then up-right, down-right, down-left and up-left on an 8-direction sheet), with column 0 the standing pose. [method make_frames] turns a sheet into [SpriteFrames] with one animation per direction, named [code]up[/code], [code]right[/code], [code]down[/code], [code]left[/code] (and [code]up_right[/code], [code]down_right[/code], [code]down_left[/code], [code]up_left[/code]).
+		Sheets laid out differently are described by options: [code]frames[/code] (walk frames a row, default 4), [code]directions[/code] (4 or 8), [code]grid[/code] (characters across and down the image, default [code]Vector2i(1, 1)[/code]) with [code]index[/code] (which one, row by row), [code]row_order[/code] (the direction names of the rows, comma-separated), [code]y_offset[/code] (pixels to draw the character higher) and [code]object[/code] (an object that bushes do not hide). The editor's Character Sheet importer (Import As in the Import dock) takes the same options and saves the [SpriteFrames]; an image imported as a plain texture is cut with the default layout.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_y_offset" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="frames" type="SpriteFrames" />
+			<description>
+				Returns how many pixels higher than its cell [param frames] are drawn: the [code]y_offset[/code] their sheet was cut with.
+			</description>
+		</method>
+		<method name="is_object" qualifiers="static">
+			<return type="bool" />
+			<param index="0" name="frames" type="SpriteFrames" />
+			<description>
+				Returns [code]true[/code] when [param frames] belong to an object (the [code]object[/code] option): bushes do not hide its lower part.
+			</description>
+		</method>
+		<method name="load_frames" qualifiers="static">
+			<return type="SpriteFrames" />
+			<param index="0" name="reference" type="String" />
+			<description>
+				Returns the frames a character reference is drawn with: [param reference] is a [code]uid://[/code] or [code]res://[/code] path, as database entries hold it. [SpriteFrames] made by the Character Sheet importer come back as they are; an image is cut with the default layout. Returns [code]null[/code] when the file is missing or the image does not fit the default layout.
+			</description>
+		</method>
+		<method name="make_frames" qualifiers="static">
+			<return type="SpriteFrames" />
+			<param index="0" name="texture" type="Texture2D" />
+			<param index="1" name="options" type="Dictionary" default="{}" />
+			<description>
+				Returns the [SpriteFrames] of one character of [param texture], cut as [param options] describe (see the class description; options left out keep their defaults). Returns [code]null[/code], with an error saying why, when the image does not divide into that layout or the options are wrong.
+			</description>
+		</method>
+	</methods>
+</class>

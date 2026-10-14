@@ -69,17 +69,21 @@
 #include "modules/jrpg/core/jrpg_types_data.h"
 #include "modules/jrpg/core/jrpg_usable_data.h"
 #include "modules/jrpg/core/jrpg_weapon_data.h"
+#include "modules/jrpg/runtime/jrpg_character_sheet.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 #include "modules/jrpg/runtime/jrpg_map_files.h"
 #include "modules/jrpg/runtime/jrpg_player.h"
 #include "modules/jrpg/runtime/jrpg_scene_manager.h"
 
 #ifdef TOOLS_ENABLED
+#include "core/io/resource_importer.h"
+#include "editor/editor_node.h"
 #include "editor/plugins/editor_plugin.h"
 
 #include "modules/jrpg/editor/jrpg_autotile_importer.h"
 #include "modules/jrpg/editor/jrpg_bootstrap_plugin.h"
 #include "modules/jrpg/editor/jrpg_bridge_tools.h"
+#include "modules/jrpg/editor/jrpg_character_sheet_importer.h"
 #include "modules/jrpg/editor/jrpg_curve_editor.h"
 #include "modules/jrpg/editor/jrpg_database_editing.h"
 #include "modules/jrpg/editor/jrpg_database_view.h"
@@ -107,6 +111,15 @@
 
 // Registration levels (plan/specs/01_module_layout.md): core and runtime classes at SCENE level so games and MMO
 // servers get them; editor plugins at EDITOR level, compiled only in editor builds.
+
+#ifdef TOOLS_ENABLED
+// Import As > Character Sheet (task 8.7.1), once the editor's own importers are in (the mp3 module's way).
+static void _add_importers() {
+	Ref<JRPGCharacterSheetImporter> character_sheet;
+	character_sheet.instantiate();
+	ResourceFormatImporter::get_singleton()->add_importer(character_sheet);
+}
+#endif // TOOLS_ENABLED
 
 void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) {
@@ -154,6 +167,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGMover);
 		GDREGISTER_ABSTRACT_CLASS(JRPGMapShapes); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGMapFiles); // Static methods only.
+		GDREGISTER_ABSTRACT_CLASS(JRPGCharacterSheet); // Static methods only.
 		GDREGISTER_CLASS(JRPGMap);
 		GDREGISTER_CLASS(JRPGPlayer);
 		GDREGISTER_CLASS(JRPGSceneManager);
@@ -200,6 +214,8 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_ABSTRACT_CLASS(JRPGMapEditing); // Static methods only.
 		GDREGISTER_CLASS(JRPGProjectSetup);
 		GDREGISTER_INTERNAL_CLASS(JRPGSetupDialog);
+		GDREGISTER_INTERNAL_CLASS(JRPGCharacterSheetImporter);
+		EditorNode::add_init_callback(_add_importers);
 		EditorPlugins::add_by_type<JRPGBootstrapPlugin>();
 #ifdef MODULE_CLAUDE_BRIDGE_ENABLED
 		JRPGBridgeTools::register_provider();

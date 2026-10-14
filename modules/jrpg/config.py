@@ -19,6 +19,7 @@ def get_doc_classes():
         "JRPGAutotileImporter",
         "JRPGAutotileResolver",
         "JRPGBattleRules",
+        "JRPGCharacterSheet",
         "JRPGClassData",
         "JRPGCommonEventData",
         "JRPGDatabase",

@@ -649,3 +649,18 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** deterministic movement (servers, replays), the reference's grid feel, small maps framed like the
   reference's centered small maps.
 - **Reversal:** `JRPGSceneManager::_simulation_step` and `_update_camera_limits` hold these rules.
+
+## D-045 — Character sheets: plain images by default, the importer for other layouts
+- **Context:** spec 05 says character sheets import to `SpriteFrames` with their layout as import settings
+  (task 8.7). Actors already reference their character as an image file (`*.png` path strings); the database
+  forms, the bridge's `jrpg_db_set_image` and the starter assets treat those files as textures.
+- **Options:** switch every character image to a SpriteFrames importer (changes the files' resource type under the
+  forms and tools); cut sheets only at run time with a fixed layout (no other layouts); both.
+- **Choice:** `JRPGCharacterSheet` (runtime) cuts `SpriteFrames` from a texture and a layout (frames, 4 or 8
+  directions, grid and index, row order, y offset, object); a plain image gets the default layout (one character,
+  4 x 4) when a character is drawn with it; the editor's `JRPGCharacterSheetImporter` ("Character Sheet" under
+  Import As, priority 0.1 so the texture importer stays the default, `core/io/resource_importer.cpp:521-537`) saves
+  the SpriteFrames of any other layout, which `load_frames` returns as they are.
+- **Why:** the common case needs no import step and nothing that reads the images as textures changes; other
+  layouts use Godot's own import settings, as the spec asks.
+- **Reversal:** make the importer the default for a folder by tooling, or drop the texture path in `load_frames`.
