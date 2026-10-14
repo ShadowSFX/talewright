@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "5.4.3 JRPGFormula",
+  "last_completed": "5.5.1 JRPGGameState core",
   "tasks": [
     {
       "id": "0",
@@ -1526,17 +1526,32 @@
       "id": "5.5.1",
       "parent": "5.5",
       "title": "JRPGGameState core",
-      "description": "Switches (bitset), variables, self switches, gold, inventory, party, steps, playtime, system flags; serialize/deserialize.",
+      "description": "JRPGGameState (core): switches (bitset), variables (Array, index = id), self switches, party members, gold, inventory counts, steps, playtime, map position, system flags (access, window tone, music overrides, timer), the JRPGRandomStreams and a JRPGSimClock (fixed 60 Hz steps with at most 4 steps per frame); new-game setup from the database; serialize/deserialize in spec 06's canonical form with validation that leaves the state unchanged on bad data.",
       "dependencies": [],
       "priority": 1,
       "acceptance_criteria": [
-        "Round-trip equality"
+        "serialize -> deserialize -> serialize gives an identical Dictionary (and identical var_to_bytes) for a state using every section",
+        "RNG streams and the step clock round-trip: draws after loading match draws from the original",
+        "Malformed or newer-format data is refused with an error and leaves the state unchanged; unknown keys are ignored",
+        "Documented limits: items 0..99 (RM-CMD-019), gold 0..999 999 999 (Talewright limit, spec 06), timer 0..99:59",
+        "Doctests [JRPG]; dev_mode build clean; doctool stable; full suite passes"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
-      "files": [],
-      "commit": "",
+      "files": [
+        "modules/jrpg/core/jrpg_game_state.h",
+        "modules/jrpg/core/jrpg_game_state.cpp",
+        "modules/jrpg/core/jrpg_sim_clock.h",
+        "modules/jrpg/core/jrpg_sim_clock.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGGameState.xml",
+        "modules/jrpg/doc_classes/JRPGSimClock.xml",
+        "modules/jrpg/tests/test_jrpg_game_state.h",
+        "plan/specs/06_save_format.md"
+      ],
+      "commit": "pending",
       "notes": "",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "5.5.2",
@@ -1555,6 +1570,25 @@
       "commit": "",
       "notes": "",
       "status": "pending"
+    },
+    {
+      "id": "5.5.3",
+      "parent": "5.5",
+      "title": "Event runtime state",
+      "description": "JRPGEventState (core): event_id, cell, direction, pattern, move-route index and wait, erased, transparency, through override; the events_state section {map_id, map_revision, events} of JRPGGameState; on load drop states of events that no longer exist (spec 06).",
+      "dependencies": [
+        "5.5.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Round-trip equality of the events_state section",
+        "States of missing events are dropped on load with one warning"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "5.6",

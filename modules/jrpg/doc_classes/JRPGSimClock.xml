@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGSimClock" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Counts the fixed 60 Hz simulation steps of a JRPG.
+	</brief_description>
+	<description>
+		Waits, movement and timers count simulation steps instead of seconds, so the game behaves the same at any frame rate and on servers. Each rendered frame, the game passes the frame time to [method advance], runs the steps it returns, and calls [method step] for each of them.
+		At most [constant MAX_STEPS_PER_FRAME] steps run per frame: after a long stall the game slows down instead of trying to catch up.
+		Online, each zone server owns the clock of the maps it simulates.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="advance">
+			<return type="int" />
+			<param index="0" name="delta" type="float" />
+			<description>
+				Adds [param delta] seconds of frame time and returns how many steps are due now, from 0 to [constant MAX_STEPS_PER_FRAME]. It does not change the step count. Zero, negative and NaN frame times add nothing.
+			</description>
+		</method>
+		<method name="get_steps" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns how many steps have run.
+			</description>
+		</method>
+		<method name="reset_pending_time">
+			<return type="void" />
+			<description>
+				Drops frame time that has not become a step yet, for example after loading or a pause.
+			</description>
+		</method>
+		<method name="set_steps">
+			<return type="void" />
+			<param index="0" name="steps" type="int" />
+			<description>
+				Sets the step count (when loading). Negative values are refused.
+			</description>
+		</method>
+		<method name="step">
+			<return type="int" />
+			<description>
+				Counts one step and returns the new total.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="STEPS_PER_SECOND" value="60">
+			Simulation steps per second.
+		</constant>
+		<constant name="MAX_STEPS_PER_FRAME" value="4">
+			Most steps [method advance] returns for one frame.
+		</constant>
+	</constants>
+</class>

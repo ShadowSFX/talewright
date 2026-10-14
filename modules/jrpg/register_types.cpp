@@ -44,9 +44,11 @@
 #include "modules/jrpg/core/jrpg_entry.h"
 #include "modules/jrpg/core/jrpg_equip_data.h"
 #include "modules/jrpg/core/jrpg_formula.h"
+#include "modules/jrpg/core/jrpg_game_state.h"
 #include "modules/jrpg/core/jrpg_item_data.h"
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_random.h"
+#include "modules/jrpg/core/jrpg_sim_clock.h"
 #include "modules/jrpg/core/jrpg_skill_data.h"
 #include "modules/jrpg/core/jrpg_stat_block.h"
 #include "modules/jrpg/core/jrpg_state_data.h"
@@ -103,6 +105,8 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGTilesetData);
 		GDREGISTER_CLASS(JRPGCommonEventData);
 		GDREGISTER_CLASS(JRPGDatabase);
+		GDREGISTER_CLASS(JRPGSimClock);
+		GDREGISTER_CLASS(JRPGGameState);
 	}
 #ifdef TOOLS_ENABLED
 	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) {

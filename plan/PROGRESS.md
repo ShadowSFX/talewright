@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 18:58 -0600
+- **Updated:** 2026-10-13 19:12 -0600
 - **Current task:** 1.8 Fork CI: every Linux job green
-- **Last completed:** 5.4.3 JRPGFormula
-- **Next task:** 5.5.1 JRPGGameState core
-- **Done leaf tasks:** 56
+- **Last completed:** 5.5.1 JRPGGameState core
+- **Next task:** 5.5.2 Runtime actor state
+- **Done leaf tasks:** 57
 <!-- status:end -->
 
 ## Log
@@ -145,3 +145,6 @@
 | 2026-10-13 18:53 -0600 | 5.4.3 | done: JRPGFormula — JRPGFormula: lexical identifier allow-list checked before Expression::parse (inputs a/b/v, battler values, is_state_affected/is_actor, deterministic utilities abs/min/max/clamp/floor/ceil/round/sqrt/sign, helpers iff/roll, true/false/and/or/not; strings, node paths, dictionaries refused), Expression executed with const_calls_only; result to int64 rounded half away from zero; empty/invalid formula, runtime error, NaN/inf -> 0 with one warning per formula. JRPGFormulaBattler proxy (values via _get, const is_state_affected/is_actor); internal JRPGFormulaContext with const iff() and roll() drawing from the given battle stream. 4 doctests: battler values, v[n], integer vs float division, utilities, iff/is_state_affected/is_actor, roll() in stream order, parse/runtime errors (division by zero, non-number variable, missing variable, NaN) -> 0, refusal of randi/randf/instance_from_id/str_to_var/pow/a.free()/a.get_value/v.clear()/OS/strings/dictionaries. Full suite 1443/1443 (containers: 5.4 in_progress->done, 5 in_progress->pending) | bebdd8b95a |
 | 2026-10-13 18:58 -0600 | - | imported 1 new / 0 updated tasks (containers: 1 done->pending) | |
 | 2026-10-13 18:58 -0600 | 1.8 | started: Fork CI: every Linux job green (containers: 1 pending->in_progress) |  |
+| 2026-10-13 19:01 -0600 | - | imported 1 new / 1 updated tasks | |
+| 2026-10-13 19:01 -0600 | 5.5.1 | started: JRPGGameState core (containers: 5.5 pending->in_progress, 5 pending->in_progress) |  |
+| 2026-10-13 19:12 -0600 | 5.5.1 | done: JRPGGameState core — JRPGGameState (switches bitset, variables, self switches, party/gold/steps/inventory, position, system flags, timer, music/window tone overrides, RNG streams, clock) and JRPGSimClock (60 Hz, max 4 steps/frame) in core; canonical serialize/validated deserialize; spec 06 limits; 7 doctests (round-trip bytes, RNG/clock continuity, 22 corruptions refused unchanged, new game, frame rates); full suite 1450/1450 (containers: 5.5 in_progress->pending, 5 in_progress->pending) | pending |

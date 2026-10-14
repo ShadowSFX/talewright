@@ -5,17 +5,29 @@ Inventory: RM-SAV-001..007, RM-NEW-026/027 (autosave, game id), RM-CMD2-029 (sav
 ## What is saved (`JRPGGameState.serialize()` → Dictionary)
 `format: "talewright-save"`, `format_version: int`, `game_id: String` (`JRPGSystemData.game_id`, a random id
 generated once by the setup tool and editable in the System tab, RM-NEW-027; not a project setting, D-008),
-`db_schema_version`, `db_content_hash`, `saved_at` (UTC ISO-8601), `playtime_frames`, `map: {map_id, player cell,
-direction, vehicle, followers}`, `switches: PackedByteArray (bitset)`, `variables: Array (int/float/String)`,
-`self_switches: Dictionary "map:event:letter" → bool`, `party: {members, gold, steps, items/weapons/armors counts}`,
+`db_schema_version`, `db_content_hash`, `playtime_steps` (60 per second, menus included), `map: {map_id, cell,
+direction, vehicle, followers}`, `switches: PackedByteArray (bitset, bit id%8 of byte id/8, trailing zero bytes
+dropped)`, `variables: Array (int/float/String, index = id)`, `self_switches: Dictionary "map:event:letter" → true`
+(only switches that are on), `party: {members, gold, steps, items, weapons, armors}` (each kind `{id: count}` in
+ascending id order, counts ≥ 1),
 `actors: [{id, name_override, nickname_override, class_id, level, exp, hp, mp, tp, equips, skills, states with
 turns, buffs}]` (names are stored only when an event changed them; otherwise they come from the database through the
 current language, D-026),
-`system: {save/menu/encounter/formation access, window tone, battle/victory/defeat/vehicle BGM overrides, timer}`,
-`screen: {tint, pictures, weather}`, `audio: {bgm, bgs, saved bgm}`, `interpreters: [spec 03 serialized state for
-the map autorun/parallel processes and the current event, with list hashes]`, `rng: {stream name → {state, inc}}`
-(spec 04 streams), `clock: simulation steps`, `events_state: {map_id, map_revision, events: [JRPGEventState]}` for the
-current map (other maps start from their data when entered).
+`system: {save_enabled, menu_enabled, encounters_enabled, formation_enabled, window_tone (only when set by an event),
+music: {battle/victory/defeat → {stream, volume, pitch, pan}} (only overrides), timer: {working, steps}}` (vehicle
+music joins with vehicles), `screen: {tint, pictures, weather}`, `audio: {bgm, bgs, saved bgm}`, `interpreters: [spec
+03 serialized state for the map autorun/parallel processes and the current event, with list hashes]`,
+`rng: {stream name → {state, inc}}` (spec 04 streams), `clock: simulation steps`, `events_state: {map_id,
+map_revision, events: [JRPGEventState]}` for the current map (other maps start from their data when entered).
+The save writer adds `saved_at` (UTC ISO-8601) to the file header; `serialize()` never reads the wall clock, so the
+same state always gives the same Dictionary and bytes (keys in a fixed order). Sections are added by the tasks that
+build their features; `deserialize()` ignores unknown keys, gives missing sections their defaults, and checks the
+whole input before changing anything.
+
+**Limits** (`JRPGGameState` constants): switch and variable IDs 1..100 000 (the database table bound); item counts
+0..99 per item, weapon or armor (RM-CMD-019); gold 0..999 999 999 — the help gives no gold limit (RM-CMD-018 notes),
+so this is Talewright's own: nine digits fit the menu's gold window and stay far from 32-bit overflow when rewards are
+added; timer 0..99 min 59 s (RM-CMD-009).
 `JRPGEventState` (core): `event_id`, cell, direction, pattern, move-route index and wait, erased flag, transparency,
 "through" override. On load, states whose `event_id` no longer exists are dropped; if `map_revision` differs, events
 whose data changed are reset to their data position (one warning).

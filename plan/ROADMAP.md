@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 139, in_progress: 2, done: 66, blocked: 0, deferred: 3 (of 210)
+**Totals:** pending: 139, in_progress: 2, done: 67, blocked: 0, deferred: 3 (of 211)
 
 ## [x] 0 Bootstrap and task system
 
@@ -99,8 +99,9 @@ modules/jrpg with pure-logic core (no Node dependency), database, game state, RN
   - [x] **5.4.2** Traits, effects, parameters, stat cache, EXP curve (P1) _(deps: 5.4.1; commit: d05cbf6650)_
   - [x] **5.4.3** JRPGFormula (P1) _(deps: 5.4.2; commit: bebdd8b95a)_
 - [ ] **5.5** Game state core (P1) _(deps: 5.4)_
-  - [ ] **5.5.1** JRPGGameState core (P1)
+  - [x] **5.5.1** JRPGGameState core (P1) _(commit: pending)_
   - [ ] **5.5.2** Runtime actor state (P1) _(deps: 5.5.1)_
+  - [ ] **5.5.3** Event runtime state (P1) _(deps: 5.5.1)_
 - [ ] **5.6** Reference scanner (P2) _(deps: 5.5)_
 - [ ] **5.7** Epic review: JRPG core (P1) _(deps: 5.6)_
 

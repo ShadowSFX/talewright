@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGGameState" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Everything a JRPG remembers while it is played, saved and loaded as a [Dictionary].
+	</brief_description>
+	<description>
+		Holds the switches, variables, self switches, the party with its gold, steps and inventory, the player's position, system flags (save, menu, encounter and formation access, window tone, battle music, timer), the [JRPGRandomStreams] and the [JRPGSimClock] of a game.
+		[method serialize] converts the state to a [Dictionary] of plain values in a canonical form: saving, loading and saving again gives an equal [Dictionary] with the same bytes. [method deserialize] checks the whole input before changing anything.
+		Online, zone servers hold the authoritative state of each character and of the world; clients keep a copy to show their own event pages and never send it back.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_party_member">
+			<return type="bool" />
+			<param index="0" name="actor_id" type="int" />
+			<description>
+				Adds an actor at the end of the party. Returns [code]false[/code] when the actor is already a member.
+			</description>
+		</method>
+		<method name="add_playtime_steps">
+			<return type="void" />
+			<param index="0" name="steps" type="int" />
+			<description>
+				Adds [param steps] simulation steps (60 per second) of play time. Negative values are refused.
+			</description>
+		</method>
+		<method name="clear">
+			<return type="void" />
+			<description>
+				Resets everything to the state before a new game, with every random stream seeded from 0 and the clock at 0.
+			</description>
+		</method>
+		<method name="clear_window_tone_override">
+			<return type="void" />
+			<description>
+				Removes the window tone set during play, so windows use the tone from [JRPGSystemData] again.
+			</description>
+		</method>
+		<method name="deserialize">
+			<return type="int" enum="Error" />
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Replaces the state with [param data], a [Dictionary] made by [method serialize]. Unknown keys are ignored and missing sections keep their defaults. Malformed data, another format or a newer format version return an error ([constant ERR_INVALID_DATA] or [constant ERR_FILE_UNRECOGNIZED]) and leave the state unchanged.
+			</description>
+		</method>
+		<method name="gain_gold">
+			<return type="int" />
+			<param index="0" name="amount" type="int" />
+			<description>
+				Changes the party's gold by [param amount], keeping it between 0 and [constant MAX_GOLD]. Returns the new amount.
+			</description>
+		</method>
+		<method name="gain_item">
+			<return type="int" />
+			<param index="0" name="kind" type="int" enum="JRPGGameState.ItemKind" />
+			<param index="1" name="id" type="int" />
+			<param index="2" name="amount" type="int" />
+			<description>
+				Changes how many of an item, weapon or armor the party holds by [param amount], keeping the count between 0 and [constant MAX_ITEM_COUNT]. Returns the new count. Equipped weapons and armors are not counted here.
+			</description>
+		</method>
+		<method name="get_clock" qualifiers="const">
+			<return type="JRPGSimClock" />
+			<description>
+				Returns the simulation clock of this game.
+			</description>
+		</method>
+		<method name="get_db_content_hash" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the content hash of the database this state was saved with.
+			</description>
+		</method>
+		<method name="get_db_schema_version" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the schema version of the database this state was saved with.
+			</description>
+		</method>
+		<method name="get_game_id" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the id of the game this state belongs to (from [member JRPGSystemData.game_id]).
+			</description>
+		</method>
+		<method name="get_gold" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the party's gold.
+			</description>
+		</method>
+		<method name="get_item_count" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="kind" type="int" enum="JRPGGameState.ItemKind" />
+			<param index="1" name="id" type="int" />
+			<description>
+				Returns how many of the item, weapon or armor [param id] the party holds.
+			</description>
+		</method>
+		<method name="get_item_ids" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<param index="0" name="kind" type="int" enum="JRPGGameState.ItemKind" />
+			<description>
+				Returns the IDs of every item, weapon or armor of [param kind] the party holds, in ascending order.
+			</description>
+		</method>
+		<method name="get_map_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the ID of the map the player is on (0 when none).
+			</description>
+		</method>
+		<method name="get_music_override" qualifiers="const">
+			<return type="JRPGAudioCue" />
+			<param index="0" name="slot" type="int" enum="JRPGSystemData.Music" />
+			<description>
+				Returns the music set during play for [param slot], or [code]null[/code] when the [JRPGSystemData] music is used.
+			</description>
+		</method>
+		<method name="get_party_members" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<description>
+				Returns the actor IDs of the party in formation order.
+			</description>
+		</method>
+		<method name="get_player_cell" qualifiers="const">
+			<return type="Vector2i" />
+			<description>
+				Returns the map cell of the player.
+			</description>
+		</method>
+		<method name="get_player_direction" qualifiers="const">
+			<return type="int" enum="JRPGSystemData.Direction" />
+			<description>
+				Returns the direction the player faces.
+			</description>
+		</method>
+		<method name="get_playtime_seconds" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the play time in whole seconds.
+			</description>
+		</method>
+		<method name="get_playtime_steps" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the play time in simulation steps (60 per second).
+			</description>
+		</method>
+		<method name="get_random" qualifiers="const">
+			<return type="JRPGRandomStreams" />
+			<description>
+				Returns the random streams of this game. They are saved with the state.
+			</description>
+		</method>
+		<method name="get_revision" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns a number that grows whenever something event pages depend on changes (switches, variables, self switches, inventory, party). Maps compare it to refresh their pages at most once per step. It is not saved.
+			</description>
+		</method>
+		<method name="get_self_switch" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="map_id" type="int" />
+			<param index="1" name="event_id" type="int" />
+			<param index="2" name="letter" type="String" />
+			<description>
+				Returns whether self switch [param letter] ([code]"A"[/code] to [code]"D"[/code]) of event [param event_id] on map [param map_id] is on.
+			</description>
+		</method>
+		<method name="get_steps" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns how many steps the party has walked.
+			</description>
+		</method>
+		<method name="get_switch" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="id" type="int" />
+			<description>
+				Returns whether switch [param id] is on. IDs start at 1; switches never set are off.
+			</description>
+		</method>
+		<method name="get_timer_seconds" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the timer's remaining time in whole seconds, rounded up.
+			</description>
+		</method>
+		<method name="get_timer_steps" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the timer's remaining time in simulation steps.
+			</description>
+		</method>
+		<method name="get_variable" qualifiers="const">
+			<return type="Variant" />
+			<param index="0" name="id" type="int" />
+			<description>
+				Returns the value of variable [param id]: an [int], a [float] or a [String]. Variables never set are 0.
+			</description>
+		</method>
+		<method name="get_variables" qualifiers="const">
+			<return type="Array" />
+			<description>
+				Returns a copy of the variables as an [Array] indexed by variable ID (index 0 is unused).
+			</description>
+		</method>
+		<method name="get_window_tone_override" qualifiers="const">
+			<return type="Vector3i" />
+			<description>
+				Returns the window tone set during play. Only meaningful when [method has_window_tone_override] is [code]true[/code].
+			</description>
+		</method>
+		<method name="has_item" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="kind" type="int" enum="JRPGGameState.ItemKind" />
+			<param index="1" name="id" type="int" />
+			<description>
+				Returns [code]true[/code] when the party holds at least one of the item, weapon or armor [param id].
+			</description>
+		</method>
+		<method name="has_window_tone_override" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when a window tone was set during play.
+			</description>
+		</method>
+		<method name="increase_steps">
+			<return type="int" />
+			<description>
+				Counts one step of the party and returns the new total.
+			</description>
+		</method>
+		<method name="is_encounters_enabled" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether random encounters can happen.
+			</description>
+		</method>
+		<method name="is_formation_enabled" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether the player can change the party formation.
+			</description>
+		</method>
+		<method name="is_menu_enabled" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether the player can open the menu.
+			</description>
+		</method>
+		<method name="is_party_member" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="actor_id" type="int" />
+			<description>
+				Returns [code]true[/code] when the actor is in the party.
+			</description>
+		</method>
+		<method name="is_save_enabled" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether the player can save.
+			</description>
+		</method>
+		<method name="is_timer_working" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] while the timer is started.
+			</description>
+		</method>
+		<method name="remove_party_member">
+			<return type="bool" />
+			<param index="0" name="actor_id" type="int" />
+			<description>
+				Removes an actor from the party. Returns [code]false[/code] when the actor was not a member.
+			</description>
+		</method>
+		<method name="serialize" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns the whole state as a [Dictionary] of plain values (no objects), ready to be stored in a save. The same state always gives the same [Dictionary], with keys in the same order.
+			</description>
+		</method>
+		<method name="set_database_version">
+			<return type="void" />
+			<param index="0" name="schema_version" type="int" />
+			<param index="1" name="content_hash" type="String" />
+			<description>
+				Records the schema version and content hash of the database the game runs with, so loading can detect a changed database.
+			</description>
+		</method>
+		<method name="set_encounters_enabled">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>
+				Allows or forbids random encounters.
+			</description>
+		</method>
+		<method name="set_formation_enabled">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>
+				Allows or forbids changing the party formation.
+			</description>
+		</method>
+		<method name="set_game_id">
+			<return type="void" />
+			<param index="0" name="id" type="String" />
+			<description>
+				Sets the id of the game this state belongs to.
+			</description>
+		</method>
+		<method name="set_gold">
+			<return type="void" />
+			<param index="0" name="gold" type="int" />
+			<description>
+				Sets the party's gold, kept between 0 and [constant MAX_GOLD].
+			</description>
+		</method>
+		<method name="set_menu_enabled">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>
+				Allows or forbids opening the menu.
+			</description>
+		</method>
+		<method name="set_music_override">
+			<return type="void" />
+			<param index="0" name="slot" type="int" enum="JRPGSystemData.Music" />
+			<param index="1" name="cue" type="JRPGAudioCue" />
+			<description>
+				Replaces the battle, victory or defeat music during play with a copy of [param cue]. [code]null[/code] or an empty cue restores the [JRPGSystemData] music. Other slots are refused.
+			</description>
+		</method>
+		<method name="set_party_members">
+			<return type="void" />
+			<param index="0" name="actor_ids" type="PackedInt32Array" />
+			<description>
+				Replaces the party with [param actor_ids], in formation order. IDs below 1 and repeated actors are refused.
+			</description>
+		</method>
+		<method name="set_player_position">
+			<return type="void" />
+			<param index="0" name="map_id" type="int" />
+			<param index="1" name="cell" type="Vector2i" />
+			<param index="2" name="direction" type="int" enum="JRPGSystemData.Direction" />
+			<description>
+				Sets the player's map, cell and facing direction.
+			</description>
+		</method>
+		<method name="set_save_enabled">
+			<return type="void" />
+			<param index="0" name="enabled" type="bool" />
+			<description>
+				Allows or forbids saving.
+			</description>
+		</method>
+		<method name="set_self_switch">
+			<return type="void" />
+			<param index="0" name="map_id" type="int" />
+			<param index="1" name="event_id" type="int" />
+			<param index="2" name="letter" type="String" />
+			<param index="3" name="on" type="bool" />
+			<description>
+				Turns self switch [param letter] ([code]"A"[/code] to [code]"D"[/code]) of event [param event_id] on map [param map_id] on or off.
+			</description>
+		</method>
+		<method name="set_switch">
+			<return type="void" />
+			<param index="0" name="id" type="int" />
+			<param index="1" name="on" type="bool" />
+			<description>
+				Turns switch [param id] on or off. IDs go from 1 to [constant MAX_SWITCH_ID].
+			</description>
+		</method>
+		<method name="set_variable">
+			<return type="void" />
+			<param index="0" name="id" type="int" />
+			<param index="1" name="value" type="Variant" />
+			<description>
+				Sets variable [param id] to an [int], a finite [float] or a [String] (a [StringName] is stored as a [String]). IDs go from 1 to [constant MAX_VARIABLE_ID]; growing the variables fills the new ones with 0.
+			</description>
+		</method>
+		<method name="set_window_tone_override">
+			<return type="void" />
+			<param index="0" name="tone" type="Vector3i" />
+			<description>
+				Sets a window tone during play; each component is kept between -255 and 255.
+			</description>
+		</method>
+		<method name="start_new_game">
+			<return type="int" enum="Error" />
+			<param index="0" name="database" type="JRPGDatabase" />
+			<param index="1" name="seed" type="int" />
+			<description>
+				Clears the state and applies the starting values of [param database]: game id, starting party (IDs without an actor entry are skipped), start position, and random streams seeded from [param seed]. The same database and seed always give the same state.
+			</description>
+		</method>
+		<method name="start_timer">
+			<return type="void" />
+			<param index="0" name="seconds" type="int" />
+			<description>
+				Starts the countdown timer at [param seconds], kept between 0 and [constant MAX_TIMER_SECONDS].
+			</description>
+		</method>
+		<method name="step_timer">
+			<return type="bool" />
+			<description>
+				Counts one simulation step down while the timer works. Returns [code]true[/code] on the step the timer reaches 0.
+			</description>
+		</method>
+		<method name="stop_timer">
+			<return type="void" />
+			<description>
+				Stops the timer, keeping its remaining time.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="ITEM_KIND_ITEM" value="0" enum="ItemKind">
+			Items.
+		</constant>
+		<constant name="ITEM_KIND_WEAPON" value="1" enum="ItemKind">
+			Weapons.
+		</constant>
+		<constant name="ITEM_KIND_ARMOR" value="2" enum="ItemKind">
+			Armors.
+		</constant>
+		<constant name="ITEM_KIND_MAX" value="3" enum="ItemKind">
+			Number of item kinds.
+		</constant>
+		<constant name="FORMAT_VERSION" value="1">
+			Version of the format written by [method serialize]. Older versions are converted when loading; newer ones are refused.
+		</constant>
+		<constant name="MAX_SWITCH_ID" value="100000">
+			Highest switch ID.
+		</constant>
+		<constant name="MAX_VARIABLE_ID" value="100000">
+			Highest variable ID.
+		</constant>
+		<constant name="MAX_EVENT_ID" value="1073741823">
+			Highest event ID a self switch can belong to.
+		</constant>
+		<constant name="MAX_ITEM_COUNT" value="99">
+			Most the party can hold of one item, weapon or armor.
+		</constant>
+		<constant name="MAX_GOLD" value="999999999">
+			Most gold the party can hold.
+		</constant>
+		<constant name="MAX_TIMER_SECONDS" value="5999">
+			Longest timer: 99 minutes 59 seconds.
+		</constant>
+	</constants>
+</class>
