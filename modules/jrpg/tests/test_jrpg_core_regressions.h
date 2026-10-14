@@ -31,7 +31,9 @@
 
 #pragma once
 
+#include "core/io/resource_loader.h"
 #include "core/io/resource_saver.h"
+#include "core/object/class_db.h"
 #include "core/variant/variant_parser.h"
 #include "tests/test_macros.h"
 #include "tests/test_utils.h"
@@ -42,6 +44,7 @@
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_formula.h"
 #include "modules/jrpg/core/jrpg_game_state.h"
+#include "modules/jrpg/core/jrpg_item_data.h"
 #include "modules/jrpg/core/jrpg_random.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_schema.h"

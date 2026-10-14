@@ -36,7 +36,6 @@
 #include "jrpg_class_data.h"
 #include "jrpg_database.h"
 #include "jrpg_enemy_data.h"
-#include "jrpg_item_data.h"
 #include "jrpg_skill_data.h"
 #include "jrpg_state_data.h"
 #include "jrpg_traits.h"

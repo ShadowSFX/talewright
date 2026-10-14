@@ -405,6 +405,13 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   headers) with clang's diagnostics and Godot's clang warning set through Visual Studio's `clang-tidy` and the
   `compile_commands.json` written by the `editor` build profile. `static_checks.py` runs it before every push.
   GCC-only warnings (`-Wlogical-op`, `-Wduplicated-branches`, ...) still need CI: no GCC toolchain is installed.
+- **Follow-up 2 (run 38501753154):** every template job failed because templates also compile the doctests and a
+  test header used `ClassDB` without including it (editor builds include it indirectly), and the Linux Mono job's
+  "Style checks via clangd-tidy" step (`.github/actions/clangd-tidy/action.yml`: every changed C/C++ file analyzed on
+  its own, default `--fail-on-severity hint`, so unused includes fail too) rejected test headers that did not include
+  what they use. `clang_check.py` now also compiles `tests/test_main.cpp` without `TOOLS_ENABLED` (template view of
+  the tests), and `static_checks.py` runs the same pip `clangd-tidy` on the changed C/C++ files with the local
+  compile database (`PYTHONUTF8=1`; `// IWYU pragma: keep` where an include is needed only for a conversion).
 
 ## D-029 — Saved JRPG data always records its version; stored defaults are frozen
 - **Context:** Godot's text saver skips any property equal to the class default

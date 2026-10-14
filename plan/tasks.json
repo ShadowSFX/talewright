@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "6.1 Managed addon embedding",
+  "last_completed": "1.9 Fork CI: templates compile the tests; clangd-tidy clean",
   "tasks": [
     {
       "id": "0",
@@ -317,6 +317,36 @@
       ],
       "status": "done",
       "commit": "803d0e2f7c",
+      "notes": ""
+    },
+    {
+      "id": "1.9",
+      "parent": "1",
+      "title": "Fork CI: templates compile the tests; clangd-tidy clean",
+      "description": "CI run 38501753154 failed every template job (a test header used ClassDB without including it; templates compile the doctests) and the Linux Mono clangd-tidy step (test headers not self-contained, unused includes). Fix the includes; make clang_check.py also compile tests/test_main.cpp without TOOLS_ENABLED; run CI's pip clangd-tidy on changed C/C++ files in static_checks.py (D-028 follow-up 2).",
+      "dependencies": [
+        "1.8"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "static_checks.py runs clangd-tidy and clang_check.py's template pass, both clean",
+        "The next CI run on origin/talewright is green on every job (gh run view)"
+      ],
+      "test_strategy": "Push; gh run view; on failure fetch the job log.",
+      "files": [
+        "modules/jrpg/tests/test_jrpg_core_regressions.h",
+        "modules/jrpg/tests/test_jrpg_reference_scanner.h",
+        "modules/jrpg/tests/test_jrpg_actor_state.h",
+        "modules/jrpg/core/jrpg_random.h",
+        "modules/jrpg/core/jrpg_reference_scanner.cpp",
+        "modules/claude_bridge/claude_bridge_plugin.cpp",
+        "talewright/tools/static_checks.py",
+        "talewright/tools/clang_check.py",
+        "CLAUDE.md",
+        "plan/DECISIONS.md"
+      ],
+      "status": "done",
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -1693,7 +1723,7 @@
       "dependencies": [
         "5"
       ],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Setup idempotent",
@@ -1736,7 +1766,7 @@
         "plan/DECISIONS.md",
         "plan/evidence/jrpg/6.1-bridge-addon.txt"
       ],
-      "commit": "pending",
+      "commit": "554066373a",
       "notes": ""
     },
     {
@@ -1747,7 +1777,7 @@
       "dependencies": [
         "6.1"
       ],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Idempotent on an empty project (second run changes nothing)",

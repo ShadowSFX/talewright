@@ -4,8 +4,11 @@
 CI runs `prek run --files <changed files>` with the repository's .pre-commit-config.yaml. This script runs the same
 hooks on the files a push would bring (default: everything that differs from origin/talewright, committed or not,
 plus untracked files), then the fork's own checks: Talewright license headers (Godot's copyright-headers hook skips
-the fork modules), the jrpg core include boundary, the upstream-patch ledger and clang's diagnostics on the fork's
-C++ (talewright/tools/clang_check.py; skipped when clang-tidy or compile_commands.json is missing).
+the fork modules), the jrpg core include boundary, the upstream-patch ledger, clang's diagnostics on the fork's
+C++ (talewright/tools/clang_check.py; skipped when clang-tidy or compile_commands.json is missing), and clangd-tidy on
+the changed C/C++ files, as CI's "Style checks via clangd-tidy" step runs it (every file analyzed on its own, so
+headers must include what they use; any diagnostic fails, CI's default --fail-on-severity hint). Install it with
+`python -m pip install --user clangd clangd-tidy`.
 
 Usage (any directory inside the repository):
     python talewright/tools/static_checks.py            # files changed since origin/talewright
@@ -21,8 +24,11 @@ from __future__ import annotations
 import argparse
 import hashlib
 import io
+import os
+import shutil
 import subprocess
 import sys
+import sysconfig
 from pathlib import Path
 
 FORK_MODULES = ("modules/claude_bridge/", "modules/jrpg/", "modules/mmo/")
@@ -44,6 +50,45 @@ def changed_files(root: Path, base: str) -> list[str]:
     files = set(git(root, "diff", "--name-only", "--no-renames", "-z", base, "--").split("\0"))
     files |= set(git(root, "ls-files", "--others", "--exclude-standard", "-z").split("\0"))
     return sorted(f for f in files if f and (root / f).is_file())
+
+
+def find_tool(name: str) -> str | None:
+    found = shutil.which(name)
+    if found:
+        return found
+    user_scripts = Path(sysconfig.get_path("scripts", f"{os.name}_user"))
+    for candidate in (user_scripts / (name + ".exe"), user_scripts / name):
+        if candidate.is_file():
+            return str(candidate)
+    return None
+
+
+def run_clangd_tidy(root: Path, files: list[str]) -> tuple[int, str]:
+    """Returns (exit code, last line); exit code 2 when clangd-tidy or the compile database is missing."""
+    sources = [f for f in files if f.endswith(CPP_SUFFIXES) and not f.startswith("thirdparty/")]
+    if not sources:
+        return 0, "no C/C++ files changed"
+    tidy, clangd = find_tool("clangd-tidy"), find_tool("clangd")
+    if not tidy or not clangd or not (root / "compile_commands.json").is_file():
+        return 2, "clangd-tidy, clangd or compile_commands.json not found"
+    env = dict(os.environ, PYTHONUTF8="1")  # clangd-tidy reads sources with the default encoding.
+    out = subprocess.run(
+        [tidy, "--clangd-executable", clangd, "-p", str(root), "-j", "16", "--color", "never", *sources],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=env,
+    )
+    diagnostics = [
+        ln
+        for ln in out.stdout.splitlines()
+        if ": Error:" in ln or ": Warning:" in ln or ": Information:" in ln or ": Hint:" in ln
+    ]
+    for d in diagnostics:
+        print("   ", d)
+    return (1 if diagnostics else 0), f"{len(diagnostics)} diagnostics in {len(sources)} files"
 
 
 def content_hash(path: Path) -> str:
@@ -114,6 +159,14 @@ def main() -> int:
         if clang.returncode != 0:
             print(clang.stdout)
         ok &= clang.returncode == 0
+
+    # CI analyzes each changed C/C++ file on its own with clangd (headers included).
+    code, last = run_clangd_tidy(root, files)
+    if code == 2:
+        print("[SKIP] clangd-tidy: " + last)
+    else:
+        print(("[PASS] " if code == 0 else "[FAIL] ") + "clangd-tidy: " + last)
+        ok &= code == 0
 
     print("ALL PASS" if ok else "FAILURES")
     return 0 if ok else 1

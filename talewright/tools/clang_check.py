@@ -28,6 +28,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 FORK_DIRS = ("modules/claude_bridge/", "modules/jrpg/", "modules/mmo/")
 EXTRA_UNITS = ("tests/test_main.cpp",)
+# Templates compile the tests too (CI builds them with tests): test_main.cpp is checked again without TOOLS_ENABLED.
+TEMPLATE_UNITS = ("tests/test_main.cpp",)
 # Godot's clang warnings (SConstruct, clang branch of "common_warnings" plus the CCFLAGS/CXXFLAGS it appends).
 CLANG_WARNINGS = [
     "-Wall",
@@ -79,9 +81,11 @@ def normalize(path: str) -> str:
     return p
 
 
-def check_unit(clang_tidy: str, unit: str) -> list[str]:
+def check_unit(clang_tidy: str, unit: str, template: bool = False) -> list[str]:
     args = [clang_tidy, "-p", str(ROOT), "--quiet", "-checks=-*,cert-err34-c"]
     args += [f"--extra-arg=/clang:{w}" for w in CLANG_WARNINGS]
+    if template:
+        args.append("--extra-arg=/UTOOLS_ENABLED")
     args.append("--header-filter=modules[\\\\/](claude_bridge|jrpg|mmo)[\\\\/]")
     args.append(unit)
     out = subprocess.run(args, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
@@ -110,12 +114,15 @@ def main() -> int:
         for e in entries
         if normalize(e["file"]).startswith(FORK_DIRS) or normalize(e["file"]) in EXTRA_UNITS
     })
+    jobs_list = [(u, False) for u in units] + [(u, True) for u in TEMPLATE_UNITS]
     with ThreadPoolExecutor(max_workers=jobs) as pool:
-        results = list(pool.map(lambda u: check_unit(clang_tidy, u), units))
+        results = list(pool.map(lambda job: check_unit(clang_tidy, job[0], job[1]), jobs_list))
     diagnostics = sorted({d for r in results for d in r})
     for d in diagnostics:
         print(d)
-    print(f"clang diagnostics in fork code: {len(diagnostics)} ({len(units)} translation units)")
+    print(
+        f"clang diagnostics in fork code: {len(diagnostics)} ({len(units)} translation units + tests without TOOLS_ENABLED)"
+    )
     return 1 if diagnostics else 0
 
 

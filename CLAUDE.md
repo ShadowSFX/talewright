@@ -38,7 +38,9 @@ and move on to the next ready task.
    `python talewright/tools/static_checks.py` (the CI static-check hooks on the files the next push brings, plus fork
    checks; needs `python -m pip install --user prek`) and review every file a hook rewrote — codespell's automatic
    fixes have renamed identifiers before (D-027). It also compiles every fork translation unit with clang's
-   diagnostics (`talewright/tools/clang_check.py`): MSVC accepts code that CI's clang builds reject (D-028).
+   diagnostics (`talewright/tools/clang_check.py`): MSVC accepts code that CI's clang builds reject (D-028), and runs
+   CI's clangd-tidy on the changed C/C++ files (`python -m pip install --user clangd clangd-tidy`): every file,
+   headers included, must include what it uses and nothing unused.
    CI fails on any push that skips this.
 7. `python plan/tools/tasks.py done <id> -m "<what was done>"`, then ONE commit for the task containing code
    and tracker files: message `"<id>: <summary>"`. Then `python plan/tools/tasks.py stamp` (fills the hash;
