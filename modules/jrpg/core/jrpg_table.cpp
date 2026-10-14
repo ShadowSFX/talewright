@@ -66,6 +66,7 @@ void JRPGTable::set_entry_class(const StringName &p_class) {
 		return;
 	}
 	ERR_FAIL_COND_MSG(!ClassDB::is_parent_class(p_class, JRPGEntry::get_class_static()), vformat("JRPGTable: \"%s\" does not extend JRPGEntry.", p_class));
+	ERR_FAIL_COND_MSG(!ClassDB::can_instantiate(p_class), vformat("JRPGTable: \"%s\" cannot be instantiated (abstract class).", p_class));
 	ERR_FAIL_COND_MSG(!entries.is_empty(), "JRPGTable: the entry class can only change while the table is empty.");
 	entry_class = p_class;
 	emit_changed();

@@ -11,15 +11,21 @@ def configure(env):
 def get_doc_classes():
     return [
         "JRPGActorData",
+        "JRPGArmorData",
         "JRPGAudioCue",
         "JRPGBattleRules",
         "JRPGClassData",
         "JRPGDatabase",
         "JRPGEntry",
+        "JRPGEquipData",
+        "JRPGItemData",
+        "JRPGSkillData",
         "JRPGSystemData",
         "JRPGTable",
         "JRPGTermsData",
         "JRPGTypesData",
+        "JRPGUsableData",
+        "JRPGWeaponData",
     ]
 
 

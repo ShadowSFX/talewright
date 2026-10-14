@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGSkillData" inherits="JRPGUsableData" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A skill: an action battlers can take.
+	</brief_description>
+	<description>
+		Database entry for a skill, from the plain attack and guard to magic and special moves. It has the usable fields of [JRPGUsableData] plus its type, costs, battle message and required weapons.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="accepts_weapon_type" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="weapon_type_id" type="int" />
+			<description>
+				Returns [code]true[/code] if a user holding a weapon of type [param weapon_type_id] may use the skill: always when no weapon is required, otherwise only for one of the required types.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="message" type="String" setter="set_message" getter="get_message" default="&quot;&quot;">
+			Text shown in the battle log when the skill is used, up to two lines. [code]%1[/code] is replaced by the user's name and [code]%2[/code] by the skill's name.
+		</member>
+		<member name="mp_cost" type="int" setter="set_mp_cost" getter="get_mp_cost" default="0">
+			MP needed to use the skill.
+		</member>
+		<member name="required_weapon_type_1" type="int" setter="set_required_weapon_type_1" getter="get_required_weapon_type_1" default="0">
+			A weapon type the user must hold, or [code]0[/code] for none.
+		</member>
+		<member name="required_weapon_type_2" type="int" setter="set_required_weapon_type_2" getter="get_required_weapon_type_2" default="0">
+			A second weapon type that also allows the skill, or [code]0[/code] for none.
+		</member>
+		<member name="skill_type_id" type="int" setter="set_skill_type_id" getter="get_skill_type_id" default="0">
+			ID of the skill's type in [member JRPGTypesData.skill_types], or [code]0[/code] for none.
+		</member>
+		<member name="tp_cost" type="int" setter="set_tp_cost" getter="get_tp_cost" default="0">
+			TP needed to use the skill.
+		</member>
+	</members>
+</class>

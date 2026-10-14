@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "5.3.1 Actors, classes, types, terms, system",
+  "last_completed": "5.3.2 Skills, items, weapons, armors",
   "tasks": [
     {
       "id": "0",
@@ -1307,7 +1307,7 @@
         "modules/jrpg/config.py",
         "talewright/tools/fill_class_docs.py"
       ],
-      "commit": "pending",
+      "commit": "2ec147be91",
       "notes": "",
       "status": "done"
     },
@@ -1324,10 +1324,28 @@
         "Every slice field of skills, items, weapons and armors round-trips"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
-      "files": [],
-      "commit": "",
+      "files": [
+        "modules/jrpg/core/jrpg_usable_data.h",
+        "modules/jrpg/core/jrpg_usable_data.cpp",
+        "modules/jrpg/core/jrpg_skill_data.h",
+        "modules/jrpg/core/jrpg_skill_data.cpp",
+        "modules/jrpg/core/jrpg_item_data.h",
+        "modules/jrpg/core/jrpg_item_data.cpp",
+        "modules/jrpg/core/jrpg_equip_data.h",
+        "modules/jrpg/core/jrpg_equip_data.cpp",
+        "modules/jrpg/core/jrpg_weapon_data.h",
+        "modules/jrpg/core/jrpg_weapon_data.cpp",
+        "modules/jrpg/core/jrpg_armor_data.h",
+        "modules/jrpg/core/jrpg_armor_data.cpp",
+        "modules/jrpg/core/jrpg_table.cpp",
+        "modules/jrpg/doc_classes/",
+        "modules/jrpg/tests/test_jrpg_tables_b.h",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py"
+      ],
+      "commit": "pending",
       "notes": "",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "5.3.3",

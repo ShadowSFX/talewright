@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGEquipData" inherits="JRPGEntry" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Base class of weapons and armors.
+	</brief_description>
+	<description>
+		What weapons and armors have in common: an icon, a description, a price and the parameter changes and traits they give while equipped.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_param" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="param" type="int" />
+			<description>
+				Returns the change of parameter [param param] (in [enum JRPGClassData.Param] order).
+			</description>
+		</method>
+		<method name="get_slot_type_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the ID of the equipment slot this equipment goes into.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="description" type="String" setter="set_description" getter="get_description" default="&quot;&quot;">
+			Help text shown when the equipment is selected.
+		</member>
+		<member name="icon_index" type="int" setter="set_icon_index" getter="get_icon_index" default="0">
+			Index of the equipment's icon in the project's icon sheet.
+		</member>
+		<member name="params" type="PackedInt32Array" setter="set_params" getter="get_params" default="PackedInt32Array(0, 0, 0, 0, 0, 0, 0, 0)">
+			Flat parameter changes while equipped, in [enum JRPGClassData.Param] order. Max HP and max MP changes stay within -5000 to 5000, the others within -500 to 500.
+		</member>
+		<member name="price" type="int" setter="set_price" getter="get_price" default="0">
+			Shop price. The equipment sells for half of it; a price of 0 means it cannot be sold.
+		</member>
+		<member name="traits" type="Array" setter="set_traits" getter="get_traits" default="[]">
+			Traits granted while equipped, as dictionaries with [code]code[/code], [code]data_id[/code] and [code]value[/code].
+		</member>
+	</members>
+	<constants>
+		<constant name="PARAM_COUNT" value="8">
+			Number of parameters in [member params].
+		</constant>
+	</constants>
+</class>

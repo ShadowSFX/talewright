@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGWeaponData" inherits="JRPGEquipData" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A weapon.
+	</brief_description>
+	<description>
+		Database entry for a weapon. Weapons always go into equipment slot 1 and add their parameter changes and traits while equipped.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="animation_id" type="int" setter="set_animation_id" getter="get_animation_id" default="0">
+			ID of the animation played when the holder attacks, or [code]0[/code] for none.
+		</member>
+		<member name="weapon_type_id" type="int" setter="set_weapon_type_id" getter="get_weapon_type_id" default="0">
+			ID of the weapon type in [member JRPGTypesData.weapon_types]. Actors can equip it only if a trait allows that type.
+		</member>
+	</members>
+</class>

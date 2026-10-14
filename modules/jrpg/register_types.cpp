@@ -35,15 +35,21 @@
 #include "core/object/class_db.h"
 
 #include "modules/jrpg/core/jrpg_actor_data.h"
+#include "modules/jrpg/core/jrpg_armor_data.h"
 #include "modules/jrpg/core/jrpg_audio_cue.h"
 #include "modules/jrpg/core/jrpg_battle_rules.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_entry.h"
+#include "modules/jrpg/core/jrpg_equip_data.h"
+#include "modules/jrpg/core/jrpg_item_data.h"
+#include "modules/jrpg/core/jrpg_skill_data.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
 #include "modules/jrpg/core/jrpg_terms_data.h"
 #include "modules/jrpg/core/jrpg_types_data.h"
+#include "modules/jrpg/core/jrpg_usable_data.h"
+#include "modules/jrpg/core/jrpg_weapon_data.h"
 
 #ifdef TOOLS_ENABLED
 #include "editor/plugins/editor_plugin.h"
@@ -70,6 +76,12 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGTermsData);
 		GDREGISTER_CLASS(JRPGActorData);
 		GDREGISTER_CLASS(JRPGClassData);
+		GDREGISTER_ABSTRACT_CLASS(JRPGUsableData);
+		GDREGISTER_CLASS(JRPGSkillData);
+		GDREGISTER_CLASS(JRPGItemData);
+		GDREGISTER_ABSTRACT_CLASS(JRPGEquipData);
+		GDREGISTER_CLASS(JRPGWeaponData);
+		GDREGISTER_CLASS(JRPGArmorData);
 		GDREGISTER_CLASS(JRPGDatabase);
 	}
 #ifdef TOOLS_ENABLED

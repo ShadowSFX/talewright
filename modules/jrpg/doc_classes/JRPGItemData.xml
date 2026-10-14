@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGItemData" inherits="JRPGUsableData" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		An item the party carries and uses.
+	</brief_description>
+	<description>
+		Database entry for an item, with the usable fields of [JRPGUsableData] plus its item type, price and whether using it consumes it.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="is_hidden" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] for hidden items, which never appear on the item screen and are only offered when an event asks the player to pick an item.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="consumable" type="bool" setter="set_consumable" getter="is_consumable" default="true">
+			If [code]true[/code], using the item uses one up.
+		</member>
+		<member name="item_type" type="int" setter="set_item_type" getter="get_item_type" enum="JRPGItemData.ItemType" default="0">
+			Where the item appears: with regular items, in the key items section, or hidden.
+		</member>
+		<member name="price" type="int" setter="set_price" getter="get_price" default="0">
+			Shop price. The item sells for half of it; a price of 0 means it cannot be sold.
+		</member>
+	</members>
+	<constants>
+		<constant name="ITEM_REGULAR" value="0" enum="ItemType">
+			A regular item.
+		</constant>
+		<constant name="ITEM_KEY" value="1" enum="ItemType">
+			A key item, listed in its own section of the item screen.
+		</constant>
+		<constant name="ITEM_HIDDEN_A" value="2" enum="ItemType">
+			A hidden item of the first group.
+		</constant>
+		<constant name="ITEM_HIDDEN_B" value="3" enum="ItemType">
+			A hidden item of the second group.
+		</constant>
+	</constants>
+</class>

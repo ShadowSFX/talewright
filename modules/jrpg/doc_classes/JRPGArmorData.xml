@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGArmorData" inherits="JRPGEquipData" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		An armor: equipment for the slots after the weapon slot.
+	</brief_description>
+	<description>
+		Database entry for armor. It goes into the equipment slot given by [member equip_type_id] and adds its parameter changes and traits while equipped.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="armor_type_id" type="int" setter="set_armor_type_id" getter="get_armor_type_id" default="0">
+			ID of the armor type in [member JRPGTypesData.armor_types]. Actors can equip it only if a trait allows that type.
+		</member>
+		<member name="equip_type_id" type="int" setter="set_equip_type_id" getter="get_equip_type_id" default="2">
+			ID of the equipment slot the armor goes into, from [member JRPGTypesData.equip_types]. Slot 1 is the weapon slot, so armors normally use slot 2 or higher.
+		</member>
+	</members>
+</class>

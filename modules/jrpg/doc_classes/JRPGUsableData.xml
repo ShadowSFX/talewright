@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGUsableData" inherits="JRPGEntry" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Base class of skills and items.
+	</brief_description>
+	<description>
+		What skills and items have in common: who they target, where they can be used, how they hit, the damage they cause and their effects. Percentages are whole percent values as shown in the editor.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="is_usable_in_battle" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] if [member occasion] allows use in battle.
+			</description>
+		</method>
+		<method name="is_usable_in_menu" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] if [member occasion] allows use from the menu.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="animation_id" type="int" setter="set_animation_id" getter="get_animation_id" default="0">
+			ID of the battle animation played on use, [code]0[/code] for none, or [constant ANIMATION_NORMAL_ATTACK] to use the animation of the user's weapon.
+		</member>
+		<member name="damage_critical" type="bool" setter="set_damage_critical" getter="is_damage_critical" default="false">
+			If [code]true[/code], the damage can be a critical hit.
+		</member>
+		<member name="damage_element_id" type="int" setter="set_damage_element_id" getter="get_damage_element_id" default="0">
+			Element of the damage: an element ID, [code]0[/code] for none, or [constant ELEMENT_NORMAL_ATTACK] to use the user's attack elements.
+		</member>
+		<member name="damage_formula" type="String" setter="set_damage_formula" getter="get_damage_formula" default="&quot;&quot;">
+			Expression that computes the base amount, for example [code]a.atk * 4 - b.def * 2[/code]. [code]a[/code] is the user, [code]b[/code] the target and [code]v[n][/code] reads game variable [code]n[/code]. Element rates and guarding are applied afterwards and do not belong in the formula.
+		</member>
+		<member name="damage_type" type="int" setter="set_damage_type" getter="get_damage_type" enum="JRPGUsableData.DamageType" default="0">
+			What the damage does: lower, raise or drain HP or MP, or nothing.
+		</member>
+		<member name="damage_variance" type="int" setter="set_damage_variance" getter="get_damage_variance" default="10">
+			Random spread of the amount in percent: with 20, an amount of 100 lands between 80 and 120.
+		</member>
+		<member name="description" type="String" setter="set_description" getter="get_description" default="&quot;&quot;">
+			Help text shown while the cursor is on the skill or item.
+		</member>
+		<member name="effects" type="Array" setter="set_effects" getter="get_effects" default="[]">
+			Additional effects, as dictionaries with [code]code[/code], [code]data_id[/code], [code]value1[/code] and [code]value2[/code].
+		</member>
+		<member name="hit_type" type="int" setter="set_hit_type" getter="get_hit_type" enum="JRPGUsableData.HitType" default="0">
+			How hitting is decided and which reactions (counterattack, reflection, substitute) can happen.
+		</member>
+		<member name="icon_index" type="int" setter="set_icon_index" getter="get_icon_index" default="0">
+			Index of the icon in the project's icon sheet.
+		</member>
+		<member name="occasion" type="int" setter="set_occasion" getter="get_occasion" enum="JRPGUsableData.Occasion" default="0">
+			Where it can be used: anywhere, only in battle, only from the menu, or never.
+		</member>
+		<member name="random_targets" type="int" setter="set_random_targets" getter="get_random_targets" default="1">
+			Number of random targets when [member target_count] is [constant COUNT_RANDOM].
+		</member>
+		<member name="repeats" type="int" setter="set_repeats" getter="get_repeats" default="1">
+			How many times the effect is applied per use, from 1 to 9.
+		</member>
+		<member name="speed" type="int" setter="set_speed" getter="get_speed" default="0">
+			Added to the user's agility when deciding the order of actions, from -2000 to 2000.
+		</member>
+		<member name="success" type="int" setter="set_success" getter="get_success" default="100">
+			Base chance of success in percent.
+		</member>
+		<member name="target_count" type="int" setter="set_target_count" getter="get_target_count" enum="JRPGUsableData.TargetCount" default="0">
+			Whether it affects one target, all targets or random targets.
+		</member>
+		<member name="target_side" type="int" setter="set_target_side" getter="get_target_side" enum="JRPGUsableData.TargetSide" default="1">
+			Which side it targets: enemies, allies, both, the user, or nobody.
+		</member>
+		<member name="target_status" type="int" setter="set_target_status" getter="get_target_status" enum="JRPGUsableData.TargetStatus" default="0">
+			For allies, whether it targets the living, the knocked out, or anyone.
+		</member>
+		<member name="tp_gain" type="int" setter="set_tp_gain" getter="get_tp_gain" default="0">
+			TP the user gains when the use succeeds.
+		</member>
+	</members>
+	<constants>
+		<constant name="SIDE_NONE" value="0" enum="TargetSide">
+			No target.
+		</constant>
+		<constant name="SIDE_ENEMY" value="1" enum="TargetSide">
+			Targets enemies.
+		</constant>
+		<constant name="SIDE_ALLY" value="2" enum="TargetSide">
+			Targets allies.
+		</constant>
+		<constant name="SIDE_ENEMY_AND_ALLY" value="3" enum="TargetSide">
+			Targets enemies and allies.
+		</constant>
+		<constant name="SIDE_USER" value="4" enum="TargetSide">
+			Targets the user.
+		</constant>
+		<constant name="COUNT_ONE" value="0" enum="TargetCount">
+			One target.
+		</constant>
+		<constant name="COUNT_ALL" value="1" enum="TargetCount">
+			All targets.
+		</constant>
+		<constant name="COUNT_RANDOM" value="2" enum="TargetCount">
+			[member random_targets] random targets.
+		</constant>
+		<constant name="STATUS_ALIVE" value="0" enum="TargetStatus">
+			Only living targets.
+		</constant>
+		<constant name="STATUS_KNOCKED_OUT" value="1" enum="TargetStatus">
+			Only knocked-out targets.
+		</constant>
+		<constant name="STATUS_ANY" value="2" enum="TargetStatus">
+			Any target.
+		</constant>
+		<constant name="OCCASION_ALWAYS" value="0" enum="Occasion">
+			Usable in battle and from the menu.
+		</constant>
+		<constant name="OCCASION_BATTLE" value="1" enum="Occasion">
+			Usable in battle only.
+		</constant>
+		<constant name="OCCASION_MENU" value="2" enum="Occasion">
+			Usable from the menu only.
+		</constant>
+		<constant name="OCCASION_NEVER" value="3" enum="Occasion">
+			Not usable.
+		</constant>
+		<constant name="HIT_CERTAIN" value="0" enum="HitType">
+			Always hits when the use succeeds; counterattack, reflection and substitute do not apply.
+		</constant>
+		<constant name="HIT_PHYSICAL" value="1" enum="HitType">
+			Hit decided by the user's accuracy against the target's evasion; counterattack and substitute can apply.
+		</constant>
+		<constant name="HIT_MAGICAL" value="2" enum="HitType">
+			Hit decided against the target's magic evasion; reflection and substitute can apply.
+		</constant>
+		<constant name="DAMAGE_NONE" value="0" enum="DamageType">
+			No damage.
+		</constant>
+		<constant name="DAMAGE_HP" value="1" enum="DamageType">
+			Lowers HP.
+		</constant>
+		<constant name="DAMAGE_MP" value="2" enum="DamageType">
+			Lowers MP.
+		</constant>
+		<constant name="RECOVER_HP" value="3" enum="DamageType">
+			Raises HP.
+		</constant>
+		<constant name="RECOVER_MP" value="4" enum="DamageType">
+			Raises MP.
+		</constant>
+		<constant name="DRAIN_HP" value="5" enum="DamageType">
+			Takes HP from the target and gives it to the user.
+		</constant>
+		<constant name="DRAIN_MP" value="6" enum="DamageType">
+			Takes MP from the target and gives it to the user.
+		</constant>
+		<constant name="ELEMENT_NORMAL_ATTACK" value="-1">
+			Element value meaning "the user's attack elements".
+		</constant>
+		<constant name="ANIMATION_NORMAL_ATTACK" value="-1">
+			Animation value meaning "the animation of the user's weapon".
+		</constant>
+	</constants>
+</class>
