@@ -47,6 +47,8 @@ protected:
 public:
 	static constexpr const char *DEFAULT_DIRECTORY = "res://addons/talewright";
 	static constexpr const char *STAMP_FILE = "addon.cfg";
+	// The game scene (a JRPGSceneManager root) that Play From Start runs: a new game at the System start position.
+	static constexpr const char *GAME_SCENE = "res://addons/talewright/scenes/game.tscn";
 
 	struct SourceFile {
 		String path; // Relative to the addon folder, with "/" separators.

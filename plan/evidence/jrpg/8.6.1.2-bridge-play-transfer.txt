@@ -1,0 +1,35 @@
+# 8.6.1.2 bridge verification: Play From Start, transfers, map music
+## no start position yet: Play From Start says what to do
+   Set the start position first: in the map's Events mode, right-click a cell and choose Set Start Position Here.
+  maps: [(1, 'Harbor'), (2, 'Cave')]
+## a start position, but the project's managed addon predates the game scene: Play From Start says what to do
+   The managed addon has no game scene yet. Run Project > Tools > Set Up JRPG Project... to update it.
+## set up the project again (upgrades the managed addon)
+  addon added: ['scenes/game.tscn']
+  screenshot: plan/evidence/jrpg/8.6.1.2-workspace-ready.png
+## Play From Start: a new game at the start position (Harbor, (3, 7))
+   {"scene": "res://addons/talewright/scenes/game.tscn", "start_map_id": 1, "start_cell": [3, 7]}
+  game tree: Game JRPGSceneManager > [('BGM', 'AudioStreamPlayer'), ('BGS', 'AudioStreamPlayer'), ('Harbor', 'JRPGMap'), ('Fade', 'CanvasLayer')]
+  get_map_id[] -> 1
+  BGM: {'playing': True, 'stream': {'class': 'AudioStreamOggVorbis', 'resource_path': 'res://audio/bgm/field.ogg'}, 'volume_linear': 0.899999976158142}
+  game screenshot: plan/evidence/jrpg/8.6.1.2-harbor.png
+## transfer to the Cave (4, 3), fading through black: the map and its music change
+  transfer[2, "Vector2i(4, 3)", -1, 0] -> 0
+  get_map_id[] -> 2
+  is_transferring[] -> False
+  BGM: {'playing': True, 'stream': {'class': 'AudioStreamOggVorbis', 'resource_path': 'res://audio/bgm/dungeon.ogg'}, 'volume_linear': 0.800000011920929}
+  game screenshot: plan/evidence/jrpg/8.6.1.2-cave.png
+  warnings since: 0
+## refused transfers: a map the list lacks, then a cell outside the Cave; the player stays, one warning each
+  transfer[99, "Vector2i(0, 0)", -1, 2] -> 33
+  get_map_id[] -> 2
+  warnings since: 1
+    warning JRPG: the transfer to map 99, cell (0, 0) was refused: map 99 is not in the map list. The player stays where they are.
+  transfer[2, "Vector2i(40, 40)", -1, 2] -> 5
+  get_map_id[] -> 2
+  warnings since: 1
+    warning JRPG: the transfer to map 2, cell (40, 40) was refused: cell (40, 40) is outside the map (10 x 8 cells). The player stays where they are.
+  BGM: {'playing': True, 'stream': {'class': 'AudioStreamOggVorbis', 'resource_path': 'res://audio/bgm/dungeon.ogg'}, 'volume_linear': 0.800000011920929}
+## editor errors
+    "errors": 0,
+    "warnings": 2,

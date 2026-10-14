@@ -34,6 +34,7 @@
 #include "core/io/dir_access.h"
 #include "core/io/file_access.h"
 #include "core/io/json.h"
+#include "core/math/a_star_grid_2d.h"
 #include "core/object/class_db.h"
 #include "core/os/os.h"
 #include "tests/test_macros.h"
@@ -479,6 +480,27 @@ TEST_CASE("[ClaudeBridge][Tools] JSON conversion of variants and values") {
 	CHECK(String(ClaudeBridgeTools::json_to_value("hi", Variant::STRING, ok)) == "hi");
 	ClaudeBridgeTools::json_to_value("not a vector", Variant::VECTOR2, ok);
 	CHECK_FALSE(ok);
+}
+
+TEST_CASE("[ClaudeBridge][Tools] Call arguments from JSON become the types the method declares") {
+	Ref<AStarGrid2D> grid;
+	grid.instantiate();
+	Array args = { "Vector2(3, 4)" };
+	String error;
+	REQUIRE(ClaudeBridgeTools::call_args_from_json(grid.ptr(), "set_cell_size", args, error));
+	CHECK(args[0].get_type() == Variant::VECTOR2);
+	CHECK(Vector2(args[0]) == Vector2(3, 4));
+	args = { 2.0 }; // JSON numbers are floats.
+	REQUIRE(ClaudeBridgeTools::call_args_from_json(grid.ptr(), "set_diagonal_mode", args, error));
+	CHECK((args[0].get_type() == Variant::INT && int(args[0]) == 2));
+	args = { "name", 1.5 }; // set_meta's value is untyped: as given.
+	REQUIRE(ClaudeBridgeTools::call_args_from_json(grid.ptr(), "set_meta", args, error));
+	CHECK(args[1].get_type() == Variant::FLOAT);
+	args = { "not a vector" };
+	CHECK_FALSE(ClaudeBridgeTools::call_args_from_json(grid.ptr(), "set_cell_size", args, error));
+	CHECK(error.contains("Vector2"));
+	args = { 7 };
+	CHECK(ClaudeBridgeTools::call_args_from_json(grid.ptr(), "no_such_method", args, error)); // Left to the call.
 }
 
 TEST_CASE("[ClaudeBridge][Tools] res:// path validation rejects traversal") {

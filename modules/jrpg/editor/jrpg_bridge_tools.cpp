@@ -1748,6 +1748,25 @@ void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 	p_call->complete_data(result);
 }
 
+void tool_play_from_start(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGWorkspaceShell *shell = JRPGWorkspaceShell::get_singleton();
+	if (!shell) {
+		p_call->fail("The JRPG workspace is not open: turn on the project setting jrpg/enabled (or run jrpg_setup_project).");
+		return;
+	}
+	String message;
+	if (shell->play_from_start(&message) != OK) {
+		p_call->fail(message);
+		return;
+	}
+	const Ref<JRPGSystemData> system = JRPGDatabaseEditing::get_singleton()->get_database()->get_system();
+	Dictionary result;
+	result["scene"] = JRPGManagedAddon::GAME_SCENE;
+	result["start_map_id"] = system->get_start_map_id();
+	result["start_cell"] = Array({ system->get_start_cell().x, system->get_start_cell().y });
+	p_call->complete_data(result);
+}
+
 void tool_map_set_start(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
 	JRPGMap *map = edited_map(p_call);
 	if (!map) {
@@ -2200,6 +2219,16 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	map_set_start.destructive = false;
 	map_set_start.func = &tool_map_set_start;
 	r_mcp.register_tool(map_set_start);
+
+	ClaudeBridgeMCP::Tool play_from_start;
+	play_from_start.name = "jrpg_play_from_start";
+	play_from_start.title = "Play from start";
+	play_from_start.description = "Runs a new game from the System start position, as the JRPG workspace's Play From Start button: the managed addon's game scene (a JRPGSceneManager root) runs, after the editor saves as when running the project. Refused, with what to do, while there is no start position, the start map is gone or the managed addon lacks the game scene. The game starts in the background: follow with run_status and the game_* tools, stop it with stop_project. Returns the scene and the start position.";
+	play_from_start.input_schema = ClaudeBridgeMCP::object_schema(Dictionary());
+	play_from_start.read_only = false;
+	play_from_start.destructive = false; // Saves, as running the project does.
+	play_from_start.func = &tool_play_from_start;
+	r_mcp.register_tool(play_from_start);
 
 	ClaudeBridgeMCP::Tool map_capture;
 	map_capture.name = "jrpg_map_capture";

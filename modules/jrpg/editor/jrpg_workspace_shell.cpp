@@ -33,14 +33,20 @@
 
 #include "jrpg_database_editing.h"
 #include "jrpg_database_view.h"
+#include "jrpg_managed_addon.h"
 #include "jrpg_map_canvas.h"
+#include "jrpg_map_editing.h"
 #include "jrpg_map_tree.h"
 #include "jrpg_tile_palette.h"
 #include "jrpg_workspace_view.h"
 
 #include "core/io/image.h"
+#include "core/io/resource_loader.h"
 #include "core/object/callable_mp.h"
+#include "editor/editor_interface.h"
+#include "editor/editor_node.h"
 #include "editor/editor_string_names.h"
+#include "editor/file_system/editor_file_system.h"
 #include "editor/settings/editor_settings.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/button.h"
@@ -58,6 +64,8 @@
 
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_map_data.h"
+#include "modules/jrpg/core/jrpg_map_list.h"
+#include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 
@@ -169,6 +177,49 @@ void JRPGWorkspaceShell::refresh() {
 		database_view->refresh();
 	}
 	_update_canvas();
+	_update_play_button();
+}
+
+String JRPGWorkspaceShell::play_blocker(const Ref<JRPGDatabase> &p_database, const Ref<JRPGMapList> &p_map_list, bool p_has_game_scene) {
+	const Ref<JRPGSystemData> system = p_database.is_valid() ? p_database->get_system() : Ref<JRPGSystemData>();
+	if (system.is_null() || !system->has_start_position()) {
+		return TTR("Set the start position first: in the map's Events mode, right-click a cell and choose Set Start Position Here.");
+	}
+	if (p_map_list.is_null() || !p_map_list->has_map(system->get_start_map_id())) {
+		return TTR("The start position is on a map that no longer exists. Set it again on another map.");
+	}
+	if (!p_has_game_scene) {
+		return TTR("The managed addon has no game scene yet. Run Project > Tools > Set Up JRPG Project... to update it.");
+	}
+	return String();
+}
+
+String JRPGWorkspaceShell::get_play_blocker() const {
+	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
+	return play_blocker(editing ? editing->get_database() : Ref<JRPGDatabase>(), JRPGMapEditing::get_map_list(), ResourceLoader::exists(JRPGManagedAddon::GAME_SCENE));
+}
+
+Error JRPGWorkspaceShell::play_from_start(String *r_message) {
+	const String blocker = get_play_blocker();
+	if (!blocker.is_empty()) {
+		if (r_message) {
+			*r_message = blocker;
+		}
+		_update_play_button();
+		return ERR_UNCONFIGURED;
+	}
+	EditorInterface::get_singleton()->play_custom_scene(JRPGManagedAddon::GAME_SCENE);
+	return OK;
+}
+
+void JRPGWorkspaceShell::_play_pressed() {
+	play_from_start();
+}
+
+void JRPGWorkspaceShell::_update_play_button() {
+	const String blocker = get_play_blocker();
+	play_button->set_disabled(!blocker.is_empty());
+	play_button->set_tooltip_text(blocker.is_empty() ? TTR("Runs a new game from the start position. The editor saves first, as when running the project.") : blocker);
 }
 
 void JRPGWorkspaceShell::_update_canvas() {
@@ -265,6 +316,32 @@ void JRPGWorkspaceShell::_notification(int p_what) {
 				refresh();
 			}
 		} break;
+		case NOTIFICATION_ENTER_TREE: {
+			// Play From Start follows the start position, the map list and the managed addon's files.
+			if (JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton()) {
+				editing->connect(SNAME("database_changed"), callable_mp(this, &JRPGWorkspaceShell::_update_play_button));
+			}
+			if (EditorNode::get_singleton()) {
+				EditorNode::get_singleton()->connect(SNAME("scene_changed"), callable_mp(this, &JRPGWorkspaceShell::_update_play_button));
+			}
+			if (EditorFileSystem::get_singleton()) {
+				EditorFileSystem::get_singleton()->connect(SNAME("filesystem_changed"), callable_mp(this, &JRPGWorkspaceShell::_update_play_button));
+			}
+			_update_play_button();
+		} break;
+		case NOTIFICATION_EXIT_TREE: {
+			const Callable update = callable_mp(this, &JRPGWorkspaceShell::_update_play_button);
+			JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
+			if (editing && editing->is_connected(SNAME("database_changed"), update)) {
+				editing->disconnect(SNAME("database_changed"), update);
+			}
+			if (EditorNode::get_singleton() && EditorNode::get_singleton()->is_connected(SNAME("scene_changed"), update)) {
+				EditorNode::get_singleton()->disconnect(SNAME("scene_changed"), update);
+			}
+			if (EditorFileSystem::get_singleton() && EditorFileSystem::get_singleton()->is_connected(SNAME("filesystem_changed"), update)) {
+				EditorFileSystem::get_singleton()->disconnect(SNAME("filesystem_changed"), update);
+			}
+		} break;
 	}
 }
 
@@ -287,8 +364,8 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 	play_button = memnew(Button);
 	play_button->set_text(TTR("Play From Start"));
 	play_button->set_theme_type_variation("FlatButton");
-	play_button->set_disabled(true);
-	play_button->set_tooltip_text(TTR("Runs the game from its start position. Available once the project has a map and a start position."));
+	play_button->set_disabled(true); // Until _update_play_button says it can run.
+	play_button->connect(SceneStringName(pressed), callable_mp(this, &JRPGWorkspaceShell::_play_pressed));
 	top->add_child(play_button);
 	battle_button = memnew(Button);
 	battle_button->set_text(TTR("Battle Test"));

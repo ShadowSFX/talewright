@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.6.1.1 Scene manager node",
+  "last_completed": "8.6.1.2 Play From Start",
   "tasks": [
     {
       "id": "0",
@@ -3254,9 +3254,9 @@
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
-      "commit": "",
-      "notes": "",
-      "status": "pending"
+      "commit": "children",
+      "notes": "Closed automatically when all children closed.",
+      "status": "done"
     },
     {
       "id": "8.6.1.1",
@@ -3285,7 +3285,7 @@
         "plan/specs/05_maps_tiles.md",
         "plan/specs/06_save_format.md"
       ],
-      "commit": "pending",
+      "commit": "4b4305de3a",
       "notes": ""
     },
     {
@@ -3303,9 +3303,24 @@
         "A transfer to a missing map or an out-of-bounds cell leaves the player in place with one warning (game logs)"
       ],
       "test_strategy": "Doctests (button state) + bridge verification with screenshots and logs.",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/addon_template/scenes/game.tscn",
+        "modules/jrpg/addon_template/README.md",
+        "modules/jrpg/editor/jrpg_managed_addon.h",
+        "modules/jrpg/editor/jrpg_workspace_shell.{h,cpp}",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/tests/test_jrpg_workspace_shell.h",
+        "modules/jrpg/tests/test_jrpg_bridge_tools.h",
+        "modules/claude_bridge/claude_bridge_tools.{h,cpp}",
+        "modules/claude_bridge/claude_bridge_game.cpp",
+        "modules/claude_bridge/claude_bridge_plugin.cpp",
+        "modules/claude_bridge/tests/test_claude_bridge.h",
+        "talewright/docs/claude_bridge.md",
+        "talewright/tools/jrpg_bridge_checks.py",
+        "plan/evidence/jrpg/8.6.1.2-*"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

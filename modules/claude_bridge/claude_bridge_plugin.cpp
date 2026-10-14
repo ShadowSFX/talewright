@@ -551,7 +551,7 @@ void ClaudeBridgePlugin::_register_game_tools() {
 		{ "game_node_set", "Set game node property", "Sets a property on a node in the running game (not undoable; the game is a separate process).", &ClaudeBridgePlugin::_tool_game_node_set, false, 10000 },
 		{ "game_input", "Inject input", "Injects input into the running game: events [{action|key|type:'mouse_button', pressed?, hold_frames?, button?, position?}] or shorthand action/key. Without 'pressed' the input is pressed and released after hold_frames (default 2).", &ClaudeBridgePlugin::_tool_game_input, false, 10000 },
 		{ "game_wait", "Wait frames", "Waits until the running game has processed the given number of frames.", &ClaudeBridgePlugin::_tool_game_wait, true, 70000 },
-		{ "game_call", "Call game method", "Calls a method on a node in the running game and returns the result.", &ClaudeBridgePlugin::_tool_game_call, false, 10000 },
+		{ "game_call", "Call game method", "Calls a method on a node in the running game and returns the result. Arguments become the types the method declares; give engine types as Godot literals, such as \"Vector2i(3, 2)\".", &ClaudeBridgePlugin::_tool_game_call, false, 10000 },
 		{ "game_logs", "Game-side logs", "Reads the game's own log buffer (complete even when debugger output is rate-limited).", &ClaudeBridgePlugin::_tool_game_logs, true, 10000 },
 	};
 	for (const Def &d : defs) {

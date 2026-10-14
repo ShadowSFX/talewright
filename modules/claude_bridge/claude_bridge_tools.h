@@ -44,6 +44,10 @@ namespace ClaudeBridgeTools {
 Variant variant_to_json(const Variant &p_value, int p_depth = 0);
 // Converts a JSON argument into a value for a property of type p_target (accepts Godot literal strings).
 Variant json_to_value(const Variant &p_json, Variant::Type p_target, bool &r_ok);
+// Converts the JSON arguments of a call to p_method of p_object to the types the method declares (numbers arrive as
+// floats; vectors and other engine types as Godot literal strings such as "Vector2i(3, 2)"). Untyped and object
+// arguments, and those of methods p_object does not list, pass as they are. False, with the reason, when one cannot.
+bool call_args_from_json(const Object *p_object, const StringName &p_method, Array &r_args, String &r_error);
 // True when p_text only contains numbers, punctuation and math/packed-array constructor names (safe for str_to_var).
 bool is_safe_literal(const String &p_text);
 // Loads a resource given as a res:// path for an Object property, checking the property's resource type hint.

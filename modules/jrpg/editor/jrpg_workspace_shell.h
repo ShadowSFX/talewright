@@ -38,7 +38,9 @@
 class Button;
 class ButtonGroup;
 class CenterContainer;
+class JRPGDatabase;
 class JRPGDatabaseView;
+class JRPGMapList;
 class JRPGMapCanvas;
 class JRPGMapTree;
 class JRPGMessageMark;
@@ -106,6 +108,8 @@ private:
 	void _layer_selected(int p_index);
 	void _region_changed(double p_value);
 	void _update_theme();
+	void _update_play_button();
+	void _play_pressed();
 
 protected:
 	void _notification(int p_what);
@@ -125,6 +129,16 @@ public:
 	JRPGMapCanvas *get_map_canvas() const { return map_canvas; }
 	JRPGTilePalette *get_palette() const { return palette; }
 	void refresh();
+
+	// Why Play From Start cannot run a game with p_database and p_map_list (and the managed addon's game scene, when
+	// p_has_game_scene): the button's tooltip and the bridge's refusal. Empty when it can.
+	static String play_blocker(const Ref<JRPGDatabase> &p_database, const Ref<JRPGMapList> &p_map_list, bool p_has_game_scene);
+	// The same for the project as it is now.
+	String get_play_blocker() const;
+	// Runs the managed addon's game scene (JRPGManagedAddon::GAME_SCENE), a new game at the System start position, as
+	// the Play From Start button does; the editor saves first, as when running the project. ERR_UNCONFIGURED, with
+	// the reason in r_message, when it cannot.
+	Error play_from_start(String *r_message = nullptr);
 
 	JRPGWorkspaceShell();
 	~JRPGWorkspaceShell();

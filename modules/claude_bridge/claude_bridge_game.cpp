@@ -383,7 +383,12 @@ void ClaudeBridgeGame::_cmd_call(int p_id, const Array &p_args) {
 		_reply(p_id, false, Variant(), "Method not found: " + String(method));
 		return;
 	}
-	const Array args = p_args.size() > 3 ? Array(p_args[3]) : Array();
+	Array args = p_args.size() > 3 ? Array(p_args[3]).duplicate() : Array();
+	String error;
+	if (!ClaudeBridgeTools::call_args_from_json(node, method, args, error)) {
+		_reply(p_id, false, Variant(), error);
+		return;
+	}
 	const Variant result = node->callv(method, args);
 	Dictionary out;
 	out["result"] = ClaudeBridgeTools::variant_to_json(result);

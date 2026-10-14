@@ -97,7 +97,7 @@ struct Bridge {
 
 TEST_CASE("[JRPG][BridgeTools] The database tools are registered") {
 	Bridge bridge;
-	for (const char *name : { "jrpg_db_list", "jrpg_db_get", "jrpg_db_set", "jrpg_db_create", "jrpg_db_set_maximum", "jrpg_db_clear", "jrpg_db_copy", "jrpg_db_paste", "jrpg_db_generate_curve", "jrpg_db_save", "jrpg_addon_install", "jrpg_tileset_flags", "jrpg_tileset_set_flag", "jrpg_tileset_create", "jrpg_tileset_add_sheet", "jrpg_db_set_image", "jrpg_map_create", "jrpg_map_paint", "jrpg_map_get", "jrpg_map_list", "jrpg_map_rename", "jrpg_map_move", "jrpg_map_delete", "jrpg_map_open", "jrpg_map_set" }) {
+	for (const char *name : { "jrpg_db_list", "jrpg_db_get", "jrpg_db_set", "jrpg_db_create", "jrpg_db_set_maximum", "jrpg_db_clear", "jrpg_db_copy", "jrpg_db_paste", "jrpg_db_generate_curve", "jrpg_db_save", "jrpg_addon_install", "jrpg_tileset_flags", "jrpg_tileset_set_flag", "jrpg_tileset_create", "jrpg_tileset_add_sheet", "jrpg_db_set_image", "jrpg_map_create", "jrpg_map_paint", "jrpg_map_get", "jrpg_map_list", "jrpg_map_rename", "jrpg_map_move", "jrpg_map_delete", "jrpg_map_open", "jrpg_map_set", "jrpg_play_from_start" }) {
 		CHECK_MESSAGE(bridge.mcp.has_tool(name), name);
 	}
 }

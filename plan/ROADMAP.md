@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 103, in_progress: 0, done: 141, blocked: 0, deferred: 3 (of 247)
+**Totals:** pending: 101, in_progress: 0, done: 143, blocked: 0, deferred: 3 (of 247)
 
 ## [x] 0 Bootstrap and task system
 
@@ -183,9 +183,9 @@ JRPGMap scenes, map editor canvas, cell cache, runtime map and movement.
   - [x] **8.5.1** Palette panel (P1) _(deps: 8.4; commit: 3014929d32)_
   - [x] **8.5.2** Multi-tile stamps (P1) _(deps: 8.5.1; commit: 33799de79d)_
 - [ ] **8.6** Runtime map, cell-step movement, camera, transfer (P1) _(deps: 8.2)_
-  - [ ] **8.6.1** Scene manager, map loading and transfer (P1)
-    - [x] **8.6.1.1** Scene manager node (P1) _(commit: pending)_
-    - [ ] **8.6.1.2** Play From Start (P1) _(deps: 8.6.1.1)_
+  - [x] **8.6.1** Scene manager, map loading and transfer (P1)
+    - [x] **8.6.1.1** Scene manager node (P1) _(commit: 4b4305de3a)_
+    - [x] **8.6.1.2** Play From Start (P1) _(deps: 8.6.1.1; commit: pending)_
   - [ ] **8.6.2** Player movement, passability, dash, camera (P1) _(deps: 8.6.1)_
 - [ ] **8.7** Character sprites (P1) _(deps: 8.6)_
 - [ ] **8.8** Map authoring tools (P2) _(deps: 8.5)_

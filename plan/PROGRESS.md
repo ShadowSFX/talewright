@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 07:29 -0600
+- **Updated:** 2026-10-14 07:41 -0600
 - **Current task:** none
-- **Last completed:** 8.6.1.1 Scene manager node
-- **Next task:** 8.6.1.2 Play From Start
-- **Done leaf tasks:** 111
+- **Last completed:** 8.6.1.2 Play From Start
+- **Next task:** 8.6.2 Player movement, passability, dash, camera
+- **Done leaf tasks:** 112
 <!-- status:end -->
 
 ## Log
@@ -294,4 +294,6 @@
 | 2026-10-14 07:06 -0600 | 8.6.1 | started: Scene manager, map loading and transfer (containers: 8.6 pending->in_progress, 8 pending->in_progress) |  |
 | 2026-10-14 07:10 -0600 | - | imported 2 new / 1 updated tasks (containers: 8.6.1 in_progress->pending, 8.6 in_progress->pending, 8 in_progress->pending) | |
 | 2026-10-14 07:10 -0600 | 8.6.1.1 | started: Scene manager node (containers: 8.6.1 pending->in_progress, 8.6 pending->in_progress, 8 pending->in_progress) |  |
-| 2026-10-14 07:29 -0600 | 8.6.1.1 | done: Scene manager node — JRPGSceneManager (runtime node, D-041): holds the running JRPGGameState and shows the current map as its first child (a JRPGMap scene instance found through the map list); start_new_game (System start position), resume (a loaded game: prunes the map's event states, warns once on a changed map revision, falls back to the start position when the saved map is gone), transfer(map_id, cell, direction=retain, fade=black/white/none): checked first (listed, loadable, a map, cell inside) and otherwise refused with one warning, the player staying; with a fade the map changes at the darkest point (0.3 s each way; map_entered, transfer_finished); entering calls set_events_map(map_id, revision) and plays the map's autoplay BGM/BGS (the same track continues). Autostart deferred after every _ready(). JRPGMapData::get_event_ids seam (9.1 fills it). Shared test WarningCounter. 5 doctests (transfers and refusals, fades through SceneTree::process, music continuity with a non-threaded dummy audio driver, resume, autostart), 1562 tests, static checks ALL PASS, class docs. (containers: 8.6.1 in_progress->pending, 8.6 in_progress->pending, 8 in_progress->pending) | pending |
+| 2026-10-14 07:29 -0600 | 8.6.1.1 | done: Scene manager node — JRPGSceneManager (runtime node, D-041): holds the running JRPGGameState and shows the current map as its first child (a JRPGMap scene instance found through the map list); start_new_game (System start position), resume (a loaded game: prunes the map's event states, warns once on a changed map revision, falls back to the start position when the saved map is gone), transfer(map_id, cell, direction=retain, fade=black/white/none): checked first (listed, loadable, a map, cell inside) and otherwise refused with one warning, the player staying; with a fade the map changes at the darkest point (0.3 s each way; map_entered, transfer_finished); entering calls set_events_map(map_id, revision) and plays the map's autoplay BGM/BGS (the same track continues). Autostart deferred after every _ready(). JRPGMapData::get_event_ids seam (9.1 fills it). Shared test WarningCounter. 5 doctests (transfers and refusals, fades through SceneTree::process, music continuity with a non-threaded dummy audio driver, resume, autostart), 1562 tests, static checks ALL PASS, class docs. (containers: 8.6.1 in_progress->pending, 8.6 in_progress->pending, 8 in_progress->pending) | 4b4305de3a |
+| 2026-10-14 07:29 -0600 | 8.6.1.2 | started: Play From Start (containers: 8.6.1 pending->in_progress, 8.6 pending->in_progress, 8 pending->in_progress) |  |
+| 2026-10-14 07:41 -0600 | 8.6.1.2 | done: Play From Start — Play From Start: the managed addon ships scenes/game.tscn (a JRPGSceneManager root, fixed uid); the workspace button runs it through EditorInterface::play_custom_scene (the editor saves first, database included), enabled once the System start position names a listed map and the addon has the game scene, its tooltip saying what is missing otherwise (JRPGWorkspaceShell::play_blocker, doctested). Bridge: jrpg_play_from_start; game_call now converts arguments to the method's declared types (ClaudeBridgeTools::call_args_from_json, Godot literals such as Vector2i(3, 2); doctest). Verified in a running game through the bridge: the start map shown, a transfer changes map and BGM (field.ogg -> dungeon.ogg, playing), refused transfers (missing map, out of bounds) keep the map with one warning each (plan/evidence/jrpg/8.6.1.2-*); jrpg_bridge_checks 156/156 (play refused without a start position, then the running game shows the start map); 1564 tests; static checks ALL PASS. (containers: 8.6.1 in_progress->done, 8.6 in_progress->pending, 8 in_progress->pending) | pending |

@@ -8,4 +8,8 @@ You can change any file here. The upgrade tool (Project > Tools > Set up JRPG Pr
 bridge tool) replaces a file only when it is exactly as Talewright installed it. Files you changed are kept and
 listed in the upgrade report, so you can merge newer versions by hand.
 
+## Contents
+- `scenes/game.tscn`: the game, a `JRPGSceneManager` root. The JRPG workspace's Play From Start runs it: a new game at
+  the start position set in System data.
+
 `addon.cfg` records the installed version and the hash of every installed file. Do not edit it.

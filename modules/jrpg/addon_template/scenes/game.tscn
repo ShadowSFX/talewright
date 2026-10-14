@@ -1,0 +1,3 @@
+[gd_scene format=3 uid="uid://mtd5kj4crdd4"]
+
+[node name="Game" type="JRPGSceneManager"]

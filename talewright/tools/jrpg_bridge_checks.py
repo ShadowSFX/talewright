@@ -149,6 +149,7 @@ def run(checks: Checks) -> None:
     c.check("setup: a first run creates the database", "res://jrpg/database.tres" in first.get("created", []))
     second = c.call("jrpg_setup_project")
     c.check("setup: a second run changes nothing", second.get("changed") is False, json.dumps(second)[:400])
+    c.check("jrpg_play_from_start: refused without a start position", c.refused("jrpg_play_from_start", {}))
 
     # Every database tool, undone and redone through the editor's history.
     c.round_trip(
@@ -609,6 +610,23 @@ def run(checks: Checks) -> None:
         json.dumps(start_position()),
     )
     c.check("jrpg_map_set_start: refuses a cell outside the map", c.refused("jrpg_map_set_start", {"cell": [10, 0]}))
+
+    # Play From Start (task 8.6.1.2): the managed addon's game scene runs a new game at the start position.
+    played = c.call("jrpg_play_from_start")
+    c.check(
+        "jrpg_play_from_start: runs the game scene from the start position",
+        played.get("start_map_id") == strokes_map and played.get("start_cell") == [2, 3],
+        json.dumps(played),
+    )
+    connected = False
+    for _ in range(120):
+        if c.call("run_status").get("debugger_connected"):
+            connected = True
+            break
+        time.sleep(0.5)
+    shown = c.call("game_call", {"path": "/root/Game", "method": "get_map_id"}).get("result") if connected else None
+    c.check("jrpg_play_from_start: the running game shows the start map", shown == strokes_map, str(shown))
+    c.call("stop_project")
 
     # Saving leaves nothing unsaved, bakes the tile flags and writes the TileSet.
     c.call("jrpg_db_save")

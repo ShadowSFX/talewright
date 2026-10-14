@@ -224,6 +224,31 @@ Variant json_to_value(const Variant &p_json, Variant::Type p_target, bool &r_ok)
 	return Variant();
 }
 
+bool call_args_from_json(const Object *p_object, const StringName &p_method, Array &r_args, String &r_error) {
+	List<MethodInfo> methods;
+	p_object->get_method_list(&methods);
+	for (const MethodInfo &method : methods) {
+		if (method.name != p_method) {
+			continue;
+		}
+		for (int i = 0; i < MIN(r_args.size(), method.arguments.size()); i++) {
+			const Variant::Type type = method.arguments[i].type;
+			if (type == Variant::NIL || type == Variant::OBJECT) {
+				continue; // Untyped, or an object: as given.
+			}
+			bool ok = false;
+			const Variant value = json_to_value(r_args[i], type, ok);
+			if (!ok) {
+				r_error = vformat("Argument %d (%s) of %s must be a %s; engine types are given as Godot literals, such as \"Vector2i(3, 2)\".", i + 1, method.arguments[i].name, String(p_method), Variant::get_type_name(type));
+				return false;
+			}
+			r_args[i] = value;
+		}
+		return true;
+	}
+	return true;
+}
+
 Variant json_to_resource(const Variant &p_json, const String &p_type_hint, bool &r_ok) {
 	r_ok = false;
 	if (p_json.get_type() == Variant::NIL) {

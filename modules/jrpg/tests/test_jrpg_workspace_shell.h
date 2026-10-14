@@ -37,6 +37,9 @@
 #include "scene/main/window.h"
 #include "tests/test_macros.h"
 
+#include "modules/jrpg/core/jrpg_database.h"
+#include "modules/jrpg/core/jrpg_map_list.h"
+#include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/editor/jrpg_map_canvas.h"
 #include "modules/jrpg/editor/jrpg_workspace_shell.h"
 
@@ -78,6 +81,26 @@ TEST_CASE("[SceneTree][JRPG][Workspace] The workspace builds and follows its bru
 	ERR_PRINT_ON;
 	memdelete(shell);
 	CHECK(JRPGWorkspaceShell::get_singleton() == nullptr);
+}
+
+TEST_CASE("[JRPG][Workspace] Play From Start needs a start position on a listed map and the game scene") {
+	Ref<JRPGDatabase> db;
+	db.instantiate();
+	Ref<JRPGSystemData> system;
+	system.instantiate();
+	db->set_system(system);
+	Ref<JRPGMapList> list;
+	list.instantiate();
+	REQUIRE(list->add_map_with_id(3, "Town", "res://jrpg/maps/map_0003.tscn") == OK);
+
+	CHECK(JRPGWorkspaceShell::play_blocker(Ref<JRPGDatabase>(), list, true).contains("Set Start Position Here"));
+	CHECK(JRPGWorkspaceShell::play_blocker(db, list, true).contains("Set Start Position Here")); // No start position.
+	system->set_start_map_id(5);
+	CHECK(JRPGWorkspaceShell::play_blocker(db, list, true).contains("no longer exists")); // Not a listed map.
+	CHECK(JRPGWorkspaceShell::play_blocker(db, Ref<JRPGMapList>(), true).contains("no longer exists"));
+	system->set_start_map_id(3);
+	CHECK(JRPGWorkspaceShell::play_blocker(db, list, false).contains("Set Up JRPG Project")); // An older addon.
+	CHECK(JRPGWorkspaceShell::play_blocker(db, list, true).is_empty());
 }
 
 TEST_CASE("[JRPG][Workspace] Tool names and undo action names") {
