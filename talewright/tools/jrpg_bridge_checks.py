@@ -473,6 +473,19 @@ def run(checks: Checks) -> None:
     c.round_trip(
         "jrpg_map_stroke (a pencil path)", hashes, lambda: stroke("pencil", "objects", [[0, 7], [4, 5], [9, 7]], 19)
     )
+    # Regions and shadows (task 8.4.3.1): undone exactly too; the shadows draw on the map, regions only in the editor.
+    c.round_trip("jrpg_map_stroke (regions)", hashes, lambda: stroke("rectangle", "regions", [[0, 0], [4, 3]], 7))
+    c.round_trip("jrpg_map_stroke (shadows)", hashes, lambda: stroke("pencil", "shadows", [[1, 4], [1, 6]], 1 + 4))
+    regions = c.call("jrpg_map_get", {"layer": "regions"})
+    c.check(
+        "jrpg_map_get: lists the regions painted",
+        regions["painted_cells"]["regions"] == 20 and regions["cells"][3][4] == 7 and regions["cells"][4][0] == 0,
+        json.dumps(regions["painted_cells"]),
+    )
+    c.check(
+        "jrpg_map_stroke: refuses a region past 255",
+        c.refused("jrpg_map_stroke", {"tool": "pencil", "layer": "regions", "value": 256, "points": [[0, 0]]}),
+    )
     erased = stroke("eraser", "objects", [[6, 3], [7, 3]])
     c.check(
         "jrpg_map_stroke: the eraser clears the cells it crosses", erased.get("changed") == 2, json.dumps(erased)[:200]

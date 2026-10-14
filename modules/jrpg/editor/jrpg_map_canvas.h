@@ -80,10 +80,13 @@ class JRPGMapCanvas : public Control {
 	JRPGMapEditSession::Tool stroke_tool = JRPGMapEditSession::TOOL_PENCIL;
 	Vector2i stroke_anchor; // Where the stroke started.
 	Vector2i stroke_last; // The last cell the pencil reached; the rectangle's or ellipse's other corner.
+	Vector2i stroke_last_half; // The shadow pen's last half cell (quarters are half cells).
+	bool shadow_on = false; // What the shadow pen's stroke sets: the opposite of the first quarter it touched.
 
 	JRPGMap *_get_map() const;
 	void _map_changed();
 	void _watch_data(JRPGMap *p_map);
+	void _cells_changed(int p_layer, const PackedInt32Array &p_cells);
 	void _apply_view();
 	void _store_view();
 	void _set_hovered(const Vector2i &p_cell);
@@ -92,8 +95,10 @@ class JRPGMapCanvas : public Control {
 	void _zoom_widget_changed();
 	void _draw_overlay();
 	void _grid_toggled(bool p_on);
-	void _begin_stroke(const Vector2i &p_cell);
-	void _continue_stroke(const Vector2i &p_cell);
+	Vector2i _half_cell_at(const Vector2 &p_point) const;
+	void _shadow_quarters(const Vector<Vector2i> &p_halves);
+	void _begin_stroke(const Vector2 &p_point);
+	void _continue_stroke(const Vector2 &p_point);
 	void _finish_stroke();
 	void _cancel_stroke();
 	Vector<Vector2i> _shape_cells() const;
@@ -121,6 +126,8 @@ public:
 	// Sets the brush to the tile under p_cell: the current layer's, or the top-most layer's that has one (and that
 	// layer). False when the cell is empty on every layer.
 	bool pick_tile(const Vector2i &p_cell);
+	// Sets the region painted to p_cell's (false when it has none).
+	bool pick_region(const Vector2i &p_cell);
 	// The canvas's mouse and key handling (its overlay's gui_input); positions in canvas coordinates.
 	void handle_input(const Ref<InputEvent> &p_event);
 	void set_grid_visible(bool p_visible);

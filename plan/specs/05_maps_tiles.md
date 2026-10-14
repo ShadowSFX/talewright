@@ -25,7 +25,7 @@ Each map is a scene `res://jrpg/maps/map_NNNN.tscn` whose root is a `JRPGMap` no
 | `tileset_id` | int | JRPGTilesetData |
 | `size` | Vector2i | cells (1..256 per axis default, 512 max) |
 | `layers` | Array[PackedInt32Array] | 4 tile layers (ground, ground detail, objects, upper), `size.x*size.y` each; cell value = palette index (0 empty) |
-| `shadows` | PackedByteArray | 4 bits per cell (quarter shadows), one byte per cell |
+| `shadows` | PackedByteArray | 4 bits per cell (quarter shadows: 1 top left, 2 top right, 4 bottom left, 8 bottom right), one byte per cell |
 | `regions` | PackedByteArray | region id 0..255 per cell |
 | `scroll_type` | enum | none / loop vertical / loop horizontal / loop both |
 | `bgm`, `bgs` + `autoplay_bgm`, `autoplay_bgs` | `JRPGAudioCue` + bool | the System's cue type (7.x reuse) |
@@ -63,7 +63,7 @@ flags say overhead; characters use z 1); the tileset comes from the database (`J
 the resource cache so the editor's database tools edit the same object; `set_database` for tests and tools); a full
 build runs on entering the tree and on `layout_changed` or a change of the tileset entry (palette, baked flags, TileSet),
 deferred and coalesced; `cells_changed` re-resolves only the 3 × 3 blocks around the painted cells
-(`JRPGAutotileResolver.update_around`). Shadows and regions are not drawn by the map (editor overlays, 8.4).
+(`JRPGAutotileResolver.update_around`). The map draws its shadows (amended in 8.4.3.1, as the shadow pen's shadows show in the game, RM-MAP-014): half-opaque black quarters over the ground layers and under the objects; regions are an editor overlay (the map canvas's Regions mode).
 
 ## Tilesets and tile ids
 - `JRPGTilesetData` (database entry) references its Godot `TileSet` by `uid://` string (`tileset_uid`) and owns an

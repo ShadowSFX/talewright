@@ -55,10 +55,16 @@ TEST_CASE("[SceneTree][JRPG][Workspace] The workspace builds and follows its bru
 
 	// The brush the toolbar shows is the canvas session's.
 	const Ref<JRPGMapEditSession> session = shell->get_map_canvas()->get_session();
-	session->set_tool(JRPGMapEditSession::TOOL_FILL);
+	session->set_tool(JRPGMapEditSession::TOOL_SHADOW);
 	session->set_layer(2);
 	session->set_value(7);
-	CHECK(session->get_tool() == JRPGMapEditSession::TOOL_FILL);
+	CHECK(session->get_tool() == JRPGMapEditSession::TOOL_SHADOW);
+	session->set_region(12);
+	CHECK(session->get_region() == 12);
+	ERR_PRINT_OFF;
+	session->set_region(0); // Regions are 1-255.
+	ERR_PRINT_ON;
+	CHECK(session->get_region() == 12);
 	shell->select_section(JRPGWorkspaceShell::SECTION_DATABASE);
 	CHECK(shell->get_section() == JRPGWorkspaceShell::SECTION_DATABASE);
 	ERR_PRINT_ON;
@@ -76,6 +82,9 @@ TEST_CASE("[JRPG][Workspace] Tool names and undo action names") {
 		CHECK_FALSE(JRPGMapEditSession::get_action_name(tool).is_empty());
 	}
 	CHECK(JRPGMapEditSession::get_action_name(JRPGMapEditSession::TOOL_ELLIPSE) == "Draw Ellipse");
+	CHECK(JRPGMapEditSession::get_action_name(JRPGMapEditSession::TOOL_SHADOW) == "Draw Shadows");
+	CHECK(JRPGMapEditSession::get_action_name(JRPGMapEditSession::TOOL_FILL, JRPGMapEditSession::MODE_REGIONS) == "Paint Regions");
+	CHECK(JRPGMapEditSession::get_action_name(JRPGMapEditSession::TOOL_ERASER, JRPGMapEditSession::MODE_REGIONS) == "Erase Regions");
 }
 
 } // namespace TestJRPGWorkspaceShell

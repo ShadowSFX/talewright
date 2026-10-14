@@ -5,7 +5,7 @@ Images the checks compare new renders with, pixel for pixel (`talewright/tools/i
 
 | Image | Made by | What it shows |
 |---|---|---|
-| `jrpg_map_strokes.png` | `talewright/tools/jrpg_bridge_checks.py` (`jrpg_map_capture`) | A 10 x 8 map drawn with each map canvas tool: a grass fill, a rectangle, an ellipse with two cells erased, a pencil path (task 8.4.2) |
+| `jrpg_map_strokes.png` | `talewright/tools/jrpg_bridge_checks.py` (`jrpg_map_capture`) | A 10 x 8 map drawn with each map canvas tool: a grass fill, a rectangle, an ellipse with two cells erased, a pencil path (task 8.4.2), and a column of left-half shadows (task 8.4.3.1; regions are not drawn on the map) |
 
 Goldens are regenerated only on purpose, when the rendering is meant to change:
 `python talewright/tools/jrpg_bridge_checks.py --update-goldens`, then look at the new image and say why in the commit.

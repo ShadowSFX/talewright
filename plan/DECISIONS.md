@@ -552,3 +552,12 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** one place to edit map data, the editor's own inspector (resources, audio cues, undo per scene, favorites)
   with nothing duplicated; the dock stays visible beside the JRPG workspace.
 - **Reversal:** wrap an EditorInspector in a dialog opened by `JRPGMapTree::_inspect_map`; the undo hook stays.
+
+## D-039 — Placing events on the map canvas comes with the event editor
+- **Context:** task 8.4.3 listed an Events mode that creates, moves and deletes events on the canvas grid, but the
+  event data model (`JRPGEventData`, task 9.1) belongs to epic 9, which depends on epic 8.
+- **Options:** a stopgap event entry format now; or place events where the model and the event editor are built.
+- **Choice:** event placement moves to task 9.7 (event editor UI). Events mode exists from 8.4.3 and holds what needs
+  no event data: Set Start Position Here (8.4.3.2).
+- **Why:** no throwaway format to migrate; one place builds events and their canvas handling.
+- **Reversal:** move the placement criteria back into an epic 8 task once a minimal event model is wanted earlier.

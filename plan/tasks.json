@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.4.2 Drawing tools with undo patches",
+  "last_completed": "8.4.3.1 Region mode and shadow pen",
   "tasks": [
     {
       "id": "0",
@@ -3049,7 +3049,7 @@
         "CLAUDE.md",
         "plan/evidence/jrpg/8.4.2-*"
       ],
-      "commit": "pending",
+      "commit": "bf93360f24",
       "notes": "",
       "status": "done"
     },
@@ -3057,20 +3057,76 @@
       "id": "8.4.3",
       "parent": "8.4",
       "title": "Shadow, region, event modes and auto-layer",
-      "description": "Shadow pen, region painting, event mode (create/move/delete events on grid), auto layer selection by tile kind. Event mode also places the player start: Set Start Position Here on a cell sets the System start map, cell and direction as one undo action (the System form row of 8.3.2 picks them without the canvas).",
+      "description": "Split into 8.4.3.1 (regions and the shadow pen) and 8.4.3.2 (automatic layer and Set Start Position Here). Event placement on the canvas (create/move/delete events on the grid) moved to 9.7, where the event data model of 9.1 exists (D-039).",
       "dependencies": [
         "8.4.2"
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "Bridge-driven edit of each mode",
-        "Set Start Position Here on the canvas sets the System start position (map, cell), undoable, and the System form row shows it"
+        "8.4.3.1 and 8.4.3.2 done"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
       "commit": "",
       "notes": "",
       "status": "pending"
+    },
+    {
+      "id": "8.4.3.1",
+      "parent": "8.4.3",
+      "title": "Region mode and shadow pen",
+      "priority": 1,
+      "dependencies": [
+        "8.4.2"
+      ],
+      "description": "Regions mode paints region IDs 1-255 with the same tools (pencil, rectangle, ellipse, fill, eraser = 0, eyedropper/right-click pick) and shows each cell's region number over the map; the shadow pen (Tiles mode) toggles a quarter-cell shadow under the mouse, a drag keeps the first click's on/off (RM-MAP-014, RM-MAP-023). One undo action per stroke (JRPGMapStroke over regions and shadows). Bridge: jrpg_map_stroke on regions and shadows; jrpg_map_get reports them.",
+      "acceptance_criteria": [
+        "Regions painted with each tool, shown on the canvas, undo restores them exactly (hash)",
+        "The shadow pen toggles quarters; one undo action per stroke",
+        "Bridge-driven edit of each mode with screenshots"
+      ],
+      "test_strategy": "Doctests (stroke over regions/shadows, canvas mouse tools) + jrpg_bridge_checks + bridge screenshots.",
+      "status": "done",
+      "files": [
+        "modules/jrpg/editor/jrpg_map_editing.{h,cpp}",
+        "modules/jrpg/editor/jrpg_map_edit_session.{h,cpp}",
+        "modules/jrpg/editor/jrpg_map_canvas.{h,cpp}",
+        "modules/jrpg/editor/jrpg_workspace_shell.{h,cpp}",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/runtime/jrpg_map.{h,cpp}",
+        "modules/jrpg/core/jrpg_map_data.h",
+        "modules/jrpg/doc_classes/JRPGMap.xml",
+        "modules/jrpg/doc_classes/JRPGMapData.xml",
+        "plan/specs/05_maps_tiles.md",
+        "modules/jrpg/tests/test_jrpg_map_canvas.h",
+        "modules/jrpg/tests/test_jrpg_workspace_shell.h",
+        "talewright/tools/jrpg_bridge_checks.py",
+        "talewright/goldens/",
+        "talewright/docs/claude_bridge.md",
+        "plan/DECISIONS.md",
+        "plan/evidence/jrpg/8.4.3.1-*"
+      ],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "8.4.3.2",
+      "parent": "8.4.3",
+      "title": "Automatic layer and Set Start Position Here",
+      "priority": 1,
+      "dependencies": [
+        "8.4.3.1"
+      ],
+      "description": "Auto layer (the default layer choice, RM-MAP-022): autotile and wall kinds go to Ground; plain tiles stack on the two upper layers keeping at most two per cell, the oldest dropping out (RM-MAP-019); the eraser clears the cell's top-most tile. Events mode: right-click a cell, Set Start Position Here sets the System start map and cell as one undo action; the canvas marks the start cell on the start map. Bridge: jrpg_map_stroke layer auto.",
+      "acceptance_criteria": [
+        "Auto layer rules covered by doctests and the bridge",
+        "Set Start Position Here on the canvas sets the System start position (map, cell), undoable, and the System form row shows it"
+      ],
+      "test_strategy": "Doctests + jrpg_bridge_checks + bridge screenshots.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "8.5",
@@ -3514,7 +3570,7 @@
     {
       "id": "9.7",
       "title": "Event editor UI",
-      "description": "Pages, conditions, command list, forms (inspector-based + custom), quick events.",
+      "description": "Pages, conditions, command list, forms (inspector-based + custom), quick events. Includes event placement on the map canvas (Events mode: create, move and delete events on the grid, moved from 8.4.3 by D-039).",
       "parent": "9",
       "dependencies": [
         "9.6"

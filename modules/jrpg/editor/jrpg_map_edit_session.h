@@ -58,6 +58,7 @@ public:
 		TOOL_RECTANGLE,
 		TOOL_ELLIPSE,
 		TOOL_FILL,
+		TOOL_SHADOW, // Tiles mode only: toggles quarter shadows (RM-MAP-014).
 		TOOL_ERASER,
 		TOOL_EYEDROPPER,
 		TOOL_MAX,
@@ -77,6 +78,7 @@ private:
 	Tool tool = TOOL_PENCIL;
 	int layer = 0; // JRPGMapData::Layer.
 	int value = 1; // Palette index of the tile drawn.
+	int region = 1; // Region ID painted in Regions mode, 1-255.
 
 	void _scene_changed();
 
@@ -108,12 +110,16 @@ public:
 	int get_layer() const { return layer; }
 	void set_value(int p_value);
 	int get_value() const { return value; }
+	void set_region(int p_region);
+	int get_region() const { return region; }
+	// Whether p_tool draws in p_mode (the shadow pen only on tiles; nothing in Events mode).
+	static bool is_tool_available(Tool p_tool, Mode p_mode);
 	// "Pencil"..., untranslated (bridge argument names are the lowercase forms).
 	static String get_tool_name(Tool p_tool);
 	// TOOL_MAX when unknown; matches the name without regard to case.
 	static Tool find_tool(const String &p_name);
-	// The undo action a stroke of p_tool files ("Draw Rectangle"...), translated.
-	static String get_action_name(Tool p_tool);
+	// The undo action a stroke of p_tool files in p_mode ("Draw Rectangle", "Paint Regions"...), translated.
+	static String get_action_name(Tool p_tool, Mode p_mode = MODE_TILES);
 
 	~JRPGMapEditSession();
 };

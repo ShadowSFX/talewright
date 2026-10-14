@@ -42,8 +42,9 @@
 // One map's data (spec 05, "JRPGMapData"; D-006): a built-in sub-resource of the map scene, so edits follow the
 // scene's own undo history, and readable without nodes (JRPGMapFiles) by tools and servers. Tile layers hold palette
 // indexes of the map's tileset (0 = empty; an autotile cell holds its kind, the resolver picks the shape), one int per
-// cell row by row; shadows (4 quarter bits) and regions (0..255) one byte per cell. Every array always holds
-// size.x * size.y cells: data loaded or set in another shape is fitted (padded or cut) with a warning.
+// cell row by row; shadows (4 quarter bits: 1 top left, 2 top right, 4 bottom left, 8 bottom right) and regions (0..255)
+// one byte per cell. Every array always holds size.x * size.y cells: data loaded or set in another shape is fitted
+// (padded or cut) with a warning.
 class JRPGMapData : public Resource {
 	GDCLASS(JRPGMapData, Resource);
 

@@ -44,6 +44,7 @@ class JRPGMapTree;
 class Label;
 class OptionButton;
 class PanelContainer;
+class SpinBox;
 class TabBar;
 
 // The JRPG workspace once a project is set up (task 6.3): section tabs (Map, Database) with the playtest actions on
@@ -84,6 +85,7 @@ private:
 	Ref<ButtonGroup> tool_group;
 	Button *tool_buttons[JRPGMapEditSession::TOOL_MAX] = {};
 	OptionButton *layer_picker = nullptr;
+	SpinBox *region_picker = nullptr;
 	Control *canvas = nullptr;
 	JRPGMapCanvas *map_canvas = nullptr;
 	CenterContainer *canvas_center = nullptr;
@@ -100,6 +102,7 @@ private:
 	void _mode_toggled(bool p_on, int p_mode);
 	void _tool_toggled(bool p_on, int p_tool);
 	void _layer_selected(int p_index);
+	void _region_changed(double p_value);
 	void _update_theme();
 	Label *_make_note(const String &p_text);
 

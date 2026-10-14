@@ -103,9 +103,14 @@ TEST_CASE("[SceneTree][JRPG][MapCanvas] Without an edited map the canvas and its
 	memdelete(canvas);
 }
 
-TEST_CASE("[SceneTree][JRPG][MapCanvas] A map without a TileSet uses the default cell size") {
+TEST_CASE("[SceneTree][JRPG][MapCanvas] A map without a TileSet uses the default cell size; its shadows draw over the ground") {
 	JRPGMap *map = memnew(JRPGMap);
 	CHECK(map->get_cell_size() == Vector2i(JRPGMap::DEFAULT_CELL_SIZE, JRPGMap::DEFAULT_CELL_SIZE));
+	// Internal children in drawing order: the ground layers, the shadows, the object and upper layers.
+	REQUIRE(map->get_child_count(true) == 2 * JRPGMapData::LAYER_COUNT + 1);
+	CHECK(String(map->get_child(1, true)->get_name()) == "GroundDetail");
+	CHECK(String(map->get_child(2, true)->get_name()) == "Shadows");
+	CHECK(String(map->get_child(3, true)->get_name()) == "Objects");
 	memdelete(map);
 }
 
@@ -143,7 +148,25 @@ TEST_CASE("[SceneTree][JRPG][MapCanvas] A stroke paints as it goes, ends as one 
 	stroke->add({ Vector2i(0, 0) });
 	CHECK(stroke->end("Draw with Pencil") == 0);
 
+	// Regions and shadows, and a stroke that writes to several targets: one change set, one cancel.
+	REQUIRE(stroke->begin(map, JRPGMapStroke::TARGET_REGIONS, 200) == OK);
+	CHECK(stroke->add({ Vector2i(5, 3) }) == 1);
+	CHECK(stroke->set_values(JRPGMapStroke::TARGET_SHADOWS, { Vector2i(5, 3), Vector2i(4, 3) }, PackedInt32Array({ 9, 99 })) == 2);
+	CHECK(data->get_region(Vector2i(5, 3)) == 200);
+	CHECK(data->get_shadow(Vector2i(4, 3)) == 15); // Clamped to the four quarter bits.
+	CHECK(JRPGMapStroke::read(data, JRPGMapStroke::TARGET_SHADOWS, Vector2i(5, 3)) == 9);
+	CHECK(JRPGMapStroke::read_all(data, JRPGMapStroke::TARGET_REGIONS)[3 * 6 + 5] == 200);
+	CHECK(stroke->end("Paint Regions") == 3);
+	REQUIRE(stroke->begin(map, JRPGMapStroke::TARGET_REGIONS, 0) == OK);
+	stroke->add({ Vector2i(5, 3) });
+	stroke->set_values(JRPGMapStroke::TARGET_SHADOWS, { Vector2i(5, 3) }, PackedInt32Array({ 0 }));
+	stroke->cancel();
+	CHECK((data->get_region(Vector2i(5, 3)) == 200 && data->get_shadow(Vector2i(5, 3)) == 9));
+	CHECK(JRPGMapStroke::get_max_value(JRPGMapStroke::TARGET_REGIONS) == 255);
+	CHECK(JRPGMapStroke::get_max_value(JRPGMapStroke::TARGET_SHADOWS) == 15);
+
 	String message;
+	CHECK(stroke->begin(map, JRPGMapStroke::TARGET_REGIONS, 256, &message) == ERR_INVALID_PARAMETER);
 	CHECK(stroke->begin(map, 7, 1, &message) == ERR_INVALID_PARAMETER);
 	CHECK(stroke->begin(nullptr, 0, 1, &message) == ERR_UNCONFIGURED);
 	REQUIRE(stroke->begin(map, 0, 1) == OK);
@@ -235,11 +258,64 @@ TEST_CASE("[SceneTree][JRPG][MapCanvas] The canvas tools draw what the mouse doe
 	click(canvas, MouseButton::LEFT, at(5, 1), false);
 	CHECK(cell(0, 5, 1) == 0);
 
-	// Other modes do not draw tiles.
+	// The shadow pen: the first quarter decides (clear becomes dark), a drag goes on through the half cells it crosses.
+	session->set_tool(JRPGMapEditSession::TOOL_SHADOW);
+	click(canvas, MouseButton::LEFT, Vector2(5, 5), true); // Top left quarter of cell (0, 0).
+	move(canvas, Vector2(5 + 48 + 24, 5)); // Through the top right of (0, 0) to the top right of (1, 0).
+	click(canvas, MouseButton::LEFT, Vector2(5 + 48 + 24, 5), false);
+	CHECK(data->get_shadow(Vector2i(0, 0)) == 1 + 2);
+	CHECK(data->get_shadow(Vector2i(1, 0)) == 1 + 2);
+	click(canvas, MouseButton::LEFT, Vector2(30, 5), true); // A dark quarter: the stroke clears.
+	click(canvas, MouseButton::LEFT, Vector2(30, 5), false);
+	CHECK(data->get_shadow(Vector2i(0, 0)) == 1);
+	// A diagonal move crosses two quarters (the path is 8-connected).
+	Ref<JRPGMapStroke> dark;
+	dark.instantiate();
+	REQUIRE(dark->begin(map, JRPGMapStroke::TARGET_SHADOWS, 15) == OK);
+	dark->add({ Vector2i(3, 2) });
+	dark->set_values(JRPGMapStroke::TARGET_SHADOWS, { Vector2i(3, 1), Vector2i(4, 1) }, PackedInt32Array({ 2, 1 }));
+	dark->end("Draw Shadows");
+	click(canvas, MouseButton::LEFT, Vector2(3 * 48 + 5, 2 * 48 + 5), true);
+	move(canvas, Vector2(3 * 48 + 40, 2 * 48 + 40));
+	click(canvas, MouseButton::LEFT, Vector2(3 * 48 + 40, 2 * 48 + 40), false);
+	CHECK(data->get_shadow(Vector2i(3, 1 + 1)) == 15 - 1 - 8);
+	// One move that clears a cell's last dark quarter and then another of its quarters leaves it clear.
+	click(canvas, MouseButton::LEFT, Vector2(4 * 48 + 5, 48 + 5), true); // The dark top left of (4, 1).
+	move(canvas, Vector2(3 * 48 + 5, 48 + 5)); // Over the top right, then the top left, of (3, 1).
+	click(canvas, MouseButton::LEFT, Vector2(3 * 48 + 5, 48 + 5), false);
+	CHECK((data->get_shadow(Vector2i(4, 1)) == 0 && data->get_shadow(Vector2i(3, 1)) == 0));
+
+	// Regions mode: the same tools paint region IDs; tiles stay as they are; the shadow pen gives way to the pencil
+	// (as the workspace's mode buttons do).
 	session->set_mode(JRPGMapEditSession::MODE_REGIONS);
+	CHECK_FALSE(JRPGMapEditSession::is_tool_available(JRPGMapEditSession::TOOL_SHADOW, JRPGMapEditSession::MODE_REGIONS));
 	click(canvas, MouseButton::LEFT, at(5, 2), true);
 	click(canvas, MouseButton::LEFT, at(5, 2), false);
-	CHECK(cell(0, 5, 2) == 0);
+	CHECK(data->get_region(Vector2i(5, 2)) == 0); // The shadow pen does nothing here.
+	session->set_tool(JRPGMapEditSession::TOOL_PENCIL);
+	session->set_region(7);
+	click(canvas, MouseButton::LEFT, at(4, 2), true);
+	move(canvas, at(5, 2));
+	click(canvas, MouseButton::LEFT, at(5, 2), false);
+	CHECK((data->get_region(Vector2i(4, 2)) == 7 && data->get_region(Vector2i(5, 2)) == 7 && cell(0, 5, 2) == 0));
+	session->set_tool(JRPGMapEditSession::TOOL_FILL);
+	session->set_region(3);
+	click(canvas, MouseButton::LEFT, at(0, 3), true);
+	click(canvas, MouseButton::LEFT, at(0, 3), false);
+	CHECK((data->get_region(Vector2i(0, 0)) == 3 && data->get_region(Vector2i(4, 2)) == 7));
+	click(canvas, MouseButton::RIGHT, at(5, 2), true); // Pick a region.
+	CHECK(session->get_region() == 7);
+	session->set_tool(JRPGMapEditSession::TOOL_ERASER);
+	click(canvas, MouseButton::LEFT, at(4, 2), true);
+	click(canvas, MouseButton::LEFT, at(4, 2), false);
+	CHECK(data->get_region(Vector2i(4, 2)) == 0);
+
+	// Events mode draws nothing.
+	session->set_mode(JRPGMapEditSession::MODE_EVENTS);
+	session->set_tool(JRPGMapEditSession::TOOL_PENCIL);
+	click(canvas, MouseButton::LEFT, at(5, 2), true);
+	click(canvas, MouseButton::LEFT, at(5, 2), false);
+	CHECK((cell(0, 5, 2) == 0 && data->get_region(Vector2i(5, 2)) == 7));
 	ERR_PRINT_ON;
 	memdelete(canvas);
 	memdelete(map);

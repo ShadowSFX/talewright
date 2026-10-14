@@ -4,7 +4,7 @@
 		The root node of a JRPG map scene.
 	</brief_description>
 	<description>
-		Holds the map's [JRPGMapData] as a built-in resource of the scene, so the map's edits follow the scene's undo history and save with it, and draws it: for each tile layer, two internal [TileMapLayer] nodes hold the tiles drawn below characters and the overhead tiles drawn above them. Autotile and wall cells show the shape [JRPGAutotileResolver] picks from their neighbors. Any other node can be added under the map.
+		Holds the map's [JRPGMapData] as a built-in resource of the scene, so the map's edits follow the scene's undo history and save with it, and draws it: for each tile layer, two internal [TileMapLayer] nodes hold the tiles drawn below characters and the overhead tiles drawn above them. Autotile and wall cells show the shape [JRPGAutotileResolver] picks from their neighbors. The map's quarter shadows ([member JRPGMapData.shadows]) are drawn half-opaque over the ground layers and under the objects. Any other node can be added under the map.
 	</description>
 	<tutorials>
 	</tutorials>

@@ -1453,6 +1453,33 @@ int map_layer(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call)
 	return -1;
 }
 
+// The stroke target named by "layer": a tile layer (0-3 or its name), "regions" or "shadows"; -1 after failing the call.
+int map_target(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call) {
+	const String name = String(p_args.get("layer", "")).strip_edges().to_lower();
+	if (name == "regions") {
+		return JRPGMapStroke::TARGET_REGIONS;
+	}
+	if (name == "shadows") {
+		return JRPGMapStroke::TARGET_SHADOWS;
+	}
+	const Variant v = p_args.get("layer", Variant());
+	int64_t number = -1;
+	if (whole_number(v, number) && number >= 0 && number < JRPGMapData::LAYER_COUNT) {
+		return int(number);
+	}
+	for (int i = 0; i < JRPGMapData::LAYER_COUNT; i++) {
+		if (name == LAYER_KEYS[i]) {
+			return i;
+		}
+	}
+	p_call->fail("\"layer\" must be 0-3, ground, ground_detail, objects, upper, regions or shadows.");
+	return -1;
+}
+
+String target_key(int p_target) {
+	return p_target == JRPGMapStroke::TARGET_REGIONS ? String("regions") : (p_target == JRPGMapStroke::TARGET_SHADOWS ? String("shadows") : String(LAYER_KEYS[p_target]));
+}
+
 Dictionary describe_map(const Ref<JRPGMapData> &p_data, const String &p_scene) {
 	Dictionary map;
 	map["scene"] = p_scene;
@@ -1461,23 +1488,23 @@ Dictionary describe_map(const Ref<JRPGMapData> &p_data, const String &p_scene) {
 	map["tileset_id"] = p_data->get_tileset_id();
 	map["size"] = Array({ p_data->get_size().x, p_data->get_size().y });
 	map["scroll_type"] = int(p_data->get_scroll_type());
+	// Per tile layer, then regions and shadows: how many cells hold something, and a fingerprint of the cells that
+	// undo must bring back exactly (tasks 8.4.2, 8.4.3.1).
 	Dictionary painted;
-	for (int layer = 0; layer < JRPGMapData::LAYER_COUNT; layer++) {
-		int count = 0;
-		for (const int index : p_data->get_layer(layer)) {
-			count += index != 0 ? 1 : 0;
-		}
-		painted[LAYER_KEYS[layer]] = count;
-	}
-	map["painted_cells"] = painted;
-	// A fingerprint of each layer's cells: undo must bring it back exactly (task 8.4.2).
 	Dictionary hashes;
-	for (int layer = 0; layer < JRPGMapData::LAYER_COUNT; layer++) {
-		const PackedByteArray bytes = p_data->get_layer(layer).to_byte_array();
+	for (int target = 0; target < JRPGMapStroke::TARGET_COUNT; target++) {
+		const PackedInt32Array values = JRPGMapStroke::read_all(p_data, target);
+		int count = 0;
+		for (const int value : values) {
+			count += value != 0 ? 1 : 0;
+		}
+		painted[target_key(target)] = count;
+		const PackedByteArray bytes = values.to_byte_array();
 		unsigned char hash[32];
 		CryptoCore::sha256(bytes.ptr(), bytes.size(), hash);
-		hashes[LAYER_KEYS[layer]] = String::hex_encode_buffer(hash, 32);
+		hashes[target_key(target)] = String::hex_encode_buffer(hash, 32);
 	}
+	map["painted_cells"] = painted;
 	map["layer_sha256"] = hashes;
 	return map;
 }
@@ -1509,7 +1536,7 @@ void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 		p_call->fail("\"tool\" must be pencil, rectangle, ellipse, fill or eraser.");
 		return;
 	}
-	const int layer = map_layer(p_args, p_call);
+	const int layer = map_target(p_args, p_call);
 	if (layer < 0) {
 		return;
 	}
@@ -1518,8 +1545,8 @@ void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 		if (!int_arg(p_args, "value", 0, p_call, value)) {
 			return;
 		}
-		if (value < 1) {
-			p_call->fail("\"value\" is the palette index to draw, 1 or more (the eraser draws nothing, 0).");
+		if (value < 1 || value > JRPGMapStroke::get_max_value(layer)) {
+			p_call->fail(vformat("\"value\" is what to draw: a palette index (1 or more) on a tile layer, a region ID (1-255) on regions, the shadowed quarters (1-15: 1 top left, 2 top right, 4 bottom left, 8 bottom right) on shadows; the eraser draws 0. Got %d for %s.", value, target_key(layer)));
 			return;
 		}
 	}
@@ -1549,7 +1576,7 @@ void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 			stroke->add(JRPGMapShapes::ellipse(points[0], points[1]));
 		} break;
 		case JRPGMapEditSession::TOOL_FILL: {
-			stroke->add(JRPGMapShapes::flood_fill(data->get_layer(layer), data->get_size(), points[0]));
+			stroke->add(JRPGMapShapes::flood_fill(JRPGMapStroke::read_all(data, layer), data->get_size(), points[0]));
 		} break;
 		default: {
 			stroke->add({ points[0] });
@@ -1558,10 +1585,11 @@ void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 			}
 		} break;
 	}
-	const int changed = stroke->end(JRPGMapEditSession::get_action_name(tool));
+	const bool regions = layer == JRPGMapStroke::TARGET_REGIONS;
+	const int changed = stroke->end(layer == JRPGMapStroke::TARGET_SHADOWS ? JRPGMapEditSession::get_action_name(JRPGMapEditSession::TOOL_SHADOW) : JRPGMapEditSession::get_action_name(tool, regions ? JRPGMapEditSession::MODE_REGIONS : JRPGMapEditSession::MODE_TILES));
 	Dictionary result = describe_map(data, map->get_scene_file_path());
 	result["tool"] = String(JRPGMapEditSession::get_tool_name(tool)).to_lower();
-	result["layer"] = LAYER_KEYS[layer];
+	result["layer"] = target_key(layer);
 	result["changed"] = changed;
 	result["undoable"] = changed > 0;
 	p_call->complete_data(result);
@@ -1732,8 +1760,8 @@ void tool_map_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_c
 	}
 	Dictionary result = describe_map(data, scene);
 	if (p_args.has("layer")) {
-		const int layer = map_layer(p_args, p_call);
-		if (layer < 0) {
+		const int target = map_target(p_args, p_call);
+		if (target < 0) {
 			return;
 		}
 		const Vector2i size = data->get_size();
@@ -1745,11 +1773,11 @@ void tool_map_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_c
 		for (int y = 0; y < size.y; y++) {
 			PackedInt32Array row;
 			for (int x = 0; x < size.x; x++) {
-				row.push_back(data->get_cell(layer, Vector2i(x, y)));
+				row.push_back(JRPGMapStroke::read(data, target, Vector2i(x, y)));
 			}
 			rows.push_back(row);
 		}
-		result["cells"] = rows; // Rows top to bottom, palette indexes (0 = empty).
+		result["cells"] = rows; // Rows top to bottom: palette indexes, region IDs or shadow bits (0 = none).
 	}
 	p_call->complete_data(result);
 }
@@ -1970,13 +1998,13 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool map_stroke;
 	map_stroke.name = "jrpg_map_stroke";
 	map_stroke.title = "Draw on the map";
-	map_stroke.description = "Draws one stroke on a tile layer of the edited map with a map canvas tool, as one undo action of the map scene: pencil (the path through points, joined by straight lines), rectangle and ellipse (filled, between two corner points), fill (the area of matching tiles around the one point), eraser (the pencil drawing 0). value is the palette index drawn. Points outside the map are allowed; only cells inside are drawn. Returns the cells changed and each layer's SHA-256 (layer_sha256), which undo restores exactly.";
+	map_stroke.description = "Draws one stroke on the edited map with a map canvas tool, as one undo action of the map scene: pencil (the path through points, joined by straight lines), rectangle and ellipse (filled, between two corner points), fill (the area of matching cells around the one point), eraser (the pencil drawing 0). layer is a tile layer, regions or shadows; value is the palette index, the region ID (1-255) or the shadowed quarters of each cell (1-15: 1 top left, 2 top right, 4 bottom left, 8 bottom right; the canvas's shadow pen toggles single quarters instead). Points outside the map are allowed; only cells inside are drawn. Returns the cells changed and each layer's SHA-256 (layer_sha256), which undo restores exactly.";
 	Dictionary map_stroke_properties;
 	Dictionary tool_property = schema_property("string", "The tool.");
 	tool_property["enum"] = Array({ "pencil", "rectangle", "ellipse", "fill", "eraser" });
 	map_stroke_properties["tool"] = tool_property;
-	map_stroke_properties["layer"] = schema_property("string", "ground, ground_detail, objects or upper (or 0-3).");
-	map_stroke_properties["value"] = schema_property("integer", "Palette index to draw (not for the eraser).");
+	map_stroke_properties["layer"] = schema_property("string", "ground, ground_detail, objects, upper (or 0-3), regions or shadows.");
+	map_stroke_properties["value"] = schema_property("integer", "Palette index, region ID or shadow quarters (not for the eraser).");
 	map_stroke_properties["points"] = schema_property("array", "[x, y] cells: the path (pencil, eraser), two corners (rectangle, ellipse) or the start cell (fill).");
 	map_stroke.input_schema = ClaudeBridgeMCP::object_schema(map_stroke_properties, PackedStringArray({ "tool", "layer", "points" }));
 	map_stroke.read_only = false;
@@ -2274,10 +2302,10 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool map_get;
 	map_get.name = "jrpg_map_get";
 	map_get.title = "Read a map";
-	map_get.description = "Reads a map: the edited map, or the map scene file scene (res://...) without opening or instancing it. Returns its id, name, tileset, size, scroll type, how many cells each layer has painted and each layer's SHA-256 (layer_sha256: undo brings it back exactly); with layer, also that layer's palette indexes as rows (maps of up to 4096 cells).";
+	map_get.description = "Reads a map: the edited map, or the map scene file scene (res://...) without opening or instancing it. Returns its id, name, tileset, size, scroll type, how many cells each tile layer, the regions and the shadows hold and the SHA-256 of each (layer_sha256: undo brings it back exactly); with layer, also those cells as rows: palette indexes, region IDs or shadow quarters (maps of up to 4096 cells).";
 	Dictionary map_get_properties;
 	map_get_properties["scene"] = schema_property("string", "res:// path of a map scene (default: the edited map).");
-	map_get_properties["layer"] = schema_property("string", "0-3 or ground, ground_detail, objects, upper: list its cells.");
+	map_get_properties["layer"] = schema_property("string", "0-3, ground, ground_detail, objects, upper, regions or shadows: list its cells.");
 	map_get.input_schema = ClaudeBridgeMCP::object_schema(map_get_properties);
 	map_get.func = &tool_map_get;
 	r_mcp.register_tool(map_get);

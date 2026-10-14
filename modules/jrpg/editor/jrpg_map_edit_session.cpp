@@ -99,7 +99,7 @@ void JRPGMapEditSession::set_view(const String &p_scene_path, float p_zoom, cons
 
 namespace {
 
-const char *const TOOL_NAMES[JRPGMapEditSession::TOOL_MAX] = { "Pencil", "Rectangle", "Ellipse", "Fill", "Eraser", "Eyedropper" };
+const char *const TOOL_NAMES[JRPGMapEditSession::TOOL_MAX] = { "Pencil", "Rectangle", "Ellipse", "Fill", "Shadow", "Eraser", "Eyedropper" };
 
 } // namespace
 
@@ -127,6 +127,16 @@ void JRPGMapEditSession::set_value(int p_value) {
 	emit_signal(SNAME("brush_changed"));
 }
 
+void JRPGMapEditSession::set_region(int p_region) {
+	ERR_FAIL_COND(p_region < 1 || p_region > 255);
+	region = p_region;
+	emit_signal(SNAME("brush_changed"));
+}
+
+bool JRPGMapEditSession::is_tool_available(Tool p_tool, Mode p_mode) {
+	return p_mode == MODE_TILES || (p_mode == MODE_REGIONS && p_tool != TOOL_SHADOW);
+}
+
 String JRPGMapEditSession::get_tool_name(Tool p_tool) {
 	ERR_FAIL_INDEX_V(int(p_tool), TOOL_MAX, String());
 	return TOOL_NAMES[p_tool];
@@ -141,8 +151,13 @@ JRPGMapEditSession::Tool JRPGMapEditSession::find_tool(const String &p_name) {
 	return TOOL_MAX;
 }
 
-String JRPGMapEditSession::get_action_name(Tool p_tool) {
+String JRPGMapEditSession::get_action_name(Tool p_tool, Mode p_mode) {
+	if (p_mode == MODE_REGIONS) {
+		return p_tool == TOOL_ERASER ? TTR("Erase Regions") : TTR("Paint Regions");
+	}
 	switch (p_tool) {
+		case TOOL_SHADOW:
+			return TTR("Draw Shadows");
 		case TOOL_RECTANGLE:
 			return TTR("Draw Rectangle");
 		case TOOL_ELLIPSE:

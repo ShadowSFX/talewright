@@ -43,7 +43,8 @@ class TileSet;
 // follow the scene's own undo history and save with it, and draws it. For each of the four data layers it builds two
 // internal TileMapLayers (INTERNAL_MODE_FRONT, as TileMap builds its layers, scene/2d/tile_map.cpp:272): tiles drawn
 // below characters (z 0) and overhead tiles (z 2; characters use z 1). Autotile and wall cells show the shape
-// JRPGAutotileResolver picks; a paint re-resolves only the cells around it. Users may add any other node under it.
+// JRPGAutotileResolver picks; a paint re-resolves only the cells around it. The map's quarter shadows draw between the
+// ground layers and the objects (an internal node, task 8.4.3.1). Users may add any other node under it.
 // Authority (D-007): the map only presents its data; what moves on it belongs to the server online.
 class JRPGMap : public Node2D {
 	GDCLASS(JRPGMap, Node2D);
@@ -59,6 +60,9 @@ private:
 	Ref<JRPGDatabase> database; // Null: the project's (JRPGDatabase::PROJECT_PATH).
 	TileMapLayer *below[JRPGMapData::LAYER_COUNT] = {};
 	TileMapLayer *above[JRPGMapData::LAYER_COUNT] = {};
+	Node2D *shadows = nullptr; // Quarter shadows, over the ground layers and under the objects.
+
+	static constexpr float SHADOW_ALPHA = 0.5;
 
 	// What the last build used.
 	Ref<JRPGTilesetData> tileset_data;
@@ -75,6 +79,7 @@ private:
 	void _queue_rebuild();
 	void _on_cells_changed(int p_layer, const PackedInt32Array &p_cells);
 	void _update_cell(int p_layer, const Vector2i &p_cell);
+	void _draw_shadows();
 	Ref<JRPGTilesetData> _find_tileset_data() const;
 
 protected:

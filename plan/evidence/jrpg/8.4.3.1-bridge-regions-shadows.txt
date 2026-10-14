@@ -1,0 +1,22 @@
+# 8.4.3.1 bridge verification: regions and the shadow pen
+  fill on ground: 160 cells
+  pencil on objects: 5 cells
+## shadows: a block of full shadows and right halves along the trees (quarters 2 + 8)
+  before: {'regions': '9e132485d510', 'shadows': '9e132485d510'} cells {'regions': 0, 'shadows': 0}
+  rectangle on shadows: 9 cells
+  pencil on shadows: 5 cells
+  after: {'regions': '9e132485d510', 'shadows': '1123581971f5'} cells {'regions': 0, 'shadows': 14}
+  undo the right halves: {'regions': '9e132485d510', 'shadows': 'c7e273181197'} cells {'regions': 0, 'shadows': 9}
+## Tiles mode with the shadow pen: the shadows on the map
+  brush: {'mode': 'tiles', 'tool': 'shadow', 'layer': 0, 'value': 1}
+  screenshot: plan/evidence/jrpg/8.4.3.1-shadows.png
+## Regions mode: regions 3 (an ellipse) and 7 (a fill of the rest), numbered on the map
+  ellipse on regions: 52 cells
+  fill on regions: 108 cells
+  brush: {'mode': 'regions', 'tool': 'pencil', 'layer': 0, 'value': 1}
+  palette note: 'Painting region 1. Right-click a cell to paint its region.'
+  regions painted: {'regions': '24d55363dda6', 'shadows': '1123581971f5'} cells {'regions': 160, 'shadows': 14}
+  screenshot: plan/evidence/jrpg/8.4.3.1-regions.png
+## errors
+    "errors": 0,
+    "warnings": 0,

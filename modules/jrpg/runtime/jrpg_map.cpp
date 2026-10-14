@@ -102,6 +102,7 @@ Ref<JRPGTilesetData> JRPGMap::_find_tileset_data() const {
 void JRPGMap::rebuild() {
 	rebuild_queued = false;
 	rebuild_count++;
+	shadows->queue_redraw(); // A new size or cell size moves them.
 	for (int i = 0; i < JRPGMapData::LAYER_COUNT; i++) {
 		below[i]->clear();
 		above[i]->clear();
@@ -168,9 +169,34 @@ void JRPGMap::_update_cell(int p_layer, const Vector2i &p_cell) {
 	target->set_cell(p_cell, entry.get("source_id", TileSet::INVALID_SOURCE), coords, entry.get("alternative", 0));
 }
 
+void JRPGMap::_draw_shadows() {
+	// Each shadowed quarter darkened: bit 1 top left, 2 top right, 4 bottom left, 8 bottom right (spec 05).
+	if (map_data.is_null()) {
+		return;
+	}
+	const Vector2i size = map_data->get_size();
+	const Vector2 quarter = Vector2(get_cell_size()) / 2;
+	const PackedByteArray bits = map_data->get_shadows();
+	const Color shade(0, 0, 0, SHADOW_ALPHA);
+	for (int y = 0; y < size.y; y++) {
+		for (int x = 0; x < size.x; x++) {
+			const int mask = bits[y * size.x + x];
+			for (int q = 0; mask && q < 4; q++) {
+				if (mask & (1 << q)) {
+					shadows->draw_rect(Rect2((Vector2(x * 2 + (q & 1), y * 2 + (q >> 1))) * quarter, quarter), shade);
+				}
+			}
+		}
+	}
+}
+
 void JRPGMap::_on_cells_changed(int p_layer, const PackedInt32Array &p_cells) {
-	if (p_layer < 0 || p_layer >= JRPGMapData::LAYER_COUNT || tileset.is_null() || rebuild_queued) {
-		return; // Regions and shadows are not drawn here; a full build is coming anyway.
+	if (p_layer < 0) {
+		shadows->queue_redraw(); // Shadows or regions (regions are not drawn by the map).
+		return;
+	}
+	if (p_layer >= JRPGMapData::LAYER_COUNT || tileset.is_null() || rebuild_queued) {
+		return; // A full build is coming anyway.
 	}
 	const Vector2i size = map_data->get_size();
 	if (shapes[p_layer].size() != size.x * size.y) {
@@ -228,6 +254,14 @@ void JRPGMap::_bind_methods() {
 JRPGMap::JRPGMap() {
 	static const char *names[JRPGMapData::LAYER_COUNT] = { "Ground", "GroundDetail", "Objects", "Upper" };
 	for (int i = 0; i < JRPGMapData::LAYER_COUNT; i++) {
+		if (i == JRPGMapData::LAYER_OBJECTS) {
+			// Children of one z index draw in order: the shadows go over the ground layers, under the objects.
+			shadows = memnew(Node2D);
+			shadows->set_name("Shadows");
+			shadows->set_z_index(Z_BELOW);
+			shadows->connect(SceneStringName(draw), callable_mp(this, &JRPGMap::_draw_shadows));
+			add_child(shadows, false, INTERNAL_MODE_FRONT);
+		}
 		below[i] = memnew(TileMapLayer);
 		below[i]->set_name(names[i]);
 		below[i]->set_z_index(Z_BELOW);

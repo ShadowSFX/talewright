@@ -48,6 +48,7 @@
 #include "scene/gui/option_button.h"
 #include "scene/gui/panel_container.h"
 #include "scene/gui/separator.h"
+#include "scene/gui/spin_box.h"
 #include "scene/gui/split_container.h"
 #include "scene/gui/tab_bar.h"
 #include "scene/resources/image_texture.h"
@@ -66,12 +67,18 @@ namespace {
 const char *const SECTION_NAMES[JRPGWorkspaceShell::SECTION_MAX] = { TTRC("Map"), TTRC("Database") }; // Translated when shown.
 const char *const SECTION_ICONS[JRPGWorkspaceShell::SECTION_MAX] = { "TileMapLayer", "FileList" };
 const char *const MODE_ICONS[JRPGWorkspaceShell::MODE_MAX] = { "TileMapLayer", "Object", "Grid" };
-// Editor icons; the ellipse has none of its own (the round ones are class or widget icons), so it is drawn here.
-const char *const TOOL_ICONS[JRPGMapEditSession::TOOL_MAX] = { "Edit", "Rectangle", nullptr, "Bucket", "Eraser", "ColorPick" };
+// Editor icons; the ellipse and the shadow pen have none of their own (the round icons are class or widget icons), so
+// they are drawn here.
+const char *const TOOL_ICONS[JRPGMapEditSession::TOOL_MAX] = { "Edit", "Rectangle", nullptr, "Bucket", nullptr, "Eraser", "ColorPick" };
 
-// A 16 x 16 ellipse outline in the editor's icon size and text color (light and dark themes alike).
-Ref<Texture2D> make_ellipse_icon(const Color &p_color) {
-	const String svg = vformat("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><ellipse cx=\"8\" cy=\"8\" rx=\"6.5\" ry=\"4.5\" fill=\"none\" stroke=\"#%s\" stroke-width=\"2\"/></svg>", p_color.to_html(false));
+// A 16 x 16 icon of p_tool (the ellipse, or a cell with one shadowed quarter) in the editor's icon size and text color
+// (light and dark themes alike).
+Ref<Texture2D> make_tool_icon(int p_tool, const Color &p_color) {
+	const String color = p_color.to_html(false);
+	const String shape = p_tool == JRPGMapEditSession::TOOL_SHADOW
+			? vformat("<rect x=\"2\" y=\"2\" width=\"12\" height=\"12\" fill=\"none\" stroke=\"#%s\" stroke-width=\"2\"/><rect x=\"2\" y=\"8\" width=\"6\" height=\"6\" fill=\"#%s\"/>", color, color)
+			: vformat("<ellipse cx=\"8\" cy=\"8\" rx=\"6.5\" ry=\"4.5\" fill=\"none\" stroke=\"#%s\" stroke-width=\"2\"/>", color);
+	const String svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\">" + shape + "</svg>";
 	Ref<Image> image;
 	image.instantiate();
 	if (image->load_svg_from_string(svg, EDSCALE) != OK) {
@@ -174,15 +181,28 @@ void JRPGWorkspaceShell::_update_canvas() {
 void JRPGWorkspaceShell::_sync_brush() {
 	const Ref<JRPGMapEditSession> session = map_canvas->get_session();
 	const JRPGMap *map = session->get_map();
-	const bool tiles = map && session->get_mode() == JRPGMapEditSession::MODE_TILES;
+	const JRPGMapEditSession::Mode mode = session->get_mode();
+	const bool tiles = map && mode == JRPGMapEditSession::MODE_TILES;
 	for (int i = 0; i < JRPGMapEditSession::TOOL_MAX; i++) {
-		tool_buttons[i]->set_disabled(!tiles);
+		tool_buttons[i]->set_disabled(!map || !JRPGMapEditSession::is_tool_available(JRPGMapEditSession::Tool(i), mode));
 		tool_buttons[i]->set_pressed_no_signal(i == session->get_tool());
 	}
+	layer_picker->set_visible(mode != JRPGMapEditSession::MODE_REGIONS);
 	layer_picker->set_disabled(!tiles);
 	layer_picker->select(session->get_layer());
+	region_picker->set_visible(mode == JRPGMapEditSession::MODE_REGIONS);
+	region_picker->set_editable(map != nullptr);
+	region_picker->set_value_no_signal(session->get_region());
 	if (!map) {
 		palette_empty->set_text(TTR("Open a map to choose its tiles."));
+		return;
+	}
+	if (mode == JRPGMapEditSession::MODE_REGIONS) {
+		palette_empty->set_text(vformat(TTR("Painting region %d. Right-click a cell to paint its region."), session->get_region()));
+		return;
+	}
+	if (mode == JRPGMapEditSession::MODE_EVENTS) {
+		palette_empty->set_text(TTR("Events mode has no drawing tools."));
 		return;
 	}
 	// The tile drawn, until the palette lists the tileset (task 8.5): its index and its sheet's name.
@@ -204,8 +224,16 @@ void JRPGWorkspaceShell::_sync_brush() {
 
 void JRPGWorkspaceShell::_mode_toggled(bool p_on, int p_mode) {
 	if (p_on && map_canvas) { // The constructor presses Tiles before the canvas exists.
-		map_canvas->get_session()->set_mode(JRPGMapEditSession::Mode(p_mode));
+		const Ref<JRPGMapEditSession> session = map_canvas->get_session();
+		if (!JRPGMapEditSession::is_tool_available(session->get_tool(), JRPGMapEditSession::Mode(p_mode))) {
+			session->set_tool(JRPGMapEditSession::TOOL_PENCIL); // The shadow pen draws on tiles only.
+		}
+		session->set_mode(JRPGMapEditSession::Mode(p_mode));
 	}
+}
+
+void JRPGWorkspaceShell::_region_changed(double p_value) {
+	map_canvas->get_session()->set_region(int(p_value));
 }
 
 void JRPGWorkspaceShell::_tool_toggled(bool p_on, int p_tool) {
@@ -236,7 +264,7 @@ void JRPGWorkspaceShell::_update_theme() {
 		mode_buttons[i]->set_button_icon(get_editor_theme_icon(MODE_ICONS[i]));
 	}
 	for (int i = 0; i < JRPGMapEditSession::TOOL_MAX; i++) {
-		tool_buttons[i]->set_button_icon(TOOL_ICONS[i] ? get_editor_theme_icon(TOOL_ICONS[i]) : make_ellipse_icon(get_theme_color(SNAME("font_color"), EditorStringName(Editor))));
+		tool_buttons[i]->set_button_icon(TOOL_ICONS[i] ? get_editor_theme_icon(TOOL_ICONS[i]) : make_tool_icon(i, get_theme_color(SNAME("font_color"), EditorStringName(Editor))));
 	}
 
 	// Notes are the theme's read-only text color; the canvas is the darker editor surface; the message frame matches
@@ -352,8 +380,8 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 	toolbar->add_child(memnew(VSeparator));
 	// The drawing tools, one at a time, as the TileMap editor's (editor/scene/2d/tiles/tile_map_layer_editor.cpp:2207-2251).
 	tool_group.instantiate();
-	const String tool_names[JRPGMapEditSession::TOOL_MAX] = { TTR("Pencil"), TTR("Rectangle"), TTR("Ellipse"), TTR("Fill"), TTR("Eraser"), TTR("Eyedropper") };
-	const String tool_tips[JRPGMapEditSession::TOOL_MAX] = { TTR("Draw tiles where you drag."), TTR("Draw a filled rectangle: drag from one corner to the other."), TTR("Draw a filled ellipse inside the rectangle you drag."), TTR("Fill the area of matching tiles you click."), TTR("Erase tiles where you drag."), TTR("Pick the tile you click to draw with it (right-click does the same with any tool).") };
+	const String tool_names[JRPGMapEditSession::TOOL_MAX] = { TTR("Pencil"), TTR("Rectangle"), TTR("Ellipse"), TTR("Fill"), TTR("Shadow Pen"), TTR("Eraser"), TTR("Eyedropper") };
+	const String tool_tips[JRPGMapEditSession::TOOL_MAX] = { TTR("Draw where you drag."), TTR("Draw a filled rectangle: drag from one corner to the other."), TTR("Draw a filled ellipse inside the rectangle you drag."), TTR("Fill the area of matching cells you click."), TTR("Darken a quarter of a cell, or clear it if it is dark; drag to go on. Tiles only."), TTR("Erase where you drag."), TTR("Pick what the cell you click holds, to draw with it (right-click does the same with any tool).") };
 	for (int i = 0; i < JRPGMapEditSession::TOOL_MAX; i++) {
 		tool_buttons[i] = memnew(Button);
 		tool_buttons[i]->set_tooltip_text(tool_names[i] + "\n" + tool_tips[i]);
@@ -377,6 +405,16 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 	layer_picker->set_disabled(true);
 	layer_picker->connect(SceneStringName(item_selected), callable_mp(this, &JRPGWorkspaceShell::_layer_selected));
 	toolbar->add_child(layer_picker);
+	region_picker = memnew(SpinBox);
+	region_picker->set_min(1);
+	region_picker->set_max(255);
+	region_picker->set_prefix(TTR("Region"));
+	region_picker->set_custom_minimum_size(Size2(120, 0) * EDSCALE); // The prefix and three digits.
+	region_picker->set_tooltip_text(TTR("The region ID the tools paint, 1-255. Regions limit encounters and map rules to areas."));
+	region_picker->set_accessibility_name(TTR("Region"));
+	region_picker->set_visible(false);
+	region_picker->connect(SceneStringName(value_changed), callable_mp(this, &JRPGWorkspaceShell::_region_changed));
+	toolbar->add_child(region_picker);
 
 	PanelContainer *canvas_panel = memnew(PanelContainer);
 	canvas_panel->set_v_size_flags(SIZE_EXPAND_FILL);

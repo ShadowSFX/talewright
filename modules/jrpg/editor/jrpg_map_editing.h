@@ -95,31 +95,57 @@ public:
 	static Error check_start_position(int p_map_id, const Vector2i &p_cell, String *r_message = nullptr);
 };
 
-// A brush stroke on one tile layer (spec 05 "one brush stroke = one undo action"; task 8.4.2). Cells are painted as
-// they come, so the canvas shows the stroke while the mouse moves; end() files one undo action of the map scene with
-// the touched cells' old and new values (EditorUndoRedoManager::commit_action without executing them again,
-// editor/editor_undo_redo_manager.cpp:246), and cancel() puts the old values back. The canvas tools and the
-// jrpg_map_stroke bridge tool both draw through it.
+// A brush stroke (spec 05 "one brush stroke = one undo action"; tasks 8.4.2, 8.4.3.1) on a tile layer, the regions or
+// the shadows of a map. Cells are written as they come, so the canvas shows the stroke while the mouse moves; end()
+// files one undo action of the map scene with the touched cells' old and new values (EditorUndoRedoManager::
+// commit_action without executing them again, editor/editor_undo_redo_manager.cpp:246), and cancel() puts the old
+// values back. A stroke may write to several targets (the automatic layer moves tiles between layers). The canvas
+// tools and the jrpg_map_stroke bridge tool both draw through it.
 class JRPGMapStroke : public RefCounted {
 	GDCLASS(JRPGMapStroke, RefCounted);
 
+public:
+	// Targets besides the tile layers (0 to JRPGMapData::LAYER_COUNT - 1).
+	static constexpr int TARGET_REGIONS = JRPGMapData::LAYER_COUNT; // Region IDs, 0-255.
+	static constexpr int TARGET_SHADOWS = JRPGMapData::LAYER_COUNT + 1; // Quarter shadow bits, 0-15.
+	static constexpr int TARGET_COUNT = JRPGMapData::LAYER_COUNT + 2;
+
+private:
+	struct Patch {
+		PackedInt32Array positions; // Cell indexes, in the order first touched.
+		PackedInt32Array before; // Their values before the stroke.
+		HashSet<int> touched;
+	};
+
 	ObjectID map;
 	Ref<JRPGMapData> data;
-	int layer = 0;
+	int target = 0;
 	int value = 0;
-	PackedInt32Array positions; // Cell indexes, in the order first touched.
-	PackedInt32Array before; // Their values before the stroke.
-	HashSet<int> touched;
+	Patch patches[TARGET_COUNT];
+
+	void _write(int p_target, const PackedInt32Array &p_cells, const PackedInt32Array &p_values);
 
 public:
-	// Starts painting p_value (0 erases) on tile layer p_layer of p_map.
-	Error begin(JRPGMap *p_map, int p_layer, int p_value, String *r_message = nullptr);
+	// The highest value a target holds (palette indexes have no limit: INT32_MAX).
+	static int get_max_value(int p_target);
+	// p_target's value of p_cell in p_data (0 outside the map).
+	static int read(const Ref<JRPGMapData> &p_data, int p_target, const Vector2i &p_cell);
+	// All of p_target's values in p_data, row by row (for fills).
+	static PackedInt32Array read_all(const Ref<JRPGMapData> &p_data, int p_target);
+
+	// Starts writing p_value (0 erases) to p_target of p_map.
+	Error begin(JRPGMap *p_map, int p_target, int p_value, String *r_message = nullptr);
 	bool is_active() const { return data.is_valid(); }
-	int get_layer() const { return layer; }
+	int get_target() const { return target; }
 	int get_value() const { return value; }
-	// Paints p_cells now; cells outside the map are skipped. Returns how many cells changed with this call.
+	// Writes the stroke's value to p_cells of its target now; cells outside the map are skipped. Returns how many
+	// cells changed with this call.
 	int add(const Vector<Vector2i> &p_cells);
-	// Files the stroke as one undo action named p_name (none when nothing changed); returns how many cells changed.
+	// Writes p_values[i] to p_cells[i] of p_target (any target; values clamped to its range). Returns how many cells
+	// changed with this call.
+	int set_values(int p_target, const Vector<Vector2i> &p_cells, const PackedInt32Array &p_values);
+	// Files the stroke as one undo action named p_name (none when nothing changed); returns how many cells changed,
+	// all targets together.
 	int end(const String &p_name);
 	// Puts every touched cell back.
 	void cancel();

@@ -393,89 +393,160 @@ Error JRPGMapEditing::check_start_position(int p_map_id, const Vector2i &p_cell,
 	return OK;
 }
 
-Error JRPGMapStroke::begin(JRPGMap *p_map, int p_layer, int p_value, String *r_message) {
+int JRPGMapStroke::get_max_value(int p_target) {
+	return p_target == TARGET_REGIONS ? 255 : (p_target == TARGET_SHADOWS ? 15 : INT32_MAX);
+}
+
+int JRPGMapStroke::read(const Ref<JRPGMapData> &p_data, int p_target, const Vector2i &p_cell) {
+	ERR_FAIL_COND_V(p_data.is_null(), 0);
+	if (p_target == TARGET_REGIONS) {
+		return p_data->get_region(p_cell);
+	}
+	if (p_target == TARGET_SHADOWS) {
+		return p_data->get_shadow(p_cell);
+	}
+	return p_data->get_cell(p_target, p_cell);
+}
+
+PackedInt32Array JRPGMapStroke::read_all(const Ref<JRPGMapData> &p_data, int p_target) {
+	ERR_FAIL_COND_V(p_data.is_null(), PackedInt32Array());
+	if (p_target < JRPGMapData::LAYER_COUNT) {
+		return p_data->get_layer(p_target);
+	}
+	const PackedByteArray bytes = p_target == TARGET_REGIONS ? p_data->get_regions() : p_data->get_shadows();
+	PackedInt32Array values;
+	values.resize(bytes.size());
+	for (int i = 0; i < bytes.size(); i++) {
+		values.set(i, bytes[i]);
+	}
+	return values;
+}
+
+void JRPGMapStroke::_write(int p_target, const PackedInt32Array &p_cells, const PackedInt32Array &p_values) {
+	if (p_target == TARGET_REGIONS) {
+		data->paint_regions(p_cells, p_values);
+	} else if (p_target == TARGET_SHADOWS) {
+		data->paint_shadows(p_cells, p_values);
+	} else {
+		data->paint(p_target, p_cells, p_values);
+	}
+}
+
+Error JRPGMapStroke::begin(JRPGMap *p_map, int p_target, int p_value, String *r_message) {
 	ERR_FAIL_COND_V_MSG(is_active(), ERR_ALREADY_IN_USE, "JRPGMapStroke: a stroke is already in progress.");
 	if (!p_map || p_map->get_map_data().is_null()) {
 		return refuse("there is no map to draw on.", r_message, ERR_UNCONFIGURED);
 	}
-	if (p_layer < 0 || p_layer >= JRPGMapData::LAYER_COUNT) {
-		return refuse(vformat("there is no tile layer %d (0 to %d).", p_layer, JRPGMapData::LAYER_COUNT - 1), r_message);
+	if (p_target < 0 || p_target >= TARGET_COUNT) {
+		return refuse(vformat("there is no layer %d to draw on (tile layers 0 to %d, regions, shadows).", p_target, JRPGMapData::LAYER_COUNT - 1), r_message);
 	}
-	if (p_value < 0) {
-		return refuse("a palette index is 0 (empty) or more.", r_message);
+	if (p_value < 0 || p_value > get_max_value(p_target)) {
+		return refuse(vformat("%d is not a value of that layer (0 to %d).", p_value, get_max_value(p_target)), r_message);
 	}
 	map = p_map->get_instance_id();
 	data = p_map->get_map_data();
-	layer = p_layer;
+	target = p_target;
 	value = p_value;
-	positions.clear();
-	before.clear();
-	touched.clear();
+	for (Patch &patch : patches) {
+		patch = Patch();
+	}
 	return OK;
 }
 
 int JRPGMapStroke::add(const Vector<Vector2i> &p_cells) {
+	PackedInt32Array values;
+	values.resize(p_cells.size());
+	values.fill(value);
+	return set_values(target, p_cells, values);
+}
+
+int JRPGMapStroke::set_values(int p_target, const Vector<Vector2i> &p_cells, const PackedInt32Array &p_values) {
 	ERR_FAIL_COND_V(!is_active(), 0);
+	ERR_FAIL_INDEX_V(p_target, TARGET_COUNT, 0);
+	ERR_FAIL_COND_V(p_values.size() != p_cells.size(), 0);
+	Patch &patch = patches[p_target];
 	PackedInt32Array cells;
-	HashSet<int> in_call; // A cell twice in p_cells is painted once.
-	for (const Vector2i &cell : p_cells) {
+	PackedInt32Array values;
+	HashSet<int> in_call; // A cell twice in p_cells takes its last value once.
+	for (int i = p_cells.size() - 1; i >= 0; i--) {
+		const Vector2i cell = p_cells[i];
 		if (!data->has_cell(cell)) {
 			continue;
 		}
 		const int at = data->get_cell_index(cell);
-		const int old = data->get_cell(layer, cell);
-		if (!touched.has(at)) {
-			touched.insert(at);
-			positions.push_back(at);
-			before.push_back(old);
+		const int old = read(data, p_target, cell);
+		const int new_value = CLAMP(p_values[i], 0, get_max_value(p_target));
+		if (!patch.touched.has(at)) {
+			patch.touched.insert(at);
+			patch.positions.push_back(at);
+			patch.before.push_back(old);
 		}
-		if (old != value && !in_call.has(at)) {
-			in_call.insert(at);
+		if (old != new_value && !in_call.has(at)) {
 			cells.push_back(at);
+			values.push_back(new_value);
 		}
+		in_call.insert(at);
 	}
 	if (!cells.is_empty()) {
-		PackedInt32Array values;
-		values.resize(cells.size());
-		values.fill(value);
-		data->paint(layer, cells, values);
+		_write(p_target, cells, values);
 	}
 	return cells.size();
 }
 
 int JRPGMapStroke::end(const String &p_name) {
 	ERR_FAIL_COND_V(!is_active(), 0);
-	// Only the cells the stroke changed go into the action.
-	PackedInt32Array changed;
-	PackedInt32Array old_values;
-	for (int i = 0; i < positions.size(); i++) {
-		if (before[i] != value) {
-			changed.push_back(positions[i]);
-			old_values.push_back(before[i]);
+	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
+	JRPGMap *target_map = ObjectDB::get_instance<JRPGMap>(map);
+	int changed = 0;
+	bool open = false;
+	for (int t = 0; t < TARGET_COUNT; t++) {
+		// Only the cells whose value differs now go into the action.
+		const Patch &patch = patches[t];
+		PackedInt32Array cells;
+		PackedInt32Array old_values;
+		PackedInt32Array new_values;
+		for (int i = 0; i < patch.positions.size(); i++) {
+			const Vector2i cell(patch.positions[i] % data->get_size().x, patch.positions[i] / data->get_size().x);
+			const int now = read(data, t, cell);
+			if (now != patch.before[i]) {
+				cells.push_back(patch.positions[i]);
+				old_values.push_back(patch.before[i]);
+				new_values.push_back(now);
+			}
+		}
+		changed += cells.size();
+		if (cells.is_empty() || !undo_redo || !target_map) {
+			continue;
+		}
+		if (!open) {
+			// The map node as context: the action belongs to the map scene's history.
+			undo_redo->create_action(p_name, UndoRedo::MERGE_DISABLE, target_map);
+			open = true;
+		}
+		const StringName method = t == TARGET_REGIONS ? StringName("paint_regions") : (t == TARGET_SHADOWS ? StringName("paint_shadows") : StringName("paint"));
+		if (t < JRPGMapData::LAYER_COUNT) {
+			undo_redo->add_do_method(data.ptr(), method, t, cells, new_values);
+			undo_redo->add_undo_method(data.ptr(), method, t, cells, old_values);
+		} else {
+			undo_redo->add_do_method(data.ptr(), method, cells, new_values);
+			undo_redo->add_undo_method(data.ptr(), method, cells, old_values);
 		}
 	}
-	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	JRPGMap *target = ObjectDB::get_instance<JRPGMap>(map);
-	if (!changed.is_empty() && undo_redo && target) {
-		PackedInt32Array new_values;
-		new_values.resize(changed.size());
-		new_values.fill(value);
-		// The map node as context: the action belongs to the map scene's history. Already painted: not executed again.
-		undo_redo->create_action(p_name, UndoRedo::MERGE_DISABLE, target);
-		undo_redo->add_do_method(data.ptr(), "paint", layer, changed, new_values);
-		undo_redo->add_undo_method(data.ptr(), "paint", layer, changed, old_values);
-		undo_redo->commit_action(false);
+	if (open) {
+		undo_redo->commit_action(false); // Already written.
 	}
 	data.unref();
-	return changed.size();
+	return changed;
 }
 
 void JRPGMapStroke::cancel() {
 	if (!is_active()) {
 		return;
 	}
-	if (!positions.is_empty()) {
-		data->paint(layer, positions, before);
+	for (int t = 0; t < TARGET_COUNT; t++) {
+		if (!patches[t].positions.is_empty()) {
+			_write(t, patches[t].positions, patches[t].before);
+		}
 	}
 	data.unref();
 }
