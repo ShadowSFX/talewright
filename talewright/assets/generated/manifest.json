@@ -201,6 +201,34 @@
       ],
       "pixels_sha256": "ce3da5032ca52742ecb44dfecb96dc900f7f367b1d8a8b374d303851a6e84e44"
     },
+    "system/icons.png": {
+      "size": [
+        512,
+        128
+      ],
+      "pixels_sha256": "4c3d7b23dc4d669322515d948c59f86cdf2525e349dc01f4535218a7dde2e8e9"
+    },
+    "system/window.png": {
+      "size": [
+        96,
+        96
+      ],
+      "pixels_sha256": "f13936c7231c7fbfa5074193f8fba2888984f4d03d55a924cbef07531a545efa"
+    },
+    "system/window_arrows.png": {
+      "size": [
+        64,
+        16
+      ],
+      "pixels_sha256": "4fa4505594baf31b758b5e331b3e927d0e045256cdc68bcb1326062e62975450"
+    },
+    "system/window_cursor.png": {
+      "size": [
+        48,
+        48
+      ],
+      "pixels_sha256": "319aa951c50d4e92e722d7aec84685a7c72d95e7a8fe57bd352b8cde885ba819"
+    },
     "tiles/buildings.png": {
       "size": [
         384,

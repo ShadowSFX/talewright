@@ -23,12 +23,17 @@ import numpy as np
 import PIL
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from asset_gen import battle, characters, tiles  # noqa: E402
+from asset_gen import battle, characters, interface, tiles  # noqa: E402
 from asset_gen.common import TILE, pixel_hash, save_png, to_image  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "talewright" / "assets" / "generated"
-GROUPS = {"tiles": tiles.generate, "characters": characters.generate, "battle": battle.generate}
+GROUPS = {
+    "tiles": tiles.generate,
+    "characters": characters.generate,
+    "battle": battle.generate,
+    "interface": interface.generate,
+}
 
 
 def build(groups: list[str]) -> dict[str, Any]:

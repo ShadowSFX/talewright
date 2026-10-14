@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "7.1.2.2 Generated enemy battlers and battlebacks",
+  "last_completed": "7.1.2.3 Generated icon set and window skin",
   "tasks": [
     {
       "id": "0",
@@ -2425,9 +2425,9 @@
       ],
       "test_strategy": "Run twice; screenshots.",
       "files": [],
-      "commit": "",
+      "commit": "children",
       "notes": "Spec 05 (Talewright character format) governs over the original '4 dirs x 3 frames' wording: 4 frames, column 0 standing, rows up/right/down/left.",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "7.1.2.1",
@@ -2463,7 +2463,7 @@
       "test_strategy": "Run twice and compare hashes; a composed battle preview viewed.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "0dc1b46965",
       "notes": ""
     },
     {
@@ -2481,9 +2481,9 @@
         "Covered by the CC0 entry"
       ],
       "test_strategy": "Run twice and compare hashes; icon sheet and a sample window viewed.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -3326,7 +3326,7 @@
       "test_strategy": "Doctests + bridge.",
       "files": [],
       "commit": "",
-      "notes": ""
+      "notes": "Default skin from 7.1.2.3: talewright/assets/generated/system/window.png (96x96 nine-slice, 16 px margins), window_cursor.png (48x48, 8 px margins), window_arrows.png (4 marks of 16x16); see talewright/docs/assets.md."
     },
     {
       "id": "10.2",

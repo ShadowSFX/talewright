@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 01:16 -0600
+- **Updated:** 2026-10-14 01:21 -0600
 - **Current task:** none
-- **Last completed:** 7.1.2.2 Generated enemy battlers and battlebacks
-- **Next task:** 7.1.2.3 Generated icon set and window skin
-- **Done leaf tasks:** 85
+- **Last completed:** 7.1.2.3 Generated icon set and window skin
+- **Next task:** 7.1.3 Synthesized SFX and BGM
+- **Done leaf tasks:** 86
 <!-- status:end -->
 
 ## Log
@@ -232,4 +232,6 @@
 | 2026-10-14 01:10 -0600 | 7.1.2.1 | started: Generated character sheets and faces (containers: 7.1.2 pending->in_progress, 7.1 pending->in_progress, 7 pending->in_progress) |  |
 | 2026-10-14 01:13 -0600 | 7.1.2.1 | done: Generated character sheets and faces — Six original characters (hero, mage, knight, villager man and woman, merchant) as spec 05 sheets (4 rows up/right/down/left x 4 walk frames of 48x48, column 0 standing; left mirrors right) drawn from distance-field parts with lighting and outlines, plus 144x144 face portraits; hair split behind/in front of the head; deterministic (22 images match manifest); evidence plan/evidence/assets/7.1.2.1-characters-and-faces.png (containers: 7.1.2 in_progress->pending, 7.1 in_progress->pending, 7 in_progress->pending) | 70f3604677 |
 | 2026-10-14 01:13 -0600 | 7.1.2.2 | started: Generated enemy battlers and battlebacks (containers: 7.1.2 pending->in_progress, 7.1 pending->in_progress, 7 pending->in_progress) |  |
-| 2026-10-14 01:16 -0600 | 7.1.2.2 | done: Generated enemy battlers and battlebacks — Six original front-view enemy battlers (moss_blob for the starter Moss Blob, cave_bat, mushroom_imp, thorn_wolf, stone_golem, ember_wisp) and three 1280x720 battleback pairs (grassland, forest, cave: opaque backdrop + perspective ground transparent above the horizon); deterministic (34 images match manifest); evidence plan/evidence/assets/7.1.2.2-battles.png (containers: 7.1.2 in_progress->pending, 7.1 in_progress->pending, 7 in_progress->pending) | pending |
+| 2026-10-14 01:16 -0600 | 7.1.2.2 | done: Generated enemy battlers and battlebacks — Six original front-view enemy battlers (moss_blob for the starter Moss Blob, cave_bat, mushroom_imp, thorn_wolf, stone_golem, ember_wisp) and three 1280x720 battleback pairs (grassland, forest, cave: opaque backdrop + perspective ground transparent above the horizon); deterministic (34 images match manifest); evidence plan/evidence/assets/7.1.2.2-battles.png (containers: 7.1.2 in_progress->pending, 7.1 in_progress->pending, 7 in_progress->pending) | 0dc1b46965 |
+| 2026-10-14 01:16 -0600 | 7.1.2.3 | started: Generated icon set and window skin (containers: 7.1.2 pending->in_progress, 7.1 pending->in_progress, 7 pending->in_progress) |  |
+| 2026-10-14 01:21 -0600 | 7.1.2.3 | done: Generated icon set and window skin — 64-icon set (32x32, 16 per row; items, weapons, armors, elements, states, buffs/debuffs, misc; index table in talewright/docs/assets.md generated from the code) and window skin (96x96 nine-slice frame with 16 px margins, 48x48 cursor, four 16x16 marks), noted on task 10.1; deterministic (38 images match manifest); evidence plan/evidence/assets/7.1.2.3-icons-and-window.png (containers: 7.1.2 in_progress->done, 7.1 in_progress->pending, 7 in_progress->pending) | pending |
