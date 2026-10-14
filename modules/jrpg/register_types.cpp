@@ -34,11 +34,16 @@
 #include "core/config/project_settings.h"
 #include "core/object/class_db.h"
 
+#include "modules/jrpg/core/jrpg_database.h"
+#include "modules/jrpg/core/jrpg_entry.h"
+#include "modules/jrpg/core/jrpg_table.h"
+
 #ifdef TOOLS_ENABLED
-#include "editor/jrpg_bootstrap_plugin.h"
-#include "editor/jrpg_workspace_plugin.h"
-#include "editor/jrpg_workspace_view.h"
 #include "editor/plugins/editor_plugin.h"
+
+#include "modules/jrpg/editor/jrpg_bootstrap_plugin.h"
+#include "modules/jrpg/editor/jrpg_workspace_plugin.h"
+#include "modules/jrpg/editor/jrpg_workspace_view.h"
 #endif // TOOLS_ENABLED
 
 // Registration levels (plan/specs/01_module_layout.md): core and runtime classes at SCENE level so games and MMO
@@ -49,7 +54,9 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		// The only JRPG project setting (D-008): shows the JRPG workspace in the editor. Everything else lives in the
 		// project's System data.
 		GLOBAL_DEF_BASIC(PropertyInfo(Variant::BOOL, "jrpg/enabled"), false);
-		// Core and runtime classes are registered here as they are added (epic 5 onward).
+		GDREGISTER_CLASS(JRPGEntry);
+		GDREGISTER_CLASS(JRPGTable);
+		GDREGISTER_CLASS(JRPGDatabase);
 	}
 #ifdef TOOLS_ENABLED
 	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) {

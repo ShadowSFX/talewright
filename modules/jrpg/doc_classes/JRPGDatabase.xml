@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGDatabase" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The JRPG database manifest.
+	</brief_description>
+	<description>
+		Groups the tables of a JRPG project's database (actors, classes, skills, items, weapons, armors, enemies, troops, states, animations, tilesets and common events). A project keeps it in [code]res://jrpg/database.tres[/code], with each [JRPGTable] usually saved as its own file in [code]res://jrpg/db/[/code].
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="find_table_kind" qualifiers="static">
+			<return type="int" enum="JRPGDatabase.TableKind" />
+			<param index="0" name="name" type="String" />
+			<description>
+				Returns the table kind whose name is [param name] (for example [code]"items"[/code]), or [constant TABLE_MAX] if there is none.
+			</description>
+		</method>
+		<method name="get_table" qualifiers="const">
+			<return type="JRPGTable" />
+			<param index="0" name="kind" type="int" enum="JRPGDatabase.TableKind" />
+			<description>
+				Returns the table of the given [param kind], or [code]null[/code] if it is not set.
+			</description>
+		</method>
+		<method name="get_table_by_name" qualifiers="const">
+			<return type="JRPGTable" />
+			<param index="0" name="name" type="String" />
+			<description>
+				Returns the table with the given [param name] (for example [code]"items"[/code]), or [code]null[/code].
+			</description>
+		</method>
+		<method name="get_table_name" qualifiers="static">
+			<return type="String" />
+			<param index="0" name="kind" type="int" enum="JRPGDatabase.TableKind" />
+			<description>
+				Returns the name of the table [param kind], which is also its property name and file name.
+			</description>
+		</method>
+		<method name="set_table">
+			<return type="void" />
+			<param index="0" name="kind" type="int" enum="JRPGDatabase.TableKind" />
+			<param index="1" name="table" type="JRPGTable" />
+			<description>
+				Sets the table of the given [param kind].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="actors" type="JRPGTable" setter="set_table" getter="get_table">
+			The actors table.
+		</member>
+		<member name="animations" type="JRPGTable" setter="set_table" getter="get_table">
+			The animations table.
+		</member>
+		<member name="armors" type="JRPGTable" setter="set_table" getter="get_table">
+			The armors table.
+		</member>
+		<member name="classes" type="JRPGTable" setter="set_table" getter="get_table">
+			The classes table.
+		</member>
+		<member name="common_events" type="JRPGTable" setter="set_table" getter="get_table">
+			The common events table.
+		</member>
+		<member name="enemies" type="JRPGTable" setter="set_table" getter="get_table">
+			The enemies table.
+		</member>
+		<member name="items" type="JRPGTable" setter="set_table" getter="get_table">
+			The items table.
+		</member>
+		<member name="schema_version" type="int" setter="set_schema_version" getter="get_schema_version" default="1">
+			Version of the database format, used to upgrade databases saved by older versions.
+		</member>
+		<member name="skills" type="JRPGTable" setter="set_table" getter="get_table">
+			The skills table.
+		</member>
+		<member name="states" type="JRPGTable" setter="set_table" getter="get_table">
+			The states table.
+		</member>
+		<member name="tilesets" type="JRPGTable" setter="set_table" getter="get_table">
+			The tilesets table.
+		</member>
+		<member name="troops" type="JRPGTable" setter="set_table" getter="get_table">
+			The troops table.
+		</member>
+		<member name="weapons" type="JRPGTable" setter="set_table" getter="get_table">
+			The weapons table.
+		</member>
+	</members>
+	<constants>
+		<constant name="TABLE_ACTORS" value="0" enum="TableKind">
+			Actors.
+		</constant>
+		<constant name="TABLE_CLASSES" value="1" enum="TableKind">
+			Classes.
+		</constant>
+		<constant name="TABLE_SKILLS" value="2" enum="TableKind">
+			Skills.
+		</constant>
+		<constant name="TABLE_ITEMS" value="3" enum="TableKind">
+			Items.
+		</constant>
+		<constant name="TABLE_WEAPONS" value="4" enum="TableKind">
+			Weapons.
+		</constant>
+		<constant name="TABLE_ARMORS" value="5" enum="TableKind">
+			Armors.
+		</constant>
+		<constant name="TABLE_ENEMIES" value="6" enum="TableKind">
+			Enemies.
+		</constant>
+		<constant name="TABLE_TROOPS" value="7" enum="TableKind">
+			Troops.
+		</constant>
+		<constant name="TABLE_STATES" value="8" enum="TableKind">
+			States.
+		</constant>
+		<constant name="TABLE_ANIMATIONS" value="9" enum="TableKind">
+			Animations.
+		</constant>
+		<constant name="TABLE_TILESETS" value="10" enum="TableKind">
+			Tilesets.
+		</constant>
+		<constant name="TABLE_COMMON_EVENTS" value="11" enum="TableKind">
+			Common events.
+		</constant>
+		<constant name="TABLE_MAX" value="12" enum="TableKind">
+			Number of table kinds.
+		</constant>
+	</constants>
+</class>

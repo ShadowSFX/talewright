@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGEntry" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		One record of a JRPG database table.
+	</brief_description>
+	<description>
+		Base class of every JRPG database record (actors, classes, skills, items...). An entry lives in a [JRPGTable], which assigns its [member id] from its position: the first entry has ID 1, the second ID 2, and so on. IDs never move, so other data can refer to an entry by its ID.
+		Typed entries (for example the item data of a game) extend this class with their own properties.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_kind" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the kind of this entry, derived from its class: [code]"Item"[/code] for an item data class, [code]"Entry"[/code] for a plain [JRPGEntry]. Tables use it to name saved entries ([code]Item_42[/code]) and translation keys ([code]Item_42.name[/code]).
+			</description>
+		</method>
+		<method name="kind_from_class" qualifiers="static">
+			<return type="String" />
+			<param index="0" name="class_name" type="StringName" />
+			<description>
+				Returns the kind for the class name [param class_name]: the name without its [code]JRPG[/code] prefix and [code]Data[/code] suffix.
+			</description>
+		</method>
+		<method name="reset_to_defaults">
+			<return type="void" />
+			<description>
+				Resets every stored property of this entry to its default value. The entry keeps its ID; this is how an entry is "deleted" from a table without moving the IDs after it.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="id" type="int" setter="" getter="get_id" default="0">
+			The entry's ID: its position in the owning [JRPGTable] plus one, or [code]0[/code] when the entry is not in a table. Assigned by the table and never saved.
+		</member>
+		<member name="name" type="String" setter="set_entry_name" getter="get_entry_name" default="&quot;&quot;">
+			The entry's name as shown to players and in the editor. It is translated through the key [code]&lt;Kind&gt;_&lt;id&gt;.name[/code].
+		</member>
+		<member name="note" type="String" setter="set_note" getter="get_note" default="&quot;&quot;">
+			Free text for designers and plugins. Tags written as [code]&lt;tag:value&gt;[/code] can be read by scripts.
+		</member>
+	</members>
+</class>

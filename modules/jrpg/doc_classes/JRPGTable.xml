@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGTable" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A JRPG database table whose entry IDs are their positions.
+	</brief_description>
+	<description>
+		An ordered list of [JRPGEntry] objects of one class. The ID of an entry is its position plus one, and IDs never move: entries are not reordered, [method clear_entry] resets an entry instead of removing it, and [method set_maximum] only adds or removes entries at the end.
+		Each entry is saved as a sub-resource named after its kind and ID (for example [code]Item_42[/code]), so saved tables stay stable and easy to compare.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="clear_entry">
+			<return type="void" />
+			<param index="0" name="id" type="int" />
+			<description>
+				Resets the entry with the given [param id] to its default values. The entry object and its ID stay the same.
+			</description>
+		</method>
+		<method name="get_entry" qualifiers="const">
+			<return type="JRPGEntry" />
+			<param index="0" name="id" type="int" />
+			<description>
+				Returns the entry with the given [param id], or [code]null[/code] when [param id] is [code]0[/code] ("none") or outside the table.
+			</description>
+		</method>
+		<method name="get_kind" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the kind of the table's entries (see [method JRPGEntry.get_kind]).
+			</description>
+		</method>
+		<method name="get_maximum" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the number of entries, which is also the highest ID.
+			</description>
+		</method>
+		<method name="has_entry" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="id" type="int" />
+			<description>
+				Returns [code]true[/code] if an entry with the given [param id] exists.
+			</description>
+		</method>
+		<method name="set_maximum">
+			<return type="void" />
+			<param index="0" name="count" type="int" />
+			<description>
+				Sets the number of entries. New entries are added at the end with default values; when the table shrinks, entries are removed from the end. Other data that still refers to removed IDs then refers to "none".
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="entries" type="JRPGEntry[]" setter="set_entries" getter="get_entries" default="[]">
+			The entries in ID order. Entries that are [code]null[/code] when assigned are replaced by default entries so the IDs after them keep their positions.
+		</member>
+		<member name="entry_class" type="StringName" setter="set_entry_class" getter="get_entry_class" default="&amp;&quot;JRPGEntry&quot;">
+			The class of the table's entries. It can only change while the table is empty.
+		</member>
+		<member name="schema_version" type="int" setter="set_schema_version" getter="get_schema_version" default="1">
+			Version of the table's data format, used to upgrade tables saved by older versions.
+		</member>
+	</members>
+	<constants>
+		<constant name="MAX_ENTRIES" value="100000">
+			The largest number of entries a table accepts.
+		</constant>
+	</constants>
+</class>

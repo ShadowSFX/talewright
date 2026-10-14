@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "5.1.2 jrpg/enabled + dynamic workspace",
+  "last_completed": "5.2.1 Entry/table/manifest classes",
   "tasks": [
     {
       "id": "0",
@@ -1169,7 +1169,7 @@
         "plan/evidence/jrpg/",
         "plan/status.py"
       ],
-      "commit": "pending",
+      "commit": "43a0aa1607",
       "notes": "",
       "status": "done"
     },
@@ -1204,10 +1204,23 @@
         "Scene-unique ids assigned"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
-      "files": [],
-      "commit": "",
+      "files": [
+        "modules/jrpg/core/jrpg_entry.h",
+        "modules/jrpg/core/jrpg_entry.cpp",
+        "modules/jrpg/core/jrpg_table.h",
+        "modules/jrpg/core/jrpg_table.cpp",
+        "modules/jrpg/core/jrpg_database.h",
+        "modules/jrpg/core/jrpg_database.cpp",
+        "modules/jrpg/doc_classes/",
+        "modules/jrpg/tests/test_jrpg_database.h",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "doc/classes/ProjectSettings.xml",
+        "plan/UPSTREAM_PATCHES.md"
+      ],
+      "commit": "pending",
       "notes": "",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "5.2.2",

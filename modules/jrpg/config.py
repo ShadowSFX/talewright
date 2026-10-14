@@ -9,7 +9,11 @@ def configure(env):
 
 
 def get_doc_classes():
-    return []
+    return [
+        "JRPGDatabase",
+        "JRPGEntry",
+        "JRPGTable",
+    ]
 
 
 def get_doc_path():
