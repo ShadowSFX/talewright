@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGMover" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		One character's step-by-step movement from cell to cell on a map.
+	</brief_description>
+	<description>
+		Tracks a character's [member cell], [member direction] and the step it is taking. A step to the next cell takes [method get_steps_per_cell] simulation steps at the character's [member speed] (each level is twice as fast as the one below), and [method advance] runs one simulation step at a time, so movement is the same at any frame rate and on servers.
+		Whether a step can start comes from the map's [JRPGMapCellCache]: the sides of the current and next cells, blocked cells, and looping edges. A step that is not allowed only turns the character. From the moment a step starts, [member cell] is the destination, as events and other characters see it; [method get_position] says where to draw the character on the way.
+		It holds no nodes and reads no input: the game decides when to move a character and draws it where this says.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="advance">
+			<return type="bool" />
+			<description>
+				Runs one simulation step of the step under way. Returns [code]true[/code] when that ends the step (the character arrived), [code]false[/code] otherwise or when no step is under way.
+			</description>
+		</method>
+		<method name="get_offset" qualifiers="static">
+			<return type="Vector2i" />
+			<param index="0" name="direction" type="int" enum="JRPGSystemData.Direction" />
+			<description>
+				Returns the cell offset one step toward [param direction] takes: up is [code]Vector2i(0, -1)[/code].
+			</description>
+		</method>
+		<method name="get_position" qualifiers="const">
+			<return type="Vector2" />
+			<description>
+				Returns where to draw the character, in cells: [member cell] when it stands still, or a point on the way from the previous cell, moving evenly. Across a looping edge the previous cell is just outside the map's side.
+			</description>
+		</method>
+		<method name="get_steps_per_cell" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="speed" type="int" />
+			<description>
+				Returns how many simulation steps (1/60 s each) a step to the next cell takes at [param speed]: 160, 80, 40, 20, 10 and 5 for speeds 1 to 6. Speeds outside 1-6 count as the nearest one.
+			</description>
+		</method>
+		<method name="is_moving" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] while a step is under way.
+			</description>
+		</method>
+		<method name="move">
+			<return type="bool" />
+			<param index="0" name="direction" type="int" enum="JRPGSystemData.Direction" />
+			<param index="1" name="cell_cache" type="JRPGMapCellCache" />
+			<param index="2" name="dash" type="bool" default="false" />
+			<description>
+				Turns the character toward [param direction] and, unless a step is already under way, starts a step toward it when [param cell_cache] allows it (any cell inside the map with [member through]). With [param dash] the step is one speed level faster. Returns [code]true[/code] when a step started; when it is not allowed the character only turns. While a step is under way nothing changes.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="cell" type="Vector2i" setter="set_cell" getter="get_cell" default="Vector2i(0, 0)">
+			The cell the character stands on, or is stepping to. Setting it places the character there at once and ends any step under way.
+		</member>
+		<member name="direction" type="int" setter="set_direction" getter="get_direction" enum="JRPGSystemData.Direction" default="2">
+			The way the character faces.
+		</member>
+		<member name="speed" type="int" setter="set_speed" getter="get_speed" default="4">
+			How fast the character steps, from 1 (slowest) to 6 (fastest); 4 is normal.
+		</member>
+		<member name="through" type="bool" setter="set_through" getter="is_through" default="false">
+			If [code]true[/code], the character steps through blocked cells and sides. The map's edges still stop it, except on an axis that loops.
+		</member>
+	</members>
+	<constants>
+		<constant name="SPEED_MIN" value="1">
+			The slowest speed.
+		</constant>
+		<constant name="SPEED_MAX" value="6">
+			The fastest speed.
+		</constant>
+		<constant name="SPEED_NORMAL" value="4">
+			The usual walking speed.
+		</constant>
+	</constants>
+</class>

@@ -598,6 +598,24 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Reversal:** the manager's API can sit on `change_scene_to_packed` instead; the rules above are each one place in
   `jrpg_scene_manager.cpp`.
 
+## D-042 — How characters step between cells (JRPGMover)
+- **Context:** task 8.6.2 needs the movement rules every character shares (player now, events and servers later):
+  speed levels twice as fast each (RM-EVT-032, spec 05's table), dash one level up, passability from the cell cache.
+  The help does not say when a moving character's position changes, whether a blocked step turns it, or how input
+  during a step is handled.
+- **Options:** keep a fractional position and collide continuously; or discrete cell steps whose logical cell
+  changes at once and a drawn position that follows.
+- **Choice:** core `JRPGMover`: the logical cell becomes the destination when a step starts (what events and other
+  characters see); the drawn position leaves the previous cell evenly over `get_steps_per_cell(speed)` simulation
+  steps (160 >> (speed - 1): 160, 80, 40, 20, 10, 5; dash = speed + 1, capped at 6); a step the cache does not allow
+  only turns the character; a new direction waits until the step under way ends; `through` ignores blocked cells
+  and sides but not the map's edges (looping axes wrap). The speed table is a core constant instead of System data
+  fields (spec 05 said "all numbers are fields"): it is the documented 2x ratio with one base value, and servers
+  and clients must agree on it.
+- **Why:** discrete steps are deterministic on the 60 Hz clock, cheap for servers, and match the reference's
+  tile-step feel; one shared class keeps offline and online movement identical.
+- **Reversal:** `JRPGMover::get_steps_per_cell` (one function) could read System data instead.
+
 ## D-043 — The editor file system only with an editor
 - **Context:** the full doctest run crashed intermittently in the workspace tests (8.6.1.2): the shell connected to
   `EditorFileSystem::get_singleton()`, which the constructor sets and the destructor never clears

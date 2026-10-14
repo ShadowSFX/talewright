@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.6.1.2 Play From Start",
+  "last_completed": "8.6.2.1 Cell-step mover (core)",
   "tasks": [
     {
       "id": "0",
@@ -3320,26 +3320,71 @@
         "talewright/tools/jrpg_bridge_checks.py",
         "plan/evidence/jrpg/8.6.1.2-*"
       ],
-      "commit": "pending",
+      "commit": "af28176d76",
       "notes": ""
     },
     {
       "id": "8.6.2",
       "parent": "8.6",
       "title": "Player movement, passability, dash, camera",
-      "description": "Cell-step movement with speed timers, 4-dir+star passability from cell cache, dash, camera follow and map bounds.",
+      "description": "Cell-step movement with speed timers, 4-dir+star passability from cell cache, dash, camera follow and map bounds. Split into 8.6.2.1 (core JRPGMover, doctested) and 8.6.2.2 (the player node, the game loop, input, camera, bridge verification).",
       "dependencies": [
         "8.6.1"
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "Passability matrix doctest; walk blocked by wall via bridge"
+        "8.6.2.1 and 8.6.2.2 done"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
       "commit": "",
       "notes": "",
       "status": "pending"
+    },
+    {
+      "id": "8.6.2.1",
+      "parent": "8.6.2",
+      "title": "Cell-step mover (core)",
+      "priority": 1,
+      "dependencies": [],
+      "description": "JRPGMover (core): a character's cell and facing and the step it is taking, advanced one fixed 60 Hz simulation step at a time at the speed table of spec 05 (dash: one level up); a step starts only when the map cell cache allows it (4-dir sides, blocked cells, star tiles never deciding, looping edges) unless the character moves through; a blocked step turns the character only. Pure logic shared with servers.",
+      "acceptance_criteria": [
+        "Passability matrix doctest: every direction from cells next to blocked cells, one-way sides, star tiles, map edges and looping edges",
+        "Speeds and dash: steps per cell follow the table; the drawn position moves evenly between cells, across a looping edge too"
+      ],
+      "test_strategy": "Doctests on maps compiled with JRPGMapCellCache.",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_mover.{h,cpp}",
+        "modules/jrpg/tests/test_jrpg_mover.h",
+        "modules/jrpg/doc_classes/JRPGMover.xml",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "plan/DECISIONS.md",
+        "plan/specs/05_maps_tiles.md"
+      ],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "8.6.2.2",
+      "parent": "8.6.2",
+      "title": "Player, game loop and camera",
+      "priority": 1,
+      "dependencies": [
+        "8.6.2.1"
+      ],
+      "description": "JRPGPlayer (runtime node inside the current map, at the characters' z) moves with the jrpg_up/down/left/right actions and dashes with jrpg_dash unless the map disables it; the scene manager runs the game's fixed-step loop on the game state's simulation clock and keeps the player's position in the game state (steps counted). A camera follows the player within the map's bounds (a map smaller than the screen is centered). Until character sprites (8.7) the player draws a placeholder marker. Authority declared (D-007).",
+      "acceptance_criteria": [
+        "Walk blocked by a wall via the bridge (game_input, the player's cell before and after)",
+        "The camera stays inside the map; a small map is centered (screenshots)",
+        "The game state's player position and step count follow the walk (doctest + bridge)"
+      ],
+      "test_strategy": "Doctests (game loop with simulated input) + bridge verification with screenshots.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "8.7",
