@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGCommandList" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A list of event commands, stored packed.
+	</brief_description>
+	<description>
+		What an event page, a common event or a troop page runs, and the branches of branch commands. It stores its commands packed in one property ([member data]: one [code][lb]code, parameters, child lists[rb][/code] entry per command), so maps with many commands load fast, and builds the [JRPGEventCommand] objects the first time they are read; editing them changes what is packed next. Child lists stay packed until they are read too.
+		Authority: server. Online, the zone runs the lists; clients only see presentation requests.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_command" qualifiers="const">
+			<return type="JRPGEventCommand" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns the command at [param index].
+			</description>
+		</method>
+		<method name="get_command_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns how many commands the list has.
+			</description>
+		</method>
+		<method name="get_commands" qualifiers="const">
+			<return type="JRPGEventCommand[]" />
+			<description>
+				Returns the commands, built from the packed data the first time.
+			</description>
+		</method>
+		<method name="get_content_hash" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns a 64-bit hash of the packed commands, child lists included: any change at any depth changes it. A saved interpreter records it to notice a list edited since the save.
+			</description>
+		</method>
+		<method name="insert_command">
+			<return type="void" />
+			<param index="0" name="index" type="int" />
+			<param index="1" name="command" type="JRPGEventCommand" />
+			<description>
+				Inserts [param command] at [param index] (at the end when [code]-1[/code]).
+			</description>
+		</method>
+		<method name="remove_command">
+			<return type="void" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Removes the command at [param index].
+			</description>
+		</method>
+		<method name="set_commands">
+			<return type="void" />
+			<param index="0" name="commands" type="JRPGEventCommand[]" />
+			<description>
+				Replaces the commands with [param commands].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="data" type="Array" setter="set_data" getter="get_data" default="[]">
+			The packed commands, as saved: built from the commands when they have been read, so it always holds the list as it is.
+		</member>
+	</members>
+</class>

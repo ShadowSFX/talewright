@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 86, in_progress: 0, done: 179, blocked: 0, deferred: 3 (of 268)
+**Totals:** pending: 88, in_progress: 0, done: 180, blocked: 0, deferred: 3 (of 271)
 
 ## [x] 0 Bootstrap and task system
 
@@ -206,8 +206,11 @@ Pages, conditions, triggers, command model with authority, interpreter with pres
   - [x] **9.1.1** Event data and page selection (core) (P1) _(commit: dcecee2cdb)_
   - [x] **9.1.2** Event nodes on the map, page refresh, anchors, id repair on save (P1) _(deps: 9.1.1; commit: 5ee9f36187)_
 - [ ] **9.2** Command model + registry + authority + script commands (P1) _(deps: 9.1, 3.3)_
-  - [x] **9.2.1** Command storage benchmark (P1) _(commit: pending)_
+  - [x] **9.2.1** Command storage benchmark (P1) _(commit: d0e3013034)_
   - [ ] **9.2.2** Command model, registry, authority, script commands (P1) _(deps: 9.2.1)_
+    - [x] **9.2.2.1** Command base, packed lists and registry (core) (P1) _(commit: pending)_
+    - [ ] **9.2.2.2** Script commands (P1) _(deps: 9.2.2.1)_
+    - [ ] **9.2.2.3** Command lists on pages, troop pages and common events; reference scanning (P1) _(deps: 9.2.2.2)_
 - [ ] **9.3** Interpreter (P1) _(deps: 9.2)_
   - [ ] **9.3.1** Interpreter frames, waits, labels, budgets (P1)
   - [ ] **9.3.2** Common events and map processes (P1) _(deps: 9.3.1)_

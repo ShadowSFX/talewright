@@ -42,10 +42,12 @@
 #include "modules/jrpg/core/jrpg_autotile_resolver.h"
 #include "modules/jrpg/core/jrpg_battle_rules.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
+#include "modules/jrpg/core/jrpg_command_list.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_enemy_data.h"
 #include "modules/jrpg/core/jrpg_entry.h"
 #include "modules/jrpg/core/jrpg_equip_data.h"
+#include "modules/jrpg/core/jrpg_event_command.h"
 #include "modules/jrpg/core/jrpg_event_data.h"
 #include "modules/jrpg/core/jrpg_event_state.h"
 #include "modules/jrpg/core/jrpg_formula.h"
@@ -171,6 +173,10 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGEventState);
 		GDREGISTER_CLASS(JRPGEventPage);
 		GDREGISTER_CLASS(JRPGEventData);
+		GDREGISTER_CLASS(JRPGEventCommand);
+		GDREGISTER_CLASS(JRPGUnknownCommand);
+		GDREGISTER_CLASS(JRPGCommandList);
+		GDREGISTER_ABSTRACT_CLASS(JRPGCommandRegistry); // Static methods only.
 		GDREGISTER_CLASS(JRPGReferenceScanner);
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotile); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotileResolver);
@@ -248,6 +254,9 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 }
 
 void uninitialize_jrpg_module(ModuleInitializationLevel p_level) {
+	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) {
+		JRPGCommandRegistry::clear(); // Its command instances go before ClassDB does.
+	}
 #if defined(TOOLS_ENABLED) && defined(MODULE_CLAUDE_BRIDGE_ENABLED)
 	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) {
 		JRPGBridgeTools::unregister_provider();

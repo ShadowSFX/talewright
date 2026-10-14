@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGUnknownCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A command whose code no registered command class has.
+	</brief_description>
+	<description>
+		Stands in for a command whose code is unknown (a plugin that was removed, data from a newer version). It keeps the command exactly as it was saved, so saving the list again loses nothing; the interpreter skips it with a warning.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_packed" qualifiers="const">
+			<return type="Array" />
+			<description>
+				Returns the command as it was saved.
+			</description>
+		</method>
+	</methods>
+</class>

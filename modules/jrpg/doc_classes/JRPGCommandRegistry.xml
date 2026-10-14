@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGCommandRegistry" inherits="Object" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Which command class each command code stands for.
+	</brief_description>
+	<description>
+		The built-in command classes register when the module starts; script commands join them. One instance of each class answers the metadata questions ([method get_metadata]), so the event editor and the server can know a command without making one.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="JRPGEventCommand" />
+			<param index="0" name="code" type="StringName" />
+			<description>
+				Returns a new command of [param code] with its default parameters, or [code]null[/code] when no class has that code.
+			</description>
+		</method>
+		<method name="get_codes" qualifiers="static">
+			<return type="PackedStringArray" />
+			<description>
+				Returns every registered code, sorted.
+			</description>
+		</method>
+		<method name="get_command_class" qualifiers="static">
+			<return type="StringName" />
+			<param index="0" name="code" type="StringName" />
+			<description>
+				Returns the class registered under [param code], or an empty name.
+			</description>
+		</method>
+		<method name="get_metadata" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="code" type="StringName" />
+			<description>
+				Returns [code]{code, class, category, display_name, authority, usable_in, can_wait, id_parameters, child_lists}[/code] of [param code], or an empty dictionary.
+			</description>
+		</method>
+		<method name="has_command" qualifiers="static">
+			<return type="bool" />
+			<param index="0" name="code" type="StringName" />
+			<description>
+				Returns [code]true[/code] when a class is registered under [param code].
+			</description>
+		</method>
+		<method name="register_command" qualifiers="static">
+			<return type="void" />
+			<param index="0" name="class_name" type="StringName" />
+			<description>
+				Registers the command class [param class_name] under the code its instances report. A class already under that code is replaced, with an error.
+			</description>
+		</method>
+		<method name="unpack_command" qualifiers="static">
+			<return type="JRPGEventCommand" />
+			<param index="0" name="packed" type="Variant" />
+			<description>
+				Returns the command [param packed] stands for (as [method JRPGEventCommand.pack] writes it): a [JRPGUnknownCommand] holding it when its code is unknown (one warning per code), or [code]null[/code] (with an error) when the entry is not a command at all.
+			</description>
+		</method>
+		<method name="unregister_command" qualifiers="static">
+			<return type="void" />
+			<param index="0" name="code" type="StringName" />
+			<description>
+				Forgets the class registered under [param code].
+			</description>
+		</method>
+	</methods>
+</class>

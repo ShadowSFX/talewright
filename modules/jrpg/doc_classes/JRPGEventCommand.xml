@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGEventCommand" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		One event command: its parameters, child lists and metadata.
+	</brief_description>
+	<description>
+		The base of every event command. Its parameters are the subclass's stored properties; a branch command also has child [JRPGCommandList]s, named by [method get_child_list_names]. Commands are never saved one by one: the list that holds them packs them ([method pack]) and builds them again from that ([method unpack]).
+		A subclass says what it is through the metadata methods: [method get_code] (stable, since saved lists hold it), [method get_category], [method get_display_name] and [method get_summary] for the event editor, [method get_authority] (who runs it online), [method get_usable_in], [method can_wait] and [method get_id_parameters] (the parameters that are database IDs, for the reference checks). Command classes are registered with [JRPGCommandRegistry].
+		Authority: each command declares its own ([method get_authority]).
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="can_wait" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when the command can make the interpreter wait (a message, a wait, a move route to finish).
+			</description>
+		</method>
+		<method name="get_authority" qualifiers="const">
+			<return type="int" enum="JRPGEventCommand.Authority" />
+			<description>
+				Returns who runs the command online: the server (it changes game state), the client (it only presents) or both.
+			</description>
+		</method>
+		<method name="get_category" qualifiers="const">
+			<return type="int" enum="JRPGEventCommand.Category" />
+			<description>
+				Returns the event editor category the command is listed in.
+			</description>
+		</method>
+		<method name="get_child_list_names" qualifiers="const">
+			<return type="PackedStringArray" />
+			<description>
+				Returns the names of the properties that hold the command's child lists (the branches of a branch command), in order.
+			</description>
+		</method>
+		<method name="get_code" qualifiers="const">
+			<return type="StringName" />
+			<description>
+				Returns the code saved lists hold for this command. It must never change once lists have been saved with it; the class name unless a subclass gives another.
+			</description>
+		</method>
+		<method name="get_display_name" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the command's name in the event editor.
+			</description>
+		</method>
+		<method name="get_id_parameters" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns a dictionary [code]{parameter name: table name}[/code] of the parameters that hold database IDs, for the reference checks ([JRPGReferenceScanner]).
+			</description>
+		</method>
+		<method name="get_parameter_names" qualifiers="const">
+			<return type="PackedStringArray" />
+			<description>
+				Returns the names of the parameters [method pack] writes: the stored properties, without the child lists and the engine's own properties.
+			</description>
+		</method>
+		<method name="get_summary" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns one line describing the command with its parameters, for the event editor.
+			</description>
+		</method>
+		<method name="get_usable_in" qualifiers="const">
+			<return type="int" enum="JRPGEventCommand.Usable" is_bitfield="true" />
+			<description>
+				Returns where the command may be used: map events, battle events, common events.
+			</description>
+		</method>
+		<method name="pack" qualifiers="const">
+			<return type="Array" />
+			<description>
+				Returns the command as a list stores it: [code][lb]code, {parameter: value}, {child list name: packed list}[rb][/code].
+			</description>
+		</method>
+		<method name="unpack">
+			<return type="void" />
+			<param index="0" name="packed" type="Array" />
+			<description>
+				Takes the parameters and child lists from [param packed] (as [method pack] writes it). Parameters the command does not have (or no longer has) are left out with a warning; the script and the engine's own properties are never set this way.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="CATEGORY_MESSAGE" value="0" enum="Category">
+			Messages: text, choices, number input, item selection, scrolling text.
+		</constant>
+		<constant name="CATEGORY_GAME_PROGRESSION" value="1" enum="Category">
+			Game progression: switches, variables, self switches, timers.
+		</constant>
+		<constant name="CATEGORY_FLOW_CONTROL" value="2" enum="Category">
+			Flow control: branches, loops, labels, common events, comments.
+		</constant>
+		<constant name="CATEGORY_PARTY" value="3" enum="Category">
+			Party: gold, items, weapons, armors, members.
+		</constant>
+		<constant name="CATEGORY_ACTOR" value="4" enum="Category">
+			Actors: HP, MP, TP, states, experience, levels, parameters, skills, equipment, names, classes, images.
+		</constant>
+		<constant name="CATEGORY_MOVEMENT" value="5" enum="Category">
+			Movement: transfers, vehicles, event locations, scrolling, move routes, getting on and off.
+		</constant>
+		<constant name="CATEGORY_CHARACTER" value="6" enum="Category">
+			Characters: transparency, followers, animations, balloons, erasing events.
+		</constant>
+		<constant name="CATEGORY_PICTURE" value="7" enum="Category">
+			Pictures: show, move, rotate, tint, erase.
+		</constant>
+		<constant name="CATEGORY_TIMING" value="8" enum="Category">
+			Timing: waits.
+		</constant>
+		<constant name="CATEGORY_SCREEN" value="9" enum="Category">
+			Screen: fades, tints, flashes, shakes, weather.
+		</constant>
+		<constant name="CATEGORY_AUDIO_VIDEO" value="10" enum="Category">
+			Audio and video: music, ambience, sound effects, movies.
+		</constant>
+		<constant name="CATEGORY_SCENE_CONTROL" value="11" enum="Category">
+			Scene control: battles, shops, name input, menus, saving, game over, the title screen.
+		</constant>
+		<constant name="CATEGORY_SYSTEM_SETTINGS" value="12" enum="Category">
+			System settings: music, window color, access to save, menu, encounters and formation, vehicle images.
+		</constant>
+		<constant name="CATEGORY_MAP" value="13" enum="Category">
+			Map: map name display, tilesets, battle backgrounds, parallax, location information.
+		</constant>
+		<constant name="CATEGORY_BATTLE" value="14" enum="Category">
+			Battle: enemy and actor changes during a battle.
+		</constant>
+		<constant name="CATEGORY_ADVANCED" value="15" enum="Category">
+			Advanced: scripts and other commands for authors who know the engine.
+		</constant>
+		<constant name="CATEGORY_PLUGIN" value="16" enum="Category">
+			Commands added by plugins and scripts.
+		</constant>
+		<constant name="CATEGORY_MAX" value="17" enum="Category">
+			The number of categories.
+		</constant>
+		<constant name="AUTHORITY_SERVER" value="0" enum="Authority">
+			The command changes game state: online, the server runs it.
+		</constant>
+		<constant name="AUTHORITY_CLIENT" value="1" enum="Authority">
+			The command only presents: online, the server sends it to the client.
+		</constant>
+		<constant name="AUTHORITY_BOTH" value="2" enum="Authority">
+			The command changes game state and presents.
+		</constant>
+		<constant name="USABLE_MAP_EVENTS" value="1" enum="Usable" is_bitfield="true">
+			The command can be used in map events.
+		</constant>
+		<constant name="USABLE_BATTLE_EVENTS" value="2" enum="Usable" is_bitfield="true">
+			The command can be used in battle events.
+		</constant>
+		<constant name="USABLE_COMMON_EVENTS" value="4" enum="Usable" is_bitfield="true">
+			The command can be used in common events.
+		</constant>
+		<constant name="USABLE_EVERYWHERE" value="7" enum="Usable" is_bitfield="true">
+			The command can be used in every kind of event.
+		</constant>
+	</constants>
+</class>

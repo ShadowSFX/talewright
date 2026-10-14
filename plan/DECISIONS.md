@@ -974,4 +974,13 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   The command classes, their metadata, authority and script commands stay as D-007 describes (task 9.2.2).
 - **Why:** game loads stay under the gate with room for large projects, map scenes stay small and diff cleanly in
   version control, and the typed API keeps editing and scripting simple.
+- **Amended (task 9.2.2.1):** one packed entry is `[code, {parameter: value}, {child list name: packed list}]`, with
+  every parameter written (not only those that differ from a default, so a later default never changes saved
+  events). Lists build their commands the first time they are read and pack them again whenever their data is read
+  (saving); child lists stay packed until read. A code no class has becomes a `JRPGUnknownCommand` that saves back
+  exactly (one warning per code); a parameter the command no longer has is left out with a warning, unless JRPGSchema
+  knows its new name; packed data never sets a script or the engine's own properties; an entry that is not a command
+  is dropped with an error. The content hash is a 64-bit hash of the packed data's text (`VariantWriter`), so a
+  change at any depth changes it. `JRPGCommandRegistry` maps codes to classes and keeps one instance per class for
+  metadata.
 - **Reversal:** store `JRPGEventCommand` sub-resources in `JRPGCommandList` directly (the benchmark's typed case).

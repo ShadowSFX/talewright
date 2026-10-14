@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.2.1 Command storage benchmark",
+  "last_completed": "9.2.2.1 Command base, packed lists and registry (core)",
   "tasks": [
     {
       "id": "0",
@@ -3743,7 +3743,7 @@
         "plan/DECISIONS.md",
         "plan/specs/03_events_interpreter.md"
       ],
-      "commit": "pending",
+      "commit": "d0e3013034",
       "notes": "",
       "status": "done"
     },
@@ -3751,21 +3751,90 @@
       "id": "9.2.2",
       "parent": "9.2",
       "title": "Command model, registry, authority, script commands",
-      "description": "JRPGEventCommand base, metadata, registry, script subclass discovery. Adds the `commands` JRPGCommandList property to JRPGTroopPage and JRPGCommonEventData (their other fields exist since 5.3.3).",
+      "description": "JRPGEventCommand base, metadata, registry, script subclass discovery. Adds the `commands` JRPGCommandList property to JRPGTroopPage and JRPGCommonEventData (their other fields exist since 5.3.3). Split into 9.2.2.1 (command base, packed list storage, registry), 9.2.2.2 (script commands), 9.2.2.3 (command lists on event pages, troop pages and common events; reference scanning).",
       "dependencies": [
         "9.2.1"
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "Script subclass discovered and executed",
-        "Troop pages and common events save and load their command lists",
-        "Command metadata declares which parameters are database IDs; JRPGReferenceScanner visits command lists of map events, common events and troop pages and reports a dangling command parameter with its location (task 5.6 deferral)"
+        "9.2.2.1, 9.2.2.2 and 9.2.2.3 done"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
       "commit": "",
       "notes": "D-058 (9.2.1 benchmark): JRPGCommandList stores commands packed (code, parameters, child lists) in one property and builds typed JRPGEventCommand objects when first run or edited; keep the typed API, pack again on save; content_hash over the packed data.",
       "status": "pending"
+    },
+    {
+      "id": "9.2.2.1",
+      "parent": "9.2.2",
+      "title": "Command base, packed lists and registry (core)",
+      "priority": 1,
+      "dependencies": [],
+      "description": "Core: JRPGEventCommand (typed parameters as stored properties, child lists for branches, metadata: code, category of the 16, display name, summary, authority SERVER/CLIENT/BOTH, usable in map/battle/common events, waits, database-id parameters); JRPGCommandList storing its commands packed (D-058: code, parameters, child lists) and building the typed objects when first read, packing them again on save, with a 64-bit content hash over the packed data; JRPGCommandRegistry from code to class (built-in classes registered at module start); a command whose code is unknown (a removed plugin) is kept as JRPGUnknownCommand and saved back unchanged.",
+      "acceptance_criteria": [
+        "Doctest: a nested list (branches with child lists) round-trips through a saved .tres byte for byte, typed objects equal before and after",
+        "Content hash changes when any command at any depth changes, and only then",
+        "An unknown code survives load and save unchanged, with one warning",
+        "Metadata of a command class is readable without an instance (registry)"
+      ],
+      "test_strategy": "Doctests [JRPG] with test command classes.",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_event_command.h",
+        "modules/jrpg/core/jrpg_event_command.cpp",
+        "modules/jrpg/core/jrpg_command_list.h",
+        "modules/jrpg/core/jrpg_command_list.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGEventCommand.xml",
+        "modules/jrpg/doc_classes/JRPGUnknownCommand.xml",
+        "modules/jrpg/doc_classes/JRPGCommandList.xml",
+        "modules/jrpg/doc_classes/JRPGCommandRegistry.xml",
+        "modules/jrpg/tests/test_jrpg_command_list.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "9.2.2.2",
+      "parent": "9.2.2",
+      "title": "Script commands",
+      "priority": 1,
+      "dependencies": [
+        "9.2.2.1"
+      ],
+      "description": "Script classes extending JRPGEventCommand (global class names, ScriptServer::get_global_class_list) are found and registered by their class name; their exported properties are their parameters (packed and unpacked like built-in ones); their _execute(context) and metadata virtuals are called (GDVIRTUAL). The interpreter (9.3) will call execute; a context object stands in until then.",
+      "acceptance_criteria": [
+        "Script subclass discovered and executed",
+        "A script command's exported parameters round-trip through a command list",
+        "A script command whose script is gone loads as an unknown command"
+      ],
+      "test_strategy": "Doctests with a GDScript command (GDScript module present).",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.2.2.3",
+      "parent": "9.2.2",
+      "title": "Command lists on pages, troop pages and common events; reference scanning",
+      "priority": 1,
+      "dependencies": [
+        "9.2.2.2"
+      ],
+      "description": "Adds `commands` (JRPGCommandList) to JRPGEventPage, JRPGTroopPage and JRPGCommonEventData with schema stamps; JRPGReferenceScanner visits the command lists of map events, common events and troop pages and reports a command parameter naming a missing database entry with its location (map/event/page/command path, common event, troop page) (task 5.6 deferral).",
+      "acceptance_criteria": [
+        "Troop pages and common events save and load their command lists",
+        "Command metadata declares which parameters are database IDs; JRPGReferenceScanner reports a dangling command parameter with its location"
+      ],
+      "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "9.3",
