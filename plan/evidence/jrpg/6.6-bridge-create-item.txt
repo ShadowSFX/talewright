@@ -1,0 +1,75 @@
+# 6.6 bridge verification: creating an item (scratch project committed to git)
+## jrpg_db_list table=items (before)
+"maximum":13,"id":1,"name":"HerbTonic""id":2,"name":"""id":3,"name":"""id":4,"name":""
+## jrpg_db_create items: Elixir, price 500, description, Recover HP 100% and Recover MP 100%
+{
+  "table": "items",
+  "id": 2,
+  "name": "Elixir",
+  "maximum": 13,
+  "values": {
+    "name": "Elixir",
+    "price": 500,
+    "description": "Restores all HP and MP of one ally.",
+    "target_side": 2,
+    "effects": [
+      {
+        "code": 1,
+        "data_id": 0,
+        "value1": 10000,
+        "value2": 0
+      },
+      {
+        "code": 2,
+        "data_id": 0,
+        "value1": 10000,
+        "value2": 0
+      }
+    ]
+  },
+  "undoable": true
+}
+## jrpg_db_get items 2 (readable effects)
+Elixir 500 Restores all HP and MP of one ally.
+{'effects': ['Recover HP: 100% + 0', 'Recover MP: 100% + 0']}
+## jrpg_db_save and the .tres diff
+{
+  "saved": [
+    "res://jrpg/db/items.tres"
+  ]
+}
+--- a/jrpg/db/items.tres
++++ b/jrpg/db/items.tres
+@@ -15,0 +16,15 @@ price = 40
++name = "Elixir"
++description = "Restores all HP and MP of one ally."
++target_side = 2
++effects = [{
++"code": 1,
++"data_id": 0,
++"value1": 10000,
++"value2": 0
++}, {
++"code": 2,
++"data_id": 0,
++"value1": 10000,
++"value2": 0
++}]
++price = 500
+(diff stat:  1 file changed, 15 insertions(+))
+## undo empties the slot again; redo brings the Elixir back
+  "performed": true
+''
+  "performed": true
+'Elixir'
+## at_end: a second Elixir at a new ID past the maximum, then undo
+  "id": 14,
+  "maximum": 14,
+  "performed": true
+  "maximum": 13,
+## a bad value is refused and nothing changes
+"price" takes type int; nothing was changed. (message wording since fixed from "takes a int")
+      "name": ""
+## errors
+    "errors": 0,
+    "warnings": 0,

@@ -80,6 +80,13 @@ public:
 	// have its property's type; the read-only "id" and engine properties (resource_*, script, metadata) are refused,
 	// and nothing changes unless every value is valid.
 	Error set_record_properties(const String &p_table, int p_id, const Dictionary &p_values);
+	// Creates an entry from p_values ({property: value}): fills the first blank entry of p_table (every field at its
+	// default, is_blank_entry), or adds one at the end when there is none or p_at_end. One undoable action; nothing
+	// changes unless every value is valid. r_id: the new entry's ID.
+	Error create_entry(const String &p_table, const Dictionary &p_values, bool p_at_end, int &r_id);
+	static bool is_blank_entry(const Ref<JRPGEntry> &p_entry);
+	// OK when every value of p_values names an editable property of p_record and has its type.
+	static Error check_values(const Object *p_record, const Dictionary &p_values);
 	// Replaces parameter p_param's curve of class p_class_id with one generated from p_first (level 1) to p_last
 	// (level 99) with growth shape p_growth (-10..10, JRPGCurves::generate), clamped to the parameter's range; undoable.
 	Error generate_param_curve(int p_class_id, int p_param, int p_first, int p_last, int p_growth);

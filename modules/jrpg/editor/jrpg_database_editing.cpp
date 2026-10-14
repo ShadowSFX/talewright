@@ -37,6 +37,7 @@
 #include "core/io/file_access.h"
 #include "core/io/resource_saver.h"
 #include "core/object/callable_mp.h"
+#include "core/object/class_db.h"
 #include "editor/editor_undo_redo_manager.h"
 
 #include "modules/jrpg/core/jrpg_class_data.h"
@@ -172,20 +173,9 @@ Error JRPGDatabaseEditing::set_record_properties(const String &p_table, int p_id
 	const Ref<Resource> record = get_record(p_table, p_id);
 	ERR_FAIL_COND_V_MSG(record.is_null(), ERR_DOES_NOT_EXIST, vformat("JRPG database: no record %d in \"%s\".", p_id, p_table));
 	ERR_FAIL_COND_V_MSG(p_values.is_empty(), ERR_INVALID_PARAMETER, "JRPG database: no properties to set.");
-	List<PropertyInfo> props;
-	record->get_property_list(&props);
-	// Every value is checked before anything changes, so a call either applies completely or not at all.
-	for (const KeyValue<Variant, Variant> &kv : p_values) {
-		const String name = kv.key;
-		const PropertyInfo *info = nullptr;
-		for (const PropertyInfo &pi : props) {
-			if (pi.name == name) {
-				info = &pi;
-				break;
-			}
-		}
-		ERR_FAIL_COND_V_MSG(!info || !is_editable_property(*info), ERR_INVALID_PARAMETER, vformat("JRPG database: %s has no editable property \"%s\".", record->get_class(), name));
-		ERR_FAIL_COND_V_MSG(kv.value.get_type() != info->type && !(info->type == Variant::OBJECT && kv.value.get_type() == Variant::NIL), ERR_INVALID_PARAMETER, vformat("JRPG database: \"%s\" takes a %s.", name, Variant::get_type_name(info->type)));
+	const Error valid = check_values(record.ptr(), p_values);
+	if (valid != OK) {
+		return valid;
 	}
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
 	if (!undo_redo) {
@@ -202,6 +192,97 @@ Error JRPGDatabaseEditing::set_record_properties(const String &p_table, int p_id
 		undo_redo->add_undo_property(record.ptr(), kv.key, record->get(StringName(kv.key)));
 	}
 	undo_redo->commit_action();
+	return OK;
+}
+
+Error JRPGDatabaseEditing::check_values(const Object *p_record, const Dictionary &p_values) {
+	List<PropertyInfo> props;
+	p_record->get_property_list(&props);
+	// Every value is checked before anything changes, so a call either applies completely or not at all.
+	for (const KeyValue<Variant, Variant> &kv : p_values) {
+		const String name = kv.key;
+		const PropertyInfo *info = nullptr;
+		for (const PropertyInfo &pi : props) {
+			if (pi.name == name) {
+				info = &pi;
+				break;
+			}
+		}
+		ERR_FAIL_COND_V_MSG(!info || !is_editable_property(*info), ERR_INVALID_PARAMETER, vformat("JRPG database: %s has no editable property \"%s\".", p_record->get_class(), name));
+		ERR_FAIL_COND_V_MSG(kv.value.get_type() != info->type && !(info->type == Variant::OBJECT && kv.value.get_type() == Variant::NIL), ERR_INVALID_PARAMETER, vformat("JRPG database: \"%s\" takes type %s.", name, Variant::get_type_name(info->type)));
+	}
+	return OK;
+}
+
+bool JRPGDatabaseEditing::is_blank_entry(const Ref<JRPGEntry> &p_entry) {
+	ERR_FAIL_COND_V(p_entry.is_null(), false);
+	List<PropertyInfo> props;
+	p_entry->get_property_list(&props);
+	for (const PropertyInfo &pi : props) {
+		if (!is_data_property(pi)) {
+			continue;
+		}
+		bool valid = false;
+		const Variant def = ClassDB::class_get_default_property_value(p_entry->get_class_name(), pi.name, &valid);
+		if (valid && p_entry->get(pi.name) != def) {
+			return false;
+		}
+	}
+	return true;
+}
+
+Error JRPGDatabaseEditing::create_entry(const String &p_table, const Dictionary &p_values, bool p_at_end, int &r_id) {
+	r_id = 0;
+	const Ref<JRPGTable> table = get_table(p_table);
+	ERR_FAIL_COND_V_MSG(table.is_null(), ERR_DOES_NOT_EXIST, vformat("JRPG database: no table \"%s\".", p_table));
+	// The new entry is built first, so the change is one action whichever slot it lands in.
+	Ref<JRPGEntry> filled = Object::cast_to<JRPGEntry>(ClassDB::instantiate(table->get_entry_class()));
+	ERR_FAIL_COND_V(filled.is_null(), ERR_CANT_CREATE);
+	const Error valid = check_values(filled.ptr(), p_values);
+	if (valid != OK) {
+		return valid;
+	}
+	for (const KeyValue<Variant, Variant> &kv : p_values) {
+		filled->set(StringName(kv.key), kv.value);
+	}
+	int slot = 0;
+	if (!p_at_end) {
+		for (int id = 1; id <= table->get_maximum() && slot == 0; id++) {
+			slot = is_blank_entry(table->get_entry(id)) ? id : 0;
+		}
+	}
+	if (slot == 0) {
+		ERR_FAIL_COND_V_MSG(table->get_maximum() >= JRPGTable::MAX_ENTRIES, ERR_OUT_OF_MEMORY, vformat("JRPG database: \"%s\" is full (%d entries).", p_table, JRPGTable::MAX_ENTRIES));
+	}
+	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
+	const String kind = JRPGEntry::kind_from_class(table->get_entry_class());
+	if (slot > 0) {
+		const Ref<JRPGEntry> entry = table->get_entry(slot);
+		if (!undo_redo) {
+			entry->assign_from(filled);
+		} else {
+			undo_redo->create_action_for_history(vformat(TTR("Create %s %d"), kind, slot), EditorUndoRedoManager::GLOBAL_HISTORY);
+			undo_redo->force_fixed_history();
+			undo_redo->add_do_method(entry.ptr(), "assign_from", filled);
+			undo_redo->add_undo_method(entry.ptr(), "assign_from", entry->duplicate(true));
+			undo_redo->commit_action();
+		}
+		r_id = slot;
+		return OK;
+	}
+	const TypedArray<JRPGEntry> before = table->get_entries();
+	TypedArray<JRPGEntry> after = before.duplicate();
+	after.push_back(filled);
+	if (!undo_redo) {
+		table->set_entries(after);
+	} else {
+		undo_redo->create_action_for_history(vformat(TTR("Create %s %d"), kind, after.size()), EditorUndoRedoManager::GLOBAL_HISTORY);
+		undo_redo->force_fixed_history();
+		undo_redo->add_do_method(table.ptr(), "set_entries", after);
+		undo_redo->add_undo_method(table.ptr(), "set_entries", before);
+		undo_redo->commit_action();
+	}
+	r_id = table->get_maximum();
 	return OK;
 }
 

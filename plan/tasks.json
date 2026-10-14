@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "6.5.3.2 System party, type lists and slice field check",
+  "last_completed": "6.6 Database authoring API + bridge tools",
   "tasks": [
     {
       "id": "0",
@@ -2220,7 +2220,7 @@
         "plan/evidence/jrpg/6.5.3.2-terms-form.png"
       ],
       "status": "done",
-      "commit": "pending",
+      "commit": "c98c01be4b",
       "notes": "Files differ from the planned jrpg_type_list_editor.*: the party, type list and terms editors live together in jrpg_system_editors.*. Start map picker: 8.3 (see 6.5.3 notes)."
     },
     {
@@ -2231,15 +2231,22 @@
       "dependencies": [
         "6.5"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Claude can create an item via bridge"
       ],
       "test_strategy": "Bridge.",
-      "files": [],
-      "commit": "",
-      "notes": ""
+      "files": [
+        "modules/jrpg/editor/jrpg_database_editing.h",
+        "modules/jrpg/editor/jrpg_database_editing.cpp",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/tests/test_jrpg_database_editing.h",
+        "talewright/docs/claude_bridge.md",
+        "plan/evidence/jrpg/6.6-bridge-create-item.txt"
+      ],
+      "commit": "pending",
+      "notes": "Database bridge tools now: jrpg_db_list, jrpg_db_get, jrpg_db_set, jrpg_db_create, jrpg_db_clear, jrpg_db_copy, jrpg_db_paste, jrpg_db_set_maximum, jrpg_db_generate_curve, jrpg_db_save, jrpg_db_select (all undoable where they change data; all validate before changing anything)."
     },
     {
       "id": "6.7",

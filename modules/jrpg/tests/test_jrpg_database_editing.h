@@ -324,6 +324,49 @@ TEST_CASE("[JRPG][DatabaseEditing] Records are read and edited by property; new 
 	memdelete(editing);
 }
 
+TEST_CASE("[JRPG][DatabaseEditing] Creating an entry fills the first blank slot or adds one at the end") {
+	JRPGDatabaseEditing *editing = memnew(JRPGDatabaseEditing);
+	Ref<JRPGDatabase> db = JRPGProjectSetup::create_starter_database("Lantern Road");
+	editing->set_database(db);
+	const Ref<JRPGTable> items = db->get_table(JRPGDatabase::TABLE_ITEMS);
+	const int count = items->get_maximum();
+	CHECK_FALSE(JRPGDatabaseEditing::is_blank_entry(items->get_entry(1))); // Herb Tonic.
+	CHECK(JRPGDatabaseEditing::is_blank_entry(items->get_entry(2)));
+	items->get_entry(2)->set_note("reserved"); // Not blank any more: a note is data too.
+	CHECK_FALSE(JRPGDatabaseEditing::is_blank_entry(items->get_entry(2)));
+
+	Dictionary elixir;
+	elixir["name"] = "Elixir";
+	elixir["price"] = 500;
+	int id = 0;
+	CHECK(editing->create_entry("items", elixir, false, id) == OK);
+	CHECK(id == 3); // The first blank slot.
+	const Ref<JRPGItemData> made = items->get_entry(3);
+	CHECK(made->get_entry_name() == "Elixir");
+	CHECK(made->get_price() == 500);
+	CHECK(made->get_id() == 3);
+	CHECK(items->get_maximum() == count);
+
+	CHECK(editing->create_entry("items", elixir, true, id) == OK);
+	CHECK(id == count + 1); // At the end.
+	CHECK(items->get_maximum() == count + 1);
+	CHECK(items->get_entry(id)->get_entry_name() == "Elixir");
+	CHECK(items->get_entry(id)->get_id() == id);
+
+	// Every value is checked first: nothing changes.
+	Dictionary bad;
+	bad["name"] = "Nope";
+	bad["price"] = "cheap";
+	ERR_PRINT_OFF;
+	CHECK(editing->create_entry("items", bad, false, id) == ERR_INVALID_PARAMETER);
+	CHECK(editing->create_entry("nope", elixir, false, id) == ERR_DOES_NOT_EXIST);
+	ERR_PRINT_ON;
+	CHECK(id == 0);
+	CHECK(items->get_maximum() == count + 1);
+	CHECK(JRPGDatabaseEditing::is_blank_entry(items->get_entry(4)));
+	memdelete(editing);
+}
+
 } // namespace TestJRPGDatabaseEditing
 
 #endif // TOOLS_ENABLED

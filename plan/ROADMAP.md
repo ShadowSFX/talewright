@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 123, in_progress: 0, done: 93, blocked: 0, deferred: 3 (of 219)
+**Totals:** pending: 122, in_progress: 0, done: 94, blocked: 0, deferred: 3 (of 219)
 
 ## [x] 0 Bootstrap and task system
 
@@ -126,8 +126,8 @@ Setup tool, managed addon, main-screen workspace, database editor, authoring API
     - [x] **6.5.2.3** Actor initial equipment and slice field check (P1) _(deps: 6.5.2.2; commit: e5fe6b28ea)_
   - [x] **6.5.3** Weapons, armors, enemies, troops, states, system, types, terms forms (P1) _(deps: 6.5.2)_
     - [x] **6.5.3.1** Parameter grids, enemy drops and actions, troop members (P1) _(commit: 27dfc497c0)_
-    - [x] **6.5.3.2** System party, type lists and slice field check (P1) _(deps: 6.5.3.1; commit: pending)_
-- [ ] **6.6** Database authoring API + bridge tools (P1) _(deps: 6.5)_
+    - [x] **6.5.3.2** System party, type lists and slice field check (P1) _(deps: 6.5.3.1; commit: c98c01be4b)_
+- [x] **6.6** Database authoring API + bridge tools (P1) _(deps: 6.5; commit: pending)_
 - [ ] **6.7** Epic review: workspace (P1) _(deps: 6.6)_
 
 ## [ ] 7 Assets and tilesets

@@ -42,6 +42,7 @@
 #include "jrpg_trait_editor.h"
 #include "jrpg_workspace_shell.h"
 
+#include "core/object/class_db.h"
 #include "editor/editor_interface.h"
 
 #include "modules/claude_bridge/claude_bridge_registry.h"
@@ -436,20 +437,16 @@ void tool_db_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_ca
 	p_call->complete_data(result);
 }
 
-void tool_db_set(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
-	JRPGDatabaseEditing *editing = database_editing(p_call);
-	const Ref<Resource> record = editing ? database_record(editing, p_args, p_call) : Ref<Resource>();
-	if (record.is_null()) {
-		return;
-	}
+// The "values" argument converted to p_record's property types (JSON, Godot literals, res:// paths); false after
+// failing the call.
+bool convert_values(const Object *p_record, const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, Dictionary &r_values) {
 	const Dictionary values = p_args.get("values", Dictionary());
 	if (values.is_empty()) {
 		p_call->fail("\"values\" must be an object such as {\"name\": \"Fire\", \"price\": 50}.");
-		return;
+		return false;
 	}
 	List<PropertyInfo> list;
-	record->get_property_list(&list);
-	Dictionary converted;
+	p_record->get_property_list(&list);
 	for (const KeyValue<Variant, Variant> &kv : values) {
 		const String name = kv.key;
 		const PropertyInfo *info = nullptr;
@@ -460,30 +457,73 @@ void tool_db_set(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_ca
 			}
 		}
 		if (!info) {
-			p_call->fail(vformat("%s has no editable property \"%s\" (jrpg_db_get lists them); nothing was changed.", record->get_class(), name));
-			return;
+			p_call->fail(vformat("%s has no editable property \"%s\" (jrpg_db_get lists them); nothing was changed.", p_record->get_class(), name));
+			return false;
 		}
 		bool ok = false;
 		const Variant value = info->type == Variant::OBJECT ? ClaudeBridgeTools::json_to_resource(kv.value, info->hint_string, ok) : ClaudeBridgeTools::json_to_value(whole_numbers(kv.value), info->type, ok);
 		if (!ok) {
-			p_call->fail(vformat("\"%s\" takes a %s; nothing was changed.", name, info->type == Variant::OBJECT ? info->hint_string : Variant::get_type_name(info->type)));
-			return;
+			p_call->fail(vformat("\"%s\" takes type %s; nothing was changed.", name, info->type == Variant::OBJECT ? info->hint_string : Variant::get_type_name(info->type)));
+			return false;
 		}
-		converted[name] = value;
+		r_values[name] = value;
+	}
+	return true;
+}
+
+Dictionary changed_values(const Object *p_record, const Dictionary &p_values) {
+	Dictionary changed;
+	for (const KeyValue<Variant, Variant> &kv : p_values) {
+		changed[kv.key] = ClaudeBridgeTools::variant_to_json(p_record->get(StringName(kv.key)));
+	}
+	return changed;
+}
+
+void tool_db_set(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	const Ref<Resource> record = editing ? database_record(editing, p_args, p_call) : Ref<Resource>();
+	Dictionary converted;
+	if (record.is_null() || !convert_values(record.ptr(), p_args, p_call, converted)) {
+		return;
 	}
 	const String table = p_args.get("table", "");
 	if (editing->set_record_properties(table, p_args.get("id", 0), converted) != OK) {
 		p_call->fail("The values were refused; see the editor log. Nothing was changed.");
 		return;
 	}
-	Dictionary changed;
-	for (const KeyValue<Variant, Variant> &kv : converted) {
-		changed[kv.key] = ClaudeBridgeTools::variant_to_json(record->get(StringName(kv.key)));
-	}
 	Dictionary result;
 	result["table"] = table;
 	result["class"] = record->get_class();
-	result["changed"] = changed;
+	result["changed"] = changed_values(record.ptr(), converted);
+	result["undoable"] = true;
+	p_call->complete_data(result);
+}
+
+void tool_db_create(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	const Ref<JRPGTable> table = editing ? database_table(editing, p_args, p_call) : Ref<JRPGTable>();
+	if (table.is_null()) {
+		return;
+	}
+	// The values are converted for a fresh entry of the table's class: the entry that receives them may not exist yet.
+	Ref<JRPGEntry> sample = Object::cast_to<JRPGEntry>(ClassDB::instantiate(table->get_entry_class()));
+	Dictionary converted;
+	if (sample.is_null() || !convert_values(sample.ptr(), p_args, p_call, converted)) {
+		return;
+	}
+	const String name = p_args["table"];
+	int id = 0;
+	if (editing->create_entry(name, converted, p_args.get("at_end", false), id) != OK) {
+		p_call->fail("The entry could not be created; see the editor log. Nothing was changed.");
+		return;
+	}
+	const Ref<JRPGEntry> entry = table->get_entry(id);
+	Dictionary result;
+	result["table"] = name;
+	result["id"] = id;
+	result["name"] = entry->get_entry_name();
+	result["maximum"] = table->get_maximum();
+	result["values"] = changed_values(entry.ptr(), converted);
 	result["undoable"] = true;
 	p_call->complete_data(result);
 }
@@ -721,6 +761,20 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	set.destructive = false; // Undoable.
 	set.func = &tool_db_set;
 	r_mcp.register_tool(set);
+
+	ClaudeBridgeMCP::Tool create;
+	create.name = "jrpg_db_create";
+	create.title = "Create a JRPG database entry";
+	create.description = "Creates an entry from values (the properties jrpg_db_get lists for that table): it fills the first blank entry of the table (every field at its default), or adds one at the end when there is none or at_end is true. IDs never move. One undoable editor action; nothing changes unless every value is valid. Returns the new entry's ID. Save with jrpg_db_save.";
+	Dictionary create_properties;
+	create_properties["table"] = table_property;
+	create_properties["values"] = schema_property("object", "Property names and values, e.g. {\"name\": \"Elixir\", \"price\": 500, \"effects\": [{\"code\": 1, \"data_id\": 0, \"value1\": 10000, \"value2\": 0}]}.");
+	create_properties["at_end"] = schema_property("boolean", "Always add a new entry at the end instead of filling a blank one (default false).");
+	create.input_schema = ClaudeBridgeMCP::object_schema(create_properties, PackedStringArray({ "table", "values" }));
+	create.read_only = false;
+	create.destructive = false; // Undoable; only blank entries are filled.
+	create.func = &tool_db_create;
+	r_mcp.register_tool(create);
 
 	ClaudeBridgeMCP::Tool curve;
 	curve.name = "jrpg_db_generate_curve";
