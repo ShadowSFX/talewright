@@ -8,6 +8,7 @@
 		While a game runs it runs the game's loop at a fixed 60 steps a second on the game state's simulation clock: each step moves the player ([method get_player]) as the direction actions say, keeps the game state's player position, and counts the steps taken. The player's camera, the one the game is seen through, stays inside the map (its area on the canvas, seen through the camera's zoom); a map smaller than the screen stays in the middle of it. On a looping axis the camera is free, but the map is drawn once: the looping display comes with a later version.
 		Each map shown gets a [JRPGEvent] node for each of its events, from the states the game state keeps for that map (a resumed game) or new ones from the events' data. Every step the events' pages are picked again when the game state changed since the last time (a switch, a variable, a self switch, an item or the party). Events Same as characters stop the player stepping onto their cells.
 		Every step also runs the map's event processes ([method get_event_runner]) after a transfer's step and before the player moves. While an autorun or an event started by a trigger runs, the player stands still (a step under way still ends); a transfer's fade pauses the processes; entering another map stops the old map's parallel processes, while an event that moved the player goes on with its remaining commands.
+		The events ask the player through a local presentation port ([method get_local_port]) that shows the requests in the message, choice, number input and gold windows of the manager's message layer ([constant MESSAGE_LAYER]); the player also stands still while a request waits for an answer.
 		When it enters a running game's tree (not in the editor) with [member autostart] on, it starts a new game at the System start position, after every [method Node._ready] call: a script that continues a loaded game there with [method resume] comes first.
 		A transfer that cannot happen (a map the map list lacks, a scene that cannot load or is not a map, a cell outside the map) leaves the player where they are, prints one warning and returns an error.
 		Authority: in a single-player game the manager decides transfers itself; online, the server decides them and the client's manager only applies what it is told.
@@ -31,6 +32,12 @@
 			<return type="JRPGMapCellCache" />
 			<description>
 				Returns the current map's cell cache: what each cell means for movement.
+			</description>
+		</method>
+		<method name="get_choice_window" qualifiers="const">
+			<return type="JRPGChoiceWindow" />
+			<description>
+				Returns the window the events' choices show in.
 			</description>
 		</method>
 		<method name="get_database" qualifiers="const">
@@ -70,6 +77,18 @@
 				Returns the state of the running game, or [code]null[/code] before a game starts.
 			</description>
 		</method>
+		<method name="get_gold_window" qualifiers="const">
+			<return type="JRPGGoldWindow" />
+			<description>
+				Returns the gold window a message's [code]\$[/code] shows.
+			</description>
+		</method>
+		<method name="get_local_port" qualifiers="const">
+			<return type="JRPGLocalPort" />
+			<description>
+				Returns the presentation port the map's events ask the player through.
+			</description>
+		</method>
 		<method name="get_map" qualifiers="const">
 			<return type="JRPGMap" />
 			<description>
@@ -86,6 +105,18 @@
 			<return type="JRPGMapList" />
 			<description>
 				Returns the map list maps are found through: the one given with [method set_map_list], or the one loaded from [member map_list_path] once a map is needed.
+			</description>
+		</method>
+		<method name="get_message_window" qualifiers="const">
+			<return type="JRPGMessageWindow" />
+			<description>
+				Returns the window the events' messages show in.
+			</description>
+		</method>
+		<method name="get_number_window" qualifiers="const">
+			<return type="JRPGNumberInputWindow" />
+			<description>
+				Returns the window the events' number input shows in.
 			</description>
 		</method>
 		<method name="get_player" qualifiers="const">
@@ -190,6 +221,9 @@
 		</constant>
 		<constant name="DIRECTION_RETAIN" value="-1">
 			For [method transfer]: the player keeps facing the way they face.
+		</constant>
+		<constant name="MESSAGE_LAYER" value="5">
+			The canvas layer of the message windows: over the map, under the game's screens.
 		</constant>
 	</constants>
 </class>

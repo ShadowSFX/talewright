@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 81, in_progress: 0, done: 191, blocked: 0, deferred: 3 (of 275)
+**Totals:** pending: 79, in_progress: 0, done: 193, blocked: 0, deferred: 3 (of 275)
 
 ## [x] 0 Bootstrap and task system
 
@@ -217,9 +217,9 @@ Pages, conditions, triggers, command model with authority, interpreter with pres
     - [x] **9.3.2.1** Common event calls and event processes (core) (P1) _(commit: debb3e23ac)_
     - [x] **9.3.2.2** Event processes on the running map (P1) _(deps: 9.3.2.1; commit: 16e84343af)_
   - [x] **9.3.3** Interpreter serialization and resume rules (P1) _(deps: 9.3.2; commit: 36328d990c)_
-- [ ] **9.4** Presentation port + local port (P1) _(deps: 9.3)_
-  - [x] **9.4.1** Presentation port and interpreter requests (core) (P1) _(commit: pending)_
-  - [ ] **9.4.2** Local port on the running map (P1) _(deps: 9.4.1)_
+- [x] **9.4** Presentation port + local port (P1) _(deps: 9.3)_
+  - [x] **9.4.1** Presentation port and interpreter requests (core) (P1) _(commit: 2c98d38e06)_
+  - [x] **9.4.2** Local port on the running map (P1) _(deps: 9.4.1; commit: pending)_
 - [ ] **9.5** Slice commands (P1) _(deps: 9.4)_
   - [ ] **9.5.1** Message and flow commands (P1)
   - [ ] **9.5.2** State commands (P1) _(deps: 9.5.1)_

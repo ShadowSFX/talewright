@@ -43,6 +43,7 @@ def get_doc_classes():
         "JRPGGoldWindow",
         "JRPGInterpreter",
         "JRPGItemData",
+        "JRPGLocalPort",
         "JRPGManagedAddon",
         "JRPGMap",
         "JRPGMapCellCache",

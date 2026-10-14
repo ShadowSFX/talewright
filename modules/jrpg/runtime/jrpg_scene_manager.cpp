@@ -59,10 +59,16 @@
 #include "modules/jrpg/core/jrpg_sim_clock.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
+#include "modules/jrpg/runtime/jrpg_choice_window.h"
 #include "modules/jrpg/runtime/jrpg_event.h"
+#include "modules/jrpg/runtime/jrpg_gold_window.h"
+#include "modules/jrpg/runtime/jrpg_local_port.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 #include "modules/jrpg/runtime/jrpg_map_files.h"
+#include "modules/jrpg/runtime/jrpg_message_window.h"
+#include "modules/jrpg/runtime/jrpg_number_input_window.h"
 #include "modules/jrpg/runtime/jrpg_player.h"
+#include "modules/jrpg/runtime/jrpg_window.h"
 
 void JRPGSceneManager::set_database_path(const String &p_path) {
 	database_path = p_path;
@@ -161,6 +167,7 @@ void JRPGSceneManager::_begin(const Ref<JRPGGameState> &p_state) {
 	pending = Transfer();
 	event_runner->setup(p_state, Ref<JRPGMapData>(), 0); // And every event process: the map entered next starts them.
 	p_state->set_interpreters_source(callable_mp(event_runner.ptr(), &JRPGEventRunner::serialize)); // Saves are current.
+	local_port->set_game_state(p_state); // The text codes read it.
 	_set_fade(0);
 	set_process_internal(true); // The game loop.
 	refresh_player_character();
@@ -391,6 +398,14 @@ void JRPGSceneManager::_refresh_events(bool p_force) {
 	}
 }
 
+Ref<JRPGEventRunner> JRPGSceneManager::get_event_runner() const {
+	return event_runner;
+}
+
+Ref<JRPGLocalPort> JRPGSceneManager::get_local_port() const {
+	return local_port;
+}
+
 JRPGEvent *JRPGSceneManager::get_event_node(int p_event_id) const {
 	return map ? Object::cast_to<JRPGEvent>(map->get_event_node(p_event_id)) : nullptr;
 }
@@ -542,6 +557,7 @@ void JRPGSceneManager::_simulation_step() {
 	if (!transferring) {
 		event_runner->step(); // The map's events, before the player: an autorun that starts now holds the player now.
 	}
+	local_port->step(); // A message window no request uses any more closes.
 	const Ref<JRPGMover> mover = player->get_mover();
 	if (mover->advance()) {
 		game_state->increase_steps(); // Arrived on a new cell.
@@ -550,9 +566,10 @@ void JRPGSceneManager::_simulation_step() {
 	// Read every step, so the direction pressed last wins even when it was pressed during a step.
 	const int direction = player->read_direction();
 	// No moving while the screen fades, nor while a control has the focus: a message, a list or a screen reads the
-	// keys then (epic 10 review B4), nor while an autorun or a triggered event runs (a step under way still ends).
+	// keys then (epic 10 review B4), nor while an autorun or a triggered event runs (a step under way still ends), nor
+	// while an event asks the player something (a parallel event's message too).
 	const bool interface_active = is_inside_tree() && get_viewport()->gui_get_focus_owner() != nullptr;
-	if (direction < 0 || transferring || interface_active || mover->is_moving() || cell_cache.is_null() || event_runner->is_main_running()) {
+	if (direction < 0 || transferring || interface_active || mover->is_moving() || cell_cache.is_null() || event_runner->is_main_running() || local_port->is_busy()) {
 		return;
 	}
 	const Ref<JRPGMapData> map_data = map->get_map_data();
@@ -625,6 +642,11 @@ void JRPGSceneManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_event_node", "event_id"), &JRPGSceneManager::get_event_node);
 	ClassDB::bind_method(D_METHOD("get_event_nodes"), &JRPGSceneManager::get_event_nodes);
 	ClassDB::bind_method(D_METHOD("get_event_runner"), &JRPGSceneManager::get_event_runner);
+	ClassDB::bind_method(D_METHOD("get_local_port"), &JRPGSceneManager::get_local_port);
+	ClassDB::bind_method(D_METHOD("get_message_window"), &JRPGSceneManager::get_message_window);
+	ClassDB::bind_method(D_METHOD("get_choice_window"), &JRPGSceneManager::get_choice_window);
+	ClassDB::bind_method(D_METHOD("get_number_window"), &JRPGSceneManager::get_number_window);
+	ClassDB::bind_method(D_METHOD("get_gold_window"), &JRPGSceneManager::get_gold_window);
 	ClassDB::bind_method(D_METHOD("run_steps", "steps"), &JRPGSceneManager::run_steps);
 	ClassDB::bind_method(D_METHOD("refresh_player_character"), &JRPGSceneManager::refresh_player_character);
 	ClassDB::bind_method(D_METHOD("get_bgm_player"), &JRPGSceneManager::get_bgm_player);
@@ -642,6 +664,7 @@ void JRPGSceneManager::_bind_methods() {
 	BIND_ENUM_CONSTANT(FADE_WHITE);
 	BIND_ENUM_CONSTANT(FADE_NONE);
 	BIND_CONSTANT(DIRECTION_RETAIN);
+	BIND_CONSTANT(MESSAGE_LAYER);
 }
 
 JRPGSceneManager::JRPGSceneManager() {
@@ -670,4 +693,31 @@ JRPGSceneManager::JRPGSceneManager() {
 	player = memnew(JRPGPlayer);
 	player->set_name("Player");
 	event_runner.instantiate();
+
+	// The windows the events ask the player through (task 9.4.2), closed until a request shows.
+	message_layer = memnew(CanvasLayer);
+	message_layer->set_name("Messages");
+	message_layer->set_layer(MESSAGE_LAYER);
+	add_child(message_layer, false, INTERNAL_MODE_BACK);
+	message_window = memnew(JRPGMessageWindow);
+	message_window->set_name("MessageWindow");
+	choice_window = memnew(JRPGChoiceWindow);
+	choice_window->set_name("ChoiceWindow");
+	choice_window->set_message_window(NodePath("../MessageWindow")); // Beside it.
+	number_window = memnew(JRPGNumberInputWindow);
+	number_window->set_name("NumberWindow");
+	number_window->set_message_window(NodePath("../MessageWindow"));
+	gold_window = memnew(JRPGGoldWindow);
+	gold_window->set_name("GoldWindow");
+	JRPGWindow *const windows[] = { message_window, choice_window, number_window, gold_window };
+	for (JRPGWindow *window : windows) {
+		window->set_openness(0);
+		message_layer->add_child(window);
+	}
+	local_port.instantiate();
+	local_port->set_windows(message_window, choice_window, number_window, gold_window);
+	event_runner->set_port(local_port);
+}
+
+JRPGSceneManager::~JRPGSceneManager() {
 }

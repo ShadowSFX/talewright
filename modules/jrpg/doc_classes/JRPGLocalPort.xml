@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGLocalPort" inherits="JRPGPresentationPort" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Shows the events' requests in the game's windows and answers them when the player is done.
+	</brief_description>
+	<description>
+		The presentation port of a game played on this machine: [JRPGSceneManager] creates one, with its message, choice, number input and gold windows, and gives it to the map's events ([method JRPGEventRunner.set_port]). It shows each request in a window and answers it when the player is done:
+		- [code]"message"[/code] with [code]text[/code] (control codes; [code]\V[/code], [code]\N[/code], [code]\P[/code] and [code]\G[/code] are replaced from the game state, see [method JRPGMessageText.expand]), [code]face[/code] (the path of a texture shown on the left; an [AtlasTexture] picks one face of a sheet), [code]speaker[/code], [code]background[/code] and [code]placement[/code] ([enum JRPGMessageWindow.Background] and [enum JRPGMessageWindow.Placement] values): shown in the message window, answered with [code]true[/code] once the player read it. A [code]\$[/code] in the text shows the gold window.
+		- [code]"choices"[/code] with [code]choices[/code] (texts), [code]default[/code], [code]cancel[/code], [code]placement[/code] and [code]background[/code] (see [method JRPGChoiceWindow.show_choices]): shown beside the message window, answered with the index chosen ([constant JRPGChoiceWindow.CANCEL_BRANCH] for the cancel branch); the choice window then closes.
+		- [code]"number"[/code] with [code]digits[/code] (1 to 8) and [code]value[/code]: the number input window, answered with the number entered; the window then closes.
+		The message window stays open while requests that sit beside it follow one another, so messages in a row never flicker; one no request uses any more closes at the next simulation step ([method step]). A request of another kind is answered at once with [code]null[/code], with one warning per kind.
+		Authority: client.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_game_state" qualifiers="const">
+			<return type="JRPGGameState" />
+			<description>
+				Returns the game state the text codes read and the gold window shows.
+			</description>
+		</method>
+		<method name="set_game_state">
+			<return type="void" />
+			<param index="0" name="state" type="JRPGGameState" />
+			<description>
+				Sets the game state the text codes ([code]\V[/code], [code]\N[/code], [code]\P[/code], [code]\G[/code]) read and the gold window shows.
+			</description>
+		</method>
+		<method name="step">
+			<return type="void" />
+			<description>
+				Called each simulation step after the events ran: closes the message window, and the gold window, when no request uses them any more.
+			</description>
+		</method>
+	</methods>
+</class>

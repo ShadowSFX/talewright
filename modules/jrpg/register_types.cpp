@@ -82,6 +82,7 @@
 #include "modules/jrpg/runtime/jrpg_event.h"
 #include "modules/jrpg/runtime/jrpg_event_anchor.h"
 #include "modules/jrpg/runtime/jrpg_gold_window.h"
+#include "modules/jrpg/runtime/jrpg_local_port.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 #include "modules/jrpg/runtime/jrpg_map_files.h"
 #include "modules/jrpg/runtime/jrpg_message_window.h"
@@ -206,6 +207,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGChoiceWindow);
 		GDREGISTER_CLASS(JRPGNumberInputWindow);
 		GDREGISTER_CLASS(JRPGGoldWindow);
+		GDREGISTER_CLASS(JRPGLocalPort);
 		GDREGISTER_CLASS(JRPGGameState);
 	}
 #ifdef TOOLS_ENABLED

@@ -1106,3 +1106,22 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   rathena_techniques D3); keeping the request with the interpreter's position keeps commands stateless and the
   re-ask after loading free; withdrawing on destruction means a dropped process can never leave the port busy.
 - **Reversal:** `JRPGPresentationPort`, `JRPGInterpreter::present`, `JRPGEventRunner::set_port`.
+
+## D-064 — The local port: the scene manager's windows, closed a step after their last request
+- **Context:** task 9.4.2 shows the requests of D-063 in the epic 10 windows on the running map. The windows report
+  when the player is done (`message_finished`, `choice_made`, `number_entered`); the message window stays open after
+  a message (choices may follow beside it). Commands in a row send their requests one simulation step apart.
+- **Options:** windows in the game scene (addon), created by the port, or created by the scene manager; close the
+  message window when its request is answered, after a delay in frames, or a simulation step later if nothing uses it.
+- **Choice:** `JRPGSceneManager` owns a "Messages" canvas layer (layer 5: over the map, under the game's screens at 10
+  and the transfer fade at 128) with a message, choice, number input and gold window, all created closed, and a
+  `JRPGLocalPort` given to its event runner. The port shows "message" (text expanded with the game state, face path,
+  speaker, background, placement), "choices" and "number" requests, answers them from the windows' signals, closes
+  the choice and number windows at once, and closes the message (and gold) window in `step()` — called every
+  simulation step after the events ran — when the shown request no longer sits beside it. Requests of other kinds
+  are answered at once with null (one warning per kind); a withdrawn shown request closes its window. The player does
+  not start a step while the port is busy (a parallel event's message holds the player as an autorun's does).
+- **Why:** the scene manager is the one place every game has, so events can talk in any game scene without addon
+  setup; a step later is exactly when the next command of the same event would have asked, so messages in a row
+  never flicker while a Wait between them closes the window, as players expect.
+- **Reversal:** `JRPGSceneManager` constructor (message layer), `JRPGLocalPort::step`.

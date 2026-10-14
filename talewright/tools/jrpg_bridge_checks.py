@@ -768,6 +768,7 @@ def run(checks: Checks) -> None:
     run_lists(c)
     run_messages(c)
     run_choices(c)
+    run_event_messages(c)
 
 
 # Windows (task 10.1.1) on a plain backdrop: open with a scroll mark, tinted with the pause mark, and three quarters open (its
@@ -1127,6 +1128,143 @@ def run_choices(c: Checks) -> None:
     compare_golden(
         c, "jrpg_choices.png", shot.get("path", ""), "JRPGChoiceWindow: the message and choices match the golden image"
     )
+
+
+# An event that talks on the running map (task 9.4.2): a game started at the start position gets an autorun event whose
+# two commands ask the player to read a message each (through JRPGInterpreter.present and the scene manager's local
+# port), then a third turns switch 1 on, which gives the event a page without commands.
+SAY_SCRIPT = r"""extends JRPGEventCommand
+
+@export var text := ""
+
+
+func _execute(context: Object) -> int:
+	if not context.present(&"message", {"text": text}):
+		return EXECUTE_WAIT
+	return EXECUTE_CONTINUE
+"""
+FLAG_SCRIPT = r"""extends JRPGEventCommand
+
+
+func _execute(context: Object) -> int:
+	context.get_game_state().set_switch(1, true)
+	return EXECUTE_CONTINUE
+"""
+EVENT_SCENE = """[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui_checks/event_messages.gd" id="1_script"]
+
+[node name="EventCheck" type="Node"]
+script = ExtResource("1_script")
+"""
+EVENT_SCRIPT = r"""extends Node
+
+const Say = preload("res://ui_checks/say_check.gd")
+const Flag = preload("res://ui_checks/flag_check.gd")
+const LINES = ["The gate is shut for the night.", "A note on it reads: back at dawn."]
+
+var manager: JRPGSceneManager
+
+
+func _ready() -> void:
+	manager = JRPGSceneManager.new()
+	manager.name = "Game"
+	manager.autostart = false
+	add_child(manager)
+	manager.start_new_game(1)
+	var talk := JRPGEventPage.new()
+	talk.trigger = JRPGEventPage.TRIGGER_AUTORUN
+	talk.commands = JRPGCommandList.new()
+	for line in LINES:
+		var say := Say.new()
+		say.text = line
+		talk.commands.insert_command(-1, say)
+	talk.commands.insert_command(-1, Flag.new())
+	var done := JRPGEventPage.new()
+	done.switch1_enabled = true
+	done.switch1_id = 1
+	manager.get_map().get_map_data().add_event(Vector2i(0, 0)).pages = [talk, done]
+
+
+func shown_text() -> String:
+	return manager.get_local_port().get_shown_params().get("text", "")
+
+
+func waiting() -> bool:
+	return manager.get_message_window().is_waiting_for_input()
+
+
+func state() -> Dictionary:
+	return {
+		"event_running": manager.get_event_runner().is_main_running(),
+		"port_busy": manager.get_local_port().is_busy(),
+		"window_closed": manager.get_message_window().is_closed(),
+		"switch_1": manager.get_game_state().get_switch(1),
+	}
+"""
+
+
+def run_event_messages(c: Checks) -> None:
+    for name, text in (
+        ("say_check.gd", SAY_SCRIPT),
+        ("flag_check.gd", FLAG_SCRIPT),
+        ("event_messages.gd", EVENT_SCRIPT),
+        ("event_messages.tscn", EVENT_SCENE),
+    ):
+        (c.project / "ui_checks" / name).write_text(text, encoding="utf-8")
+    c.call("editor_rescan")
+    c.call("run_project", {"scene": "res://ui_checks/event_messages.tscn"})
+    connected = False
+    for _ in range(120):
+        if c.call("run_status").get("debugger_connected"):
+            connected = True
+            break
+        time.sleep(0.5)
+    connected = connected and c.wait_for_node("/root/EventCheck/Game")
+    c.check("JRPGLocalPort: the event scene runs", connected)
+    if not connected:
+        c.call("stop_project")
+        return
+    root = "/root/EventCheck"
+
+    def read_until(text: str) -> bool:
+        for _ in range(40):
+            c.call("game_wait", {"frames": 10})
+            if (
+                c.call("game_call", {"path": root, "method": "shown_text"}).get("result") == text
+                and c.call("game_call", {"path": root, "method": "waiting"}).get("result") is True
+            ):
+                return True
+        return False
+
+    lines = ["The gate is shut for the night.", "A note on it reads: back at dawn."]
+    shots = []
+    for number, line in enumerate(lines, start=1):
+        shown = read_until(line)
+        c.check(f"JRPGLocalPort: the event's message {number} shows and waits for the player", shown, line)
+        shots.append(c.call("game_screenshot", {"include_image": False}))
+        c.call("game_input", {"action": "jrpg_ok"})
+    after: dict[str, Any] = {}
+    for _ in range(20):
+        c.call("game_wait", {"frames": 10})
+        after = c.call("game_call", {"path": root, "method": "state"}).get("result") or {}
+        if after.get("window_closed"):
+            break
+    c.call("stop_project")
+    c.check(
+        "JRPGLocalPort: after the second message the event ends and the window closes",
+        after.get("event_running") is False
+        and after.get("port_busy") is False
+        and after.get("window_closed") is True
+        and after.get("switch_1") is True,
+        json.dumps(after),
+    )
+    for number, shot in enumerate(shots, start=1):
+        evidence = ROOT / "plan" / "evidence" / "jrpg" / f"9.4.2-event-message-{number}.png"
+        if WRITE_EVIDENCE and shot.get("path"):
+            evidence.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(shot["path"], evidence)
+            print(f"[EVIDENCE] wrote {evidence.relative_to(ROOT)}")
 
 
 def main() -> int:

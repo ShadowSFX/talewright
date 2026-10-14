@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.4.1 Presentation port and interpreter requests (core)",
+  "last_completed": "9.4.2 Local port on the running map",
   "tasks": [
     {
       "id": "0",
@@ -4027,15 +4027,15 @@
       "dependencies": [
         "9.3"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "9.4.1 and 9.4.2 done"
       ],
       "test_strategy": "Doctests.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "9.4.1",
@@ -4065,7 +4065,7 @@
         "modules/jrpg/tests/test_jrpg_presentation_port.h",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "2c98d38e06",
       "notes": ""
     },
     {
@@ -4082,9 +4082,23 @@
         "Bridge check: a test project's event with two messages is advanced by bridge input; evidence screenshots"
       ],
       "test_strategy": "Doctests [SceneTree]; jrpg_bridge_checks.py.",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/runtime/jrpg_local_port.h",
+        "modules/jrpg/runtime/jrpg_local_port.cpp",
+        "modules/jrpg/runtime/jrpg_scene_manager.h",
+        "modules/jrpg/runtime/jrpg_scene_manager.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGLocalPort.xml",
+        "modules/jrpg/doc_classes/JRPGSceneManager.xml",
+        "modules/jrpg/tests/test_jrpg_local_port.h",
+        "talewright/tools/jrpg_bridge_checks.py",
+        "plan/evidence/jrpg/9.4.2-event-message-1.png",
+        "plan/evidence/jrpg/9.4.2-event-message-2.png",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

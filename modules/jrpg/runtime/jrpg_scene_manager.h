@@ -40,10 +40,15 @@ class AudioStreamPlayer;
 class CanvasLayer;
 class ColorRect;
 class JRPGAudioCue;
+class JRPGChoiceWindow;
 class JRPGDatabase;
 class JRPGEvent;
 class JRPGEventRunner;
 class JRPGGameState;
+class JRPGGoldWindow;
+class JRPGLocalPort;
+class JRPGMessageWindow;
+class JRPGNumberInputWindow;
 class JRPGMap;
 class JRPGMapCellCache;
 class JRPGMapData;
@@ -59,7 +64,9 @@ class PackedScene;
 // the game state's player position and step count; the player's camera stays inside the map (a map smaller than the
 // screen is centered). Each step also runs the map's event processes (JRPGEventRunner, task 9.3.2.2) after the transfer
 // and before the player moves; while an autorun or a triggered event runs the player stands still, and a transfer's
-// fade pauses them. A game scene has one, usually as its root; it starts a new game from the
+// fade pauses them. The events ask the player through a local presentation port (JRPGLocalPort, task 9.4.2) showing
+// the message, choice, number and gold windows of its message layer, between the map and the game's screens; the
+// player also stands still while a request waits. A game scene has one, usually as its root; it starts a new game from the
 // System start position when it enters a running game's tree (autostart), or continues a loaded game (resume).
 // Authority (D-007): server. In a single-player game the manager decides transfers itself; online, the zone server
 // decides them and the client's manager only applies what it is told (the network port calls transfer()).
@@ -75,6 +82,7 @@ public:
 
 	static constexpr int DIRECTION_RETAIN = -1; // transfer(): the player keeps facing the way they face.
 	static constexpr int FADE_STEPS = 18; // Simulation steps each way, out then in (0.3 s at 60 steps a second).
+	static constexpr int MESSAGE_LAYER = 5; // Over the map, under the game's screens (layer 10 in game.tscn).
 
 private:
 	String database_path;
@@ -90,6 +98,12 @@ private:
 	Node2D *events_root = nullptr; // The current map's JRPGEvent nodes ("Events", an internal child of the map).
 	uint64_t refreshed_revision = 0; // The game state's revision the event pages were last picked for.
 	Ref<JRPGEventRunner> event_runner; // The current map's event processes.
+	Ref<JRPGLocalPort> local_port; // What the events ask the player through.
+	CanvasLayer *message_layer = nullptr;
+	JRPGMessageWindow *message_window = nullptr;
+	JRPGChoiceWindow *choice_window = nullptr;
+	JRPGNumberInputWindow *number_window = nullptr;
+	JRPGGoldWindow *gold_window = nullptr;
 	AudioStreamPlayer *bgm_player = nullptr;
 	AudioStreamPlayer *bgs_player = nullptr;
 	CanvasLayer *fade_layer = nullptr;
@@ -182,7 +196,13 @@ public:
 	TypedArray<JRPGEvent> get_event_nodes() const;
 	// The current map's autorun, triggered and parallel events. A new map stops the old one's parallel processes; the
 	// main interpreter goes on.
-	Ref<JRPGEventRunner> get_event_runner() const { return event_runner; }
+	Ref<JRPGEventRunner> get_event_runner() const;
+	// The presentation port the events ask the player through, and its windows.
+	Ref<JRPGLocalPort> get_local_port() const;
+	JRPGMessageWindow *get_message_window() const { return message_window; }
+	JRPGChoiceWindow *get_choice_window() const { return choice_window; }
+	JRPGNumberInputWindow *get_number_window() const { return number_window; }
+	JRPGGoldWindow *get_gold_window() const { return gold_window; }
 	// The cells characters cannot step onto because an event there blocks them (JRPGEvent::blocks_characters).
 	HashSet<Vector2i> get_blocked_cells() const;
 	// Runs p_steps simulation steps now, as frames would (tests, tools).
@@ -195,6 +215,7 @@ public:
 	double get_fade_amount() const;
 
 	JRPGSceneManager();
+	~JRPGSceneManager(); // Here, where the types its references hold are complete.
 };
 
 VARIANT_ENUM_CAST(JRPGSceneManager::Fade);
