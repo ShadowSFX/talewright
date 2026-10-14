@@ -53,6 +53,7 @@ private:
 
 protected:
 	static void _bind_methods();
+	bool _set(const StringName &p_name, const Variant &p_value);
 
 public:
 	static String get_group_name(TermGroup p_group);

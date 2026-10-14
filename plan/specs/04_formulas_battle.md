@@ -48,12 +48,15 @@ records the reasoning in `talewright/docs/battle_defaults.md`. Every such number
 - Ex-parameters (hit, evasion, critical, critical evasion, magic evasion, magic reflection, counter, HP/MP/TP
   regeneration) are sums of trait values in bp. Sp-parameters (target rate, guard effect, recovery effect,
   pharmacology, MP cost rate, TP charge rate, physical/magic/floor damage rate, EXP rate) are products in bp.
+- Fixed-point products saturate (`JRPGMath::mul_bp` at ±`INT64_MAX / 10000`) and cached results are clamped to
+  32-bit integers, so stacked traits never overflow.
 - Stat cache with dirty flags per source (equipment, states, buffs, class, level), recomputed lazily
   (rathena_techniques C8).
-- EXP curve (Talewright's own, D-022): total EXP to reach level L = `round(base · (L−1)^(1.5 + growth/100) +
-  extra · (L−1))` with class fields `base`, `growth`, `extra` (defaults 25, 30, 10). It is evaluated once per class in
-  the editor and stored as an integer table in the class data, so runtime never evaluates `pow`; projects can edit
-  the table directly.
+- EXP curve (Talewright's own, D-022): total EXP to reach level L = `round(base · (L−1)^(1.5 + growth/100)) +
+  extra · (L−1)` with class fields `base`, `growth`, `extra` (defaults 25, 30, 10). It is computed with integer
+  fixed-point math (Q30 log2 by repeated squaring and exp2 from a constant table, `JRPGClassData::compute_total_exp`),
+  within 1 of the real-number value and identical on every platform; nothing evaluates libm `pow`, whose last bit
+  differs between platforms. The editor bakes the table into the class data; projects can edit the table directly.
 
 ## Formulas — `JRPGFormula` (core)
 - Godot `Expression` (`core/math/expression.h:253-254`), parsed once per formula string with input names
@@ -62,7 +65,9 @@ records the reasoning in `talewright/docs/battle_defaults.md`. Every such number
 - `a`/`b` are read-only proxies (`JRPGFormulaBattler`, RefCounted) whose properties `atk`, `def`, `mat`, `mdf`,
   `agi`, `luk`, `mhp`, `mmp`, `hp`, `mp`, `tp`, `level` are served by `_get`, plus const methods
   `is_state_affected(id)` and `is_actor()`.
-- `v` is passed as the game state's variables **Array** (shared, copy-on-write; index = variable ID, slot 0 unused),
+- `v` is passed as the game state's variables **Array** (shared by reference and only read by formulas; index =
+  variable ID, slot 0 unused; a literal `v[N]` past its end reads 0 like an unset variable, a computed index past the
+  end is a run-time error),
   so the documented `v[n]` syntax (RM-FRM-001) works: `Expression` parses `[]` (`core/math/expression.cpp:866-884`)
   and executes it on the Array (`:1287-1306`). (`v.get(5)` is not an option: `Object` already binds `get`,
   `core/object/object.cpp:1840`, and debug builds refuse to bind a method a parent class has,
@@ -74,14 +79,16 @@ records the reasoning in `talewright/docs/battle_defaults.md`. Every such number
   inputs `a`, `b`, `v`; proxy members above; utility functions `abs`, `min`, `max`, `clamp`, `floor`, `ceil`,
   `round`, `sqrt`, `sign`; helpers on the base instance `iff(cond, x, y)` and `roll(lo, hi)` (inclusive integer
   from the `battle` stream; named to avoid Godot's `randi`/`randf`, which use the global RNG and are not allowed);
-  literals `true`, `false`. Formulas remain trusted project content; the allow-list keeps them deterministic and
+  literals `true`, `false` and the words `and`, `or`, `not`. Formulas remain trusted project content; the allow-list keeps them deterministic and
   away from engine calls such as `instance_from_id` or `str_to_var`.
 - Integer rules: `7 / 2` is integer division (3) when both operands are integers, as in Godot; writing `7.0 / 2`
   gives 3.5. The editor's formula field shows the evaluated result for sample battlers.
 - Errors: parse error → shown in the editor; runtime error, NaN or inf → 0 and one warning per formula.
 
 ## Damage pipeline (Talewright order and numbers, D-022)
-1. `base = formula(a, b)` converted to an integer (0 when empty or failing). For HP/MP **damage** types a negative
+1. `base = formula(a, b)` converted to an integer: rounded half away from zero and kept within ±2^62 before the
+   conversion (an out-of-range double-to-integer cast is undefined behavior and differs between platforms); 0 when
+   empty or failing, with one warning per invalid or failing formula. For HP/MP **damage** types a negative
    base becomes 0 (a damage skill never heals by accident); recovery types use `|base|`.
 2. **Variance** (range documented: ±variance % of the value, RM-FRM-003): the offset is the average of two uniform
    draws in `[−variance %, +variance %]`, so results stay inside the documented range but cluster near the middle.
@@ -140,4 +147,5 @@ combination is undocumented (`08_runtime_systems.md:685`). Talewright uses an **
 ## States
 Restriction, priority, removal (battle end, restriction, auto-removal timing with min/max turns — random in range
 from the `battle` stream, removal by damage chance, walking steps), stacking (re-adding refreshes the turn count),
-death state ID 1, revive.
+death state ID 1 (HP 0 knocks out unless the battler resists state 1, which then stays standing at 0 HP; HP above 0
+or removing state 1 revives; knockout clears other states and buffs), revive.

@@ -77,8 +77,12 @@ void JRPGEnemyData::set_gold(int p_gold) {
 }
 
 void JRPGEnemyData::set_drops(const Array &p_drops) {
-	ERR_FAIL_COND_MSG(p_drops.size() > MAX_DROPS, vformat("An enemy has at most %d drops.", MAX_DROPS));
 	drops = p_drops;
+	if (drops.size() > MAX_DROPS) {
+		// Kept up to the limit rather than refused, so a file with extra drops does not lose them all.
+		WARN_PRINT(vformat("Enemy %d: %d drops, at most %d are kept.", get_id(), p_drops.size(), MAX_DROPS));
+		drops = p_drops.slice(0, MAX_DROPS);
+	}
 	emit_changed();
 }
 

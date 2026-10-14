@@ -84,15 +84,7 @@ void JRPGEntry::reset_to_defaults() {
 }
 
 bool JRPGEntry::_set(const StringName &p_name, const Variant &p_value) {
-	// Only reached for names the class does not have (Object::set tries ClassDB setters first).
-	const StringName renamed = JRPGSchema::get_renamed_property(this, p_name);
-	if (renamed == StringName() || renamed == p_name) {
-		return false;
-	}
-	bool valid = false;
-	// One hop only: ClassDB::set_property never calls _set again, so a bad rename table cannot recurse.
-	ClassDB::set_property(this, renamed, p_value, &valid);
-	return valid;
+	return JRPGSchema::set_renamed(this, p_name, p_value);
 }
 
 void JRPGEntry::_validate_property(PropertyInfo &p_property) const {

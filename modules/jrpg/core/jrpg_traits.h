@@ -143,11 +143,21 @@ namespace JRPGMath {
 
 constexpr int64_t BP_ONE = 10000;
 
-// p_value * p_bp / 10000, rounded half away from zero.
+// Results of mul_bp saturate at +-MUL_BP_LIMIT instead of overflowing.
+constexpr int64_t MUL_BP_LIMIT = INT64_MAX / BP_ONE;
+
+// p_value * p_bp / 10000, rounded half away from zero, saturating at +-MUL_BP_LIMIT (stacked traits can multiply a
+// value far past any real parameter; the callers clamp to their own ranges afterwards).
 inline int64_t mul_bp(int64_t p_value, int64_t p_bp) {
-	const int64_t product = p_value * p_bp;
-	const int64_t half = BP_ONE / 2;
-	return product >= 0 ? (product + half) / BP_ONE : -((-product + half) / BP_ONE);
+	constexpr uint64_t half = BP_ONE / 2;
+	// Magnitudes in unsigned arithmetic: well defined for every input, INT64_MIN included.
+	const uint64_t value = p_value < 0 ? uint64_t(0) - uint64_t(p_value) : uint64_t(p_value);
+	const uint64_t bp = p_bp < 0 ? uint64_t(0) - uint64_t(p_bp) : uint64_t(p_bp);
+	uint64_t magnitude = uint64_t(MUL_BP_LIMIT);
+	if (bp == 0 || value <= (uint64_t(INT64_MAX) - half) / bp) {
+		magnitude = MIN((value * bp + half) / uint64_t(BP_ONE), uint64_t(MUL_BP_LIMIT));
+	}
+	return ((p_value < 0) != (p_bp < 0)) ? -int64_t(magnitude) : int64_t(magnitude);
 }
 
 } // namespace JRPGMath

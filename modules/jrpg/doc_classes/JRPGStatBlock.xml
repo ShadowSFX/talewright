@@ -4,7 +4,7 @@
 		A battler's computed parameters and trait totals.
 	</brief_description>
 	<description>
-		Computes a battler's numbers from its base parameters (class curve or enemy values), equipment bonuses, trait sources (actor, class, equipment, states...) and buff levels. A parameter is (base + equipment) multiplied by each of its Param traits, then by the buff factor, then kept within the project's limits. Ex-parameters add their trait values (base 0); sp-parameters multiply them (base 100%). Values are integers; rates are basis points (10000 = 100%). Results are cached until something changes.
+		Computes a battler's numbers from its base parameters (class curve or enemy values), equipment bonuses, trait sources (actor, class, equipment, states...) and buff levels. A parameter is (base + equipment) multiplied by each of its Param traits, then by the buff factor, then kept within the project's limits. Ex-parameters add their trait values (base 0); sp-parameters multiply them (base 100%). Values are integers; rates are basis points (10000 = 100%). Results are cached and rebuilt after any [code]set_*[/code], [code]add_*[/code] or [code]clear_*[/code] call; changes made directly to the rules object or to an Array already given are seen at the next such call. Products saturate instead of overflowing, and every result is kept within 32-bit integers.
 	</description>
 	<tutorials>
 	</tutorials>
@@ -110,7 +110,7 @@
 			<return type="void" />
 			<param index="0" name="rules" type="JRPGBattleRules" />
 			<description>
-				Sets the battle rules that provide buff size, buff limit and parameter limits.
+				Sets the battle rules that provide buff size, buff limit and parameter limits. [code]null[/code] uses the default rules.
 			</description>
 		</method>
 		<method name="set_trait_sources">

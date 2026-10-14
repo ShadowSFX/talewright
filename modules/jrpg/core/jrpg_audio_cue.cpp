@@ -31,6 +31,8 @@
 
 #include "jrpg_audio_cue.h"
 
+#include "jrpg_schema.h"
+
 #include "core/object/class_db.h"
 
 void JRPGAudioCue::set_stream(const String &p_stream) {
@@ -51,6 +53,10 @@ void JRPGAudioCue::set_pitch(int p_pitch) {
 void JRPGAudioCue::set_pan(int p_pan) {
 	pan = CLAMP(p_pan, -100, 100);
 	emit_changed();
+}
+
+bool JRPGAudioCue::_set(const StringName &p_name, const Variant &p_value) {
+	return JRPGSchema::set_renamed(this, p_name, p_value);
 }
 
 void JRPGAudioCue::_bind_methods() {

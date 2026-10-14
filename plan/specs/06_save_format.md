@@ -68,7 +68,9 @@ Header (`slot_info`): title, playtime, party faces/characters, map name — read
   `core/io/marshalls.h:222`) → slot shown as "corrupt" (with `.bak` restore offer); never crash.
 - `format_version` older → run ordered migration steps; newer → refuse with a clear message.
 - `db_content_hash` differs (database changed since the save) → load anyway; dangling IDs become "none" with a warning
-  (spec 02), actors whose class no longer exists fall back to class 1.
+  (spec 02), actors whose class no longer exists fall back to class 1 and their level follows the saved EXP in that
+  class (`JRPGGameState.attach_database`). The content hash itself is computed by the save writer (task 13.1.2).
+- A new game needs the System start position (`start_new_game` refuses with `ERR_UNCONFIGURED` otherwise, RM-SYS-007).
 - Saving mid-event: allowed when the interpreter is waiting at a safe point (message closed, no scene change in
   progress); the Save command itself is a safe point. Saving during a running parallel process stores its frames.
 

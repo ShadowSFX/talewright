@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "5.6 Reference scanner",
+  "last_completed": "5.7 Epic review: JRPG core",
   "tasks": [
     {
       "id": "0",
@@ -1121,7 +1121,7 @@
         "3",
         "4"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Core compiles without scene/ includes",
@@ -1130,8 +1130,8 @@
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "5.1",
@@ -1664,7 +1664,7 @@
         "modules/jrpg/tests/test_jrpg_reference_scanner.h",
         "plan/specs/02_database_model.md"
       ],
-      "commit": "pending",
+      "commit": "dbea2b98f0",
       "notes": ""
     },
     {
@@ -1675,14 +1675,14 @@
       "dependencies": [
         "5.6"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Findings fixed"
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -3368,7 +3368,8 @@
       "description": "Assemble/restore the full state: interpreters with list hashes, event states with map revision, RNG streams, clock.",
       "acceptance_criteria": [
         "Canonical state hash (saved_at and playtime excluded) identical after save -> continue",
-        "Save mid-event, edit the page, load: restart per spec 03 with one warning; changed map revision resets moved events"
+        "Save mid-event, edit the page, load: restart per spec 03 with one warning; changed map revision resets moved events",
+        "The save writer computes db_content_hash (a deterministic hash of the database tables) and stores it with JRPGGameState.set_database_version; loading a save whose hash differs runs attach_database's repair (epic 5 review finding 20)"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "priority": 1,

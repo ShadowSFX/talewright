@@ -31,6 +31,8 @@
 
 #include "jrpg_terms_data.h"
 
+#include "jrpg_schema.h"
+
 #include "core/object/class_db.h"
 
 namespace {
@@ -120,9 +122,9 @@ const DefaultTerm DEFAULT_MESSAGES[] = {
 	{ "obtain_exp", "Gained %1 %2." },
 	{ "obtain_gold", "Found %1 %2." },
 	{ "obtain_item", "Received %1." },
-	{ "level_up", "%1 is now %2 %3!" },
+	{ "level_up", "%1 reached %2 %3." },
 	{ "obtain_skill", "New skill: %1." },
-	{ "use_item", "%1 uses %2!" },
+	{ "use_item", "%1 used %2." },
 	{ "critical_to_enemy", "A critical blow!" },
 	{ "critical_to_actor", "A painful critical blow!" },
 };
@@ -193,6 +195,10 @@ JRPGTermsData::JRPGTermsData() {
 	for (int i = 0; i < TERM_GROUP_MAX; i++) {
 		groups[i] = get_default_terms(TermGroup(i));
 	}
+}
+
+bool JRPGTermsData::_set(const StringName &p_name, const Variant &p_value) {
+	return JRPGSchema::set_renamed(this, p_name, p_value);
 }
 
 void JRPGTermsData::_bind_methods() {

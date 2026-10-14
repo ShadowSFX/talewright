@@ -35,7 +35,8 @@
 #include "core/string/string_name.h"
 
 // Keeps JRPG data written by older versions loadable (plan/specs/02_database_model.md, "Versioning and migration"):
-// - property renames: a resource that meets an unknown property name asks for its new name (JRPGEntry::_set);
+// - property renames: a resource that meets an unknown property name asks for its new name (set_renamed, called
+//   from the _set() of every persisted JRPG resource);
 // - migration steps: a table or database loaded with an older schema_version runs the steps from that version up to
 //   the current one, after all of its data has been loaded.
 // Registration happens at module initialization (and in tests); lookups happen while resources load.
@@ -47,6 +48,9 @@ public:
 	static void unregister_rename(const StringName &p_class, const StringName &p_old_name);
 	// New name for p_name on p_object's class or one of its parents; empty when not renamed.
 	static StringName get_renamed_property(const Object *p_object, const StringName &p_name);
+	// The _set() fallback of every persisted JRPG resource: stores p_value under the new name of a renamed property.
+	// Returns false when p_name was not renamed (or the new name does not take the value).
+	static bool set_renamed(Object *p_object, const StringName &p_name, const Variant &p_value);
 
 	// p_step upgrades data of class p_class from version p_from_version to p_from_version + 1.
 	static void register_step(const StringName &p_class, int p_from_version, MigrationStep p_step);

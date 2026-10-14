@@ -47,6 +47,7 @@ public:
 
 private:
 	Ref<JRPGBattleRules> rules;
+	bool default_rules = true; // rules is this block's own default set, not one given by set_rules.
 	int base_params[PARAM_COUNT] = {};
 	int equipment_params[PARAM_COUNT] = {};
 	int buff_levels[PARAM_COUNT] = {};
@@ -65,6 +66,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	// Null uses the default rules. The cache is rebuilt by the setters below and by set_rules; edits made directly to
+	// the rules object or to a trait Array already given are seen at the next set_* call.
 	void set_rules(const Ref<JRPGBattleRules> &p_rules);
 	Ref<JRPGBattleRules> get_rules() const { return rules; }
 	void set_base_params(const PackedInt32Array &p_params);

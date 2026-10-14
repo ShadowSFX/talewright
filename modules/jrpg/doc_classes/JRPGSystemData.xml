@@ -60,7 +60,7 @@
 	</methods>
 	<members>
 		<member name="battle_rules" type="JRPGBattleRules" setter="set_battle_rules" getter="get_battle_rules">
-			The project's battle numbers.
+			The project's battle numbers. [code]null[/code] until set (the inspector creates one when edited); code that reads the rules then uses the defaults of [JRPGBattleRules].
 		</member>
 		<member name="currency_unit" type="String" setter="set_currency_unit" getter="get_currency_unit" default="&quot;Gold&quot;">
 			Name of the game's money, shown wherever an amount of money appears.

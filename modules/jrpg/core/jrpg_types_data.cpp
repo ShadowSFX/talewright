@@ -31,6 +31,8 @@
 
 #include "jrpg_types_data.h"
 
+#include "jrpg_schema.h"
+
 #include "core/object/class_db.h"
 
 void JRPGTypesData::set_list(TypeList p_list, const PackedStringArray &p_names) {
@@ -85,6 +87,10 @@ JRPGTypesData::JRPGTypesData() {
 	weapon_types = PackedStringArray({ "Sword", "Dagger", "Axe", "Spear", "Bow", "Staff", "Fist" });
 	armor_types = PackedStringArray({ "Clothing", "Light Armor", "Heavy Armor", "Robe", "Shield" });
 	equip_types = PackedStringArray({ "Weapon", "Shield", "Head", "Body", "Accessory" });
+}
+
+bool JRPGTypesData::_set(const StringName &p_name, const Variant &p_value) {
+	return JRPGSchema::set_renamed(this, p_name, p_value);
 }
 
 void JRPGTypesData::_bind_methods() {

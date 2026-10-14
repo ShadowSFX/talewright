@@ -154,10 +154,49 @@ String JRPGFormula::check_identifiers(const String &p_text) {
 	return String();
 }
 
+int JRPGFormula::_find_max_variable_index(const String &p_text) {
+	// Finds "v[123]" (spaces allowed) where v is a whole identifier; computed indexes such as v[a.level] are not
+	// counted and fail at run time when out of range.
+	constexpr int64_t limit = 100000; // The game state's highest variable ID.
+	int max_index = -1;
+	const int len = p_text.length();
+	for (int i = 0; i < len; i++) {
+		if (p_text[i] != 'v' || (i > 0 && (is_ascii_alphanumeric_char(p_text[i - 1]) || p_text[i - 1] == '_'))) {
+			continue;
+		}
+		int j = i + 1;
+		while (j < len && p_text[j] == ' ') {
+			j++;
+		}
+		if (j >= len || p_text[j] != '[') {
+			continue;
+		}
+		j++;
+		while (j < len && p_text[j] == ' ') {
+			j++;
+		}
+		int64_t index = 0;
+		int digits = 0;
+		while (j < len && is_digit(p_text[j]) && index <= limit) {
+			index = index * 10 + (p_text[j] - '0');
+			j++;
+			digits++;
+		}
+		while (j < len && p_text[j] == ' ') {
+			j++;
+		}
+		if (digits > 0 && j < len && p_text[j] == ']' && index <= limit) {
+			max_index = MAX(max_index, int(index));
+		}
+	}
+	return max_index;
+}
+
 Error JRPGFormula::set_text(const String &p_text) {
 	text = p_text.strip_edges();
 	valid = false;
 	warned = false;
+	max_variable_index = -1;
 	error = String();
 	if (text.is_empty()) {
 		return OK; // An empty formula evaluates to 0.
@@ -171,20 +210,35 @@ Error JRPGFormula::set_text(const String &p_text) {
 		error = expression.get_error_text();
 		return err;
 	}
+	max_variable_index = _find_max_variable_index(text);
 	valid = true;
 	return OK;
 }
 
 int64_t JRPGFormula::evaluate(const Ref<JRPGFormulaBattler> &p_a, const Ref<JRPGFormulaBattler> &p_b, const Array &p_variables, const Ref<JRPGRandom> &p_random) {
 	if (!valid) {
+		if (!text.is_empty() && !warned) {
+			warned = true;
+			WARN_PRINT(vformat("JRPG formula \"%s\" is invalid (%s); using 0.", text, error));
+		}
 		return 0;
 	}
 	JRPGFormulaContext context;
 	context.set_random(p_random);
+	Array variables = p_variables;
+	if (max_variable_index >= variables.size()) {
+		// Variables never set read 0 (RM-FRM-001); pad a copy instead of failing the whole formula.
+		const int old_size = variables.size();
+		variables = p_variables.duplicate();
+		variables.resize(max_variable_index + 1);
+		for (int i = old_size; i <= max_variable_index; i++) {
+			variables[i] = 0;
+		}
+	}
 	Array inputs;
 	inputs.push_back(p_a);
 	inputs.push_back(p_b);
-	inputs.push_back(p_variables);
+	inputs.push_back(variables);
 	const Variant result = expression.execute(inputs, &context, false, true);
 	String problem;
 	int64_t value = 0;
@@ -197,7 +251,10 @@ int64_t JRPGFormula::evaluate(const Ref<JRPGFormulaBattler> &p_a, const Ref<JRPG
 		if (!Math::is_finite(d)) {
 			problem = "the result is not a finite number";
 		} else {
-			value = int64_t(d >= 0 ? Math::floor(d + 0.5) : -Math::floor(-d + 0.5));
+			// Clamped first: converting an out-of-range double to an integer is undefined behavior, and platforms
+			// disagree on the result. Math::round rounds half away from zero without floor(d + 0.5)'s error.
+			constexpr double limit = 4611686018427387904.0; // 2^62
+			value = int64_t(Math::round(CLAMP(d, -limit, limit)));
 		}
 	} else if (result.get_type() == Variant::BOOL) {
 		value = bool(result) ? 1 : 0;

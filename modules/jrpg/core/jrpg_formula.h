@@ -74,6 +74,9 @@ class JRPGFormula : public RefCounted {
 	String error;
 	bool valid = false;
 	bool warned = false;
+	int max_variable_index = -1; // Highest literal v[N] in the text; shorter variable arrays read 0 there.
+
+	static int _find_max_variable_index(const String &p_text);
 
 protected:
 	static void _bind_methods();
@@ -87,8 +90,9 @@ public:
 	bool is_valid() const { return valid; }
 	String get_error() const { return error; }
 
-	// Evaluates the formula and converts the result to an integer (rounded half away from zero). An empty or invalid
-	// formula, a runtime error, NaN or infinity gives 0; runtime problems print one warning per formula.
+	// Evaluates the formula and converts the result to an integer (rounded half away from zero, kept within
+	// +-2^62). v[N] with a literal N past the end of p_variables reads 0, like an unset variable. An empty formula
+	// gives 0 silently; an invalid formula, a runtime error, NaN or infinity give 0 and one warning per formula.
 	int64_t evaluate(const Ref<JRPGFormulaBattler> &p_a, const Ref<JRPGFormulaBattler> &p_b, const Array &p_variables, const Ref<JRPGRandom> &p_random);
 };
 

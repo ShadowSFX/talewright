@@ -4,7 +4,7 @@
 		A damage formula such as a.atk * 4 - b.def * 2.
 	</brief_description>
 	<description>
-		Evaluates a skill or item formula with Godot's [Expression]. [code]a[/code] is the user and [code]b[/code] the target (see [JRPGFormulaBattler]), and [code]v[n][/code] reads game variable [code]n[/code]. Formulas may also use the functions [code]abs[/code], [code]min[/code], [code]max[/code], [code]clamp[/code], [code]floor[/code], [code]ceil[/code], [code]round[/code], [code]sqrt[/code] and [code]sign[/code], plus [code]iff(condition, if_true, if_false)[/code] and [code]roll(low, high)[/code], which draws from the battle random stream. Any other name is refused when the formula is set, so formulas stay deterministic and cannot call engine functions. When both operands are integers, [code]/[/code] divides as integers ([code]7 / 2[/code] is 3); write [code]7.0 / 2[/code] for 3.5.
+		Evaluates a skill or item formula with Godot's [Expression]. [code]a[/code] is the user and [code]b[/code] the target (see [JRPGFormulaBattler]), and [code]v[n][/code] reads game variable [code]n[/code]. Formulas may also use the functions [code]abs[/code], [code]min[/code], [code]max[/code], [code]clamp[/code], [code]floor[/code], [code]ceil[/code], [code]round[/code], [code]sqrt[/code] and [code]sign[/code], plus [code]iff(condition, if_true, if_false)[/code] and [code]roll(low, high)[/code], which draws from the battle random stream. The words [code]true[/code], [code]false[/code], [code]and[/code], [code]or[/code] and [code]not[/code] are allowed too. Any other name is refused when the formula is set, so formulas stay deterministic and cannot call engine functions. When both operands are integers, [code]/[/code] divides as integers ([code]7 / 2[/code] is 3); write [code]7.0 / 2[/code] for 3.5.
 	</description>
 	<tutorials>
 	</tutorials>
@@ -23,7 +23,7 @@
 			<param index="2" name="variables" type="Array" />
 			<param index="3" name="random" type="JRPGRandom" />
 			<description>
-				Evaluates the formula with user [param a], target [param b], the game [param variables] (index = variable ID) and the battle [param random] stream, and returns the result rounded to an integer (half away from zero). Empty or invalid formulas, runtime errors, NaN and infinity give 0; runtime problems print one warning per formula.
+				Evaluates the formula with user [param a], target [param b], the game [param variables] (index = variable ID) and the battle [param random] stream, and returns the result rounded to an integer (half away from zero, kept within ±2^62). [code]v[n][/code] with a literal [code]n[/code] past the end of [param variables] reads 0, like a variable never set. An empty formula gives 0; an invalid formula, a runtime error, NaN and infinity give 0 and print one warning per formula.
 			</description>
 		</method>
 		<method name="get_error" qualifiers="const">

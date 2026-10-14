@@ -22,7 +22,7 @@
 			<param index="2" name="extra" type="int" />
 			<param index="3" name="level" type="int" />
 			<description>
-				Returns the total EXP needed to reach [param level] with the given curve values: [code]round(base * (level - 1) ^ (1.5 + growth / 100) + extra * (level - 1))[/code]. Level 1 needs 0 EXP.
+				Returns the total EXP needed to reach [param level] with the given curve values: [code]round(base * (level - 1) ^ (1.5 + growth / 100)) + extra * (level - 1)[/code]. Level 1 needs 0 EXP. It is computed with integer fixed-point math, within 1 of the real-number value and identical on every platform, so games, servers and the editor always agree.
 			</description>
 		</method>
 		<method name="get_exp_for_level" qualifiers="const">

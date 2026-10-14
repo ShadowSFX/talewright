@@ -65,12 +65,23 @@ JRPGDatabase::TableKind JRPGDatabase::find_table_kind(const String &p_name) {
 	return TABLE_MAX;
 }
 
+void JRPGDatabase::_stamp_version() {
+	if (schema_version == SCHEMA_UNSTAMPED) {
+		schema_version = CURRENT_SCHEMA_VERSION;
+	}
+}
+
+bool JRPGDatabase::_set(const StringName &p_name, const Variant &p_value) {
+	return JRPGSchema::set_renamed(this, p_name, p_value);
+}
+
 void JRPGDatabase::set_table(TableKind p_kind, const Ref<JRPGTable> &p_table) {
 	ERR_FAIL_INDEX(p_kind, TABLE_MAX);
 	if (tables[p_kind] == p_table) {
 		return;
 	}
 	tables[p_kind] = p_table;
+	_stamp_version(); // While loading, the saved schema_version was set first and is kept.
 	emit_changed();
 }
 
@@ -86,21 +97,26 @@ Ref<JRPGTable> JRPGDatabase::get_table_by_name(const String &p_name) const {
 
 void JRPGDatabase::set_system(const Ref<JRPGSystemData> &p_system) {
 	system = p_system;
+	_stamp_version();
 	emit_changed();
 }
 
 void JRPGDatabase::set_types(const Ref<JRPGTypesData> &p_types) {
 	types = p_types;
+	_stamp_version();
 	emit_changed();
 }
 
 void JRPGDatabase::set_terms(const Ref<JRPGTermsData> &p_terms) {
 	terms = p_terms;
+	_stamp_version();
 	emit_changed();
 }
 
 void JRPGDatabase::upgrade() {
-	if (schema_version > CURRENT_SCHEMA_VERSION) {
+	if (schema_version == SCHEMA_UNSTAMPED) {
+		_stamp_version();
+	} else if (schema_version > CURRENT_SCHEMA_VERSION) {
 		WARN_PRINT_ONCE(vformat("JRPGDatabase \"%s\" was saved by a newer Talewright (schema %d, this build knows %d); some data may not load.", get_path(), schema_version, CURRENT_SCHEMA_VERSION));
 	} else if (schema_version < CURRENT_SCHEMA_VERSION) {
 		JRPGSchema::migrate(this, get_class_static(), schema_version, CURRENT_SCHEMA_VERSION);
@@ -161,4 +177,5 @@ void JRPGDatabase::_bind_methods() {
 	BIND_ENUM_CONSTANT(TABLE_COMMON_EVENTS);
 	BIND_ENUM_CONSTANT(TABLE_MAX);
 	BIND_CONSTANT(CURRENT_SCHEMA_VERSION);
+	BIND_CONSTANT(SCHEMA_UNSTAMPED);
 }

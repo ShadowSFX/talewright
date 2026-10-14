@@ -42,21 +42,26 @@ class JRPGTable : public Resource {
 	GDCLASS(JRPGTable, Resource);
 
 	StringName entry_class = "JRPGEntry";
-	int schema_version = 1; // CURRENT_SCHEMA_VERSION for new tables; the saved value for loaded ones.
+	// SCHEMA_UNSTAMPED until the table gets content, then the version its data follows. The class default is never
+	// a real version, so the text saver (which skips values equal to the class default) always writes it.
+	int schema_version = -1;
 	Vector<Ref<JRPGEntry>> entries;
 
 	Ref<JRPGEntry> _create_entry() const;
 	void _assign_ids();
+	void _stamp_version();
 
 protected:
 	static void _bind_methods();
 	void _validate_property(PropertyInfo &p_property) const;
+	bool _set(const StringName &p_name, const Variant &p_value);
 
 public:
 	// Generous safety limit against accidental huge resizes; real projects stay far below it.
 	static constexpr int MAX_ENTRIES = 100000;
 	// Data format version written by this build. Raise it together with a JRPGSchema migration step.
 	static constexpr int CURRENT_SCHEMA_VERSION = 1;
+	static constexpr int SCHEMA_UNSTAMPED = -1;
 
 	void set_entry_class(const StringName &p_class);
 	StringName get_entry_class() const { return entry_class; }
@@ -64,6 +69,9 @@ public:
 	int get_schema_version() const { return schema_version; }
 	String get_kind() const;
 
+	// Loads the entries (slot = ID). Missing slots become default entries, entries of another class are replaced by
+	// default ones and repeated objects are copied (each slot owns its entry); more than MAX_ENTRIES are cut, with
+	// warnings.
 	void set_entries(const TypedArray<JRPGEntry> &p_entries);
 	TypedArray<JRPGEntry> get_entries() const;
 

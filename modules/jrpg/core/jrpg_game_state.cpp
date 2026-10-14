@@ -85,6 +85,7 @@ bool read(const Dictionary &p_dict, const char *p_key, Variant::Type p_type, Var
 
 void JRPGGameState::clear() {
 	data = Data();
+	database.unref();
 	random->seed_all(0);
 	clock->set_steps(0);
 	clock->reset_pending_time();
@@ -93,13 +94,12 @@ void JRPGGameState::clear() {
 
 Error JRPGGameState::start_new_game(const Ref<JRPGDatabase> &p_database, int64_t p_seed) {
 	ERR_FAIL_COND_V_MSG(p_database.is_null(), ERR_INVALID_PARAMETER, "JRPGGameState: a new game needs a database.");
+	const Ref<JRPGSystemData> system = p_database->get_system();
+	ERR_FAIL_COND_V_MSG(system.is_null() || !system->has_start_position(), ERR_UNCONFIGURED, "JRPGGameState: set the player's start position in System data before starting a new game.");
 	clear();
+	database = p_database;
 	data.db_schema_version = p_database->get_schema_version();
 	random->seed_all(uint64_t(p_seed));
-	const Ref<JRPGSystemData> system = p_database->get_system();
-	if (system.is_null()) {
-		return OK;
-	}
 	data.game_id = system->get_game_id();
 	const Ref<JRPGTable> actors = p_database->get_table(JRPGDatabase::TABLE_ACTORS);
 	const PackedInt32Array starting_party = system->get_starting_party();
@@ -257,10 +257,14 @@ int JRPGGameState::attach_database(const Ref<JRPGDatabase> &p_database) {
 			fixes++;
 		}
 	}
+	database = p_database;
 	for (const KeyValue<int, Ref<JRPGActorState>> &kv : data.actors) {
 		kv.value->set_party(this);
 		// Equipment the actor can no longer use goes back to the inventory, cleaned below if its entry is gone.
 		fixes += kv.value->repair_references(p_database);
+	}
+	for (int i = 0; i < data.party_members.size(); i++) {
+		ensure_actor(p_database, data.party_members[i]); // Members always have a state (only hand-made data lacks one).
 	}
 	const JRPGDatabase::TableKind item_tables[ITEM_KIND_MAX] = { JRPGDatabase::TABLE_ITEMS, JRPGDatabase::TABLE_WEAPONS, JRPGDatabase::TABLE_ARMORS };
 	for (int kind = 0; kind < ITEM_KIND_MAX; kind++) {
@@ -340,6 +344,7 @@ void JRPGGameState::set_party_members(const PackedInt32Array &p_actor_ids) {
 	for (int i = 0; i < p_actor_ids.size(); i++) {
 		ERR_FAIL_COND_MSG(p_actor_ids[i] < 1, "JRPGGameState: party members are actor IDs from 1.");
 		ERR_FAIL_COND_MSG(p_actor_ids.find(p_actor_ids[i]) != i, vformat("JRPGGameState: actor %d is in the party twice.", p_actor_ids[i]));
+		ERR_FAIL_COND_MSG(database.is_valid() && ensure_actor(database, p_actor_ids[i]).is_null(), vformat("JRPGGameState: the database has no actor %d.", p_actor_ids[i]));
 	}
 	data.party_members = p_actor_ids;
 	_changed();
@@ -349,6 +354,9 @@ bool JRPGGameState::add_party_member(int p_actor_id) {
 	ERR_FAIL_COND_V_MSG(p_actor_id < 1, false, "JRPGGameState: party members are actor IDs from 1.");
 	if (data.party_members.has(p_actor_id)) {
 		return false;
+	}
+	if (database.is_valid() && ensure_actor(database, p_actor_id).is_null()) {
+		return false; // No such actor in the database.
 	}
 	data.party_members.push_back(p_actor_id);
 	_changed();
@@ -808,6 +816,7 @@ void JRPGGameState::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("ensure_actor", "database", "actor_id"), &JRPGGameState::ensure_actor);
 	ClassDB::bind_method(D_METHOD("get_actor_ids"), &JRPGGameState::get_actor_ids);
 	ClassDB::bind_method(D_METHOD("attach_database", "database"), &JRPGGameState::attach_database);
+	ClassDB::bind_method(D_METHOD("get_database"), &JRPGGameState::get_database);
 	ClassDB::bind_method(D_METHOD("set_events_map", "map_id", "revision"), &JRPGGameState::set_events_map);
 	ClassDB::bind_method(D_METHOD("get_events_map_id"), &JRPGGameState::get_events_map_id);
 	ClassDB::bind_method(D_METHOD("get_events_map_revision"), &JRPGGameState::get_events_map_revision);

@@ -134,14 +134,24 @@ struct Collector {
 	}
 };
 
-void collect_entry(Collector &c, const Ref<JRPGEntry> &p_entry) {
+bool has_dual_wield(const Array &p_traits) {
+	for (const Variant &t : p_traits) {
+		if (t.get_type() == Variant::DICTIONARY && int(Dictionary(t).get("code", 0)) == JRPGTraits::TRAIT_SLOT_TYPE && int(Dictionary(t).get("data_id", 0)) == 1) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void collect_entry(Collector &c, const Ref<JRPGDatabase> &p_database, const Ref<JRPGEntry> &p_entry) {
 	if (const JRPGActorData *actor = Object::cast_to<JRPGActorData>(p_entry.ptr())) {
 		c.add("class_id", table(JRPGDatabase::TABLE_CLASSES), actor->get_class_id());
-		// Slot 1 holds a weapon, and slot 2 too when the actor or its class has dual wield (RM-TRT-022).
-		bool dual_wield = false;
-		for (const Variant &t : actor->get_traits()) {
-			dual_wield = dual_wield || (t.get_type() == Variant::DICTIONARY && int(Dictionary(t).get("code", 0)) == JRPGTraits::TRAIT_SLOT_TYPE && int(Dictionary(t).get("data_id", 0)) == 1);
-		}
+		// Slot 1 holds a weapon, and slot 2 too when the actor or its class has dual wield (RM-TRT-022). Equipment
+		// and states can also give dual wield during play; initial equipment follows the database setup only.
+		bool dual_wield = has_dual_wield(actor->get_traits());
+		const Ref<JRPGTable> classes = p_database->get_table(JRPGDatabase::TABLE_CLASSES);
+		const JRPGClassData *actor_class = classes.is_valid() ? Object::cast_to<JRPGClassData>(classes->get_entry(actor->get_class_id()).ptr()) : nullptr;
+		dual_wield = dual_wield || (actor_class && has_dual_wield(actor_class->get_traits()));
 		const PackedInt32Array equipment = actor->get_initial_equipment();
 		for (int i = 0; i < equipment.size(); i++) {
 			const bool weapon = i == 0 || (i == 1 && dual_wield);
@@ -299,7 +309,7 @@ Array JRPGReferenceScanner::collect_references(const Ref<JRPGDatabase> &p_databa
 		c.source = JRPGDatabase::get_table_name(JRPGDatabase::TableKind(kind));
 		for (int id = 1; id <= table->get_maximum(); id++) {
 			c.source_id = id;
-			collect_entry(c, table->get_entry(id));
+			collect_entry(c, p_database, table->get_entry(id));
 		}
 	}
 	const Ref<JRPGSystemData> system = p_database->get_system();

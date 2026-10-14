@@ -110,6 +110,7 @@ private:
 	};
 
 	Data data;
+	Ref<JRPGDatabase> database; // Set by start_new_game() and attach_database(); not saved.
 	Ref<JRPGRandomStreams> random;
 	Ref<JRPGSimClock> clock;
 	uint64_t revision = 0;
@@ -132,7 +133,8 @@ public:
 	// Resets everything to the state before a new game, with every random stream seeded from 0.
 	void clear();
 	// Clears the state and applies the database's starting values: game id, starting party (IDs without an actor
-	// entry are skipped) with their actor states, start position, random streams seeded from p_seed.
+	// entry are skipped) with their actor states, start position, random streams seeded from p_seed. Refused with
+	// ERR_UNCONFIGURED when System data has no start position (RM-SYS-007): the state is left unchanged.
 	Error start_new_game(const Ref<JRPGDatabase> &p_database, int64_t p_seed);
 
 	void set_game_id(const String &p_id) { data.game_id = p_id; }
@@ -194,7 +196,11 @@ public:
 	// how many were dropped.
 	int prune_event_states(const PackedInt32Array &p_existing_event_ids);
 
-	// Party members are actor IDs in formation order, each at most once.
+	// The database given to start_new_game() or attach_database().
+	Ref<JRPGDatabase> get_database() const { return database; }
+
+	// Party members are actor IDs in formation order, each at most once. While a database is attached, every member
+	// has an actor state (created on joining) and IDs without an actor entry are refused.
 	void set_party_members(const PackedInt32Array &p_actor_ids);
 	PackedInt32Array get_party_members() const { return data.party_members; }
 	bool add_party_member(int p_actor_id);

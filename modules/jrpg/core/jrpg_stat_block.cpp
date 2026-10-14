@@ -37,7 +37,13 @@
 using namespace JRPGTraits;
 
 void JRPGStatBlock::set_rules(const Ref<JRPGBattleRules> &p_rules) {
-	rules = p_rules.is_valid() ? p_rules : Ref<JRPGBattleRules>(memnew(JRPGBattleRules));
+	if (p_rules.is_valid()) {
+		rules = p_rules;
+		default_rules = false;
+	} else if (!default_rules) {
+		rules.instantiate(); // Default rules, kept for later calls with null (no allocation per refresh).
+		default_rules = true;
+	}
 	_mark_dirty();
 }
 
@@ -195,10 +201,10 @@ void JRPGStatBlock::_update_cache() const {
 		param_cache[i] = int(CLAMP(value, low, high));
 	}
 	for (int i = 0; i < XPARAM_MAX; i++) {
-		xparam_cache[i] = int(trait_sum(TRAIT_XPARAM, i));
+		xparam_cache[i] = int(CLAMP(trait_sum(TRAIT_XPARAM, i), int64_t(INT32_MIN), int64_t(INT32_MAX)));
 	}
 	for (int i = 0; i < SPARAM_MAX; i++) {
-		sparam_cache[i] = int(trait_product_bp(TRAIT_SPARAM, i));
+		sparam_cache[i] = int(CLAMP(trait_product_bp(TRAIT_SPARAM, i), int64_t(INT32_MIN), int64_t(INT32_MAX)));
 	}
 	dirty = false;
 }

@@ -405,3 +405,21 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   headers) with clang's diagnostics and Godot's clang warning set through Visual Studio's `clang-tidy` and the
   `compile_commands.json` written by the `editor` build profile. `static_checks.py` runs it before every push.
   GCC-only warnings (`-Wlogical-op`, `-Wduplicated-branches`, ...) still need CI: no GCC toolchain is installed.
+
+## D-029 — Saved JRPG data always records its version; stored defaults are frozen
+- **Context:** Godot's text saver skips any property equal to the class default
+  (`scene/resources/resource_format_text.cpp:1986-1990`, defaults from a fresh instance, `core/object/class_db.cpp:2184-2198`).
+  The epic 5 review (finding 1) showed that `schema_version`, defaulting to the current version, was never written, so
+  the first real migration would misfire; finding 6 showed the same for starter values (types, terms, battle rules,
+  every entry field): a build that changed a default would silently change every project that kept it.
+- **Options:** always-store tricks (synthetic properties, null defaults); move starter content out of class defaults
+  into a setup-time factory; keep the defaults and forbid changing them without a migration.
+- **Choice:** `schema_version` class default is -1 ("unstamped", never a real version) and any content change stamps
+  the current version, so every saved table and manifest records it (an explicit 0 stays a real older version for
+  migrations). Stored defaults stay as they are and are frozen: `test_jrpg_core_regressions.h` fingerprints the
+  stored defaults of every persisted JRPG class (entries, troop pages, system, types, terms, rules, audio cues,
+  tables, manifest); changing one fails the test until a `JRPGSchema` migration step writes the old value into data
+  saved by the previous version and the fingerprint is updated.
+- **Why:** no project files exist yet, so the stamping convention costs nothing now; freezing defaults keeps the
+  starter content convenient (inspector-created resources are usable) and makes accidental rebalancing impossible.
+- **Reversal:** to change a default, add the migration step described above; to drop the freeze, delete the test.

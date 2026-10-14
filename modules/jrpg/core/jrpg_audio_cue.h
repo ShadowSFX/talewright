@@ -46,6 +46,7 @@ class JRPGAudioCue : public Resource {
 
 protected:
 	static void _bind_methods();
+	bool _set(const StringName &p_name, const Variant &p_value);
 
 public:
 	void set_stream(const String &p_stream);

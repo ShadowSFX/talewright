@@ -31,6 +31,8 @@
 
 #include "jrpg_troop_data.h"
 
+#include "jrpg_schema.h"
+
 #include "core/object/class_db.h"
 
 void JRPGTroopPage::set_turn_end(bool p_enabled) {
@@ -106,6 +108,10 @@ bool JRPGTroopPage::matches_turn(int p_turn) const {
 	return p_turn >= turn_a && (p_turn - turn_a) % turn_b == 0;
 }
 
+bool JRPGTroopPage::_set(const StringName &p_name, const Variant &p_value) {
+	return JRPGSchema::set_renamed(this, p_name, p_value);
+}
+
 void JRPGTroopPage::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_turn_end", "enabled"), &JRPGTroopPage::set_turn_end);
 	ClassDB::bind_method(D_METHOD("is_turn_end"), &JRPGTroopPage::is_turn_end);
@@ -158,8 +164,12 @@ void JRPGTroopPage::_bind_methods() {
 }
 
 void JRPGTroopData::set_members(const Array &p_members) {
-	ERR_FAIL_COND_MSG(p_members.size() > MAX_MEMBERS, vformat("A troop has at most %d members.", MAX_MEMBERS));
 	members = p_members;
+	if (members.size() > MAX_MEMBERS) {
+		// Kept up to the limit rather than refused, so a file with extra members does not lose them all.
+		WARN_PRINT(vformat("Troop %d: %d members, at most %d are kept.", get_id(), p_members.size(), MAX_MEMBERS));
+		members = p_members.slice(0, MAX_MEMBERS);
+	}
 	emit_changed();
 }
 
@@ -175,6 +185,18 @@ Dictionary JRPGTroopData::make_member(int p_enemy_id, const Vector2i &p_position
 void JRPGTroopData::set_pages(const TypedArray<JRPGTroopPage> &p_pages) {
 	pages = p_pages;
 	emit_changed();
+	if (get_id() > 0) {
+		assign_sub_resource_ids(get_kind() + "_" + itos(get_id()));
+	}
+}
+
+void JRPGTroopData::assign_sub_resource_ids(const String &p_prefix) {
+	for (int i = 0; i < pages.size(); i++) {
+		Ref<JRPGTroopPage> page = pages[i];
+		if (page.is_valid()) {
+			page->set_scene_unique_id(p_prefix + "_Page" + itos(i + 1));
+		}
+	}
 }
 
 void JRPGTroopData::_bind_methods() {

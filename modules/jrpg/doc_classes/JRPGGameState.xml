@@ -15,7 +15,7 @@
 			<return type="bool" />
 			<param index="0" name="actor_id" type="int" />
 			<description>
-				Adds an actor at the end of the party. Returns [code]false[/code] when the actor is already a member.
+				Adds an actor at the end of the party, creating its actor state while a database is attached. Returns [code]false[/code] when the actor is already a member or the attached database has no such actor.
 			</description>
 		</method>
 		<method name="add_playtime_steps">
@@ -99,6 +99,12 @@
 			<return type="JRPGSimClock" />
 			<description>
 				Returns the simulation clock of this game.
+			</description>
+		</method>
+		<method name="get_database" qualifiers="const">
+			<return type="JRPGDatabase" />
+			<description>
+				Returns the database given to [method start_new_game] or [method attach_database], or [code]null[/code]. It is not saved.
 			</description>
 		</method>
 		<method name="get_db_content_hash" qualifiers="const">
@@ -420,7 +426,7 @@
 			<return type="void" />
 			<param index="0" name="actor_ids" type="PackedInt32Array" />
 			<description>
-				Replaces the party with [param actor_ids], in formation order. IDs below 1 and repeated actors are refused.
+				Replaces the party with [param actor_ids], in formation order, creating actor states while a database is attached. IDs below 1, repeated actors and actors the attached database does not have are refused.
 			</description>
 		</method>
 		<method name="set_player_position">
@@ -477,7 +483,7 @@
 			<param index="0" name="database" type="JRPGDatabase" />
 			<param index="1" name="seed" type="int" />
 			<description>
-				Clears the state and applies the starting values of [param database]: game id, starting party (IDs without an actor entry are skipped) with their actor states, start position, and random streams seeded from [param seed]. The same database and seed always give the same state.
+				Clears the state and applies the starting values of [param database]: game id, starting party (IDs without an actor entry are skipped) with their actor states, start position, and random streams seeded from [param seed]. The same database and seed always give the same state. Returns [constant ERR_UNCONFIGURED] and changes nothing when System data has no start position.
 			</description>
 		</method>
 		<method name="start_timer">

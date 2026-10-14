@@ -34,6 +34,7 @@
 #include "jrpg_schema.h"
 
 #include "core/object/class_db.h"
+#include "core/templates/hash_set.h"
 
 Ref<JRPGEntry> JRPGTable::_create_entry() const {
 	Object *obj = ClassDB::instantiate(entry_class);
@@ -57,8 +58,19 @@ void JRPGTable::_assign_ids() {
 			// (scene/resources/resource_format_text.cpp:1898-1935), so fixing it here keeps .tres files stable and
 			// also repairs duplicates left by copy/paste.
 			e->set_scene_unique_id(kind + "_" + itos(i + 1));
+			e->assign_sub_resource_ids(kind + "_" + itos(i + 1));
 		}
 	}
+}
+
+void JRPGTable::_stamp_version() {
+	if (schema_version == SCHEMA_UNSTAMPED) {
+		schema_version = CURRENT_SCHEMA_VERSION; // New content follows this build's format.
+	}
+}
+
+bool JRPGTable::_set(const StringName &p_name, const Variant &p_value) {
+	return JRPGSchema::set_renamed(this, p_name, p_value);
 }
 
 void JRPGTable::set_entry_class(const StringName &p_class) {
@@ -69,6 +81,7 @@ void JRPGTable::set_entry_class(const StringName &p_class) {
 	ERR_FAIL_COND_MSG(!ClassDB::can_instantiate(p_class), vformat("JRPGTable: \"%s\" cannot be instantiated (abstract class).", p_class));
 	ERR_FAIL_COND_MSG(!entries.is_empty(), "JRPGTable: the entry class can only change while the table is empty.");
 	entry_class = p_class;
+	_stamp_version(); // While loading, a saved schema_version comes next and replaces this (property order).
 	emit_changed();
 }
 
@@ -77,25 +90,43 @@ String JRPGTable::get_kind() const {
 }
 
 void JRPGTable::set_entries(const TypedArray<JRPGEntry> &p_entries) {
-	ERR_FAIL_COND_MSG(p_entries.size() > MAX_ENTRIES, vformat("JRPGTable: more than %d entries.", MAX_ENTRIES));
+	int count = p_entries.size();
+	if (count > MAX_ENTRIES) {
+		WARN_PRINT(vformat("JRPGTable \"%s\": %d entries, more than the limit of %d; the extra entries are dropped.", get_path(), count, MAX_ENTRIES));
+		count = MAX_ENTRIES;
+	}
 	entries.clear();
-	for (int i = 0; i < p_entries.size(); i++) {
+	HashSet<JRPGEntry *> seen;
+	for (int i = 0; i < count; i++) {
 		Ref<JRPGEntry> e = p_entries[i];
+		if (e.is_valid() && !e->is_class(entry_class)) {
+			WARN_PRINT(vformat("JRPGTable \"%s\": slot %d holds a %s, not a %s; it is replaced by a default entry.", get_path(), i + 1, e->get_class(), entry_class));
+			e.unref();
+		}
 		if (e.is_null()) {
 			e = _create_entry(); // A missing slot loads as a default entry; IDs after it keep their positions.
+		} else if (seen.has(e.ptr())) {
+			e = e->duplicate(true); // One object in two slots would share its ID and its edits.
 		}
+		seen.insert(e.ptr());
 		entries.push_back(e);
 	}
 	_assign_ids();
 	// While loading, entry_class and schema_version are set before entries (property order), so the data is
 	// complete here and an old table can be upgraded in one place.
-	if (schema_version < CURRENT_SCHEMA_VERSION) {
+	if (schema_version == SCHEMA_UNSTAMPED) {
+		_stamp_version();
+	} else if (schema_version < CURRENT_SCHEMA_VERSION) {
 		upgrade();
 	}
 	emit_changed();
 }
 
 void JRPGTable::upgrade() {
+	if (schema_version == SCHEMA_UNSTAMPED) {
+		_stamp_version(); // Nothing was saved with an older format.
+		return;
+	}
 	if (schema_version > CURRENT_SCHEMA_VERSION) {
 		WARN_PRINT_ONCE(vformat("JRPGTable \"%s\" was saved by a newer Talewright (schema %d, this build knows %d); some data may not load.", get_path(), schema_version, CURRENT_SCHEMA_VERSION));
 		return;
@@ -122,6 +153,7 @@ void JRPGTable::set_maximum(int p_count) {
 	if (p_count == entries.size()) {
 		return;
 	}
+	_stamp_version();
 	if (p_count < entries.size()) {
 		entries.resize(p_count);
 	} else {
@@ -142,6 +174,7 @@ Ref<JRPGEntry> JRPGTable::get_entry(int p_id) const {
 void JRPGTable::clear_entry(int p_id) {
 	ERR_FAIL_COND_MSG(!has_entry(p_id), vformat("JRPGTable: no entry with ID %d.", p_id));
 	entries[p_id - 1]->reset_to_defaults();
+	_stamp_version();
 	emit_changed();
 }
 
@@ -173,4 +206,5 @@ void JRPGTable::_bind_methods() {
 
 	BIND_CONSTANT(MAX_ENTRIES);
 	BIND_CONSTANT(CURRENT_SCHEMA_VERSION);
+	BIND_CONSTANT(SCHEMA_UNSTAMPED);
 }

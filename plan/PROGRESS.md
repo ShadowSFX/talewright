@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 19:50 -0600
+- **Updated:** 2026-10-13 20:29 -0600
 - **Current task:** 1.8 Fork CI: every Linux job green
-- **Last completed:** 5.6 Reference scanner
-- **Next task:** 5.7 Epic review: JRPG core
-- **Done leaf tasks:** 61
+- **Last completed:** 5.7 Epic review: JRPG core
+- **Next task:** 6.1 Managed addon embedding
+- **Done leaf tasks:** 62
 <!-- status:end -->
 
 ## Log
@@ -159,4 +159,7 @@
 | 2026-10-13 19:44 -0600 | 5.5.3 | done: Event runtime state — JRPGEventState (core: event_id, cell, direction, pattern, route index/wait, erased, transparent, through override) with strict deserialize; JRPGGameState events_state section (map id + revision, states by event id), set_events_map forgets other maps, prune_event_states drops deleted events with one warning; revision-based reset assigned to 8.6.1; 3 doctests; full suite 1463/1463 (containers: 5.5 in_progress->done, 5 in_progress->pending) | 5ec93c1ded |
 | 2026-10-13 19:46 -0600 | - | imported 0 new / 4 updated tasks | |
 | 2026-10-13 19:46 -0600 | 5.6 | started: Reference scanner (containers: 5 pending->in_progress) |  |
-| 2026-10-13 19:50 -0600 | 5.6 | done: Reference scanner — JRPGReferenceScanner (core): collect_references over tables, type lists and system data with locations (traits/effects by code, learnings, drops, enemy actions + state conditions, troop members + page actor, actor class + initial equipment with dual wield, skill/weapon/armor types, elements, animations, starting party); find_uses, find_uses_from, find_dangling (missing/blank), describe; 10 planted dangling kinds each reported, clean fixture empty; event params/encounters/start map assigned to 9.2.2/12.3/8.3; full suite 1465/1465 (containers: 5 in_progress->pending) | pending |
+| 2026-10-13 19:50 -0600 | 5.6 | done: Reference scanner — JRPGReferenceScanner (core): collect_references over tables, type lists and system data with locations (traits/effects by code, learnings, drops, enemy actions + state conditions, troop members + page actor, actor class + initial equipment with dual wield, skill/weapon/armor types, elements, animations, starting party); find_uses, find_uses_from, find_dangling (missing/blank), describe; 10 planted dangling kinds each reported, clean fixture empty; event params/encounters/start map assigned to 9.2.2/12.3/8.3; full suite 1465/1465 (containers: 5 in_progress->pending) | dbea2b98f0 |
+| 2026-10-13 19:50 -0600 | 5.7 | started: Epic review: JRPG core (containers: 5 pending->in_progress) |  |
+| 2026-10-13 20:28 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 20:29 -0600 | 5.7 | done: Epic review: JRPG core — Fresh-context review of epic 5 (1 high, 8 medium, 18 low + docs/tooling); all 28 fixed: schema_version stamping (-1 unstamped), frozen stored defaults (fingerprints, D-029), KO resist, formula clamp/round/v[N] padding/one warning, integer fixed-point EXP curve, nullable system rules, scanner class dual wield, repair level resync, saturating mul_bp, unsigned RNG span, validate-then-apply streams, equip kind/slot checks, actor id guard, no trade on deserialize, table entry ownership/truncation, party member states, start position required, rule setter clamps, cheap pool updates, stable sub-resource ids, rename fallbacks everywhere, reworded terms, include check inverted; 10 regression doctests; evidence plan/evidence/reviews/epic_5.md; full suite 1475/1475; smoke ALL PASS; core_diff 0 unlisted (containers: 5 in_progress->done) | pending |

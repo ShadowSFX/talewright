@@ -60,14 +60,17 @@ public:
 	};
 
 private:
-	int schema_version = 1;
+	int schema_version = -1; // Unstamped until the manifest gets content; then always saved (see JRPGTable).
 	Ref<JRPGTable> tables[TABLE_MAX];
 	Ref<JRPGSystemData> system;
 	Ref<JRPGTypesData> types;
 	Ref<JRPGTermsData> terms;
 
+	void _stamp_version();
+
 protected:
 	static void _bind_methods();
+	bool _set(const StringName &p_name, const Variant &p_value);
 
 public:
 	// Property and file name of each table ("actors", "common_events"...).
@@ -90,6 +93,7 @@ public:
 
 	// Data format version written by this build. Raise it together with a JRPGSchema migration step.
 	static constexpr int CURRENT_SCHEMA_VERSION = 1;
+	static constexpr int SCHEMA_UNSTAMPED = -1;
 	// Runs the migration steps of the manifest and of every table. Code that opens a database uses
 	// load_database(), which calls it.
 	void upgrade();

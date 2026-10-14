@@ -64,8 +64,14 @@ Full field lists per table follow the inventory slices (03/04/05). The vertical 
 | Common events | name, trigger, condition switch, commands |
 
 ## Versioning and migration
-- `JRPGDatabase.schema_version` and `JRPGTable.schema_version` (int). The loader runs `_migrate(from, to)` steps;
-  renamed properties are handled with `_set()` fallbacks (old name → new name) so old files load.
+- `JRPGDatabase.schema_version` and `JRPGTable.schema_version` (int). The class default is -1 ("unstamped", never a
+  real version) and any content change stamps the current version, so every saved manifest and table records its
+  version (Godot's text saver skips values equal to the class default, `scene/resources/resource_format_text.cpp:1986-1990`).
+  The loader runs the `JRPGSchema` migration steps from the saved version; renamed properties are handled with
+  `_set()` fallbacks (old name → new name, `JRPGSchema::set_renamed`) on every persisted JRPG resource so old files load.
+- Stored defaults are frozen (D-029): a value equal to its class default is never written, so changing a default
+  would silently change every project that kept it. `test_jrpg_core_regressions.h` fingerprints the stored defaults
+  of every persisted class; changing one needs a migration step that writes the old value into older data.
 - Saves record the database schema version and a content hash of the tables used (spec 06).
 
 ## Editing rules

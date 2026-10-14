@@ -22,7 +22,7 @@ INCLUDE_RE = re.compile(r'^\s*#\s*include\s*([<"])([^>"]+)[>"]')
 SOURCE_SUFFIXES = {".h", ".hpp", ".cpp", ".inc"}
 CORE_ALLOWED_PREFIXES = ("core/", "modules/jrpg/core/")
 CORE_ALLOWED_FILES = {"thirdparty/misc/pcg.h"}
-FORBIDDEN_IN_ANGLES = ("scene/", "servers/", "editor/", "modules/")
+# In angle brackets core may use standard headers (no path) and the allowed vendored files only.
 RUNTIME_FORBIDDEN_PREFIXES = ("editor/", "modules/jrpg/editor/")
 
 
@@ -43,9 +43,9 @@ def includes(path: Path):
 def core_violation(path: Path, kind: str, target: str, core_dir: Path) -> str | None:
     if kind == "<":
         # Godot writes thirdparty includes in angle brackets (misc/scripts/validate_includes.py).
-        if target.startswith("thirdparty/"):
-            return None if target in CORE_ALLOWED_FILES else f"third-party header not allowed in core: <{target}>"
-        return f"engine header in angle brackets: <{target}>" if target.startswith(FORBIDDEN_IN_ANGLES) else None
+        if target in CORE_ALLOWED_FILES or "/" not in target:
+            return None
+        return f"header not allowed in core: <{target}>"
     if target in CORE_ALLOWED_FILES or target.startswith(CORE_ALLOWED_PREFIXES):
         return None
     # A relative include is fine only when it resolves to a file inside modules/jrpg/core.

@@ -66,6 +66,18 @@ void JRPGSchema::unregister_rename(const StringName &p_class, const StringName &
 	}
 }
 
+bool JRPGSchema::set_renamed(Object *p_object, const StringName &p_name, const Variant &p_value) {
+	// Only reached for names the class does not have (Object::set tries ClassDB setters first).
+	const StringName renamed = get_renamed_property(p_object, p_name);
+	if (renamed == StringName() || renamed == p_name) {
+		return false;
+	}
+	bool valid = false;
+	// One hop only: ClassDB::set_property never calls _set again, so a bad rename table cannot recurse.
+	ClassDB::set_property(p_object, renamed, p_value, &valid);
+	return valid;
+}
+
 StringName JRPGSchema::get_renamed_property(const Object *p_object, const StringName &p_name) {
 	ERR_FAIL_NULL_V(p_object, StringName());
 	for (StringName cls = p_object->get_class_name(); cls != StringName(); cls = ClassDB::get_parent_class(cls)) {

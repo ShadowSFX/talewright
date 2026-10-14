@@ -31,12 +31,18 @@
 
 #include "jrpg_battle_rules.h"
 
+#include "jrpg_schema.h"
+
 #include "core/object/class_db.h"
 
 #define JRPG_BIND_RULE(m_name, m_hint) \
 	ClassDB::bind_method(D_METHOD("set_" #m_name, "value"), &JRPGBattleRules::set_##m_name); \
 	ClassDB::bind_method(D_METHOD("get_" #m_name), &JRPGBattleRules::get_##m_name); \
 	ADD_PROPERTY(PropertyInfo(Variant::INT, #m_name, PROPERTY_HINT_RANGE, m_hint), "set_" #m_name, "get_" #m_name);
+
+bool JRPGBattleRules::_set(const StringName &p_name, const Variant &p_value) {
+	return JRPGSchema::set_renamed(this, p_name, p_value);
+}
 
 void JRPGBattleRules::_bind_methods() {
 	ADD_GROUP("Damage", "");

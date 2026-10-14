@@ -31,7 +31,6 @@
 
 #include "jrpg_class_data.h"
 
-#include "core/math/math_funcs.h"
 #include "core/object/class_db.h"
 
 void JRPGClassData::set_exp_base(int p_value) {
@@ -49,13 +48,67 @@ void JRPGClassData::set_exp_extra(int p_value) {
 	emit_changed();
 }
 
+namespace {
+
+// 2^(2^-i) in Q30 for i = 1..30, rounded to nearest (computed once with 60-digit decimal arithmetic).
+const uint64_t EXP2_STEPS[30] = {
+	1518500250, 1276901417, 1170923762, 1121280436, 1097253708, 1085434106, 1079572136, 1076653033, 1075196443,
+	1074468888, 1074105294, 1073923544, 1073832680, 1073787251, 1073764537, 1073753181, 1073747502, 1073744663,
+	1073743244, 1073742534, 1073742179, 1073742001, 1073741913, 1073741868, 1073741846, 1073741835, 1073741830,
+	1073741827, 1073741825, 1073741825
+};
+
+constexpr int Q = 30; // Fixed-point fraction bits.
+constexpr uint64_t ONE = uint64_t(1) << Q;
+
+// log2(p_x) in Q30 for 1 <= p_x < 2^31, by repeated squaring (one fraction bit per step).
+uint64_t log2_q30(uint64_t p_x) {
+	int whole = 0;
+	while ((p_x >> (whole + 1)) != 0) {
+		whole++;
+	}
+	uint64_t y = (p_x << Q) >> whole; // p_x / 2^whole in [1, 2), Q30.
+	uint64_t fraction = 0;
+	for (int bit = Q - 1; bit >= 0; bit--) {
+		y = (y * y) >> Q; // y < 2^31, so y * y < 2^62.
+		if (y >= 2 * ONE) {
+			y >>= 1;
+			fraction |= uint64_t(1) << bit;
+		}
+	}
+	return (uint64_t(whole) << Q) | fraction;
+}
+
+// 2^p_fraction in Q30 for a Q30 fraction in [0, 1).
+uint64_t exp2_fraction_q30(uint64_t p_fraction) {
+	uint64_t result = ONE;
+	for (int i = 0; i < Q; i++) {
+		if (p_fraction & (uint64_t(1) << (Q - 1 - i))) {
+			result = (result * EXP2_STEPS[i] + (ONE >> 1)) >> Q;
+		}
+	}
+	return result;
+}
+
+} // namespace
+
 int64_t JRPGClassData::compute_total_exp(int p_base, int p_growth, int p_extra, int p_level) {
 	if (p_level <= 1) {
 		return 0;
 	}
-	const double steps = p_level - 1;
-	const double total = p_base * Math::pow(steps, 1.5 + p_growth / 100.0) + double(p_extra) * steps;
-	return int64_t(Math::round(total));
+	// Integer fixed-point only: libm's pow differs between platforms in the last bit, which would let a client and a
+	// server disagree on a level-up (spec 04, "Numbers and determinism"). Results match the real-number formula to
+	// within 1.
+	const uint64_t steps = uint64_t(MIN(p_level, 1024) - 1);
+	const uint64_t base = uint64_t(CLAMP(p_base, 0, 1 << 20));
+	const uint64_t extra = uint64_t(MAX(0, p_extra));
+	const uint64_t exponent_percent = uint64_t(150 + CLAMP(p_growth, 0, 100)); // 1.5 + growth / 100, in percent.
+	const uint64_t scaled_log = (log2_q30(steps) * exponent_percent + 50) / 100; // log2(steps^exponent), Q30.
+	const int whole = int(scaled_log >> Q); // At most 25 for 1023 steps and exponent 2.5.
+	const uint64_t power = exp2_fraction_q30(scaled_log & (ONE - 1)); // Q30, < 2^31.
+	const int shift = Q - whole; // power * 2^whole / 2^30, rounded.
+	const uint64_t curve = (base * power + (uint64_t(1) << (shift - 1))) >> shift;
+	return int64_t(curve + extra * steps);
 }
 
 void JRPGClassData::bake_exp_table() {

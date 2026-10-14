@@ -111,7 +111,7 @@
 			<return type="int" enum="Error" />
 			<param index="0" name="data" type="Dictionary" />
 			<description>
-				Replaces the actor with [param data], made by [method serialize]. Malformed data leaves the actor unchanged and returns [constant ERR_INVALID_DATA].
+				Replaces the actor with [param data], made by [method serialize]. Malformed data, or data of another actor than the one this state already holds, leaves the actor unchanged and returns [constant ERR_INVALID_DATA]. Loading never trades equipment with the party.
 			</description>
 		</method>
 		<method name="force_equip">
@@ -519,7 +519,7 @@
 			<param index="0" name="database" type="JRPGDatabase" />
 			<param index="1" name="actor_id" type="int" />
 			<description>
-				Starts the actor from the database: its class, initial level and that level's EXP, the class skills learned up to that level, full HP and MP, no TP. Returns [constant ERR_DOES_NOT_EXIST] when [param database] has no actor [param actor_id].
+				Starts the actor from the database: its class, initial level and that level's EXP, the class skills learned up to that level, full HP and MP, no TP. Returns [constant ERR_DOES_NOT_EXIST] when [param database] has no actor [param actor_id], and [constant ERR_ALREADY_IN_USE] when this state already belongs to another actor.
 			</description>
 		</method>
 	</methods>

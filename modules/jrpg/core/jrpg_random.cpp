@@ -43,7 +43,7 @@ uint32_t JRPGRandom::next_u32() {
 
 int64_t JRPGRandom::range(int64_t p_low, int64_t p_high) {
 	ERR_FAIL_COND_V_MSG(p_low > p_high, p_low, "JRPGRandom::range: low is greater than high.");
-	const uint64_t span = uint64_t(p_high - p_low) + 1;
+	const uint64_t span = (uint64_t(p_high) - uint64_t(p_low)) + 1; // Unsigned: no signed overflow for any range.
 	ERR_FAIL_COND_V_MSG(span > (uint64_t(1) << 32) || span == 0, p_low, "JRPGRandom::range: the range is wider than 2^32.");
 	if (span == (uint64_t(1) << 32)) {
 		return p_low + int64_t(next_u32());
@@ -144,24 +144,26 @@ Dictionary JRPGRandomStreams::serialize() const {
 }
 
 bool JRPGRandomStreams::deserialize(const Dictionary &p_data) {
-	bool ok = true;
+	// Everything is checked before anything changes, so a refused input leaves every stream as it was.
 	for (int i = 0; i < STREAM_MAX; i++) {
 		if (!p_data.has(STREAM_NAMES[i])) {
 			continue; // Streams added after the save was written keep their current state.
 		}
 		const Variant v = p_data[STREAM_NAMES[i]];
 		if (v.get_type() != Variant::DICTIONARY) {
-			ok = false;
-			continue;
+			return false;
 		}
 		const Dictionary s = v;
 		if (!s.has("state") || !s.has("inc") || s["state"].get_type() != Variant::INT || s["inc"].get_type() != Variant::INT || (int64_t(s["inc"]) & 1) == 0) {
-			ok = false;
-			continue;
+			return false;
 		}
-		streams[i]->set_state(s);
 	}
-	return ok;
+	for (int i = 0; i < STREAM_MAX; i++) {
+		if (p_data.has(STREAM_NAMES[i])) {
+			streams[i]->set_state(p_data[STREAM_NAMES[i]]);
+		}
+	}
+	return true;
 }
 
 JRPGRandomStreams::JRPGRandomStreams() {

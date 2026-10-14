@@ -86,7 +86,7 @@ TEST_CASE("[JRPG][Database] Every slice field of enemies round-trips within docu
 	ERR_PRINT_OFF;
 	enemy->set_drops(Array({ Dictionary(), Dictionary(), Dictionary(), Dictionary() }));
 	ERR_PRINT_ON;
-	CHECK(enemy->get_drops().size() == 2); // At most 3 drops.
+	CHECK(enemy->get_drops().size() == JRPGEnemyData::MAX_DROPS); // Extra drops are cut, the first three kept.
 }
 
 TEST_CASE("[JRPG][Database] Troops keep at most 8 members and battle event pages") {
@@ -139,7 +139,7 @@ TEST_CASE("[JRPG][Database] Troops keep at most 8 members and battle event pages
 	ERR_PRINT_OFF;
 	troop->set_members(nine);
 	ERR_PRINT_ON;
-	CHECK(troop->get_members().size() == 2);
+	CHECK(troop->get_members().size() == JRPGTroopData::MAX_MEMBERS); // Extra members are cut, the first eight kept.
 }
 
 TEST_CASE("[JRPG][Database] Every slice field of states round-trips") {

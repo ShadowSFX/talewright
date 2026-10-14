@@ -95,7 +95,8 @@ public:
 
 	// {stream name: {state, inc}} for saves (spec 06).
 	Dictionary serialize() const;
-	// Restores the streams present in p_data; returns false if any entry is malformed.
+	// Restores the streams present in p_data (others keep their state). A malformed entry changes nothing and
+	// returns false.
 	bool deserialize(const Dictionary &p_data);
 
 	JRPGRandomStreams();

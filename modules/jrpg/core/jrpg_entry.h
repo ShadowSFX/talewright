@@ -55,6 +55,9 @@ public:
 	static String kind_from_class(const StringName &p_class);
 
 	void set_id(int p_id) { id = p_id; } // Called by JRPGTable only.
+	// Gives nested sub-resources (troop pages...) stable scene-unique ids "<p_prefix>_<name><n>", so .tres diffs stay
+	// stable (D-005). Called by JRPGTable with "<Kind>_<id>".
+	virtual void assign_sub_resource_ids(const String &p_prefix) {}
 	int get_id() const { return id; }
 	String get_kind() const;
 

@@ -126,6 +126,7 @@ static Ref<JRPGDatabase> make_database() {
 
 	Ref<JRPGSystemData> system;
 	system.instantiate();
+	system->set_start_map_id(1); // A new game needs a start position.
 	db->set_system(system);
 	return db;
 }

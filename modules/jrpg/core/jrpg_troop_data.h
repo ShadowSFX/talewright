@@ -65,6 +65,7 @@ private:
 
 protected:
 	static void _bind_methods();
+	bool _set(const StringName &p_name, const Variant &p_value);
 
 public:
 	void set_turn_end(bool p_enabled);
@@ -118,5 +119,6 @@ public:
 	Array get_members() const { return members; }
 	static Dictionary make_member(int p_enemy_id, const Vector2i &p_position, bool p_hidden);
 	void set_pages(const TypedArray<JRPGTroopPage> &p_pages);
+	void assign_sub_resource_ids(const String &p_prefix) override;
 	TypedArray<JRPGTroopPage> get_pages() const { return pages; }
 };

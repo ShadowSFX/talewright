@@ -110,7 +110,15 @@ private:
 	bool _has_state_data(int p_state_id) const;
 	void _learn_skills_up_to(int p_from_level, int p_to_level, PackedInt32Array *r_learned);
 	Dictionary _set_exp(int64_t p_exp);
+	// Moves the level up or down to match the EXP total, within 1 and the maximum level; learns class skills on the
+	// way up when p_learn.
+	void _sync_level(PackedInt32Array *r_learned, bool p_learn);
 	void _knock_out();
+	// Keeps HP/MP/TP within their maximums and applies the knockout rule (HP 0 knocks out unless the actor resists
+	// state 1; HP above 0 revives). Cheap: no trait rebuild unless the knockout state changes.
+	void _clamp_pools();
+	// Repeats _release_unequippable until nothing more comes off (bounded by the number of slots).
+	void _release_all_unequippable(bool p_to_party);
 	Ref<JRPGEquipData> _equip_data(EquipKind p_kind, int p_id) const;
 	bool _fits_slot(int p_slot_type, EquipKind p_kind, int p_id) const;
 	JRPGGameState *_party() const;
@@ -128,7 +136,8 @@ protected:
 
 public:
 	// Starts the actor from its database entry: class, initial level and its EXP, skills learned up to that level,
-	// full HP and MP. Fails when the database has no actor p_actor_id.
+	// full HP and MP. Fails when the database has no actor p_actor_id, or when this state already belongs to another
+	// actor (a game state keys its actors by ID).
 	Error setup(const Ref<JRPGDatabase> &p_database, int p_actor_id);
 	// Attaches the database after loading; parameters and limits are recomputed from it.
 	void set_database(const Ref<JRPGDatabase> &p_database);
@@ -249,7 +258,8 @@ public:
 	bool change_class(int p_class_id, bool p_keep_level);
 
 	Dictionary serialize() const;
-	// Replaces the actor with p_data; malformed data leaves it unchanged and returns ERR_INVALID_DATA.
+	// Replaces the actor with p_data; malformed data, or data of another actor than the one this state already holds,
+	// leaves it unchanged and returns ERR_INVALID_DATA. Loading never trades equipment with the party.
 	Error deserialize(const Dictionary &p_data);
 
 	JRPGActorState();

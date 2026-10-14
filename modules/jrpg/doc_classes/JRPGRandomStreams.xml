@@ -13,7 +13,7 @@
 			<return type="bool" />
 			<param index="0" name="data" type="Dictionary" />
 			<description>
-				Restores the streams found in [param data] (as written by [method serialize]). Streams missing from [param data] keep their state. Returns [code]false[/code] if an entry is malformed.
+				Restores the streams found in [param data] (as written by [method serialize]). Streams missing from [param data] keep their state. Returns [code]false[/code] and changes nothing if an entry is malformed.
 			</description>
 		</method>
 		<method name="get_stream" qualifiers="const">

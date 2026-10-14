@@ -45,7 +45,7 @@
 			Path of the enemy's battle image.
 		</member>
 		<member name="drops" type="Array" setter="set_drops" getter="get_drops" default="[]">
-			Up to [constant MAX_DROPS] possible drops, as dictionaries with [code]kind[/code], [code]data_id[/code] and [code]denominator[/code]. See [method make_drop].
+			Up to [constant MAX_DROPS] possible drops, as dictionaries with [code]kind[/code], [code]data_id[/code] and [code]denominator[/code]. See [method make_drop]. Extra drops are cut with a warning.
 		</member>
 		<member name="exp" type="int" setter="set_exp" getter="get_exp" default="0">
 			EXP the party earns for defeating the enemy.

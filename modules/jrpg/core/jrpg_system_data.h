@@ -82,6 +82,7 @@ private:
 
 protected:
 	static void _bind_methods();
+	bool _set(const StringName &p_name, const Variant &p_value);
 
 public:
 	void set_game_title(const String &p_title);
@@ -117,13 +118,12 @@ public:
 	void set_window_tone(const Vector3i &p_tone);
 	Vector3i get_window_tone() const { return window_tone; }
 
+	// Null until set; code that reads rules falls back to JRPGBattleRules' defaults.
 	void set_battle_rules(const Ref<JRPGBattleRules> &p_rules);
 	Ref<JRPGBattleRules> get_battle_rules() const { return battle_rules; }
 
 	// Problems that prevent playing the project, as readable sentences (empty when ready).
 	PackedStringArray validate() const;
-
-	JRPGSystemData();
 };
 
 VARIANT_ENUM_CAST(JRPGSystemData::Direction);

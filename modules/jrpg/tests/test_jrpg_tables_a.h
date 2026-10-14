@@ -60,8 +60,9 @@ TEST_CASE("[JRPG][Database] Defaults follow specs 02 and 04") {
 
 	Ref<JRPGSystemData> system;
 	system.instantiate();
-	Ref<JRPGBattleRules> rules = system->get_battle_rules();
-	REQUIRE(rules.is_valid());
+	CHECK(system->get_battle_rules().is_null()); // Created on edit or by the setup tool; readers use the defaults.
+	Ref<JRPGBattleRules> rules;
+	rules.instantiate();
 	CHECK(rules->get_tp_max() == 100);
 	CHECK(rules->get_tp_start_max() == 24);
 	CHECK(rules->get_buff_step_bp() == 2500);
@@ -225,7 +226,13 @@ TEST_CASE("[JRPG][Database] Every slice field of actors, classes, types, terms a
 	ok_sound->set_stream("uid://ok");
 	system->set_sound(JRPGSystemData::SOUND_OK, ok_sound);
 	system->set_window_tone(Vector3i(-300, 20, 255));
-	system->get_battle_rules()->set_crit_multiplier_bp(15000);
+	Ref<JRPGBattleRules> custom_rules;
+	custom_rules.instantiate();
+	custom_rules->set_crit_multiplier_bp(15000);
+	custom_rules->set_max_hp_limit(0); // Clamped to the inspector range: a limit of 0 would knock everyone out.
+	CHECK(custom_rules->get_max_hp_limit() == 1);
+	custom_rules->set_max_hp_limit(9999999);
+	system->set_battle_rules(custom_rules);
 	Ref<JRPGSystemData> s = save_and_load(system, "jrpg_system.tres");
 	CHECK(s->get_game_title() == "Skyward");
 	CHECK(s->get_game_id().length() == 16);

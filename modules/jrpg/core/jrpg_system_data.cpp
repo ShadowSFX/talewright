@@ -31,6 +31,8 @@
 
 #include "jrpg_system_data.h"
 
+#include "jrpg_schema.h"
+
 #include "core/crypto/crypto_core.h"
 #include "core/object/class_db.h"
 
@@ -91,6 +93,10 @@ void JRPGSystemData::set_draw_game_title(bool p_draw) {
 void JRPGSystemData::set_music(Music p_slot, const Ref<JRPGAudioCue> &p_cue) {
 	ERR_FAIL_INDEX(p_slot, MUSIC_MAX);
 	music[p_slot] = p_cue;
+	if (p_cue.is_valid() && p_cue->get_path().is_empty()) {
+		static const char *const names[MUSIC_MAX] = { "Title", "Battle", "Victory", "Defeat" };
+		p_cue->set_scene_unique_id(String("Music_") + names[p_slot]); // Stable sub-resource id (D-005).
+	}
 	emit_changed();
 }
 
@@ -102,6 +108,10 @@ Ref<JRPGAudioCue> JRPGSystemData::get_music(Music p_slot) const {
 void JRPGSystemData::set_sound(Sound p_slot, const Ref<JRPGAudioCue> &p_cue) {
 	ERR_FAIL_INDEX(p_slot, SOUND_MAX);
 	sounds[p_slot] = p_cue;
+	if (p_cue.is_valid() && p_cue->get_path().is_empty()) {
+		static const char *const names[SOUND_MAX] = { "Cursor", "Ok", "Cancel", "Buzzer" };
+		p_cue->set_scene_unique_id(String("Sound_") + names[p_slot]); // Stable sub-resource id (D-005).
+	}
 	emit_changed();
 }
 
@@ -117,6 +127,9 @@ void JRPGSystemData::set_window_tone(const Vector3i &p_tone) {
 
 void JRPGSystemData::set_battle_rules(const Ref<JRPGBattleRules> &p_rules) {
 	battle_rules = p_rules;
+	if (battle_rules.is_valid() && battle_rules->get_path().is_empty()) {
+		battle_rules->set_scene_unique_id("BattleRules"); // Stable sub-resource id in system.tres (D-005).
+	}
 	emit_changed();
 }
 
@@ -131,8 +144,8 @@ PackedStringArray JRPGSystemData::validate() const {
 	return problems;
 }
 
-JRPGSystemData::JRPGSystemData() {
-	battle_rules.instantiate();
+bool JRPGSystemData::_set(const StringName &p_name, const Variant &p_value) {
+	return JRPGSchema::set_renamed(this, p_name, p_value);
 }
 
 void JRPGSystemData::_bind_methods() {
@@ -189,7 +202,9 @@ void JRPGSystemData::_bind_methods() {
 	ADD_PROPERTYI(PropertyInfo(Variant::OBJECT, "sound_buzzer", PROPERTY_HINT_RESOURCE_TYPE, "JRPGAudioCue"), "set_sound", "get_sound", SOUND_BUZZER);
 	ADD_GROUP("", "");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3I, "window_tone"), "set_window_tone", "get_window_tone");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "battle_rules", PROPERTY_HINT_RESOURCE_TYPE, "JRPGBattleRules"), "set_battle_rules", "get_battle_rules");
+	// Null by default (no shared default object, ClassDB would warn); the inspector creates one when edited, the setup
+	// tool writes one, and readers fall back to the default rules.
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "battle_rules", PROPERTY_HINT_RESOURCE_TYPE, "JRPGBattleRules", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_EDITOR_INSTANTIATE_OBJECT), "set_battle_rules", "get_battle_rules");
 
 	BIND_ENUM_CONSTANT(DIRECTION_UP);
 	BIND_ENUM_CONSTANT(DIRECTION_RIGHT);

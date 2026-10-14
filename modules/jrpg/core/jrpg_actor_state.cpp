@@ -218,17 +218,28 @@ void JRPGActorState::_refresh() {
 	_update_stats();
 	if (!releasing) {
 		releasing = true;
-		// Taking something off can remove a trait another item needed, so repeat until nothing changes.
-		for (int pass = 0; pass <= DEFAULT_EQUIP_SLOTS * 2 && _release_unequippable(true); pass++) {
-			_update_stats();
-		}
+		_release_all_unequippable(true);
 		releasing = false;
 	}
+	_clamp_pools();
+}
 
+void JRPGActorState::_release_all_unequippable(bool p_to_party) {
+	// Taking something off can remove a trait another item needed, so repeat until nothing changes. Each pass that
+	// changes something removes at least one item, so the slot count bounds the passes.
+	for (int pass = 0; pass <= data.equips.size() + 1 && _release_unequippable(p_to_party); pass++) {
+		_update_stats();
+	}
+}
+
+void JRPGActorState::_clamp_pools() {
+	if (database.is_null()) {
+		return; // Maximums are unknown until the database is attached.
+	}
 	data.hp = CLAMP(data.hp, 0, get_max_hp());
 	data.mp = CLAMP(data.mp, 0, get_max_mp());
 	data.tp = CLAMP(data.tp, 0, MAX(0, stats->get_rules()->get_tp_max()));
-	if (data.hp == 0 && !is_dead()) {
+	if (data.hp == 0 && !is_dead() && !stats->has_trait(JRPGTraits::TRAIT_STATE_RESIST, KNOCKOUT)) {
 		_knock_out();
 	} else if (data.hp > 0 && is_dead()) {
 		data.states.erase(KNOCKOUT);
@@ -252,6 +263,7 @@ Error JRPGActorState::setup(const Ref<JRPGDatabase> &p_database, int p_actor_id)
 	const Ref<JRPGTable> actors = p_database->get_table(JRPGDatabase::TABLE_ACTORS);
 	const JRPGActorData *actor = actors.is_valid() ? Object::cast_to<JRPGActorData>(actors->get_entry(p_actor_id).ptr()) : nullptr;
 	ERR_FAIL_NULL_V_MSG(actor, ERR_DOES_NOT_EXIST, vformat("JRPGActorState: the database has no actor %d.", p_actor_id));
+	ERR_FAIL_COND_V_MSG(data.actor_id != 0 && data.actor_id != p_actor_id, ERR_ALREADY_IN_USE, vformat("JRPGActorState: this state belongs to actor %d, not %d.", data.actor_id, p_actor_id));
 
 	database = p_database;
 	data = Data();
@@ -270,9 +282,7 @@ Error JRPGActorState::setup(const Ref<JRPGDatabase> &p_database, int p_actor_id)
 			data.equips.write[i] = { types[i] == 1 ? EQUIP_WEAPON : EQUIP_ARMOR, initial[i] };
 		}
 	}
-	for (int pass = 0; pass <= DEFAULT_EQUIP_SLOTS * 2 && _release_unequippable(false); pass++) {
-		_update_stats();
-	}
+	_release_all_unequippable(false);
 	data.hp = INT32_MAX; // Clamped to max HP and max MP by the refresh.
 	data.mp = INT32_MAX;
 	_refresh();
@@ -327,6 +337,8 @@ int JRPGActorState::repair_references(const Ref<JRPGDatabase> &p_database) {
 		data.level = get_max_level();
 		fixes++;
 	}
+	// A replaced class has another EXP table: the level follows the saved EXP again (no skills are learned here).
+	_sync_level(nullptr, false);
 	_refresh();
 	return fixes;
 }
@@ -406,19 +418,26 @@ void JRPGActorState::_learn_skills_up_to(int p_from_level, int p_to_level, Packe
 	}
 }
 
-Dictionary JRPGActorState::_set_exp(int64_t p_exp) {
-	const int old_level = data.level;
+void JRPGActorState::_sync_level(PackedInt32Array *r_learned, bool p_learn) {
 	const int max_level = get_max_level();
-	data.exp = CLAMP(p_exp, int64_t(0), MAX_EXP);
-	PackedInt32Array learned;
-	// Without class data every level would need 0 EXP; the level stays until the class is repaired (task 5.5.4).
-	while (_class_data().is_valid() && data.level < max_level && data.exp >= get_exp_for_level(data.level + 1)) {
+	// Without class data every level would need 0 EXP; the level stays until the class is repaired.
+	const bool has_class = _class_data().is_valid();
+	while (has_class && data.level < max_level && data.exp >= get_exp_for_level(data.level + 1)) {
 		data.level++;
-		_learn_skills_up_to(data.level - 1, data.level, &learned);
+		if (p_learn) {
+			_learn_skills_up_to(data.level - 1, data.level, r_learned);
+		}
 	}
-	while (data.level > 1 && (data.level > max_level || (_class_data().is_valid() && data.exp < get_exp_for_level(data.level)))) {
+	while (data.level > 1 && (data.level > max_level || (has_class && data.exp < get_exp_for_level(data.level)))) {
 		data.level--;
 	}
+}
+
+Dictionary JRPGActorState::_set_exp(int64_t p_exp) {
+	const int old_level = data.level;
+	data.exp = CLAMP(p_exp, int64_t(0), MAX_EXP);
+	PackedInt32Array learned;
+	_sync_level(&learned, true);
 	_refresh();
 	Dictionary report;
 	report["old_level"] = old_level;
@@ -472,7 +491,7 @@ int JRPGActorState::get_max_mp() const {
 
 void JRPGActorState::set_hp(int p_hp) {
 	data.hp = MAX(0, p_hp);
-	_refresh();
+	_clamp_pools();
 }
 
 void JRPGActorState::gain_hp(int p_amount) {
@@ -481,7 +500,7 @@ void JRPGActorState::gain_hp(int p_amount) {
 
 void JRPGActorState::set_mp(int p_mp) {
 	data.mp = MAX(0, p_mp);
-	_refresh();
+	_clamp_pools();
 }
 
 void JRPGActorState::gain_mp(int p_amount) {
@@ -490,7 +509,7 @@ void JRPGActorState::gain_mp(int p_amount) {
 
 void JRPGActorState::set_tp(int p_tp) {
 	data.tp = MAX(0, p_tp);
-	_refresh();
+	_clamp_pools();
 }
 
 void JRPGActorState::gain_tp(int p_amount) {
@@ -733,7 +752,9 @@ bool JRPGActorState::is_equip_slot_sealed(int p_slot) const {
 
 bool JRPGActorState::change_equip(int p_slot, EquipKind p_kind, int p_id) {
 	ERR_FAIL_COND_V_MSG(database.is_null(), false, "JRPGActorState: changing equipment needs the database.");
-	ERR_FAIL_INDEX_V(p_slot, data.equips.size(), false);
+	ERR_FAIL_INDEX_V(int(p_kind), EQUIP_ARMOR + 1, false);
+	const PackedInt32Array types = get_equip_slot_types();
+	ERR_FAIL_INDEX_V(p_slot, MIN(data.equips.size(), types.size()), false);
 	if (is_equip_slot_locked(p_slot)) {
 		return false;
 	}
@@ -741,7 +762,7 @@ bool JRPGActorState::change_equip(int p_slot, EquipKind p_kind, int p_id) {
 	if (p_kind != EQUIP_NONE && p_id > 0) {
 		JRPGGameState *party = _party();
 		const JRPGGameState::ItemKind inventory_kind = p_kind == EQUIP_WEAPON ? JRPGGameState::ITEM_KIND_WEAPON : JRPGGameState::ITEM_KIND_ARMOR;
-		if (is_equip_slot_sealed(p_slot) || !_fits_slot(get_equip_slot_types()[p_slot], p_kind, p_id) || !can_equip(p_kind, p_id) || !party || !party->has_item(inventory_kind, p_id)) {
+		if (is_equip_slot_sealed(p_slot) || !_fits_slot(types[p_slot], p_kind, p_id) || !can_equip(p_kind, p_id) || !party || !party->has_item(inventory_kind, p_id)) {
 			return false;
 		}
 		party->gain_item(inventory_kind, p_id, -1);
@@ -761,12 +782,11 @@ bool JRPGActorState::change_equip(int p_slot, EquipKind p_kind, int p_id) {
 
 bool JRPGActorState::force_equip(int p_slot, EquipKind p_kind, int p_id) {
 	ERR_FAIL_COND_V_MSG(database.is_null(), false, "JRPGActorState: changing equipment needs the database.");
+	ERR_FAIL_INDEX_V(int(p_kind), EQUIP_ARMOR + 1, false);
 	ERR_FAIL_INDEX_V(p_slot, data.equips.size(), false);
 	data.equips.write[p_slot] = (p_kind != EQUIP_NONE && p_id > 0) ? EquipSlot{ p_kind, p_id } : EquipSlot();
 	_update_stats();
-	for (int pass = 0; pass <= DEFAULT_EQUIP_SLOTS * 2 && _release_unequippable(false); pass++) {
-		_update_stats();
-	}
+	_release_all_unequippable(false);
 	_refresh();
 	return data.equips[p_slot].kind == p_kind && data.equips[p_slot].id == p_id;
 }
@@ -942,8 +962,12 @@ Error JRPGActorState::deserialize(const Dictionary &p_data) {
 	if (err != OK) {
 		return err;
 	}
+	ERR_FAIL_COND_V_MSG(data.actor_id != 0 && loaded.actor_id != data.actor_id, ERR_INVALID_DATA, vformat("JRPGActorState: this state belongs to actor %d; the data is for actor %d.", data.actor_id, loaded.actor_id));
 	data = loaded;
+	// Recompute parameters and limits, but never trade equipment with the party while loading.
+	releasing = true;
 	_refresh();
+	releasing = false;
 	return OK;
 }
 

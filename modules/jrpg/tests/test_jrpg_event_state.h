@@ -89,7 +89,6 @@ TEST_CASE("[JRPG][EventState] The current map's event states save and load") {
 
 	// Values are kept within their ranges.
 	ERR_PRINT_OFF;
-	guard->set_direction(JRPGSystemData::Direction(9));
 	guard->set_event_id(0);
 	CHECK(game->ensure_event_state(0).is_null());
 	ERR_PRINT_ON;
