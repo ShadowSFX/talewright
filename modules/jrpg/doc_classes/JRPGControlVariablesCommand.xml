@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGControlVariablesCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: changes one variable or a range of variables.
+	</brief_description>
+	<description>
+		Applies [member operation] with an operand to variables [member first_id] to [member last_id]. The operand ([member operand_type]) is [member constant], variable [member operand_variable], a random number from [member random_min] to [member random_max] drawn for each variable (from the game's misc random stream), a value of the game ([member game_data] with [member data_id] and [member data_param]), or the formula [member script_text] ([JRPGFormula]).
+		Integers stay integers, kept within [code]-2^62[/code] and [code]2^62[/code]; a variable holding a float works in floats; text counts as 0. Division rounds toward zero, and the remainder has the sign of the variable. Dividing by 0 leaves the variable as it is, with a warning, as does a range that is backwards or outside 1 to [constant JRPGGameState.MAX_VARIABLE_ID].
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="constant" type="int" setter="set_constant" getter="get_constant" default="0">
+			The number a constant operand gives.
+		</member>
+		<member name="data_id" type="int" setter="set_data_id" getter="get_data_id" default="1">
+			For game data: the item, weapon, armor or actor; the character (-1 the player, 0 this event, or an event's ID); or the party slot (0 the leader).
+		</member>
+		<member name="data_param" type="int" setter="set_data_param" getter="get_data_param" default="0">
+			For game data: which value of an actor ([enum ActorValue]), of a character ([enum CharacterValue]), or of the game ([enum OtherValue]).
+		</member>
+		<member name="first_id" type="int" setter="set_first_id" getter="get_first_id" default="1">
+			The first variable changed.
+		</member>
+		<member name="game_data" type="int" setter="set_game_data" getter="get_game_data" enum="JRPGControlVariablesCommand.GameData" default="0">
+			Which value of the game a game data operand reads.
+		</member>
+		<member name="last_id" type="int" setter="set_last_id" getter="get_last_id" default="1">
+			The last variable changed: the same as [member first_id] for one variable.
+		</member>
+		<member name="operand_type" type="int" setter="set_operand_type" getter="get_operand_type" enum="JRPGControlVariablesCommand.OperandType" default="0">
+			Where the operand comes from.
+		</member>
+		<member name="operand_variable" type="int" setter="set_operand_variable" getter="get_operand_variable" default="1">
+			The variable a variable operand reads.
+		</member>
+		<member name="operation" type="int" setter="set_operation" getter="get_operation" enum="JRPGControlVariablesCommand.Operation" default="0">
+			How the operand changes the variables.
+		</member>
+		<member name="random_max" type="int" setter="set_random_max" getter="get_random_max" default="0">
+			The largest random number (the two bounds may be given either way round).
+		</member>
+		<member name="random_min" type="int" setter="set_random_min" getter="get_random_min" default="0">
+			The smallest random number. Both bounds are kept within [constant RANDOM_LIMIT].
+		</member>
+		<member name="script_text" type="String" setter="set_script_text" getter="get_script_text" default="&quot;&quot;">
+			The formula a script operand evaluates.
+		</member>
+	</members>
+	<constants>
+		<constant name="OPERATION_SET" value="0" enum="Operation">
+			The operand.
+		</constant>
+		<constant name="OPERATION_ADD" value="1" enum="Operation">
+			The variable plus the operand.
+		</constant>
+		<constant name="OPERATION_SUB" value="2" enum="Operation">
+			The variable minus the operand.
+		</constant>
+		<constant name="OPERATION_MUL" value="3" enum="Operation">
+			The variable times the operand.
+		</constant>
+		<constant name="OPERATION_DIV" value="4" enum="Operation">
+			The variable divided by the operand.
+		</constant>
+		<constant name="OPERATION_MOD" value="5" enum="Operation">
+			The remainder of the variable divided by the operand.
+		</constant>
+		<constant name="OPERATION_MAX" value="6" enum="Operation">
+			The number of operations.
+		</constant>
+		<constant name="OPERAND_CONSTANT" value="0" enum="OperandType">
+			A number.
+		</constant>
+		<constant name="OPERAND_VARIABLE" value="1" enum="OperandType">
+			Another variable's value.
+		</constant>
+		<constant name="OPERAND_RANDOM" value="2" enum="OperandType">
+			A random number in a range.
+		</constant>
+		<constant name="OPERAND_GAME_DATA" value="3" enum="OperandType">
+			A value of the game.
+		</constant>
+		<constant name="OPERAND_SCRIPT" value="4" enum="OperandType">
+			A formula's result.
+		</constant>
+		<constant name="OPERAND_MAX" value="5" enum="OperandType">
+			The number of operand types.
+		</constant>
+		<constant name="DATA_ITEM" value="0" enum="GameData">
+			How many of item [member data_id] the party holds.
+		</constant>
+		<constant name="DATA_WEAPON" value="1" enum="GameData">
+			How many of weapon [member data_id] the party holds.
+		</constant>
+		<constant name="DATA_ARMOR" value="2" enum="GameData">
+			How many of armor [member data_id] the party holds.
+		</constant>
+		<constant name="DATA_ACTOR" value="3" enum="GameData">
+			A value of actor [member data_id] ([enum ActorValue]); 0, with a warning, for an actor not in the game yet.
+		</constant>
+		<constant name="DATA_ENEMY" value="4" enum="GameData">
+			A value of an enemy in battle: 0, with a warning, until battles exist.
+		</constant>
+		<constant name="DATA_CHARACTER" value="5" enum="GameData">
+			A value of the player or an event ([enum CharacterValue]).
+		</constant>
+		<constant name="DATA_PARTY" value="6" enum="GameData">
+			The actor ID of party member [member data_id] (0 the leader), or 0.
+		</constant>
+		<constant name="DATA_LAST" value="7" enum="GameData">
+			A value of the last action in battle: 0, with a warning, until battles exist.
+		</constant>
+		<constant name="DATA_OTHER" value="8" enum="GameData">
+			A value of the game ([enum OtherValue]).
+		</constant>
+		<constant name="DATA_MAX" value="9" enum="GameData">
+			The number of game data kinds.
+		</constant>
+		<constant name="ACTOR_LEVEL" value="0" enum="ActorValue">
+			Level.
+		</constant>
+		<constant name="ACTOR_EXP" value="1" enum="ActorValue">
+			EXP.
+		</constant>
+		<constant name="ACTOR_HP" value="2" enum="ActorValue">
+			HP.
+		</constant>
+		<constant name="ACTOR_MP" value="3" enum="ActorValue">
+			MP.
+		</constant>
+		<constant name="ACTOR_MAX_HP" value="4" enum="ActorValue">
+			Max HP.
+		</constant>
+		<constant name="ACTOR_MAX_MP" value="5" enum="ActorValue">
+			Max MP.
+		</constant>
+		<constant name="ACTOR_ATTACK" value="6" enum="ActorValue">
+			Attack.
+		</constant>
+		<constant name="ACTOR_DEFENSE" value="7" enum="ActorValue">
+			Defense.
+		</constant>
+		<constant name="ACTOR_MAGIC_ATTACK" value="8" enum="ActorValue">
+			Magic attack.
+		</constant>
+		<constant name="ACTOR_MAGIC_DEFENSE" value="9" enum="ActorValue">
+			Magic defense.
+		</constant>
+		<constant name="ACTOR_AGILITY" value="10" enum="ActorValue">
+			Agility.
+		</constant>
+		<constant name="ACTOR_LUCK" value="11" enum="ActorValue">
+			Luck.
+		</constant>
+		<constant name="ACTOR_TP" value="12" enum="ActorValue">
+			TP.
+		</constant>
+		<constant name="ACTOR_VALUE_MAX" value="13" enum="ActorValue">
+			The number of actor values.
+		</constant>
+		<constant name="CHARACTER_MAP_X" value="0" enum="CharacterValue">
+			The column of the character's cell.
+		</constant>
+		<constant name="CHARACTER_MAP_Y" value="1" enum="CharacterValue">
+			The row of the character's cell.
+		</constant>
+		<constant name="CHARACTER_DIRECTION" value="2" enum="CharacterValue">
+			The direction the character faces, as the help numbers them: down 2, left 4, right 6, up 8.
+		</constant>
+		<constant name="CHARACTER_SCREEN_X" value="3" enum="CharacterValue">
+			The character's position on the screen: 0, with a warning, until the runtime gives it.
+		</constant>
+		<constant name="CHARACTER_SCREEN_Y" value="4" enum="CharacterValue">
+			The character's position on the screen: 0, with a warning, until the runtime gives it.
+		</constant>
+		<constant name="CHARACTER_VALUE_MAX" value="5" enum="CharacterValue">
+			The number of character values.
+		</constant>
+		<constant name="OTHER_MAP_ID" value="0" enum="OtherValue">
+			The ID of the map the player is on.
+		</constant>
+		<constant name="OTHER_PARTY_SIZE" value="1" enum="OtherValue">
+			How many actors the party has.
+		</constant>
+		<constant name="OTHER_GOLD" value="2" enum="OtherValue">
+			The party's gold.
+		</constant>
+		<constant name="OTHER_STEPS" value="3" enum="OtherValue">
+			The steps the party has taken.
+		</constant>
+		<constant name="OTHER_PLAYTIME" value="4" enum="OtherValue">
+			Seconds played.
+		</constant>
+		<constant name="OTHER_TIMER" value="5" enum="OtherValue">
+			Seconds left on the timer (0 when it does not work).
+		</constant>
+		<constant name="OTHER_VALUE_MAX" value="6" enum="OtherValue">
+			The number of other values.
+		</constant>
+		<constant name="RANDOM_LIMIT" value="99999999">
+			The largest bound of a random operand, either sign.
+		</constant>
+		<constant name="VALUE_LIMIT" value="4611686018427387904">
+			Integer results are kept within this value, either sign.
+		</constant>
+	</constants>
+</class>

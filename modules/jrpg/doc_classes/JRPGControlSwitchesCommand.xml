@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGControlSwitchesCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: turns one switch or a range of switches ON or OFF.
+	</brief_description>
+	<description>
+		Sets switches [member first_id] to [member last_id] ON or OFF ([member value]); one switch when both are the same. A range outside 1 to [constant JRPGGameState.MAX_SWITCH_ID], or backwards, changes nothing, with a warning.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="first_id" type="int" setter="set_first_id" getter="get_first_id" default="1">
+			The first switch.
+		</member>
+		<member name="last_id" type="int" setter="set_last_id" getter="get_last_id" default="1">
+			The last switch: the same as [member first_id] for one switch.
+		</member>
+		<member name="value" type="bool" setter="set_value" getter="get_value" default="true">
+			[code]true[/code] turns the switches ON, [code]false[/code] OFF.
+		</member>
+	</members>
+</class>

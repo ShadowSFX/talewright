@@ -1182,3 +1182,23 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** reads the help literally: a called common event's contents are the current event's contents; a common
   event used as a subroutine can bail out without ending the event that called it.
 - **Reversal:** `JRPGInterpreter::exit` (D-060 amended) and the command classes.
+
+## D-068 — Control Switches, Variables and Self Switch
+- **Context:** task 9.5.2.1 (RM-CMD-006..008). The help lists the operations and operand kinds but not how division
+  rounds, what happens on division by zero or overflow, whether a random operand is drawn once or per variable, which
+  "Other" values exist, or what screen positions mean to a core without a screen.
+- **Options:** integer division flooring or truncating; one random draw for a range or one per variable; refusing or
+  clamping overflow; an "Other" list copied from elsewhere or Talewright's own.
+- **Choice:** codes `control_switches` (first/last ID, value), `control_variables`, `control_self_switch` (letter,
+  value; usable in map and common events). Control Variables: operations set/add/sub/mul/div/mod; operands constant,
+  variable, random (per variable, misc stream, bounds within +-99 999 999 and in either order), game data (items,
+  weapons, armors held; actor level/EXP/HP/MP/eight parameters/TP; player or event map X/Y and direction numbered
+  down 2, left 4, right 6, up 8 as the help gives; party slot actor ID; Talewright's "other": map ID, party size,
+  gold, steps, playtime seconds, timer seconds), script (JRPGFormula). Integers saturate at +-2^62 (sums checked
+  before adding), floats stay floats when the variable or operand is one, text reads 0; division truncates toward
+  zero, the remainder takes the variable's sign; division by zero, non-finite results and bad ranges change nothing
+  with one warning per command. Enemy/last-action values and screen positions read 0 with a warning until battles
+  and the runtime position query exist.
+- **Why:** deterministic integer arithmetic matches the formula rules (D-009) and never wraps; per-variable random
+  draws make "fill a range with dice" work; documented numbering for directions keeps authors' knowledge valid.
+- **Reversal:** the command classes; `JRPGControlVariablesCommand::apply`.

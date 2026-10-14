@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.5.1.3 Loop, Break Loop, Label, Jump to Label, Common Event, Comment, Exit",
+  "last_completed": "9.5.2.1 Control Switches, Control Variables, Control Self Switch",
   "tasks": [
     {
       "id": "0",
@@ -4231,26 +4231,87 @@
         "modules/jrpg/tests/test_jrpg_flow_commands.h",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "7d14d5402e",
       "notes": ""
     },
     {
       "id": "9.5.2",
       "parent": "9.5",
       "title": "State commands",
-      "description": "Control Switches/Variables/Self Switch, Change Gold/Items/Weapons/Armors, Recover All, Change HP/MP/State.",
+      "description": "Control Switches/Variables/Self Switch, Change Gold/Items/Weapons/Armors, Recover All, Change HP/MP/State. Split into 9.5.2.1 (switches, variables, self switches), 9.5.2.2 (gold, items, weapons, armors) and 9.5.2.3 (HP, MP, TP, states, Recover All).",
       "dependencies": [
         "9.5.1"
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "One doctest per command"
+        "9.5.2.1, 9.5.2.2 and 9.5.2.3 done"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
       "commit": "",
       "notes": "",
       "status": "pending"
+    },
+    {
+      "id": "9.5.2.1",
+      "parent": "9.5.2",
+      "title": "Control Switches, Control Variables, Control Self Switch",
+      "priority": 1,
+      "dependencies": [],
+      "description": "Control Switches (RM-CMD-006: one or a range, ON/OFF), Control Variables (RM-CMD-007: one or a range; set/add/sub/mul/div/mod; operands constant, variable, random (the game's own random stream, -99 999 999..99 999 999), game data (items/weapons/armors held, an actor's parameter, the player's or an event's map X/Y/direction, a party member's actor ID, Talewright's 'other' values), script (formula)); division and modulo by zero leave the variable unchanged with a warning), Control Self Switch (RM-CMD-008: A-D of this event; refused outside map events).",
+      "acceptance_criteria": [
+        "One doctest per command, with ranges and every operation and operand kind",
+        "Edge cases: division by zero, values beyond the variable limits, a self switch without an event"
+      ],
+      "test_strategy": "Doctests [JRPG].",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_state_commands.h",
+        "modules/jrpg/core/jrpg_state_commands.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGControlSwitchesCommand.xml",
+        "modules/jrpg/doc_classes/JRPGControlVariablesCommand.xml",
+        "modules/jrpg/doc_classes/JRPGControlSelfSwitchCommand.xml",
+        "modules/jrpg/tests/test_jrpg_state_commands.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "9.5.2.2",
+      "parent": "9.5.2",
+      "title": "Change Gold, Items, Weapons, Armors",
+      "priority": 1,
+      "dependencies": [],
+      "description": "Change Gold (RM-CMD-018), Change Items (RM-CMD-019), Change Weapons (RM-CMD-020) and Change Armors (RM-CMD-021): increase or decrease by a constant or a variable's value, counts clamped to 0..99 and gold to its limit; a decrease of weapons or armors may take equipped ones (include equipped) from party members, after the bag.",
+      "acceptance_criteria": [
+        "One doctest per command, both operations and operands",
+        "Clamping at 0 and at the limits; include equipped takes from party members"
+      ],
+      "test_strategy": "Doctests [JRPG].",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.5.2.3",
+      "parent": "9.5.2",
+      "title": "Change HP, MP, TP, State; Recover All",
+      "priority": 1,
+      "dependencies": [],
+      "description": "Change HP (RM-CMD-023: an actor, the entire party or an actor ID from a variable; increase/decrease by a constant or a variable; allow death, otherwise HP stops at 1), Change MP (RM-CMD-024), Change TP (RM-CMD-025), Change State (RM-CMD-026: add/remove), Recover All (RM-CMD-027).",
+      "acceptance_criteria": [
+        "One doctest per command, entire party and variable actor included",
+        "Allow death on and off; knockout added and removed; a missing actor is skipped with a warning"
+      ],
+      "test_strategy": "Doctests [JRPG].",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "9.5.3",

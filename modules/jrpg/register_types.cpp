@@ -70,6 +70,7 @@
 #include "modules/jrpg/core/jrpg_sim_clock.h"
 #include "modules/jrpg/core/jrpg_skill_data.h"
 #include "modules/jrpg/core/jrpg_stat_block.h"
+#include "modules/jrpg/core/jrpg_state_commands.h"
 #include "modules/jrpg/core/jrpg_state_data.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
@@ -198,6 +199,9 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGLabelCommand);
 		GDREGISTER_CLASS(JRPGJumpToLabelCommand);
 		GDREGISTER_CLASS(JRPGCommentCommand);
+		GDREGISTER_CLASS(JRPGControlSwitchesCommand);
+		GDREGISTER_CLASS(JRPGControlVariablesCommand);
+		GDREGISTER_CLASS(JRPGControlSelfSwitchCommand);
 		JRPGCommandRegistry::register_command(JRPGShowTextCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGShowChoicesCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGInputNumberCommand::get_class_static());
@@ -209,6 +213,9 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		JRPGCommandRegistry::register_command(JRPGLabelCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGJumpToLabelCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGCommentCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGControlSwitchesCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGControlVariablesCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGControlSelfSwitchCommand::get_class_static());
 		GDREGISTER_CLASS(JRPGReferenceScanner);
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotile); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotileResolver);

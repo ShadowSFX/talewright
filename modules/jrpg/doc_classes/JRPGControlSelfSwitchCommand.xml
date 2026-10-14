@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGControlSelfSwitchCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: turns a self switch of this event ON or OFF.
+	</brief_description>
+	<description>
+		Sets self switch [member self_switch] of the event that runs the command ON or OFF ([member value]). A run that belongs to no map event (a common event started by itself) changes nothing, with a warning. Not for battle events.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="self_switch" type="String" setter="set_self_switch" getter="get_self_switch" default="&quot;A&quot;">
+			The self switch: A, B, C or D.
+		</member>
+		<member name="value" type="bool" setter="set_value" getter="get_value" default="true">
+			[code]true[/code] turns it ON, [code]false[/code] OFF.
+		</member>
+	</members>
+</class>
