@@ -410,8 +410,8 @@ void JRPGMapCanvas::_begin_stroke(const Vector2 &p_point) {
 		case JRPGMapEditSession::TOOL_FILL: {
 			// With the automatic layer, the area of matching cells on the layer the tile goes to.
 			const Ref<JRPGMapData> map_data = map->get_map_data();
-			const int area_layer = stroke_auto ? (stroke_ground_kind ? JRPGMapData::LAYER_GROUND : JRPGMapData::LAYER_OBJECTS) : target;
-			_stroke_cells(JRPGMapShapes::flood_fill(JRPGMapStroke::read_all(map_data, area_layer), map_data->get_size(), cell));
+			const PackedInt32Array area = stroke_auto ? JRPGMapStroke::read_auto_area(map_data, stroke_ground_kind) : JRPGMapStroke::read_all(map_data, target);
+			_stroke_cells(JRPGMapShapes::flood_fill(area, map_data->get_size(), cell));
 			_finish_stroke();
 		} break;
 		default: {

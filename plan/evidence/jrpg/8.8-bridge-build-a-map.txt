@@ -1,0 +1,38 @@
+# 8.8 bridge verification: building Lantern Cove through the bridge
+## the tileset: three autotiles and a sheet of plain tiles
+  palette entries: 35 | e.g. [(1, 'autotile', 'Grass', [0, 0]), (2, 'autotile', 'Dirt Path', [0, 0]), (3, 'autotile', 'Water', [0, 0]), (20, 'plain', 'Outdoor', [0, 2]), (21, 'plain', 'Outdoor', [1, 2]), (28, 'plain', 'Outdoor', [0, 3]), (29, 'plain', 'Outdoor', [1, 3])]
+## flags: water blocked; the trees' tops are star tiles (overhead), their trunks blocked
+  flag set, changed: True
+  flag set, changed: True
+  flag set, changed: True
+## the map: 16 x 12 cells
+  created map 1 res://jrpg/maps/map_0001.tscn
+## painting: grass everywhere, a pond, a path, a row of trees (a 2 x 2 stamp), flowers (a 2 x 1 stamp)
+   fill ground changed 192
+   ellipse auto changed 34
+   rectangle auto changed 16
+   rectangle auto changed 4
+   pencil auto changed 16
+   rectangle auto changed 15
+## a region (1) over the meadow for encounters, and shadows along the pond's west bank
+   rectangle regions changed 35
+   pencil shadows changed 5
+## properties: display name, music, encounter steps; the start position on the path
+  set: {'display_name': 'Lantern Cove', 'bgm': {'class': 'JRPGAudioCue', 'stream': 'res://audio/bgm/field.ogg', 'volume': 90, 'pitch': 100, 'pan': 0}, 'autoplay_bgm': True, 'encounter_steps': 25}
+  start: 1 [3, 9]
+## the hero leads the party
+  character: [48, 48]
+## reading it back
+  map: 1 Lantern Cove [16, 12] | painted: {'ground': 192, 'ground_detail': 54, 'objects': 31, 'upper': 0, 'regions': 35, 'shadows': 5}
+  properties: {'display_name': 'Lantern Cove', 'autoplay_bgm': True, 'encounter_steps': 25}
+  capture 768 x 576 -> plan/evidence/jrpg/8.8-lantern-cove.png
+## Play From Start: the game begins at (3, 9) with the map's music
+   {'scene': 'res://addons/talewright/scenes/game.tscn', 'start_map_id': 1, 'start_cell': [3, 9]}
+  player cell: Vector2i(3, 9)
+  BGM: True res://audio/bgm/field.ogg
+## walk up the path toward the trees: the trunks stop the player under the tree tops' row
+  player cell: Vector2i(8, 3)
+  game screenshot: plan/evidence/jrpg/8.8-playing.png
+## errors
+    "errors": 0,
+    "warnings": 0,

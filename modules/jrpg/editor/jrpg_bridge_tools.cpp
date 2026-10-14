@@ -1091,6 +1091,10 @@ Dictionary describe_tile(const Ref<TileSet> &p_tileset, const Dictionary &p_entr
 	tile["index"] = p_index;
 	tile["kind"] = p_entry.get("kind", "plain");
 	tile["name"] = p_entry.get("name", "");
+	// Where it is: its TileSet source and its cell there (for a plain sheet, its column and row in the image).
+	tile["source_id"] = p_entry.get("source_id", -1);
+	const Vector2i coords = p_entry.get("atlas_coords", Vector2i());
+	tile["atlas_coords"] = Array({ coords.x, coords.y });
 	if (!JRPGTileFlags::has_entry_tile(p_tileset, p_entry)) {
 		tile["missing"] = true; // Its tile is not in the TileSet (a removed atlas source).
 		return tile;
@@ -1770,8 +1774,8 @@ void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 			draw(JRPGMapShapes::ellipse(points[0], points[1]));
 		} break;
 		case JRPGMapEditSession::TOOL_FILL: {
-			const int area_layer = automatic ? (ground_kind ? JRPGMapData::LAYER_GROUND : JRPGMapData::LAYER_OBJECTS) : layer;
-			draw(JRPGMapShapes::flood_fill(JRPGMapStroke::read_all(data, area_layer), data->get_size(), points[0]));
+			const PackedInt32Array area = automatic ? JRPGMapStroke::read_auto_area(data, ground_kind) : JRPGMapStroke::read_all(data, layer);
+			draw(JRPGMapShapes::flood_fill(area, data->get_size(), points[0]));
 		} break;
 		default: {
 			draw({ points[0] });
@@ -1996,6 +2000,16 @@ void tool_map_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_c
 		scene = map->get_scene_file_path();
 	}
 	Dictionary result = describe_map(data, scene);
+	// What jrpg_map_set sets, read back (task 8.8).
+	Dictionary properties;
+	List<PropertyInfo> list;
+	data->get_property_list(&list);
+	for (const PropertyInfo &pi : list) {
+		if (JRPGMapEditing::is_settable_property(pi)) {
+			properties[pi.name] = data_to_json(data->get(pi.name), 4);
+		}
+	}
+	result["properties"] = properties;
 	if (p_args.has("layer")) {
 		const int target = map_target(p_args, p_call);
 		if (target < 0) {
@@ -2235,7 +2249,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool map_stroke;
 	map_stroke.name = "jrpg_map_stroke";
 	map_stroke.title = "Draw on the map";
-	map_stroke.description = "Draws one stroke on the edited map with a map canvas tool, as one undo action of the map scene: pencil (the path through points, joined by straight lines), rectangle and ellipse (filled, between two corner points), fill (the area of matching cells around the one point), eraser (the pencil drawing 0). layer is a tile layer, auto (the layer the tile's kind belongs to, as the canvas's Auto: autotiles and walls replace the ground, other tiles stack on the two upper layers, at most two per cell, the oldest dropping out; the eraser clears the top-most tile), regions or shadows; value is the palette index, the region ID (1-255) or the shadowed quarters of each cell (1-15: 1 top left, 2 top right, 4 bottom left, 8 bottom right; the canvas's shadow pen toggles single quarters instead). A stamp (rows of palette indexes) draws several tiles at once, as a rectangle of tiles chosen in the Palette panel. Points outside the map are allowed; only cells inside are drawn. Returns the cells changed and each layer's SHA-256 (layer_sha256), which undo restores exactly.";
+	map_stroke.description = "Draws one stroke on the edited map with a map canvas tool, as one undo action of the map scene: pencil (the path through points, joined by straight lines), rectangle and ellipse (filled, between two corner points), fill (the area of matching cells around the one point), eraser (the pencil drawing 0). layer is a tile layer, auto (the layer the tile's kind belongs to, as the canvas's Auto: an autotile or wall is the ground where the ground is empty or of its kind, and goes on ground_detail over other ground, which shows through its edges; other tiles stack on the two upper layers, at most two per cell, the oldest dropping out; the eraser clears the top-most tile), regions or shadows; value is the palette index, the region ID (1-255) or the shadowed quarters of each cell (1-15: 1 top left, 2 top right, 4 bottom left, 8 bottom right; the canvas's shadow pen toggles single quarters instead). A stamp (rows of palette indexes) draws several tiles at once, as a rectangle of tiles chosen in the Palette panel. Points outside the map are allowed; only cells inside are drawn. Returns the cells changed and each layer's SHA-256 (layer_sha256), which undo restores exactly.";
 	Dictionary map_stroke_properties;
 	Dictionary tool_property = schema_property("string", "The tool.");
 	tool_property["enum"] = Array({ "pencil", "rectangle", "ellipse", "fill", "eraser" });
@@ -2569,7 +2583,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool map_get;
 	map_get.name = "jrpg_map_get";
 	map_get.title = "Read a map";
-	map_get.description = "Reads a map: the edited map, or the map scene file scene (res://...) without opening or instancing it. Returns its id, name, tileset, size, scroll type, how many cells each tile layer, the regions and the shadows hold and the SHA-256 of each (layer_sha256: undo brings it back exactly); with layer, also those cells as rows: palette indexes, region IDs or shadow quarters (maps of up to 4096 cells).";
+	map_get.description = "Reads a map: the edited map, or the map scene file scene (res://...) without opening or instancing it. Returns its id, name, tileset, size, scroll type, its properties as jrpg_map_set takes them (properties), how many cells each tile layer, the regions and the shadows hold and the SHA-256 of each (layer_sha256: undo brings it back exactly); with layer, also those cells as rows: palette indexes, region IDs or shadow quarters (maps of up to 4096 cells).";
 	Dictionary map_get_properties;
 	map_get_properties["scene"] = schema_property("string", "res:// path of a map scene (default: the edited map).");
 	map_get_properties["layer"] = schema_property("string", "0-3, ground, ground_detail, objects, upper, regions or shadows: list its cells.");
@@ -2582,7 +2596,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool tile_flags;
 	tile_flags.name = "jrpg_tileset_flags";
 	tile_flags.title = "Read a tileset's tile flags";
-	tile_flags.description = "Lists a tileset's palette (the tiles maps use; an autotile or wall kind is one entry) with each tile's flags as the tileset form shows them: pass (open, blocked, transparent), no_entry and no_exit sides (north, east, south, west), overhead, ladder, bush, counter, damage and terrain_tag (0-15). A kind whose shapes carry different flags is marked mixed (the first shape's are shown); a tile its TileSet lacks is marked missing. bake_up_to_date tells whether the flags baked for maps match (the database save bakes them); sources and terrain_sets show the TileSet's layout. A flipped or rotated entry (transformed) shares its flags with the tile it turns.";
+	tile_flags.description = "Lists a tileset's palette (the tiles maps use; an autotile or wall kind is one entry) with each tile's place (source_id, and atlas_coords: for a plain sheet its column and row in the image) and flags as the tileset form shows them: pass (open, blocked, transparent), no_entry and no_exit sides (north, east, south, west), overhead, ladder, bush, counter, damage and terrain_tag (0-15). A kind whose shapes carry different flags is marked mixed (the first shape's are shown); a tile its TileSet lacks is marked missing. bake_up_to_date tells whether the flags baked for maps match (the database save bakes them); sources and terrain_sets show the TileSet's layout. A flipped or rotated entry (transformed) shares its flags with the tile it turns.";
 	Dictionary tile_flags_properties;
 	tile_flags_properties["id"] = tileset_id;
 	tile_flags_properties["from"] = schema_property("integer", "First palette index (default 1).");

@@ -147,11 +147,16 @@ public:
 	// Writes p_values[i] to p_cells[i] of p_target (any target; values clamped to its range). Returns how many cells
 	// changed with this call.
 	int set_values(int p_target, const Vector<Vector2i> &p_cells, const PackedInt32Array &p_values);
-	// The automatic layer (spec 05, D-040; RM-MAP-019, RM-MAP-022): p_value goes to the layer its kind belongs to.
-	// Autotile and wall kinds (p_ground_kind) replace the Ground tile; plain tiles stack on Objects and Upper, which
-	// hold at most two tiles, older below: a new tile goes on top and the oldest drops out, and painting the tile
-	// already on top changes nothing. p_value 0 erases the cell's top-most tile. Returns how many values changed.
+	// The automatic layer (spec 05, D-040, D-047; RM-MAP-019, RM-MAP-022): p_value goes to the layer its kind belongs
+	// to. An autotile or wall kind (p_ground_kind) is the Ground tile where the ground is empty or of its kind (and
+	// clears Ground Detail there), and goes on Ground Detail over other ground, which shows through its edges; plain
+	// tiles stack on Objects and Upper, which hold at most two tiles, older below: a new tile goes on top and the
+	// oldest drops out, and painting the tile already on top changes nothing. p_value 0 erases the cell's top-most
+	// tile. Returns how many values changed.
 	int add_auto(const Vector<Vector2i> &p_cells, int p_value, bool p_ground_kind);
+	// The cells a fill with the automatic layer compares: for an autotile or wall kind the ground as it shows
+	// (Ground Detail over Ground), for a plain tile the Objects layer.
+	static PackedInt32Array read_auto_area(const Ref<JRPGMapData> &p_data, bool p_ground_kind);
 	// Draws a multi-tile stamp (task 8.5.2): p_stamp holds p_size cells of palette indexes row by row (0: the cell is
 	// left as it is), tiled from p_anchor over p_cells, on the stroke's tile layer or, when p_automatic, each tile on the
 	// layer its kind belongs to. p_blocks: each cell brings the whole stamp-sized block it falls in (a pencil puts the

@@ -675,3 +675,16 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   frames are set from the simulation, never played, so they match the steps exactly (and online, the server's).
 - **Why:** stepping looks the same at every speed and frame rate; deterministic from the mover's position.
 - **Reversal:** `FRAMES_PER_CELL` and `JRPGCharacterSprite::show_state`.
+
+## D-047 — Autotiles drawn with Auto go over other ground (refines D-040)
+- **Context:** building a map through the bridge (task 8.8) showed holes along the edges of the pond and the path:
+  the generated water and dirt autotiles are overlay art whose edges are transparent, and D-040 put every autotile
+  drawn with Auto on Ground, replacing the grass under it, so the edges showed the clear color.
+- **Options:** make autotile art opaque (every autotile would need its own copy of each base terrain); draw a base
+  under Ground; place autotiles drawn over other ground on Ground Detail.
+- **Choice:** with Auto, an autotile or wall is the Ground tile where Ground is empty or of its kind (and then
+  clears Ground Detail, so painting grass over a path removes the path), and goes on Ground Detail over other ground,
+  which shows through its edges. The automatic fill compares the ground as it shows (Ground Detail over Ground). The
+  eraser still clears the top-most tile. Explicit layers are unchanged.
+- **Why:** terrain art with soft edges looks right without extra authoring; the base terrain stays a single fill.
+- **Reversal:** `JRPGMapStroke::add_auto` and `read_auto_area`.

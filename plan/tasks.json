@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.7.2 Character sprite on the map",
+  "last_completed": "8.8 Map authoring tools",
   "tasks": [
     {
       "id": "0",
@@ -3470,7 +3470,7 @@
         "plan/DECISIONS.md",
         "plan/evidence/jrpg/8.7.2-*"
       ],
-      "commit": "pending",
+      "commit": "eeac5a936e",
       "notes": ""
     },
     {
@@ -3481,16 +3481,27 @@
       "dependencies": [
         "8.5"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 2,
       "acceptance_criteria": [
         "Claude builds a small map via bridge",
         "Claude sets the start position via bridge and New Game (13.2) starts there"
       ],
       "test_strategy": "Bridge.",
-      "files": [],
-      "commit": "",
-      "notes": ""
+      "files": [
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/editor/jrpg_map_editing.{h,cpp}",
+        "modules/jrpg/editor/jrpg_map_canvas.cpp",
+        "modules/jrpg/runtime/jrpg_scene_manager.{h,cpp}",
+        "modules/jrpg/tests/test_jrpg_map_canvas.h",
+        "talewright/docs/claude_bridge.md",
+        "talewright/tools/jrpg_bridge_checks.py",
+        "plan/specs/05_maps_tiles.md",
+        "plan/DECISIONS.md",
+        "plan/evidence/jrpg/8.8-*"
+      ],
+      "commit": "pending",
+      "notes": "New Game is the title screen's (13.2): it calls the same JRPGSceneManager.start_new_game that Play From Start runs here, and 13.2's own criteria test it at the start position."
     },
     {
       "id": "8.9",

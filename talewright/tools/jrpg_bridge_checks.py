@@ -551,8 +551,13 @@ def run(checks: Checks) -> None:
     stroke(
         "pencil", "ground", [[9, 7]], 2
     )  # Another tile on the ground first, so the autotile has something to replace.
-    stroke("pencil", "auto", [[9, 7]], 1)  # The grass autotile: the ground, not the stack.
-    c.check("jrpg_map_stroke: an autotile replaces the ground tile", stack() == [1, 5, 0], json.dumps(stack()))
+    stroke("pencil", "auto", [[9, 7]], 1)  # The grass autotile over other ground: on ground_detail (D-047).
+    detail = c.call("jrpg_map_get", {"layer": "ground_detail"})["cells"][7][9]
+    c.check(
+        "jrpg_map_stroke: an autotile goes over other ground, not on the stack",
+        stack() == [2, 5, 0] and detail == 1,
+        json.dumps([stack(), detail]),
+    )
 
     # Multi-tile stamps (task 8.5.2): a 2 x 2 stamp from the pencil lands whole at its first cell, a 0 leaving its cell
     # as it is; a rectangle tiles the stamp from its corner; each stroke is one undo action.

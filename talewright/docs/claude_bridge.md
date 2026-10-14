@@ -95,17 +95,17 @@ by the editor. Exit codes: 0 ok, 1 the tool reported an error, 2 transport/proto
 | `jrpg_db_set_image` | Give an actor its face, character or battler image, or an enemy its battler, from a `res://` image (a newly copied file is imported first: the call waits up to 20 s); a character sheet must divide into its directions and walk frames; stores the `uid://`, undoable; an empty image clears the field |
 | `jrpg_map_create` | Create a map scene (`res://jrpg/maps/map_NNNN.tscn`, a `JRPGMap` root) listed in the map list (under `parent_id`, default the top level), and open it; writes files |
 | `jrpg_map_paint` | Paint the edited map: a palette index (0 erases) on `cells` (`[[x, y], ...]`) or a `rect` of a tile layer (ground, ground_detail, objects, upper); one undo action in the map scene's own history (`history: "map scene"`) |
-| `jrpg_map_get` | Read the edited map, or a map scene file without opening or instancing it: id, name, tileset, size, scroll type, painted cells and SHA-256 per tile layer, regions and shadows (`layer_sha256`), and one of them as rows |
+| `jrpg_map_get` | Read the edited map, or a map scene file without opening or instancing it: id, name, tileset, size, scroll type, its properties (what `jrpg_map_set` sets), painted cells and SHA-256 per tile layer, regions and shadows (`layer_sha256`), and one of them as rows |
 | `jrpg_map_list` / `jrpg_map_open` | The map tree in order (`map_id`, `name`, `parent_id`, `scene`) and the id of the map open in the editor / open a map's scene |
 | `jrpg_map_rename` / `jrpg_map_move` | Rename a map in the tree / move it (with the maps under it) under another map or to the top level, at a position; undoable, the map list is saved with the database |
 | `jrpg_map_delete` | Delete a map: its tree entry (the maps under it move up) and its scene, moved to the system trash; not undoable, refused while the scene is open unless `close_scene` (its tab closes, discarding unsaved changes); lists the data that named the map (`broken_references`, such as the System start map) |
 | `jrpg_map_view` | Read or change the map canvas view of the JRPG workspace (the open map): `fit`, `zoom` (1/32-8), `center_cell`, `grid`, and the brush the canvas tools draw with (`tool`, `layer` incl. `auto`, `value` as chosen in the Palette panel, `stamp`: a rectangle of tiles as rows of palette indexes, `region`), and the Palette panel (`palette_sheet` opens a tab, `palette_select` chooses tiles there as a click or a drag over its grid would); returns the visible cells, the center cell, the zoom, the brush (with `stamp_size` and the `stamp` rows `jrpg_map_stroke` takes) and the palette's sheets; each map tab keeps its view |
-| `jrpg_map_stroke` | Draw one stroke with a map canvas tool on a tile layer (or `auto`: the layer the tile's kind belongs to, D-040), the regions or the shadows of the edited map, as one undo action of the map scene: `pencil`/`eraser` along `points`, `rectangle`/`ellipse` between two corners, `fill` from one cell; `stamp` (rows of palette indexes, 0 = leave the cell) instead of `value` draws several tiles at once: the pencil puts the whole stamp down on a grid starting at its first point, shapes and fill repeat it from their start; returns the cells changed and `layer_sha256` |
+| `jrpg_map_stroke` | Draw one stroke with a map canvas tool on a tile layer (or `auto`: the layer the tile's kind belongs to, D-040, D-047), the regions or the shadows of the edited map, as one undo action of the map scene: `pencil`/`eraser` along `points`, `rectangle`/`ellipse` between two corners, `fill` from one cell; `stamp` (rows of palette indexes, 0 = leave the cell) instead of `value` draws several tiles at once: the pencil puts the whole stamp down on a grid starting at its first point, shapes and fill repeat it from their start; returns the cells changed and `layer_sha256` |
 | `jrpg_map_capture` | Render the edited map alone at 1:1 to a PNG (independent of the editor window), for comparison with a golden image (`talewright/tools/img_compare.py`) |
 | `jrpg_play_from_start` | Run a new game from the System start position, as the workspace's Play From Start button (the managed addon's game scene; the editor saves first); refused, with what to do, without a start position, when the start map is gone or the addon lacks the game scene; follow with `run_status` and the `game_*` tools |
 | `jrpg_map_set_start` | Make a cell of the edited map the System start position (start map and cell), as Set Start Position Here in the canvas's Events mode; undoable |
 | `jrpg_map_set` | Set the edited map's properties (display name, note, tileset, size, scroll type, music, battle backgrounds, parallax, encounters, dash) as one undo action of its scene; the raw layers and ids cannot be set |
-| `jrpg_tileset_flags` | A tileset's palette with each tile's flags decoded (`pass`, `no_entry`/`no_exit` sides, overhead, ladder, bush, counter, damage, `terrain_tag`), kinds whose shapes differ marked `mixed`, missing tiles marked, flipped or rotated ones marked `transformed` (they share the flags of the tile they turn), whether the baked flags are up to date, and the TileSet's `sources` and `terrain_sets` |
+| `jrpg_tileset_flags` | A tileset's palette with each tile's place (`source_id`, `atlas_coords`) and flags decoded (`pass`, `no_entry`/`no_exit` sides, overhead, ladder, bush, counter, damage, `terrain_tag`), kinds whose shapes differ marked `mixed`, missing tiles marked, flipped or rotated ones marked `transformed` (they share the flags of the tile they turn), whether the baked flags are up to date, and the TileSet's `sources` and `terrain_sets` |
 | `jrpg_tileset_set_flag` | Set one flag on palette tiles (`index` or `indexes`), as a click on the tileset form's overlay: every shape of a kind, other flags kept; one undoable action (`changed: false`, no undo step, when the tiles already have the value) |
 | `jrpg_tileset_create` / `jrpg_tileset_add_sheet` | Create a tileset's TileSet file (48 px tiles by default, never replacing a file, refused for a tileset whose TileSet already holds its palette unless `replace`; choosing it is undoable) / bring an image's tiles in as plain tiles, an autotile or a wall (layout guessed from the size unless `kind`), undoable |
 
@@ -128,6 +128,23 @@ Notes on arguments and results:
   `game_call`).
 - **Large values** are summarized: strings over 64K characters are truncated and packed arrays over 1024
   elements are reported by type and size.
+
+## Building a map through the bridge
+The map tools are enough to build and play a map without touching the editor (task 8.8; the transcript is
+`plan/evidence/jrpg/8.8-bridge-build-a-map.txt`):
+1. **Tileset**: `jrpg_tileset_create`, then `jrpg_tileset_add_sheet` for each sheet (autotiles and walls are
+   guessed from their size; plain sheets keep their grid). `jrpg_tileset_flags` lists the palette: each tile's
+   `index` (what maps store), `kind`, sheet `name` and `atlas_coords` (column and row in a plain sheet's image).
+2. **Flags**: `jrpg_tileset_set_flag` per tile or kind: `pass` blocked for walls and water, `overhead` for the parts
+   characters walk behind (tree tops), sides, ladder, bush, counter, damage, terrain tag. Save with `jrpg_db_save`.
+3. **Map**: `jrpg_map_create` (name, size, tileset; it opens the scene), then `jrpg_map_stroke` with `layer: "auto"`:
+   a `fill` of the base terrain first, then autotiles over it (they go on ground_detail over other ground, D-047),
+   plain tiles and `stamp`s (multi-tile objects as rows of palette indexes) on the two upper layers. `regions` and
+   `shadows` are stroke layers too.
+4. **Properties**: `jrpg_map_set` (display name, music cues with autoplay, encounters and steps, scroll type...);
+   `jrpg_map_set_start` puts the start position on a cell. `editor_save_scene` saves the map.
+5. **Check**: `jrpg_map_get` (painted cells per layer, `properties`), `jrpg_map_capture` (a PNG of the map alone),
+   `jrpg_play_from_start`, then `game_call` on `/root/Game/Map/Player` (`get_cell`), `game_input`, `game_screenshot`.
 
 ## Troubleshooting
 - *connection.json not found*: the editor is not running for that project or `claude_bridge/enabled` is off.

@@ -495,6 +495,21 @@ int JRPGMapStroke::set_values(int p_target, const Vector<Vector2i> &p_cells, con
 	return cells.size();
 }
 
+PackedInt32Array JRPGMapStroke::read_auto_area(const Ref<JRPGMapData> &p_data, bool p_ground_kind) {
+	ERR_FAIL_COND_V(p_data.is_null(), PackedInt32Array());
+	if (!p_ground_kind) {
+		return read_all(p_data, JRPGMapData::LAYER_OBJECTS);
+	}
+	// The ground as it shows: Ground Detail where it holds a tile, Ground elsewhere.
+	PackedInt32Array area = read_all(p_data, JRPGMapData::LAYER_GROUND);
+	const PackedInt32Array detail = read_all(p_data, JRPGMapData::LAYER_GROUND_DETAIL);
+	int32_t *w = area.ptrw();
+	for (int i = 0; i < area.size() && i < detail.size(); i++) {
+		w[i] = detail[i] != 0 ? detail[i] : w[i];
+	}
+	return area;
+}
+
 int JRPGMapStroke::add_auto(const Vector<Vector2i> &p_cells, int p_value, bool p_ground_kind) {
 	ERR_FAIL_COND_V(!is_active(), 0);
 	Vector<Vector2i> cells[JRPGMapData::LAYER_COUNT];
@@ -519,7 +534,16 @@ int JRPGMapStroke::add_auto(const Vector<Vector2i> &p_cells, int p_value, bool p
 				}
 			}
 		} else if (p_ground_kind) {
-			next[JRPGMapData::LAYER_GROUND] = p_value;
+			// D-047: the base terrain stays under autotiles drawn over it, which show it through their edges. Over an
+			// empty ground or ground of the same kind the tile is the ground (and clears what lies over it); over
+			// other ground it goes on Ground Detail.
+			const int ground = now[JRPGMapData::LAYER_GROUND];
+			if (ground == 0 || ground == p_value) {
+				next[JRPGMapData::LAYER_GROUND] = p_value;
+				next[JRPGMapData::LAYER_GROUND_DETAIL] = 0;
+			} else {
+				next[JRPGMapData::LAYER_GROUND_DETAIL] = p_value;
+			}
 		} else {
 			const int lower = now[JRPGMapData::LAYER_OBJECTS];
 			const int upper = now[JRPGMapData::LAYER_UPPER];

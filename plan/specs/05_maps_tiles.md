@@ -194,7 +194,8 @@ the other numbers are fields of `JRPGSystemData`.
 
 ## Map editor (editor, `JRPGMapCanvas` + `MapEditSession`)
 Modes: map (pencil, rectangle, ellipse, flood fill, shadow pen, eraser, eyedropper), region, event. Auto-layer
-selection by tile kind (D-040: autotiles and walls replace Ground; plain tiles stack on Objects and Upper, two at
+selection by tile kind (D-040, D-047: an autotile or wall is the Ground tile where Ground is empty or of its kind,
+and goes on Ground Detail over other ground, which shows through its edges; plain tiles stack on Objects and Upper, two at
 most, the oldest dropping out; the eraser clears the top-most tile) or explicit layer. Events mode: Set Start Position
 Here (8.4.3.2); event placement comes with the event editor (9.7, D-039). Multi-tile stamps (8.5.2): a drag over the
 Palette panel, or a right-drag on the map (the current layer's tiles; with Auto each cell's top-most tile), selects a

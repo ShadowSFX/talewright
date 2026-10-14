@@ -277,6 +277,7 @@ Error JRPGSceneManager::_enter(const Transfer &p_transfer) {
 			map->queue_free();
 		}
 		entered->set_database(game_state->get_database());
+		entered->set_name("Map"); // One path for the current map, whichever it is: get_map_id() tells which.
 		add_child(entered);
 		move_child(entered, 0); // Under everything else the game scene shows.
 		map = entered;

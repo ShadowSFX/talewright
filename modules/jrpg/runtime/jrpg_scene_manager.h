@@ -47,7 +47,7 @@ class JRPGPlayer;
 class PackedScene;
 
 // Plays a game's maps (task 8.6.1, D-041): holds the game state while a game runs, shows the current map (an instance
-// of its scene, found through the map list) as its first child, moves the player between maps (transfer, through a
+// of its scene, found through the map list) as its first child, named Map, moves the player between maps (transfer, through a
 // fade) and plays each map's autoplay music. It runs the game's fixed-step loop on the game state's simulation clock
 // (task 8.6.2.2): each step moves the player (JRPGPlayer, inside the current map) as the direction actions say, keeping
 // the game state's player position and step count; the player's camera stays inside the map (a map smaller than the

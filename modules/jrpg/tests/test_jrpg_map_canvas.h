@@ -166,8 +166,9 @@ TEST_CASE("[SceneTree][JRPG][MapCanvas] A stroke paints as it goes, ends as one 
 	CHECK(JRPGMapStroke::get_max_value(JRPGMapStroke::TARGET_REGIONS) == 255);
 	CHECK(JRPGMapStroke::get_max_value(JRPGMapStroke::TARGET_SHADOWS) == 15);
 
-	// The automatic layer: autotile kinds replace the ground; plain tiles stack on the two upper layers, at most two,
-	// the oldest dropping out; the eraser clears the top-most tile.
+	// The automatic layer: an autotile kind is the ground where the ground is empty or of its kind, and goes on Ground
+	// Detail over other ground (D-047); plain tiles stack on the two upper layers, at most two, the oldest dropping out;
+	// the eraser clears the top-most tile.
 	const Vector2i spot(0, 3);
 	const auto layers = [&]() {
 		return Vector<int>({ data->get_cell(0, spot), data->get_cell(1, spot), data->get_cell(2, spot), data->get_cell(3, spot) });
@@ -181,11 +182,17 @@ TEST_CASE("[SceneTree][JRPG][MapCanvas] A stroke paints as it goes, ends as one 
 	CHECK(stroke->add_auto({ spot }, 6, false) == 0); // The tile on top again: nothing changes.
 	CHECK(stroke->add_auto({ spot }, 5, false) == 2); // The oldest (5) drops out; 5 goes on top of 6.
 	CHECK(layers() == Vector<int>({ 21, 0, 6, 5 }));
-	CHECK(stroke->add_auto({ spot }, 22, true) == 1); // Another autotile replaces the ground only.
-	CHECK(layers() == Vector<int>({ 22, 0, 6, 5 }));
+	CHECK(stroke->add_auto({ spot }, 22, true) == 1); // Another autotile goes over the ground.
+	CHECK(layers() == Vector<int>({ 21, 22, 6, 5 }));
+	CHECK(stroke->add_auto({ spot }, 21, true) == 1); // The ground's own kind again clears what lies over it.
+	CHECK(layers() == Vector<int>({ 21, 0, 6, 5 }));
+	CHECK(stroke->add_auto({ spot }, 22, true) == 1);
 	stroke->add_auto({ spot }, 0, false);
-	CHECK(layers() == Vector<int>({ 22, 0, 6, 0 }));
+	CHECK(layers() == Vector<int>({ 21, 22, 6, 0 }));
 	stroke->add_auto({ spot }, 0, false);
+	stroke->add_auto({ spot }, 0, false);
+	CHECK(layers() == Vector<int>({ 21, 0, 0, 0 })); // Ground Detail before the ground.
+	CHECK(JRPGMapStroke::read_auto_area(data, true)[data->get_cell_index(spot)] == 21);
 	stroke->add_auto({ spot }, 0, false);
 	CHECK(layers() == Vector<int>({ 0, 0, 0, 0 }));
 	CHECK(stroke->add_auto({ spot, Vector2i(-1, 0) }, 0, false) == 0); // Nothing left; outside the map: skipped.
