@@ -1,0 +1,6 @@
+# 7.1.1 determinism: generate, then regenerate in memory and compare pixel hashes
+wrote 10 images to talewright\assets\generated
+10 of 10 images match manifest.json
+# again, from a clean output folder
+wrote 10 images to <a temporary folder>
+both runs: identical pixel hashes for every file

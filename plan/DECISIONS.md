@@ -484,3 +484,15 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** a single meaning for the form, the bridge and the battle epic (12.x) to implement; B = 0 as "once" is the
   only reading that gives the value a use instead of an infinite loop of turn A.
 - **Reversal:** a `JRPGSchema` migration of saved actions if the meaning changes; the form follows the shapes.
+
+## D-034 — Tile size 48 pixels
+- **Context:** the generated default tiles (task 7.1.1), the autotile templates and the character sheets need one
+  size. The reference documents 48 × 48 pixel tiles (RM-AST rows in plan/research/rpgmaker/02_maps_tilesets_assets.md,
+  "Tiles are 48×48 pixels"); Godot's TileSet takes any size (`scene/resources/2d/tile_set.h`, tile_size).
+- **Options:** 16 or 32 px (retro), 48 px, a per-project size only.
+- **Choice:** Talewright's default assets and templates use 48 × 48 px tiles; imported tilesets and sheets may use
+  any size (the importer reads the tile size from the TileSet or the import settings).
+- **Why:** assets made for the reference's standard import without scaling, 48 px reads well at 1280 × 720, and the
+  generator can redraw everything at another size later.
+- **Reversal:** change `TILE` in `talewright/tools/asset_gen/common.py` and regenerate; maps store palette indexes,
+  not pixels.

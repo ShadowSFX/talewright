@@ -1,0 +1,79 @@
+{
+  "generator": "talewright/tools/generate_assets.py",
+  "license": "CC0-1.0",
+  "tile_size": 48,
+  "numpy": "1.26.0",
+  "pillow": "11.1.0",
+  "files": {
+    "autotiles/dirt_path.png": {
+      "size": [
+        384,
+        288
+      ],
+      "pixels_sha256": "d8e738faeb7b05d5cdbd465af2ddbfeab95f638c493eeee8e6f576348f0088d4"
+    },
+    "autotiles/grass.png": {
+      "size": [
+        384,
+        288
+      ],
+      "pixels_sha256": "2488055c9a31199210dea3d0e05eae0717a395e7edd510ea342535a18e6bdabe"
+    },
+    "autotiles/sand.png": {
+      "size": [
+        384,
+        288
+      ],
+      "pixels_sha256": "7ce6b3eb62a51070f4ef6dff084d06b4d830596ecf27986d26e8b160184cd2ad"
+    },
+    "autotiles/water.png": {
+      "size": [
+        1152,
+        288
+      ],
+      "pixels_sha256": "e4953f4a81f9fb62bcad77c66fae12ebe5a843ffe2cebeda2f29fa1df3e73e56"
+    },
+    "tiles/buildings.png": {
+      "size": [
+        384,
+        144
+      ],
+      "pixels_sha256": "ced6bad02f317d95887db0d753a6d66644e97d602706367256f2f2ea75b7c011"
+    },
+    "tiles/outdoor.png": {
+      "size": [
+        384,
+        192
+      ],
+      "pixels_sha256": "9533830b3e7af98fac43ab22ef9f31d9f6a09d5132a0675d17b91fadd52b2aea"
+    },
+    "walls/brick_wall.png": {
+      "size": [
+        192,
+        192
+      ],
+      "pixels_sha256": "c44149ced5711330927d5601a91c4717fe7d737c46b4741efe0f7e02bef05b0f"
+    },
+    "walls/roof.png": {
+      "size": [
+        192,
+        192
+      ],
+      "pixels_sha256": "f1a002f2f0df1f742a402dccaf7877765313edcbca235516f9d681be423de625"
+    },
+    "walls/stone_wall.png": {
+      "size": [
+        192,
+        192
+      ],
+      "pixels_sha256": "c2b5dde8b5939a2b3962f6b689fe20e7f2cb9112300eb9a43386b404a841f5c5"
+    },
+    "walls/wood_wall.png": {
+      "size": [
+        192,
+        192
+      ],
+      "pixels_sha256": "6da6210dd95e4253d5acac93ae9bc4ec516fd31bef4319f03fd3ac4d2362f7d7"
+    }
+  }
+}

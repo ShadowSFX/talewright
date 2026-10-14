@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 120, in_progress: 0, done: 101, blocked: 0, deferred: 3 (of 224)
+**Totals:** pending: 119, in_progress: 0, done: 102, blocked: 0, deferred: 3 (of 224)
 
 ## [x] 0 Bootstrap and task system
 
@@ -133,14 +133,14 @@ Setup tool, managed addon, main-screen workspace, database editor, authoring API
   - [x] **6.7.2** Review fixes: database UI (P1) _(deps: 6.7.1; commit: f8e005287c)_
   - [x] **6.7.3** Review fixes: bridge UI tools (P1) _(commit: b40024f3dc)_
   - [x] **6.7.4** Review fixes: addon, setup, hints, tests, docs (P1) _(deps: 6.7.1, 6.7.3; commit: a72b7240a6)_
-  - [x] **6.7.5** Epic 6 review close-out (P1) _(deps: 6.7.1, 6.7.2, 6.7.3, 6.7.4; commit: pending)_
+  - [x] **6.7.5** Epic 6 review close-out (P1) _(deps: 6.7.1, 6.7.2, 6.7.3, 6.7.4; commit: 8e16c19757)_
 
 ## [ ] 7 Assets and tilesets
 
 Original generated assets, autotile importer and resolver, tileset flags.
 
 - [ ] **7.1** Original asset generator (P1)
-  - [ ] **7.1.1** Generated tiles and autotile templates (P1)
+  - [x] **7.1.1** Generated tiles and autotile templates (P1) _(commit: pending)_
   - [ ] **7.1.2** Generated characters, faces, enemies, battlebacks, icons, window skin (P1) _(deps: 7.1.1)_
   - [ ] **7.1.3** Synthesized SFX and BGM (P1) _(deps: 7.1.2)_
 - [ ] **7.2** Autotile template + importer (P1) _(deps: 7.1)_

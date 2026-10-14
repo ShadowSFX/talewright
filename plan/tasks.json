@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "6.7.5 Epic 6 review close-out",
+  "last_completed": "7.1.1 Generated tiles and autotile templates",
   "tasks": [
     {
       "id": "0",
@@ -2354,7 +2354,7 @@
       "test_strategy": "Epic gate.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "8e16c19757",
       "notes": ""
     },
     {
@@ -2407,9 +2407,9 @@
       ],
       "test_strategy": "Run twice, compare hashes; view samples.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": "",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "7.1.2",
