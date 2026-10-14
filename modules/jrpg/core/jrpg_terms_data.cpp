@@ -201,6 +201,10 @@ bool JRPGTermsData::_set(const StringName &p_name, const Variant &p_value) {
 	return JRPGSchema::set_renamed(this, p_name, p_value);
 }
 
+void JRPGTermsData::_validate_property(PropertyInfo &p_property) const {
+	JRPGSchema::hide_engine_property(p_property);
+}
+
 void JRPGTermsData::_bind_methods() {
 	ClassDB::bind_static_method("JRPGTermsData", D_METHOD("get_group_name", "group"), &JRPGTermsData::get_group_name);
 	ClassDB::bind_static_method("JRPGTermsData", D_METHOD("get_default_terms", "group"), &JRPGTermsData::get_default_terms);

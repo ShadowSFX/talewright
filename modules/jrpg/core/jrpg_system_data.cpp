@@ -148,6 +148,10 @@ bool JRPGSystemData::_set(const StringName &p_name, const Variant &p_value) {
 	return JRPGSchema::set_renamed(this, p_name, p_value);
 }
 
+void JRPGSystemData::_validate_property(PropertyInfo &p_property) const {
+	JRPGSchema::hide_engine_property(p_property);
+}
+
 void JRPGSystemData::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_game_title", "title"), &JRPGSystemData::set_game_title);
 	ClassDB::bind_method(D_METHOD("get_game_title"), &JRPGSystemData::get_game_title);

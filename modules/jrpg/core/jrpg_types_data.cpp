@@ -93,6 +93,10 @@ bool JRPGTypesData::_set(const StringName &p_name, const Variant &p_value) {
 	return JRPGSchema::set_renamed(this, p_name, p_value);
 }
 
+void JRPGTypesData::_validate_property(PropertyInfo &p_property) const {
+	JRPGSchema::hide_engine_property(p_property);
+}
+
 void JRPGTypesData::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_list", "list", "names"), &JRPGTypesData::set_list);
 	ClassDB::bind_method(D_METHOD("get_list", "list"), &JRPGTypesData::get_list);

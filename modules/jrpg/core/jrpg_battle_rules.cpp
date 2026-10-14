@@ -44,6 +44,10 @@ bool JRPGBattleRules::_set(const StringName &p_name, const Variant &p_value) {
 	return JRPGSchema::set_renamed(this, p_name, p_value);
 }
 
+void JRPGBattleRules::_validate_property(PropertyInfo &p_property) const {
+	JRPGSchema::hide_engine_property(p_property);
+}
+
 void JRPGBattleRules::_bind_methods() {
 	ADD_GROUP("Damage", "");
 	JRPG_BIND_RULE(crit_multiplier_bp, "10000,100000,100,suffix:bp");

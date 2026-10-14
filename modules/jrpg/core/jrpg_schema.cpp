@@ -107,3 +107,9 @@ void JRPGSchema::migrate(Object *p_resource, const StringName &p_class, int p_fr
 		}
 	}
 }
+
+void JRPGSchema::hide_engine_property(PropertyInfo &p_property) {
+	if (p_property.name.begins_with("resource_")) {
+		p_property.usage &= ~PROPERTY_USAGE_EDITOR;
+	}
+}

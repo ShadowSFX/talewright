@@ -37,9 +37,14 @@
 #include "tests/test_macros.h"
 #include "tests/test_utils.h"
 
+#include "modules/jrpg/core/jrpg_audio_cue.h"
+#include "modules/jrpg/core/jrpg_battle_rules.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_skill_data.h"
+#include "modules/jrpg/core/jrpg_system_data.h"
+#include "modules/jrpg/core/jrpg_terms_data.h"
 #include "modules/jrpg/core/jrpg_troop_data.h"
+#include "modules/jrpg/core/jrpg_types_data.h"
 
 namespace TestJRPGDatabase {
 
@@ -191,12 +196,22 @@ static uint32_t usage_of(const Object *p_object, const String &p_name) {
 	return 0;
 }
 
-TEST_CASE("[JRPG][Database] Entries and troop pages hide the engine's resource properties from inspectors") {
+TEST_CASE("[JRPG][Database] Persisted JRPG resources hide the engine's resource properties from inspectors") {
 	Ref<JRPGSkillData> skill;
 	skill.instantiate();
 	Ref<JRPGTroopPage> page;
 	page.instantiate();
-	for (const Object *object : { static_cast<const Object *>(skill.ptr()), static_cast<const Object *>(page.ptr()) }) {
+	Ref<JRPGSystemData> system;
+	system.instantiate();
+	Ref<JRPGTypesData> types;
+	types.instantiate();
+	Ref<JRPGTermsData> terms;
+	terms.instantiate();
+	Ref<JRPGAudioCue> cue;
+	cue.instantiate();
+	Ref<JRPGBattleRules> rules;
+	rules.instantiate();
+	for (const Object *object : { static_cast<const Object *>(skill.ptr()), static_cast<const Object *>(page.ptr()), static_cast<const Object *>(system.ptr()), static_cast<const Object *>(types.ptr()), static_cast<const Object *>(terms.ptr()), static_cast<const Object *>(cue.ptr()), static_cast<const Object *>(rules.ptr()) }) {
 		CHECK((usage_of(object, "resource_path") & PROPERTY_USAGE_EDITOR) == 0);
 		CHECK((usage_of(object, "resource_name") & PROPERTY_USAGE_EDITOR) == 0);
 		CHECK((usage_of(object, "resource_name") & PROPERTY_USAGE_STORAGE) != 0); // Still saved as before.

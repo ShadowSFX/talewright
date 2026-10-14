@@ -1,0 +1,41 @@
+# 6.5.3.2 bridge verification: System party, type lists, terms, remaining slice fields
+## System form fields
+['Battle', 'Battle Rules', 'Buzzer', 'Cancel', 'Cell', 'Currency Unit', 'Cursor', 'Defeat', 'Direction', 'Draw Game Title', 'Game ID', 'Game Title', 'Map ID', 'OK', 'Starting Party', 'Title', 'Title Image', 'Victory', 'Window Tone']
+## starting party: Add Actor, pick 0002 in the new row, then undo both
+PackedInt32Array(1)
+PackedInt32Array(1, 1)
+PackedInt32Array(1, 2)
+[image saved] plan/evidence/jrpg/6.5.3.2-system-party.png
+PackedInt32Array(1, 1)
+PackedInt32Array(1)
+## Types: rename element 0002 Fire to Flame (typing), then undo
+['Armor Types', 'Elements', 'Equip Types', 'Skill Types', 'Weapon Types']
+['Physical', 'Flame', 'Ice']
+['Physical', 'Fire', 'Ice']
+## equipment types: armor 1 uses Accessory (5); Remove Last warns and lists it; cancel
+open_dialogs: [('Remove Last', 'Equipment type 5 "Accessory" is still used. After removing it, these references point at nothing:\nArmor 1, equip_type_id: equipment type 5')]
+[image saved] plan/evidence/jrpg/6.5.3.2-types-remove-last.png
+['Weapon', 'Shield', 'Head', 'Body', 'Accessory']
+## Terms: commands Attack -> Strike, then clear it (the default applies again)
+['Basic', 'Commands', 'Messages', 'Params']
+Strike
+None
+Strike
+'Attack'
+## weapons, armors, enemies, troops, states form fields
+weapons: ['Animation ID', 'Description', 'ID', 'Icon Index', 'Name', 'Note', 'Params', 'Price', 'Traits', 'Weapon Type ID']
+armors: ['Armor Type ID', 'Description', 'Equip Type ID', 'ID', 'Icon Index', 'Name', 'Note', 'Params', 'Price', 'Traits']
+enemies: ['Actions', 'Battler', 'Drops', 'Exp', 'Gold', 'Hue', 'ID', 'Name', 'Note', 'Params', 'Traits']
+troops: ['ID', 'Members', 'Name', 'Note', 'Pages']
+states: ['Actor', 'Auto Removal', 'Damage Removal Chance', 'Enemy', 'ID', 'Icon Index', 'Max Turns', 'Min Turns', 'Name', 'Note', 'Persist', 'Priority', 'Remove', 'Remove at Battle End', 'Remove by Damage', 'Remove by Restriction', 'Remove by Walking', 'Restriction', 'Steps to Remove', 'Traits']
+## state 1: set Priority to 80 in the form, then undo
+80
+100
+## errors
+    "errors": 0,
+    "warnings": 0,
+## after undoing every step above, jrpg_db_save writes files identical to the committed ones (git diff empty)
+## viewing entry 1 of every table and System, Types, Terms changes nothing
+  "unsaved_paths": []
+}
+[image saved] plan/evidence/jrpg/6.5.3.2-terms-form.png (System, Types and Terms use the whole width: no entry list)

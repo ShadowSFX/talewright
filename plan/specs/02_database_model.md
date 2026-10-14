@@ -110,6 +110,11 @@ Full field lists per table follow the inventory slices (03/04/05). The vertical 
   class's ranges (`JRPGEquipData` / `JRPGEnemyData::get_param_limits`); enemy drops (at most 3), enemy actions
   and troop members (at most 8) are record lists. Form editors never report a change while only showing a value
   (`Range::set_min` clamps and emits, scene/gui/range.cpp:224-232): viewing every table changes nothing.
+- System: the starting party is a list of actor pickers; the start position's map is an ID until the map list
+  exists (picker with 8.3). Types: numbered rows whose IDs never move (rename in place, Add appends, Remove Last
+  lists the data still using the last type before removing it). Terms: one field per known term, its default
+  wording as the placeholder; an empty field means the default. The engine's `resource_*` properties are hidden on
+  every persisted JRPG resource (`JRPGSchema::hide_engine_property`).
 - Data properties are the stored ones (not engine `resource_*`), whether or not the inspector shows them right now
   (an item's damage fields are hidden while it deals no damage): the bridge reads and sets them all; derived ones
   (a class's EXP table) are read-only.

@@ -59,6 +59,7 @@ class JRPGBattleRules : public Resource {
 
 protected:
 	static void _bind_methods();
+	void _validate_property(PropertyInfo &p_property) const;
 	bool _set(const StringName &p_name, const Variant &p_value);
 
 public:

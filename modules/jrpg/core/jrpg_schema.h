@@ -57,4 +57,7 @@ public:
 	static void unregister_step(const StringName &p_class, int p_from_version);
 	// Runs the steps p_from .. p_to - 1 registered for p_class (missing steps mean "nothing to change").
 	static void migrate(Object *p_resource, const StringName &p_class, int p_from, int p_to);
+	// The _validate_property() rule of every persisted JRPG resource: the engine's resource_* properties (path, name,
+	// local to scene) stay stored but leave the inspector; the database editor manages files and sub-resource ids.
+	static void hide_engine_property(PropertyInfo &p_property);
 };

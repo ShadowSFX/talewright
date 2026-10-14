@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 22:52 -0600
+- **Updated:** 2026-10-13 23:03 -0600
 - **Current task:** none
-- **Last completed:** 6.5.3.1 Parameter grids, enemy drops and actions, troop members
-- **Next task:** 6.5.3.2 System party, type lists and slice field check
-- **Done leaf tasks:** 75
+- **Last completed:** 6.5.3.2 System party, type lists and slice field check
+- **Next task:** 6.6 Database authoring API + bridge tools
+- **Done leaf tasks:** 76
 <!-- status:end -->
 
 ## Log
@@ -207,4 +207,7 @@
 | 2026-10-13 22:37 -0600 | - | imported 2 new / 2 updated tasks | |
 | 2026-10-13 22:37 -0600 | 6.5.3.1 | started: Parameter grids, enemy drops and actions, troop members (containers: 6.5.3 pending->in_progress, 6.5 pending->in_progress, 6 pending->in_progress) |  |
 | 2026-10-13 22:52 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-13 22:52 -0600 | 6.5.3.1 | done: Parameter grids, enemy drops and actions, troop members — Parameter grids (weapon/armor bonuses, enemy parameters: eight labeled EditorSpinSliders within get_param_limits ranges), enemy drops (kind refills the item/weapon/armor list, at most 3) and actions (skill, condition, values, rating) and troop members (enemy, position, hidden, at most 8) as record lists; list row caps; fixed an edit-on-view bug (Range::set_min clamping) in the grid and the curve dialog with a mutation-checked doctest; verified live via editor_ui_*: grid edit, drop/action/member add + undo, viewing every table leaves nothing unsaved, errors 0; full suite 1498/1498 (containers: 6.5.3 in_progress->pending, 6.5 in_progress->pending, 6 in_progress->pending) | pending |
+| 2026-10-13 22:52 -0600 | 6.5.3.1 | done: Parameter grids, enemy drops and actions, troop members — Parameter grids (weapon/armor bonuses, enemy parameters: eight labeled EditorSpinSliders within get_param_limits ranges), enemy drops (kind refills the item/weapon/armor list, at most 3) and actions (skill, condition, values, rating) and troop members (enemy, position, hidden, at most 8) as record lists; list row caps; fixed an edit-on-view bug (Range::set_min clamping) in the grid and the curve dialog with a mutation-checked doctest; verified live via editor_ui_*: grid edit, drop/action/member add + undo, viewing every table leaves nothing unsaved, errors 0; full suite 1498/1498 (containers: 6.5.3 in_progress->pending, 6.5 in_progress->pending, 6 in_progress->pending) | 27dfc497c0 |
+| 2026-10-13 22:52 -0600 | 6.5.3.2 | started: System party, type lists and slice field check (containers: 6.5.3 pending->in_progress, 6.5 pending->in_progress, 6 pending->in_progress) |  |
+| 2026-10-13 23:03 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 23:03 -0600 | 6.5.3.2 | done: System party, type lists and slice field check — System starting party as actor pickers (add, pick, remove); type lists as numbered rows with stable IDs (rename, Add, Remove Last with a reference warning); terms as one field per known term with the default as placeholder (empty = default); engine resource_* fields hidden on every persisted JRPG resource (JRPGSchema::hide_engine_property); single resources use the whole width; slice-field doctest for weapons, armors, enemies, troops, states, system, types, terms + view-without-edit doctests; verified live via editor_ui_*: party, element rename, Remove Last warning, term edit/clear/undo, priority edit, labels of all eight forms, undone run saves to identical files, viewing changes nothing, errors 0; full suite 1500/1500 (containers: 6.5.3 in_progress->done, 6.5 in_progress->done, 6 in_progress->pending) | pending |

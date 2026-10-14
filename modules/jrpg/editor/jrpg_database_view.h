@@ -62,6 +62,7 @@ class JRPGDatabaseView : public VBoxContainer {
 	Button *clear_button = nullptr;
 	Button *copy_button = nullptr;
 	Button *paste_button = nullptr;
+	VBoxContainer *list_panel = nullptr; // Hidden for System, Types and Terms, which have no entries.
 	VBoxContainer *form = nullptr;
 	Label *form_title = nullptr;
 	Label *form_hint = nullptr;

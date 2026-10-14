@@ -36,6 +36,7 @@
 #include "jrpg_equipment_editor.h"
 #include "jrpg_list_editors.h"
 #include "jrpg_param_editor.h"
+#include "jrpg_system_editors.h"
 #include "jrpg_trait_editor.h"
 
 #include "core/object/callable_mp.h"
@@ -46,7 +47,10 @@
 #include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
+#include "modules/jrpg/core/jrpg_system_data.h"
+#include "modules/jrpg/core/jrpg_terms_data.h"
 #include "modules/jrpg/core/jrpg_troop_data.h"
+#include "modules/jrpg/core/jrpg_types_data.h"
 
 void JRPGEditorPropertyID::_set_read_only(bool p_read_only) {
 	options->set_disabled(p_read_only);
@@ -110,7 +114,7 @@ JRPGEditorPropertyID::JRPGEditorPropertyID() {
 }
 
 bool JRPGInspectorPlugin::can_handle(Object *p_object) {
-	return Object::cast_to<JRPGEntry>(p_object) || Object::cast_to<JRPGTroopPage>(p_object);
+	return Object::cast_to<JRPGEntry>(p_object) || Object::cast_to<JRPGTroopPage>(p_object) || Object::cast_to<JRPGSystemData>(p_object) || Object::cast_to<JRPGTypesData>(p_object) || Object::cast_to<JRPGTermsData>(p_object);
 }
 
 void JRPGInspectorPlugin::parse_begin(Object *p_object) {
@@ -137,6 +141,22 @@ bool JRPGInspectorPlugin::parse_property(Object *p_object, const Variant::Type p
 			add_property_editor(p_path, editor);
 			return true;
 		}
+	}
+	if (p_type == Variant::PACKED_INT32_ARRAY && !JRPGEditorPropertyIDList::get_list_target(p_object, p_path).is_empty()) {
+		JRPGEditorPropertyIDList *editor = memnew(JRPGEditorPropertyIDList);
+		editor->setup(JRPGEditorPropertyIDList::get_list_target(p_object, p_path));
+		add_property_editor(p_path, editor);
+		return true;
+	}
+	if (p_type == Variant::PACKED_STRING_ARRAY && Object::cast_to<JRPGTypesData>(p_object)) {
+		add_property_editor(p_path, memnew(JRPGEditorPropertyTypeList));
+		return true;
+	}
+	if (p_type == Variant::DICTIONARY && Object::cast_to<JRPGTermsData>(p_object) && JRPGEditorPropertyTerms::get_group_of(p_path) >= 0) {
+		JRPGEditorPropertyTerms *editor = memnew(JRPGEditorPropertyTerms);
+		editor->setup(JRPGEditorPropertyTerms::get_group_of(p_path));
+		add_property_editor(p_path, editor);
+		return true;
 	}
 	int min_value = 0;
 	int max_value = 0;

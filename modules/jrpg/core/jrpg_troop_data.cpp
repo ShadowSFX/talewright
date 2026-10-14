@@ -113,9 +113,7 @@ bool JRPGTroopPage::_set(const StringName &p_name, const Variant &p_value) {
 }
 
 void JRPGTroopPage::_validate_property(PropertyInfo &p_property) const {
-	if (p_property.name.begins_with("resource_")) {
-		p_property.usage &= ~PROPERTY_USAGE_EDITOR; // The troop owns its pages' paths and scene-unique ids.
-	}
+	JRPGSchema::hide_engine_property(p_property); // The troop owns its pages' paths and scene-unique ids.
 }
 
 void JRPGTroopPage::_bind_methods() {

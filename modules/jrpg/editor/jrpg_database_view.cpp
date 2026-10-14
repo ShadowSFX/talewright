@@ -159,6 +159,7 @@ void JRPGDatabaseView::_refresh_entries() {
 	const Ref<JRPGTable> table = (editing && !key.is_empty()) ? editing->get_table(key) : Ref<JRPGTable>();
 	entries->set_visible(table.is_valid());
 	maximum_button->set_visible(table.is_valid());
+	list_panel->set_visible(table.is_valid() || key.is_empty()); // The form takes the room of a single resource.
 	if (table.is_null()) {
 		table_title->set_text(key.is_empty() ? String() : key.capitalize());
 		form_hint->set_text(key.is_empty() ? TTR("Set up the project to edit its database.") : String());
@@ -395,7 +396,7 @@ JRPGDatabaseView::JRPGDatabaseView() {
 
 	HSplitContainer *work = memnew(HSplitContainer);
 	split->add_child(work);
-	VBoxContainer *list_panel = memnew(VBoxContainer);
+	list_panel = memnew(VBoxContainer);
 	list_panel->set_custom_minimum_size(Size2(200, 0) * EDSCALE);
 	list_panel->set_h_size_flags(SIZE_EXPAND_FILL);
 	work->add_child(list_panel);
