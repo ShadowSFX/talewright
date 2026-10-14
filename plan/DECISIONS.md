@@ -1232,3 +1232,25 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   party" event from silently raising the dead. Setting up unused actors matches how the rest of the commands and
   conditions treat database actors (D-066).
 - **Reversal:** `JRPGChangeHPCommand::execute` and `JRPGActorCommand::_targets`.
+
+## D-071 — The event host; Transfer Player, Wait, Erase Event, Script; scene commands move to their epics
+- **Context:** task 9.5.3. Transfer Player changes the world, not the presentation: single-player the scene manager
+  carries it out (D-041), online the zone does and tells the client. Waiting commands must tell their first run from
+  later ones without per-run state in the command (D-059). Battle, menu, save, game over and title commands need
+  scenes that epics 11-13 build. RM's Script runs JavaScript.
+- **Options:** transfers as presentation-port requests, as calls into a runtime node, or through a core host
+  interface; first-run detection by the command, by request ids, or by the interpreter; Script as a sandboxed formula,
+  a script class, or an Expression with full calls.
+- **Choice:** core `JRPGEventHost` (transfer_player, is_transferring; GDVIRTUAL for scripts), given by the runner to
+  every interpreter; `JRPGLocalHost` (runtime) carries it out through `JRPGSceneManager::transfer`.
+  `JRPGInterpreter::is_command_resumed` is true while the command that returned EXECUTE_WAIT runs again at the same
+  position. Commands: `transfer_player` (direct or variables, direction -1..3, fade black/white/none; waits while
+  the host transfers; refused or host-less transfers go on, warned), `wait` (1-999 steps), `erase_event` (this event
+  via `JRPGGameState::erase_event`, which bumps the revision; nodes hide; the rest of its commands still run),
+  `script` (a Godot Expression with `state` and `interpreter` inputs and non-const calls: the author's own trusted
+  code; parse and run errors warn once). Set Movement Route becomes task 9.6.3 (after the route engine); Battle
+  Processing, Open Menu/Save, Game Over and Return to Title go to 12.3, 11.1.1, 13.1 and 13.2 as host requests.
+- **Why:** a host keeps the core free of nodes and lets the server and the single-player game share the commands; the
+  interpreter knows positions, so resumption needs no command state; Script mirrors RM's "advanced users" escape
+  hatch while formulas stay sandboxed for database text (D-009).
+- **Reversal:** `JRPGEventHost`, `JRPGLocalHost`, `JRPGInterpreter::is_command_resumed`, the command classes.

@@ -66,6 +66,13 @@
 				Returns the state of event [param event_id] on the current map, creating an empty one when there is none.
 			</description>
 		</method>
+		<method name="erase_event">
+			<return type="void" />
+			<param index="0" name="event_id" type="int" />
+			<description>
+				Erase Event: event [param event_id] of the current map is gone until another map is entered ([method JRPGEventState.set_erased]). Pages are picked again: the revision changes.
+			</description>
+		</method>
 		<method name="gain_gold">
 			<return type="int" />
 			<param index="0" name="amount" type="int" />

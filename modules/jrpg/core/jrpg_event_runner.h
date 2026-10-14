@@ -39,6 +39,7 @@
 #include "core/variant/dictionary.h"
 
 class JRPGCommandList;
+class JRPGEventHost;
 class JRPGGameState;
 class JRPGMapData;
 class JRPGPresentationPort;
@@ -81,6 +82,7 @@ private:
 	int map_id = 0;
 	Ref<JRPGInterpreter> main;
 	Ref<JRPGPresentationPort> port; // Given to every interpreter.
+	Ref<JRPGEventHost> host; // Given to every interpreter.
 	Owner main_owner; // What runs on the main interpreter.
 	bool main_is_autorun = false;
 	Vector<Process> parallels;
@@ -117,6 +119,9 @@ public:
 	void change_map(const Ref<JRPGMapData> &p_map, int p_map_id);
 	// Stops everything.
 	void clear();
+	// What the events ask of the world (task 9.5.3): every interpreter of the runner uses it.
+	void set_host(const Ref<JRPGEventHost> &p_host);
+	Ref<JRPGEventHost> get_host() const;
 	// The port the events ask the player through (task 9.4.1): every interpreter of the runner uses it.
 	void set_port(const Ref<JRPGPresentationPort> &p_port);
 	Ref<JRPGPresentationPort> get_port() const;

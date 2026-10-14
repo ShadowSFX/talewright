@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGLocalHost" inherits="JRPGEventHost" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The event host of a game played on this machine.
+	</brief_description>
+	<description>
+		Carries out what events ask of the world through the [JRPGSceneManager] that created it ([method JRPGSceneManager.get_local_host]): transfers go through [method JRPGSceneManager.transfer].
+		Authority: server (a single-player game is its own server).
+	</description>
+	<tutorials>
+	</tutorials>
+</class>

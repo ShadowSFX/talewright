@@ -66,6 +66,12 @@
 				Returns the game state the commands read and change.
 			</description>
 		</method>
+		<method name="get_host" qualifiers="const">
+			<return type="JRPGEventHost" />
+			<description>
+				Returns the event host the commands ask the world through.
+			</description>
+		</method>
 		<method name="get_indexes" qualifiers="const">
 			<return type="PackedInt32Array" />
 			<description>
@@ -100,6 +106,12 @@
 			<return type="int" />
 			<description>
 				Returns how many more simulation steps the interpreter waits before the next command.
+			</description>
+		</method>
+		<method name="is_command_resumed" qualifiers="const">
+			<return type="bool" />
+			<description>
+				For commands: returns [code]true[/code] while the command being run returned [constant JRPGEventCommand.EXECUTE_WAIT] last time and runs again (it already started what it waits for); [code]false[/code] on its first run.
 			</description>
 		</method>
 		<method name="is_running" qualifiers="const">
@@ -154,6 +166,13 @@
 			<param index="1" name="event_id" type="int" />
 			<description>
 				Sets the map event the run belongs to, which commands mean by "this event": event [param event_id] of map [param map_id]. [method start] forgets it; the event runner sets it for each run, and a common event the run calls keeps it.
+			</description>
+		</method>
+		<method name="set_host">
+			<return type="void" />
+			<param index="0" name="host" type="JRPGEventHost" />
+			<description>
+				Sets the event host the commands ask the world through ([JRPGEventHost]).
 			</description>
 		</method>
 		<method name="set_port">

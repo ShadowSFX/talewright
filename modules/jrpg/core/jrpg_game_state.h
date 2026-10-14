@@ -194,6 +194,9 @@ public:
 	// Returns the event's state, creating an empty one for p_event_id when there is none.
 	Ref<JRPGEventState> ensure_event_state(int p_event_id);
 	bool remove_event_state(int p_event_id);
+	// Erase Event (RM-CMD-048): event p_event_id of the current map is gone until another map is entered. Pages are
+	// picked again (the revision changes).
+	void erase_event(int p_event_id);
 	PackedInt32Array get_event_state_ids() const;
 	// After loading, drops the states of events that the current map no longer has, with one warning, and returns
 	// how many were dropped.

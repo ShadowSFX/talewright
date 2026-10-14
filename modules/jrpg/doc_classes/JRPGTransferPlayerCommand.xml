@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGTransferPlayerCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: moves the player to another place, on this map or another.
+	</brief_description>
+	<description>
+		Moves the player to cell ([member x], [member y]) of map [member map_id], or to the map and cell variables [member map_variable], [member x_variable] and [member y_variable] hold when [member from_variables], facing [member direction], through [member fade]. It waits until the transfer has finished, fade in included; the event's next commands run on the new map. A transfer the host refuses (a map the game lacks, a cell outside it) is warned about and the event goes on. It goes through the event host ([JRPGEventHost]); without one nothing happens, with a warning.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="direction" type="int" setter="set_direction" getter="get_direction" default="-1">
+			The direction the player faces on arrival: [code]-1[/code] keeps the facing; 0 up, 1 right, 2 down, 3 left.
+		</member>
+		<member name="fade" type="int" setter="set_fade" getter="get_fade" default="0">
+			How the screen changes: [constant JRPGEventHost.FADE_BLACK], [constant JRPGEventHost.FADE_WHITE] or [constant JRPGEventHost.FADE_NONE].
+		</member>
+		<member name="from_variables" type="bool" setter="set_from_variables" getter="is_from_variables" default="false">
+			The map and cell are read from variables.
+		</member>
+		<member name="map_id" type="int" setter="set_map_id" getter="get_map_id" default="1">
+			The destination map.
+		</member>
+		<member name="map_variable" type="int" setter="set_map_variable" getter="get_map_variable" default="1">
+			The variable holding the destination map's ID.
+		</member>
+		<member name="x" type="int" setter="set_x" getter="get_x" default="0">
+			The destination cell's column.
+		</member>
+		<member name="x_variable" type="int" setter="set_x_variable" getter="get_x_variable" default="2">
+			The variable holding the destination cell's column.
+		</member>
+		<member name="y" type="int" setter="set_y" getter="get_y" default="0">
+			The destination cell's row.
+		</member>
+		<member name="y_variable" type="int" setter="set_y_variable" getter="get_y_variable" default="3">
+			The variable holding the destination cell's row.
+		</member>
+	</members>
+</class>

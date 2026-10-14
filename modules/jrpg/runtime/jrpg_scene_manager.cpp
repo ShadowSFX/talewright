@@ -62,6 +62,7 @@
 #include "modules/jrpg/runtime/jrpg_choice_window.h"
 #include "modules/jrpg/runtime/jrpg_event.h"
 #include "modules/jrpg/runtime/jrpg_gold_window.h"
+#include "modules/jrpg/runtime/jrpg_local_host.h"
 #include "modules/jrpg/runtime/jrpg_local_port.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 #include "modules/jrpg/runtime/jrpg_map_files.h"
@@ -406,6 +407,10 @@ Ref<JRPGLocalPort> JRPGSceneManager::get_local_port() const {
 	return local_port;
 }
 
+Ref<JRPGLocalHost> JRPGSceneManager::get_local_host() const {
+	return local_host;
+}
+
 JRPGEvent *JRPGSceneManager::get_event_node(int p_event_id) const {
 	return map ? Object::cast_to<JRPGEvent>(map->get_event_node(p_event_id)) : nullptr;
 }
@@ -643,6 +648,7 @@ void JRPGSceneManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_event_nodes"), &JRPGSceneManager::get_event_nodes);
 	ClassDB::bind_method(D_METHOD("get_event_runner"), &JRPGSceneManager::get_event_runner);
 	ClassDB::bind_method(D_METHOD("get_local_port"), &JRPGSceneManager::get_local_port);
+	ClassDB::bind_method(D_METHOD("get_local_host"), &JRPGSceneManager::get_local_host);
 	ClassDB::bind_method(D_METHOD("get_message_window"), &JRPGSceneManager::get_message_window);
 	ClassDB::bind_method(D_METHOD("get_choice_window"), &JRPGSceneManager::get_choice_window);
 	ClassDB::bind_method(D_METHOD("get_number_window"), &JRPGSceneManager::get_number_window);
@@ -717,6 +723,9 @@ JRPGSceneManager::JRPGSceneManager() {
 	local_port.instantiate();
 	local_port->set_windows(message_window, choice_window, number_window, gold_window);
 	event_runner->set_port(local_port);
+	local_host.instantiate();
+	local_host->set_manager(this);
+	event_runner->set_host(local_host);
 }
 
 JRPGSceneManager::~JRPGSceneManager() {

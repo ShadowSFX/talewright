@@ -37,6 +37,7 @@
 
 class JRPGCommandList;
 class JRPGEventCommand;
+class JRPGEventHost;
 class JRPGGameState;
 class JRPGPresentationPort;
 
@@ -88,6 +89,12 @@ private:
 	int runaway_steps = 0;
 	bool runaway_warned = false;
 	Ref<JRPGPresentationPort> port;
+	Ref<JRPGEventHost> host;
+	// The command at (resume_depth, resume_index) returned EXECUTE_WAIT: when it runs again it is resumed.
+	bool resume_active = false;
+	int resume_depth = 0;
+	int resume_index = 0;
+	bool command_resumed = false;
 	// The request the current command waits on (0: none) and where it was sent (frames, index of the last frame).
 	int request_id = 0;
 	int request_depth = 0;
@@ -124,6 +131,12 @@ public:
 	// Runs one simulation step.
 	StepResult step();
 
+	// What the commands ask of the world (transfers and scenes; JRPGEventHost, task 9.5.3).
+	void set_host(const Ref<JRPGEventHost> &p_host);
+	Ref<JRPGEventHost> get_host() const;
+	// For commands: true while the command being run returned EXECUTE_WAIT last time and runs again (it started what
+	// it waits for); false on its first run.
+	bool is_command_resumed() const { return command_resumed; }
 	// The port the interpreter asks the player through (spec 03); requests waiting on another port are withdrawn.
 	void set_port(const Ref<JRPGPresentationPort> &p_port);
 	Ref<JRPGPresentationPort> get_port() const;

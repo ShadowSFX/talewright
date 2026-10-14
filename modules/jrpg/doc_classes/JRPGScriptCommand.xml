@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGScriptCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: runs a line of the author's own code.
+	</brief_description>
+	<description>
+		Runs [member script_text], a Godot [Expression], for what it does, with the game state as [code]state[/code] and the interpreter as [code]interpreter[/code]: [code]state.set_variable(3, state.get_gold() / 2)[/code]. Unlike formulas it may call any method: it is the author's own code, and keeping it deterministic is the author's part. A text that does not parse, or an error while it runs, is warned about once.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="script_text" type="String" setter="set_script_text" getter="get_script_text" default="&quot;&quot;">
+			The expression to run.
+		</member>
+	</members>
+</class>

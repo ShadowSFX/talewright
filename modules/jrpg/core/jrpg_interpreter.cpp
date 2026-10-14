@@ -34,6 +34,7 @@
 #include "jrpg_command_list.h"
 #include "jrpg_database.h" // IWYU pragma: keep (JRPGGameState returns Ref<JRPGDatabase> inline).
 #include "jrpg_event_command.h"
+#include "jrpg_event_host.h"
 #include "jrpg_game_state.h"
 #include "jrpg_misc_data.h"
 #include "jrpg_presentation_port.h"
@@ -56,6 +57,7 @@ void JRPGInterpreter::start(const Ref<JRPGCommandList> &p_list, const Ref<JRPGGa
 
 void JRPGInterpreter::clear() {
 	_withdraw_request();
+	resume_active = false;
 	frames.clear();
 	wait_left = 0;
 	flow_changed = true; // From inside a command (a transfer that stops the map's processes): step() ends there.
@@ -102,16 +104,23 @@ JRPGInterpreter::StepResult JRPGInterpreter::step() {
 		const int depth = frames.size();
 		const Frame &frame = frames[depth - 1];
 		const Ref<JRPGEventCommand> command = frame.list->get_command(frame.index);
+		command_resumed = resume_active && resume_depth == depth && resume_index == frame.index;
 		flow_changed = false;
 		const JRPGEventCommand::ExecuteResult result = command.is_valid() ? command->execute(this) : JRPGEventCommand::EXECUTE_CONTINUE;
 		commands_left--;
+		command_resumed = false;
 		if (flow_changed) {
+			resume_active = false;
 			continue; // A jump, a break or the end of the run already set where to go on.
 		}
 		if (result == JRPGEventCommand::EXECUTE_WAIT && frames.size() == depth) {
+			resume_active = true; // The same command runs again at the next step, resumed.
+			resume_depth = depth;
+			resume_index = frames[depth - 1].index;
 			runaway_steps = 0;
-			return STEP_WAITING; // The same command runs again at the next step.
+			return STEP_WAITING;
 		}
+		resume_active = false;
 		frames.write[depth - 1].index++; // After the command, also once a list it pushed ends.
 		if (wait_left > 0) {
 			runaway_steps = 0;
@@ -141,6 +150,14 @@ void JRPGInterpreter::_withdraw_request() {
 		port->withdraw(request_id);
 	}
 	request_id = 0;
+}
+
+void JRPGInterpreter::set_host(const Ref<JRPGEventHost> &p_host) {
+	host = p_host;
+}
+
+Ref<JRPGEventHost> JRPGInterpreter::get_host() const {
+	return host;
 }
 
 void JRPGInterpreter::set_port(const Ref<JRPGPresentationPort> &p_port) {
@@ -398,6 +415,9 @@ void JRPGInterpreter::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_next_command"), &JRPGInterpreter::get_next_command);
 	ClassDB::bind_method(D_METHOD("get_depth"), &JRPGInterpreter::get_depth);
 	ClassDB::bind_method(D_METHOD("get_indexes"), &JRPGInterpreter::get_indexes);
+	ClassDB::bind_method(D_METHOD("is_command_resumed"), &JRPGInterpreter::is_command_resumed);
+	ClassDB::bind_method(D_METHOD("set_host", "host"), &JRPGInterpreter::set_host);
+	ClassDB::bind_method(D_METHOD("get_host"), &JRPGInterpreter::get_host);
 	ClassDB::bind_method(D_METHOD("set_port", "port"), &JRPGInterpreter::set_port);
 	ClassDB::bind_method(D_METHOD("get_port"), &JRPGInterpreter::get_port);
 	ClassDB::bind_method(D_METHOD("present", "kind", "params"), &JRPGInterpreter::present);

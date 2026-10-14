@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGWaitCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: waits a while before the next command.
+	</brief_description>
+	<description>
+		Waits [member steps] simulation steps (1/60 s each) before the event's next command, as [method JRPGInterpreter.wait_steps] does.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="steps" type="int" setter="set_steps" getter="get_steps" default="60">
+			How many simulation steps to wait, 1 to [constant MAX_STEPS].
+		</member>
+	</members>
+	<constants>
+		<constant name="MAX_STEPS" value="999">
+			The longest wait, in simulation steps.
+		</constant>
+	</constants>
+</class>

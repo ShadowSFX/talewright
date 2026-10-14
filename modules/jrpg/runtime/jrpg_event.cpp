@@ -92,6 +92,7 @@ bool JRPGEvent::refresh_page(const Ref<JRPGGameState> &p_game_state, int p_map_i
 	ERR_FAIL_COND_V(data.is_null(), false);
 	const int found = data->find_active_page(p_game_state, p_map_id);
 	if (found == page_index) {
+		set_visible(is_present()); // Erase Event keeps the page.
 		return false;
 	}
 	page_index = found;

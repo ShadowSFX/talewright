@@ -83,6 +83,12 @@
 				Returns the gold window a message's [code]\$[/code] shows.
 			</description>
 		</method>
+		<method name="get_local_host" qualifiers="const">
+			<return type="JRPGLocalHost" />
+			<description>
+				Returns the event host the map's events move the player through.
+			</description>
+		</method>
 		<method name="get_local_port" qualifiers="const">
 			<return type="JRPGLocalPort" />
 			<description>

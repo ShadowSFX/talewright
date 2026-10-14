@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGEventHost" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		What events ask of the world beyond presenting things: moving the player, and later opening scenes.
+	</brief_description>
+	<description>
+		Event commands that act on the world rather than on the game state alone go through an event host: [JRPGTransferPlayerCommand] moves the player with [method transfer_player] and waits while [method is_transferring]; the epics that build the menu, battles, saving, game over and the title screen add their scenes here. A single-player game's host is its scene manager's ([JRPGLocalHost]); online, the zone server's host acts on the world and tells the clients. The event runner gives its host to every interpreter ([method JRPGEventRunner.set_host]).
+		This class does nothing by itself: a subclass, or a script overriding the virtual methods, carries the requests out.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="_is_transferring" qualifiers="virtual const">
+			<return type="bool" />
+			<description>
+				Returns whether a transfer is under way.
+			</description>
+		</method>
+		<method name="_transfer_player" qualifiers="virtual">
+			<return type="int" enum="Error" />
+			<param index="0" name="map_id" type="int" />
+			<param index="1" name="cell" type="Vector2i" />
+			<param index="2" name="direction" type="int" />
+			<param index="3" name="fade" type="int" />
+			<description>
+				Moves the player to [param cell] of map [param map_id] facing [param direction] through [param fade] ([enum Fade]); returns [constant OK] once the transfer started.
+			</description>
+		</method>
+		<method name="is_transferring" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] while a transfer is under way (its fade has not ended).
+			</description>
+		</method>
+		<method name="transfer_player">
+			<return type="int" enum="Error" />
+			<param index="0" name="map_id" type="int" />
+			<param index="1" name="cell" type="Vector2i" />
+			<param index="2" name="direction" type="int" />
+			<param index="3" name="fade" type="int" enum="JRPGEventHost.Fade" />
+			<description>
+				Moves the player to [param cell] of map [param map_id], facing [param direction] (0 to 3, or [constant DIRECTION_RETAIN]), through [param fade]. Returns [constant OK] once the transfer started (or happened, without a fade), an error with a warning when it is refused (a map the game lacks, a cell outside it, another transfer under way), or [constant ERR_UNAVAILABLE] when the host cannot move the player.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="DIRECTION_RETAIN" value="-1">
+			The player keeps facing the way they face.
+		</constant>
+		<constant name="FADE_BLACK" value="0" enum="Fade">
+			The screen fades out to black and back in.
+		</constant>
+		<constant name="FADE_WHITE" value="1" enum="Fade">
+			The screen fades out to white and back in.
+		</constant>
+		<constant name="FADE_NONE" value="2" enum="Fade">
+			The player is moved at once.
+		</constant>
+	</constants>
+</class>

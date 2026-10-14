@@ -46,6 +46,7 @@ class JRPGEvent;
 class JRPGEventRunner;
 class JRPGGameState;
 class JRPGGoldWindow;
+class JRPGLocalHost;
 class JRPGLocalPort;
 class JRPGMessageWindow;
 class JRPGNumberInputWindow;
@@ -99,6 +100,7 @@ private:
 	uint64_t refreshed_revision = 0; // The game state's revision the event pages were last picked for.
 	Ref<JRPGEventRunner> event_runner; // The current map's event processes.
 	Ref<JRPGLocalPort> local_port; // What the events ask the player through.
+	Ref<JRPGLocalHost> local_host; // What the events ask of the world (transfers).
 	CanvasLayer *message_layer = nullptr;
 	JRPGMessageWindow *message_window = nullptr;
 	JRPGChoiceWindow *choice_window = nullptr;
@@ -199,6 +201,8 @@ public:
 	Ref<JRPGEventRunner> get_event_runner() const;
 	// The presentation port the events ask the player through, and its windows.
 	Ref<JRPGLocalPort> get_local_port() const;
+	// The event host the events move the player through (task 9.5.3).
+	Ref<JRPGLocalHost> get_local_host() const;
 	JRPGMessageWindow *get_message_window() const { return message_window; }
 	JRPGChoiceWindow *get_choice_window() const { return choice_window; }
 	JRPGNumberInputWindow *get_number_window() const { return number_window; }

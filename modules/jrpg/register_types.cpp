@@ -49,6 +49,7 @@
 #include "modules/jrpg/core/jrpg_equip_data.h"
 #include "modules/jrpg/core/jrpg_event_command.h"
 #include "modules/jrpg/core/jrpg_event_data.h"
+#include "modules/jrpg/core/jrpg_event_host.h"
 #include "modules/jrpg/core/jrpg_event_runner.h"
 #include "modules/jrpg/core/jrpg_event_state.h"
 #include "modules/jrpg/core/jrpg_flow_commands.h"
@@ -67,6 +68,7 @@
 #include "modules/jrpg/core/jrpg_presentation_port.h"
 #include "modules/jrpg/core/jrpg_random.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
+#include "modules/jrpg/core/jrpg_scene_commands.h"
 #include "modules/jrpg/core/jrpg_sim_clock.h"
 #include "modules/jrpg/core/jrpg_skill_data.h"
 #include "modules/jrpg/core/jrpg_stat_block.h"
@@ -85,6 +87,7 @@
 #include "modules/jrpg/runtime/jrpg_event.h"
 #include "modules/jrpg/runtime/jrpg_event_anchor.h"
 #include "modules/jrpg/runtime/jrpg_gold_window.h"
+#include "modules/jrpg/runtime/jrpg_local_host.h"
 #include "modules/jrpg/runtime/jrpg_local_port.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 #include "modules/jrpg/runtime/jrpg_map_files.h"
@@ -187,6 +190,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGInterpreter);
 		GDREGISTER_CLASS(JRPGEventRunner);
 		GDREGISTER_CLASS(JRPGPresentationPort);
+		GDREGISTER_CLASS(JRPGEventHost);
 		// The built-in event commands (task 9.5), known to command lists by their codes.
 		GDREGISTER_CLASS(JRPGShowTextCommand);
 		GDREGISTER_CLASS(JRPGShowChoicesCommand);
@@ -214,6 +218,10 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGChangeTPCommand);
 		GDREGISTER_CLASS(JRPGChangeStateCommand);
 		GDREGISTER_CLASS(JRPGRecoverAllCommand);
+		GDREGISTER_CLASS(JRPGTransferPlayerCommand);
+		GDREGISTER_CLASS(JRPGWaitCommand);
+		GDREGISTER_CLASS(JRPGEraseEventCommand);
+		GDREGISTER_CLASS(JRPGScriptCommand);
 		JRPGCommandRegistry::register_command(JRPGShowTextCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGShowChoicesCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGInputNumberCommand::get_class_static());
@@ -237,6 +245,10 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		JRPGCommandRegistry::register_command(JRPGChangeTPCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGChangeStateCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGRecoverAllCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGTransferPlayerCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGWaitCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGEraseEventCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGScriptCommand::get_class_static());
 		GDREGISTER_CLASS(JRPGReferenceScanner);
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotile); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotileResolver);
@@ -261,6 +273,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGNumberInputWindow);
 		GDREGISTER_CLASS(JRPGGoldWindow);
 		GDREGISTER_CLASS(JRPGLocalPort);
+		GDREGISTER_CLASS(JRPGLocalHost);
 		GDREGISTER_CLASS(JRPGGameState);
 	}
 #ifdef TOOLS_ENABLED

@@ -312,6 +312,13 @@ Ref<JRPGEventState> JRPGGameState::ensure_event_state(int p_event_id) {
 	return state;
 }
 
+void JRPGGameState::erase_event(int p_event_id) {
+	const Ref<JRPGEventState> state = ensure_event_state(p_event_id);
+	ERR_FAIL_COND(state.is_null());
+	state->set_erased(true);
+	_changed();
+}
+
 bool JRPGGameState::remove_event_state(int p_event_id) {
 	return data.events.erase(p_event_id);
 }
@@ -841,6 +848,7 @@ void JRPGGameState::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_events_map_revision"), &JRPGGameState::get_events_map_revision);
 	ClassDB::bind_method(D_METHOD("get_event_state", "event_id"), &JRPGGameState::get_event_state);
 	ClassDB::bind_method(D_METHOD("ensure_event_state", "event_id"), &JRPGGameState::ensure_event_state);
+	ClassDB::bind_method(D_METHOD("erase_event", "event_id"), &JRPGGameState::erase_event);
 	ClassDB::bind_method(D_METHOD("remove_event_state", "event_id"), &JRPGGameState::remove_event_state);
 	ClassDB::bind_method(D_METHOD("get_event_state_ids"), &JRPGGameState::get_event_state_ids);
 	ClassDB::bind_method(D_METHOD("prune_event_states", "existing_event_ids"), &JRPGGameState::prune_event_states);

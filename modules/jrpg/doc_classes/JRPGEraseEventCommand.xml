@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGEraseEventCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: removes the event running it until the player enters another map.
+	</brief_description>
+	<description>
+		The map event running the command is gone until the player enters another map ([method JRPGGameState.erase_event]): it shows nothing, blocks nothing and runs no page. The rest of its commands still run. Without a map event, or once the player is on another map, nothing happens.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+</class>
