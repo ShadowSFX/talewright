@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGCommonEventData" inherits="JRPGEntry" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A common event: commands callable from anywhere.
+	</brief_description>
+	<description>
+		Database entry for a command list that events can call, or that runs automatically while a switch is on.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="switch_id" type="int" setter="set_switch_id" getter="get_switch_id" default="1">
+			Switch that must be on for an autorun or parallel common event to run.
+		</member>
+		<member name="trigger" type="int" setter="set_trigger" getter="get_trigger" enum="JRPGCommonEventData.Trigger" default="0">
+			When the common event runs by itself: never (only when called), as an autorun, or as a parallel process.
+		</member>
+	</members>
+	<constants>
+		<constant name="TRIGGER_NONE" value="0" enum="Trigger">
+			Runs only when called.
+		</constant>
+		<constant name="TRIGGER_AUTORUN" value="1" enum="Trigger">
+			Runs automatically while [member switch_id] is on, blocking other processing.
+		</constant>
+		<constant name="TRIGGER_PARALLEL" value="2" enum="Trigger">
+			Runs alongside the game while [member switch_id] is on.
+		</constant>
+	</constants>
+</class>

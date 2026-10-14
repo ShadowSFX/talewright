@@ -40,13 +40,17 @@
 #include "modules/jrpg/core/jrpg_battle_rules.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_database.h"
+#include "modules/jrpg/core/jrpg_enemy_data.h"
 #include "modules/jrpg/core/jrpg_entry.h"
 #include "modules/jrpg/core/jrpg_equip_data.h"
 #include "modules/jrpg/core/jrpg_item_data.h"
+#include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_skill_data.h"
+#include "modules/jrpg/core/jrpg_state_data.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
 #include "modules/jrpg/core/jrpg_terms_data.h"
+#include "modules/jrpg/core/jrpg_troop_data.h"
 #include "modules/jrpg/core/jrpg_types_data.h"
 #include "modules/jrpg/core/jrpg_usable_data.h"
 #include "modules/jrpg/core/jrpg_weapon_data.h"
@@ -82,6 +86,13 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_ABSTRACT_CLASS(JRPGEquipData);
 		GDREGISTER_CLASS(JRPGWeaponData);
 		GDREGISTER_CLASS(JRPGArmorData);
+		GDREGISTER_CLASS(JRPGEnemyData);
+		GDREGISTER_CLASS(JRPGTroopPage);
+		GDREGISTER_CLASS(JRPGTroopData);
+		GDREGISTER_CLASS(JRPGStateData);
+		GDREGISTER_CLASS(JRPGAnimationData);
+		GDREGISTER_CLASS(JRPGTilesetData);
+		GDREGISTER_CLASS(JRPGCommonEventData);
 		GDREGISTER_CLASS(JRPGDatabase);
 	}
 #ifdef TOOLS_ENABLED

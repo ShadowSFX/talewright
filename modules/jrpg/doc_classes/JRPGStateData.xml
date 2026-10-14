@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGStateData" inherits="JRPGEntry" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A state such as poison or sleep.
+	</brief_description>
+	<description>
+		Database entry for a condition that changes a battler while it lasts: what it restricts, how it ends, its battle messages and its traits. State ID [constant KNOCKOUT_STATE_ID] is the knockout state, applied whenever HP reaches 0.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="auto_removal" type="int" setter="set_auto_removal" getter="get_auto_removal" enum="JRPGStateData.AutoRemoval" default="0">
+			When the remaining turns are counted down: never, after the battler's action, or at the end of the turn.
+		</member>
+		<member name="damage_removal_chance" type="int" setter="set_damage_removal_chance" getter="get_damage_removal_chance" default="100">
+			Chance in percent to remove the state each time the battler takes damage.
+		</member>
+		<member name="icon_index" type="int" setter="set_icon_index" getter="get_icon_index" default="0">
+			Index of the state's icon in the project's icon sheet.
+		</member>
+		<member name="max_turns" type="int" setter="set_max_turns" getter="get_max_turns" default="1">
+			Longest duration in turns.
+		</member>
+		<member name="message_actor" type="String" setter="set_message_actor" getter="get_message_actor" default="&quot;&quot;">
+			Battle message when a party member gets the state. [code]%1[/code] is the battler's name.
+		</member>
+		<member name="message_enemy" type="String" setter="set_message_enemy" getter="get_message_enemy" default="&quot;&quot;">
+			Battle message when an enemy gets the state.
+		</member>
+		<member name="message_persist" type="String" setter="set_message_persist" getter="get_message_persist" default="&quot;&quot;">
+			Battle message while the state stays on.
+		</member>
+		<member name="message_remove" type="String" setter="set_message_remove" getter="get_message_remove" default="&quot;&quot;">
+			Battle message when the state wears off.
+		</member>
+		<member name="min_turns" type="int" setter="set_min_turns" getter="get_min_turns" default="1">
+			Shortest duration in turns.
+		</member>
+		<member name="priority" type="int" setter="set_priority" getter="get_priority" default="50">
+			Which state's icon is shown when a battler has several: the highest priority wins, then the lowest ID.
+		</member>
+		<member name="remove_at_battle_end" type="bool" setter="set_remove_at_battle_end" getter="is_removed_at_battle_end" default="false">
+			If [code]true[/code], the state is removed when the battle ends.
+		</member>
+		<member name="remove_by_damage" type="bool" setter="set_remove_by_damage" getter="is_removed_by_damage" default="false">
+			If [code]true[/code], taking damage can remove the state (see [member damage_removal_chance]).
+		</member>
+		<member name="remove_by_restriction" type="bool" setter="set_remove_by_restriction" getter="is_removed_by_restriction" default="false">
+			If [code]true[/code], the state is removed when another state with a different restriction is added.
+		</member>
+		<member name="remove_by_walking" type="bool" setter="set_remove_by_walking" getter="is_removed_by_walking" default="false">
+			If [code]true[/code], the state is removed after the party walks [member steps_to_remove] steps on the map.
+		</member>
+		<member name="restriction" type="int" setter="set_restriction" getter="get_restriction" enum="JRPGStateData.Restriction" default="0">
+			What the battler can still do while the state is on. When several states restrict a battler, the one furthest down the list wins.
+		</member>
+		<member name="steps_to_remove" type="int" setter="set_steps_to_remove" getter="get_steps_to_remove" default="100">
+			Steps on the map that remove the state when [member remove_by_walking] is on.
+		</member>
+		<member name="traits" type="Array" setter="set_traits" getter="get_traits" default="[]">
+			Traits the battler has while the state is on.
+		</member>
+	</members>
+	<constants>
+		<constant name="RESTRICTION_NONE" value="0" enum="Restriction">
+			No restriction.
+		</constant>
+		<constant name="RESTRICTION_ATTACK_ENEMY" value="1" enum="Restriction">
+			The battler attacks an enemy on its own.
+		</constant>
+		<constant name="RESTRICTION_ATTACK_ANYONE" value="2" enum="Restriction">
+			The battler attacks anyone on its own.
+		</constant>
+		<constant name="RESTRICTION_ATTACK_ALLY" value="3" enum="Restriction">
+			The battler attacks an ally on its own.
+		</constant>
+		<constant name="RESTRICTION_CANNOT_MOVE" value="4" enum="Restriction">
+			The battler cannot act.
+		</constant>
+		<constant name="AUTO_REMOVAL_NONE" value="0" enum="AutoRemoval">
+			Turns are not counted.
+		</constant>
+		<constant name="AUTO_REMOVAL_ACTION_END" value="1" enum="AutoRemoval">
+			Turns are counted after the battler acts.
+		</constant>
+		<constant name="AUTO_REMOVAL_TURN_END" value="2" enum="AutoRemoval">
+			Turns are counted at the end of each turn.
+		</constant>
+		<constant name="KNOCKOUT_STATE_ID" value="1">
+			ID of the knockout state.
+		</constant>
+	</constants>
+</class>

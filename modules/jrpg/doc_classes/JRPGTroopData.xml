@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGTroopData" inherits="JRPGEntry" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A troop: the enemies fought together.
+	</brief_description>
+	<description>
+		Database entry for a group of up to [constant MAX_MEMBERS] enemies and its battle events. Encounters and battle commands always name a troop, even for a single enemy.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="make_member" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="enemy_id" type="int" />
+			<param index="1" name="position" type="Vector2i" />
+			<param index="2" name="hidden" type="bool" />
+			<description>
+				Returns a member dictionary for [member members]: enemy [param enemy_id] at [param position], hidden until a battle event makes it appear when [param hidden] is [code]true[/code].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="members" type="Array" setter="set_members" getter="get_members" default="[]">
+			The troop's enemies, as dictionaries with [code]enemy_id[/code], [code]x[/code], [code]y[/code] and [code]hidden[/code]. Their order is the order of targets in battle.
+		</member>
+		<member name="pages" type="JRPGTroopPage[]" setter="set_pages" getter="get_pages" default="[]">
+			Battle event pages.
+		</member>
+	</members>
+	<constants>
+		<constant name="MAX_MEMBERS" value="8">
+			Largest number of enemies in a troop.
+		</constant>
+	</constants>
+</class>

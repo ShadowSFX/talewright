@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGEnemyData" inherits="JRPGEntry" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		An enemy the party fights.
+	</brief_description>
+	<description>
+		Database entry for a foe: its battle image, fixed parameters, rewards, drops, action patterns and traits.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_param" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="param" type="int" />
+			<description>
+				Returns parameter [param param] (in [enum JRPGClassData.Param] order).
+			</description>
+		</method>
+		<method name="make_action" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="skill_id" type="int" />
+			<param index="1" name="condition" type="int" enum="JRPGEnemyData.ActionCondition" />
+			<param index="2" name="param1" type="int" />
+			<param index="3" name="param2" type="int" />
+			<param index="4" name="rating" type="int" />
+			<description>
+				Returns an action pattern dictionary for [member actions]. [param param1] and [param param2] depend on the condition: turns A and B for [constant CONDITION_TURN], a lower and upper bound in basis points for [constant CONDITION_HP] and [constant CONDITION_MP], a state, level or switch ID otherwise. [param rating] is kept between 1 and 9.
+			</description>
+		</method>
+		<method name="make_drop" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="kind" type="int" enum="JRPGEnemyData.DropKind" />
+			<param index="1" name="data_id" type="int" />
+			<param index="2" name="denominator" type="int" />
+			<description>
+				Returns a drop dictionary for [member drops]: a 1 in [param denominator] chance (1 to 1000) to drop the item, weapon or armor [param data_id].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="actions" type="Array" setter="set_actions" getter="get_actions" default="[]">
+			Action patterns, as dictionaries with [code]skill_id[/code], [code]condition_type[/code], [code]param1[/code], [code]param2[/code] and [code]rating[/code]. See [method make_action].
+		</member>
+		<member name="battler" type="String" setter="set_battler" getter="get_battler" default="&quot;&quot;">
+			Path of the enemy's battle image.
+		</member>
+		<member name="drops" type="Array" setter="set_drops" getter="get_drops" default="[]">
+			Up to [constant MAX_DROPS] possible drops, as dictionaries with [code]kind[/code], [code]data_id[/code] and [code]denominator[/code]. See [method make_drop].
+		</member>
+		<member name="exp" type="int" setter="set_exp" getter="get_exp" default="0">
+			EXP the party earns for defeating the enemy.
+		</member>
+		<member name="gold" type="int" setter="set_gold" getter="get_gold" default="0">
+			Money the party earns for defeating the enemy.
+		</member>
+		<member name="hue" type="int" setter="set_hue" getter="get_hue" default="0">
+			Color shift applied to the battle image, in degrees.
+		</member>
+		<member name="params" type="PackedInt32Array" setter="set_params" getter="get_params" default="PackedInt32Array(1, 0, 0, 0, 0, 0, 0, 0)">
+			The eight parameters at battle start: max HP 1 to 999999, max MP 0 to 9999, the others 0 to 999.
+		</member>
+		<member name="traits" type="Array" setter="set_traits" getter="get_traits" default="[]">
+			Traits of the enemy, as dictionaries with [code]code[/code], [code]data_id[/code] and [code]value[/code].
+		</member>
+	</members>
+	<constants>
+		<constant name="DROP_NONE" value="0" enum="DropKind">
+			No drop.
+		</constant>
+		<constant name="DROP_ITEM" value="1" enum="DropKind">
+			Drops an item.
+		</constant>
+		<constant name="DROP_WEAPON" value="2" enum="DropKind">
+			Drops a weapon.
+		</constant>
+		<constant name="DROP_ARMOR" value="3" enum="DropKind">
+			Drops an armor.
+		</constant>
+		<constant name="CONDITION_ALWAYS" value="0" enum="ActionCondition">
+			The action is always allowed.
+		</constant>
+		<constant name="CONDITION_TURN" value="1" enum="ActionCondition">
+			Allowed on turns A + B * X.
+		</constant>
+		<constant name="CONDITION_HP" value="2" enum="ActionCondition">
+			Allowed while the enemy's HP is within a band.
+		</constant>
+		<constant name="CONDITION_MP" value="3" enum="ActionCondition">
+			Allowed while the enemy's MP is within a band.
+		</constant>
+		<constant name="CONDITION_STATE" value="4" enum="ActionCondition">
+			Allowed while the enemy has a state.
+		</constant>
+		<constant name="CONDITION_PARTY_LEVEL" value="5" enum="ActionCondition">
+			Allowed when the highest party level reaches a value.
+		</constant>
+		<constant name="CONDITION_SWITCH" value="6" enum="ActionCondition">
+			Allowed while a switch is on.
+		</constant>
+		<constant name="PARAM_COUNT" value="8">
+			Number of parameters in [member params].
+		</constant>
+		<constant name="MAX_DROPS" value="3">
+			Largest number of drops.
+		</constant>
+	</constants>
+</class>

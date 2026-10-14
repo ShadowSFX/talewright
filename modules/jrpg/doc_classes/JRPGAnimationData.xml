@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGAnimationData" inherits="JRPGEntry" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		An animation played in battle or on the map.
+	</brief_description>
+	<description>
+		Database entry for a visual effect. For now it only points to the effect to play; timing, sounds and flashes will be added with the animation tools.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="effect" type="String" setter="set_effect" getter="get_effect" default="&quot;&quot;">
+			Path ([code]uid://[/code] or [code]res://[/code]) of the effect scene or resource.
+		</member>
+	</members>
+</class>

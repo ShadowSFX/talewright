@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGTilesetData" inherits="JRPGEntry" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A tileset: the tiles maps are painted with.
+	</brief_description>
+	<description>
+		Database entry linking a Godot [TileSet] to JRPG maps. Map cells store an index into [member palette], and [member flags] holds each palette entry's movement and terrain flags, baked from the TileSet's custom data so that game logic and servers never need the TileSet itself.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_no_entry" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="flags" type="int" />
+			<description>
+				Returns the sides (bit 0 north, 1 east, 2 south, 3 west) through which a tile with flag word [param flags] cannot be entered.
+			</description>
+		</method>
+		<method name="get_no_exit" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="flags" type="int" />
+			<description>
+				Returns the sides through which a tile with flag word [param flags] cannot be left.
+			</description>
+		</method>
+		<method name="get_pass_mode" qualifiers="static">
+			<return type="int" enum="JRPGTilesetData.PassMode" />
+			<param index="0" name="flags" type="int" />
+			<description>
+				Returns the pass mode of flag word [param flags].
+			</description>
+		</method>
+		<method name="get_terrain_tag" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="flags" type="int" />
+			<description>
+				Returns the terrain tag (0 to 15) of flag word [param flags].
+			</description>
+		</method>
+		<method name="get_tile_flags" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="palette_index" type="int" />
+			<description>
+				Returns the flag word of palette index [param palette_index], or [code]0[/code] for the empty cell and unknown indices.
+			</description>
+		</method>
+		<method name="pack_flags" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="pass" type="int" enum="JRPGTilesetData.PassMode" />
+			<param index="1" name="no_entry" type="int" />
+			<param index="2" name="no_exit" type="int" />
+			<param index="3" name="flags" type="int" />
+			<param index="4" name="terrain_tag" type="int" />
+			<description>
+				Returns a flag word built from a pass mode, entry and exit side masks, a combination of the [code]FLAG_*[/code] constants and a terrain tag.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="edge_mode" type="int" setter="set_edge_mode" getter="get_edge_mode" enum="JRPGTilesetData.EdgeMode" default="0">
+			How autotiles treat the area outside the map.
+		</member>
+		<member name="flags" type="PackedInt32Array" setter="set_flags" getter="get_flags" default="PackedInt32Array()">
+			Baked flag word per palette index; index 0 is the empty cell.
+		</member>
+		<member name="flags_hash" type="String" setter="set_flags_hash" getter="get_flags_hash" default="&quot;&quot;">
+			Hash of the TileSet custom data [member flags] was baked from, used to detect a stale bake.
+		</member>
+		<member name="palette" type="Array" setter="set_palette" getter="get_palette" default="[]">
+			Tiles maps can use, as dictionaries with [code]kind[/code], [code]source_id[/code], [code]atlas_coords[/code] and [code]alternative[/code]. A map cell's palette index is the entry's position plus one.
+		</member>
+		<member name="tileset_uid" type="String" setter="set_tileset_uid" getter="get_tileset_uid" default="&quot;&quot;">
+			Path ([code]uid://[/code] or [code]res://[/code]) of the Godot [TileSet].
+		</member>
+	</members>
+	<constants>
+		<constant name="EDGE_EXTEND" value="0" enum="EdgeMode">
+			Outside the map counts as the same autotile kind, so terrain runs cleanly to the edge.
+		</constant>
+		<constant name="EDGE_BORDER" value="1" enum="EdgeMode">
+			Outside the map counts as a different kind, so an outline is drawn at the edge.
+		</constant>
+		<constant name="PASS_OPEN" value="0" enum="PassMode">
+			The tile can be walked on.
+		</constant>
+		<constant name="PASS_BLOCKED" value="1" enum="PassMode">
+			The tile blocks movement.
+		</constant>
+		<constant name="PASS_TRANSPARENT" value="2" enum="PassMode">
+			The tile does not affect movement; the tile below decides.
+		</constant>
+		<constant name="FLAG_OVERHEAD" value="1024">
+			The tile is drawn above characters.
+		</constant>
+		<constant name="FLAG_LADDER" value="2048">
+			Characters on the tile face up, as if climbing.
+		</constant>
+		<constant name="FLAG_BUSH" value="4096">
+			Characters on the tile are partly hidden.
+		</constant>
+		<constant name="FLAG_COUNTER" value="8192">
+			Events can be talked to across the tile.
+		</constant>
+		<constant name="FLAG_DAMAGE" value="16384">
+			Walking on the tile hurts the party.
+		</constant>
+	</constants>
+</class>
