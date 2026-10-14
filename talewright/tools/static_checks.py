@@ -5,7 +5,8 @@ CI runs `prek run --files <changed files>` with the repository's .pre-commit-con
 hooks on the files a push would bring (default: everything that differs from origin/talewright, committed or not,
 plus untracked files), then the fork's own checks: Talewright license headers (Godot's copyright-headers hook skips
 the fork modules), ASCII-only narrow string literals (non-ASCII text goes in U"..." literals: String(const char *)
-reads Latin-1), the jrpg core include boundary, the upstream-patch ledger, clang's diagnostics on the fork's
+reads Latin-1), EditorFileSystem only through jrpg_editor_file_system() (its singleton dangles once a test deletes it),
+the jrpg core include boundary, the upstream-patch ledger, clang's diagnostics on the fork's
 C++ (talewright/tools/clang_check.py; skipped when clang-tidy or compile_commands.json is missing), and clangd-tidy on
 the changed C/C++ files, as CI's "Style checks via clangd-tidy" step runs it (every file analyzed on its own, so
 headers must include what they use; any diagnostic fails, CI's default --fail-on-severity hint). Install it with
@@ -214,6 +215,20 @@ def main() -> int:
     for finding in literals:
         print("   ", finding)
     ok &= not literals
+
+    # EditorFileSystem's singleton outlives the object (editor/file_system/editor_file_system.cpp:3827-3833): after a
+    # doctest deletes one, later tests read freed memory. Fork code asks jrpg_editor_file_system() or checks EditorNode.
+    dangling = [
+        f"{f}:{number}: EditorFileSystem::get_singleton() -> jrpg_editor_file_system()"
+        for f in cpp
+        if "/tests/" not in f and not f.endswith("jrpg_editor_file_system.h")
+        for number, line in enumerate((root / f).read_text(encoding="utf-8").splitlines(), 1)
+        if "EditorFileSystem::get_singleton()" in line and "EditorNode::get_singleton()" not in line
+    ]
+    print(("[PASS]" if not dangling else "[FAIL]") + f" editor file system only with an editor ({len(cpp)} files)")
+    for finding in dangling:
+        print("   ", finding)
+    ok &= not dangling
 
     for name, cmd in (
         ("jrpg core include boundary", [sys.executable, "modules/jrpg/tests/check_core_includes.py"]),

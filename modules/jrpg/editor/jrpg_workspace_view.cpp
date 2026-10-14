@@ -32,6 +32,7 @@
 #include "jrpg_workspace_view.h"
 
 #include "jrpg_bootstrap_plugin.h"
+#include "jrpg_editor_file_system.h"
 #include "jrpg_project_setup.h"
 #include "jrpg_setup_dialog.h"
 #include "jrpg_workspace_shell.h"
@@ -103,14 +104,15 @@ void JRPGWorkspaceView::_notification(int p_what) {
 		} break;
 		case NOTIFICATION_ENTER_TREE: {
 			_update_state();
-			if (EditorFileSystem::get_singleton()) {
+			if (jrpg_editor_file_system()) {
 				// The database can also appear or disappear through the FileSystem dock or version control.
-				EditorFileSystem::get_singleton()->connect("filesystem_changed", callable_mp(this, &JRPGWorkspaceView::_update_state));
+				jrpg_editor_file_system()->connect("filesystem_changed", callable_mp(this, &JRPGWorkspaceView::_update_state));
 			}
 		} break;
 		case NOTIFICATION_EXIT_TREE: {
-			if (EditorFileSystem::get_singleton()) {
-				EditorFileSystem::get_singleton()->disconnect("filesystem_changed", callable_mp(this, &JRPGWorkspaceView::_update_state));
+			EditorFileSystem *file_system = jrpg_editor_file_system();
+			if (file_system && file_system->is_connected("filesystem_changed", callable_mp(this, &JRPGWorkspaceView::_update_state))) {
+				file_system->disconnect("filesystem_changed", callable_mp(this, &JRPGWorkspaceView::_update_state));
 			}
 		} break;
 	}

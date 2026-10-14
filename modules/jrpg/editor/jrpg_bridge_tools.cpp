@@ -31,6 +31,8 @@
 
 #include "jrpg_bridge_tools.h"
 
+#include "jrpg_editor_file_system.h"
+
 #ifdef MODULE_CLAUDE_BRIDGE_ENABLED
 
 #include "jrpg_curve_editor.h"
@@ -1454,7 +1456,7 @@ void wait_for_import(const Ref<ClaudeBridgeToolCall> &p_call, const String &p_ta
 		apply_image(p_call, p_table, p_id, p_field, p_path, p_frames, p_directions);
 		return;
 	}
-	EditorFileSystem *file_system = EditorFileSystem::get_singleton();
+	EditorFileSystem *file_system = jrpg_editor_file_system();
 	if (p_rescans > 0 && file_system && !file_system->is_scanning() && !file_system->is_importing()) {
 		file_system->scan_changes(); // The last scan ended without the file (it began before the copy).
 		p_rescans--;
@@ -1510,9 +1512,9 @@ void tool_db_set_image(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall>
 		p_call->fail(vformat("\"image\" must be an image file inside the project (res://); %s was not found. Copy the file into the project folder first.", requested));
 		return;
 	}
-	if (!ResourceLoader::exists(path) && EditorFileSystem::get_singleton()) {
+	if (!ResourceLoader::exists(path) && jrpg_editor_file_system()) {
 		// A file copied in since the last scan; during a scan this queues another (editor_file_system.cpp:1710-1716).
-		EditorFileSystem::get_singleton()->scan_changes();
+		jrpg_editor_file_system()->scan_changes();
 	}
 	wait_for_import(p_call, table_name, id, field, path, int(frames), int(directions), int64_t(OS::get_singleton()->get_ticks_msec() + IMPORT_WAIT_MSEC), 1);
 }

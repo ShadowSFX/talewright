@@ -46,6 +46,7 @@
 #include "editor/debugger/script_editor_debugger.h"
 #include "editor/editor_data.h"
 #include "editor/editor_interface.h"
+#include "editor/editor_node.h"
 #include "editor/editor_undo_redo_manager.h"
 #include "editor/file_system/editor_file_system.h"
 #include "editor/run/editor_run_bar.h"
@@ -746,7 +747,12 @@ static void _tool_read_file(const Dictionary &p_args, const Ref<ClaudeBridgeTool
 }
 
 static void _tool_rescan(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *) {
-	EditorFileSystem *efs = EditorFileSystem::get_singleton();
+	// Only with an editor: the file system's singleton outlives it (editor/file_system/editor_file_system.cpp:3827-3833).
+	EditorFileSystem *efs = EditorNode::get_singleton() ? EditorFileSystem::get_singleton() : nullptr;
+	if (!efs) {
+		p_call->fail("The editor's file system is not available.");
+		return;
+	}
 	efs->scan_changes();
 	Dictionary out;
 	out["scanning"] = efs->is_scanning();

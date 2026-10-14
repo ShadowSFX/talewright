@@ -597,3 +597,19 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   without autoloads; the network port can drive the same `transfer()` online (D-007 authority: server).
 - **Reversal:** the manager's API can sit on `change_scene_to_packed` instead; the rules above are each one place in
   `jrpg_scene_manager.cpp`.
+
+## D-043 — The editor file system only with an editor
+- **Context:** the full doctest run crashed intermittently in the workspace tests (8.6.1.2): the shell connected to
+  `EditorFileSystem::get_singleton()`, which the constructor sets and the destructor never clears
+  (`editor/file_system/editor_file_system.cpp:3806`, `3827-3833`); `modules/gdscript/tests/test_lsp.h` and
+  `modules/gltf/tests/test_gltf_images.h` create and delete one, so later tests used freed memory. Seven other fork
+  call sites (scan_changes, update_file, signal connections) carried the same risk.
+- **Options:** patch upstream so the destructor clears the singleton (a core change for the ledger); or have fork
+  code use the file system only while an `EditorNode` exists (it owns the file system and clears its own singleton,
+  `editor/editor_node.cpp:9663`).
+- **Choice:** `jrpg_editor_file_system()` (modules/jrpg/editor/jrpg_editor_file_system.h) returns the file system
+  only with an EditorNode; the bridge's rescan tool checks EditorNode the same way; `static_checks.py` fails on a
+  direct `EditorFileSystem::get_singleton()` in fork code.
+- **Why:** no core patch; the editor behaves as before (an EditorNode always exists there), doctests never touch a
+  dangling pointer.
+- **Reversal:** if upstream clears the singleton in the destructor, the helper can return the singleton directly.

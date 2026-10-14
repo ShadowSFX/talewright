@@ -32,6 +32,7 @@
 #include "jrpg_map_editing.h"
 
 #include "jrpg_database_editing.h"
+#include "jrpg_editor_file_system.h"
 
 #include "core/config/project_settings.h"
 #include "core/io/dir_access.h"
@@ -114,8 +115,8 @@ Error JRPGMapEditing::create_map(const String &p_name, int p_tileset_id, const V
 	if (err != OK) {
 		return refuse(vformat("could not save the map list (%s).", error_names[err]), r_message, err);
 	}
-	if (EditorFileSystem::get_singleton()) {
-		EditorFileSystem::get_singleton()->scan_changes(); // The maps folder may be new.
+	if (jrpg_editor_file_system()) {
+		jrpg_editor_file_system()->scan_changes(); // The maps folder may be new.
 	}
 	r_map_id = id;
 	r_path = path;
@@ -263,8 +264,8 @@ Error JRPGMapEditing::delete_map(int p_map_id, String *r_message, bool p_close_s
 	}
 	list->remove_map(p_map_id);
 	const Error saved = ResourceSaver::save(list, list->get_path());
-	if (EditorFileSystem::get_singleton()) {
-		EditorFileSystem::get_singleton()->scan_changes();
+	if (jrpg_editor_file_system()) {
+		jrpg_editor_file_system()->scan_changes();
 	}
 	if (saved != OK) {
 		return refuse(vformat("could not save the map list (%s).", error_names[saved]), r_message, saved);

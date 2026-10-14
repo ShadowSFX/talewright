@@ -32,6 +32,7 @@
 #include "jrpg_database_editing.h"
 
 #include "jrpg_curve_editor.h"
+#include "jrpg_editor_file_system.h"
 #include "jrpg_list_editors.h"
 #include "jrpg_project_setup.h"
 #include "jrpg_tile_flags.h"
@@ -752,11 +753,11 @@ Error JRPGDatabaseEditing::create_tileset(int p_tileset_id, const String &p_path
 		}
 		reference = ResourceUID::get_singleton()->id_to_text(uid);
 	}
-	if (EditorFileSystem::get_singleton() && p_path.begins_with("res://")) {
+	if (jrpg_editor_file_system() && p_path.begins_with("res://")) {
 		if (new_folder) {
-			EditorFileSystem::get_singleton()->scan_changes();
+			jrpg_editor_file_system()->scan_changes();
 		} else {
-			EditorFileSystem::get_singleton()->update_file(p_path);
+			jrpg_editor_file_system()->update_file(p_path);
 		}
 	}
 	Dictionary values;

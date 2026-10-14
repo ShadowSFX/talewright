@@ -33,6 +33,7 @@
 
 #include "jrpg_database_editing.h"
 #include "jrpg_database_view.h"
+#include "jrpg_editor_file_system.h"
 #include "jrpg_managed_addon.h"
 #include "jrpg_map_canvas.h"
 #include "jrpg_map_editing.h"
@@ -324,8 +325,8 @@ void JRPGWorkspaceShell::_notification(int p_what) {
 			if (EditorNode::get_singleton()) {
 				EditorNode::get_singleton()->connect(SNAME("scene_changed"), callable_mp(this, &JRPGWorkspaceShell::_update_play_button));
 			}
-			if (EditorFileSystem::get_singleton()) {
-				EditorFileSystem::get_singleton()->connect(SNAME("filesystem_changed"), callable_mp(this, &JRPGWorkspaceShell::_update_play_button));
+			if (jrpg_editor_file_system()) {
+				jrpg_editor_file_system()->connect(SNAME("filesystem_changed"), callable_mp(this, &JRPGWorkspaceShell::_update_play_button));
 			}
 			_update_play_button();
 		} break;
@@ -338,8 +339,8 @@ void JRPGWorkspaceShell::_notification(int p_what) {
 			if (EditorNode::get_singleton() && EditorNode::get_singleton()->is_connected(SNAME("scene_changed"), update)) {
 				EditorNode::get_singleton()->disconnect(SNAME("scene_changed"), update);
 			}
-			if (EditorFileSystem::get_singleton() && EditorFileSystem::get_singleton()->is_connected(SNAME("filesystem_changed"), update)) {
-				EditorFileSystem::get_singleton()->disconnect(SNAME("filesystem_changed"), update);
+			if (jrpg_editor_file_system() && jrpg_editor_file_system()->is_connected(SNAME("filesystem_changed"), update)) {
+				jrpg_editor_file_system()->disconnect(SNAME("filesystem_changed"), update);
 			}
 		} break;
 	}

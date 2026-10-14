@@ -32,6 +32,7 @@
 #include "jrpg_managed_addon.h"
 
 #include "jrpg_addon_files.gen.h"
+#include "jrpg_editor_file_system.h"
 
 #include "core/crypto/crypto_core.h"
 #include "core/io/compression.h"
@@ -242,8 +243,8 @@ Dictionary JRPGManagedAddon::install_files(const String &p_directory, const Vect
 	if (!failed.is_empty() && !report.has("error")) {
 		report["error"] = vformat("Could not install %s. Check that the project folder is writable, then install again.", String(", ").join(failed));
 	}
-	if (p_directory.begins_with("res://") && EditorFileSystem::get_singleton() && (!added.is_empty() || !replaced.is_empty() || !removed.is_empty())) {
-		EditorFileSystem::get_singleton()->scan_changes(); // Let the FileSystem dock and the importers see the files.
+	if (p_directory.begins_with("res://") && jrpg_editor_file_system() && (!added.is_empty() || !replaced.is_empty() || !removed.is_empty())) {
+		jrpg_editor_file_system()->scan_changes(); // Let the FileSystem dock and the importers see the files.
 	}
 	return report;
 }

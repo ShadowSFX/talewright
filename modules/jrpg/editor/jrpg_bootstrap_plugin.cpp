@@ -32,6 +32,7 @@
 #include "jrpg_bootstrap_plugin.h"
 
 #include "jrpg_database_editing.h"
+#include "jrpg_editor_file_system.h"
 #include "jrpg_inspector_plugin.h" // IWYU pragma: keep (Ref<JRPGInspectorPlugin>::instantiate needs the class).
 #include "jrpg_map_editing.h"
 #include "jrpg_setup_dialog.h"
@@ -96,7 +97,7 @@ void JRPGBootstrapPlugin::_notification(int p_what) {
 			add_undo_redo_inspector_hook_callback(callable_mp_static(&JRPGMapEditing::add_inspector_undo));
 			// Deferred: EditorNode reloads the files in its own handler of the same signal
 			// (editor/editor_node.cpp:1291-1323), which marks them changed.
-			EditorFileSystem::get_singleton()->connect("resources_reload", callable_mp(database_editing, &JRPGDatabaseEditing::forget_unsaved), CONNECT_DEFERRED);
+			jrpg_editor_file_system()->connect("resources_reload", callable_mp(database_editing, &JRPGDatabaseEditing::forget_unsaved), CONNECT_DEFERRED);
 			// Deferred so the JRPG tab is added after the editor's own main screens.
 			callable_mp(this, &JRPGBootstrapPlugin::_sync_workspace).call_deferred();
 		} break;
@@ -104,7 +105,7 @@ void JRPGBootstrapPlugin::_notification(int p_what) {
 			// Only happens when the editor shuts down; the workspace plugin is a child of EditorNode and is freed
 			// with it.
 			ProjectSettings::get_singleton()->disconnect("settings_changed", callable_mp(this, &JRPGBootstrapPlugin::_on_project_settings_changed));
-			EditorFileSystem::get_singleton()->disconnect("resources_reload", callable_mp(database_editing, &JRPGDatabaseEditing::forget_unsaved));
+			jrpg_editor_file_system()->disconnect("resources_reload", callable_mp(database_editing, &JRPGDatabaseEditing::forget_unsaved));
 			remove_tool_menu_item(TTRGET(SETUP_MENU_ITEM));
 			remove_inspector_plugin(inspector_plugin);
 			inspector_plugin.unref();
