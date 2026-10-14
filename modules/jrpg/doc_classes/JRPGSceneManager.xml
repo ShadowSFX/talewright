@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGSceneManager" inherits="Node" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Plays a JRPG's maps: the running game, the current map, transfers between maps and map music.
+	</brief_description>
+	<description>
+		A game scene has one scene manager, usually as its root. While a game runs it holds the game state ([JRPGGameState]), shows the current map as an instance of its scene (found through the map list, under the manager's other children), moves the player between maps with [method transfer], fading through black or white, and plays each map's autoplay BGM and BGS.
+		When it enters a running game's tree (not in the editor) with [member autostart] on, it starts a new game at the System start position, after every [method Node._ready] call: a script that continues a loaded game there with [method resume] comes first.
+		A transfer that cannot happen (a map the map list lacks, a scene that cannot load or is not a map, a cell outside the map) leaves the player where they are, prints one warning and returns an error.
+		Authority: in a single-player game the manager decides transfers itself; online, the server decides them and the client's manager only applies what it is told.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_bgm_player" qualifiers="const">
+			<return type="AudioStreamPlayer" />
+			<description>
+				Returns the player of the map's background music.
+			</description>
+		</method>
+		<method name="get_bgs_player" qualifiers="const">
+			<return type="AudioStreamPlayer" />
+			<description>
+				Returns the player of the map's background sound (ambience).
+			</description>
+		</method>
+		<method name="get_database" qualifiers="const">
+			<return type="JRPGDatabase" />
+			<description>
+				Returns the database the game runs with: the one given with [method set_database], or the one loaded from [member database_path] once a game starts.
+			</description>
+		</method>
+		<method name="get_fade_amount" qualifiers="const">
+			<return type="float" />
+			<description>
+				Returns how opaque the transfer fade is now, from [code]0.0[/code] (clear) to [code]1.0[/code].
+			</description>
+		</method>
+		<method name="get_game_state" qualifiers="const">
+			<return type="JRPGGameState" />
+			<description>
+				Returns the state of the running game, or [code]null[/code] before a game starts.
+			</description>
+		</method>
+		<method name="get_map" qualifiers="const">
+			<return type="JRPGMap" />
+			<description>
+				Returns the current map's scene instance, or [code]null[/code] before a game starts.
+			</description>
+		</method>
+		<method name="get_map_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the ID of the current map in the map list.
+			</description>
+		</method>
+		<method name="get_map_list" qualifiers="const">
+			<return type="JRPGMapList" />
+			<description>
+				Returns the map list maps are found through: the one given with [method set_map_list], or the one loaded from [member map_list_path] once a map is needed.
+			</description>
+		</method>
+		<method name="is_transferring" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] while a transfer is fading out or in.
+			</description>
+		</method>
+		<method name="resume">
+			<return type="int" enum="Error" />
+			<param index="0" name="game_state" type="JRPGGameState" />
+			<description>
+				Continues [param game_state], a loaded game, attaching the database to it when it has none: shows its map at its player position, without a fade. Saved states of events the map no longer has are dropped, and a map edited since the save is reported with one warning. When the saved map or position no longer exists, the game continues at the System start position with one warning.
+			</description>
+		</method>
+		<method name="set_database">
+			<return type="void" />
+			<param index="0" name="database" type="JRPGDatabase" />
+			<description>
+				Sets the database the game runs with, instead of the one at [member database_path].
+			</description>
+		</method>
+		<method name="set_map_list">
+			<return type="void" />
+			<param index="0" name="map_list" type="JRPGMapList" />
+			<description>
+				Sets the map list maps are found through, instead of the one at [member map_list_path].
+			</description>
+		</method>
+		<method name="start_new_game">
+			<return type="int" enum="Error" />
+			<param index="0" name="seed" type="int" default="-1" />
+			<description>
+				Starts a new game from the database and shows the System start position without a fade. [param seed] seeds the game's random numbers; [code]-1[/code] picks a random seed. Fails when System data has no start position or the start map cannot be shown.
+			</description>
+		</method>
+		<method name="transfer">
+			<return type="int" enum="Error" />
+			<param index="0" name="map_id" type="int" />
+			<param index="1" name="cell" type="Vector2i" />
+			<param index="2" name="direction" type="int" default="-1" />
+			<param index="3" name="fade" type="int" enum="JRPGSceneManager.Fade" default="0" />
+			<description>
+				Moves the player to [param cell] of map [param map_id], facing [param direction] (a [enum JRPGSystemData.Direction], or [constant DIRECTION_RETAIN] to keep their facing), through [param fade]. With a fade, the map changes at the darkest point and the transfer ends when the fade has cleared ([signal transfer_finished]). Moving within the current map keeps its scene instance as it is.
+				A map the map list lacks, a scene that cannot load or is not a map, or a cell outside the map leaves the player where they are with one warning, and so does a transfer asked for while another is under way; the error says which.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="autostart" type="bool" setter="set_autostart" getter="is_autostart" default="true">
+			If [code]true[/code], a new game starts when the manager enters a running game's tree, unless a game was given before then.
+		</member>
+		<member name="database_path" type="String" setter="set_database_path" getter="get_database_path" default="&quot;res://jrpg/database.tres&quot;">
+			The database file loaded when no database was given with [method set_database].
+		</member>
+		<member name="map_list_path" type="String" setter="set_map_list_path" getter="get_map_list_path" default="&quot;res://jrpg/map_list.tres&quot;">
+			The map list file loaded when no map list was given with [method set_map_list].
+		</member>
+	</members>
+	<signals>
+		<signal name="map_entered">
+			<param index="0" name="map_id" type="int" />
+			<description>
+				Emitted when map [param map_id] is shown with the player on it: at once without a fade, at the darkest point with one.
+			</description>
+		</signal>
+		<signal name="transfer_finished">
+			<param index="0" name="map_id" type="int" />
+			<description>
+				Emitted when a transfer with a fade has cleared, the player on map [param map_id].
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="FADE_BLACK" value="0" enum="Fade">
+			The transfer fades out to black and back in.
+		</constant>
+		<constant name="FADE_WHITE" value="1" enum="Fade">
+			The transfer fades out to white and back in.
+		</constant>
+		<constant name="FADE_NONE" value="2" enum="Fade">
+			The transfer happens at once.
+		</constant>
+		<constant name="DIRECTION_RETAIN" value="-1">
+			For [method transfer]: the player keeps facing the way they face.
+		</constant>
+	</constants>
+</class>

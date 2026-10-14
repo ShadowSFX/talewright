@@ -39,7 +39,8 @@ added; timer 0..99 min 59 s (RM-CMD-009).
 through}` (through: 0 from the page, 1 on, 2 off), every key required, in ascending `event_id`. Entering another map
 (`JRPGGameState.set_events_map`) forgets the previous map's states. On load, states whose `event_id` no longer exists
 are dropped (`prune_event_states`, one warning); if `map_revision` differs, events whose data changed are reset to
-their data position (one warning) — done by the map loader once map data exists (task 8.6.1).
+their data position (one warning): `JRPGSceneManager.resume()` prunes the states and warns about the changed
+revision (task 8.6.1.1, D-041); the reset of the moved events comes with event data (task 13.1.2).
 Header (`slot_info`): title, playtime, party faces/characters, map name — readable without loading the full state.
 
 ## Encoding and files

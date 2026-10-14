@@ -188,8 +188,8 @@ RM-EVT-032); the base value is Talewright's:
 Autonomous-movement frequency 1–5 (higher = shorter pause, RM-EVT-033) waits 240 / 120 / 60 / 30 / 0 steps between
 moves, plus a random 0–15 steps from the `map_ai` stream so crowds do not move in lockstep. Dash = one speed level
 up. Diagonal moves optional; through; vehicle passability (later); loops (wrap coordinates). Blocked moves: "skip if
-cannot move" or wait (spec 03). Transfers to a missing map or out-of-bounds cell fail safely: stay, warn once (final
-sweep). All numbers are fields of `JRPGSystemData`.
+cannot move" or wait (spec 03). Transfers to a missing map or out-of-bounds cell fail safely: stay, warn once
+(`JRPGSceneManager.transfer`, D-041; final sweep). All numbers are fields of `JRPGSystemData`.
 
 ## Map editor (editor, `JRPGMapCanvas` + `MapEditSession`)
 Modes: map (pencil, rectangle, ellipse, flood fill, shadow pen, eraser, eyedropper), region, event. Auto-layer

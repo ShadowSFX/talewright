@@ -52,33 +52,12 @@
 #include "modules/jrpg/core/jrpg_state_data.h"
 #include "modules/jrpg/core/jrpg_troop_data.h"
 #include "modules/jrpg/core/jrpg_weapon_data.h"
+#include "modules/jrpg/tests/jrpg_test_warnings.h"
 
 // Regression tests for the epic 5 review (plan/evidence/reviews/epic_5.md); each case names its finding.
 namespace TestJRPGCoreRegressions {
 
-// Counts warnings and errors reported while it exists (handlers run even when printing is turned off).
-struct WarningCounter {
-	ErrorHandlerList handler;
-	int warnings = 0;
-	int errors = 0;
-
-	WarningCounter() {
-		handler.errfunc = _count;
-		handler.userdata = this;
-		add_error_handler(&handler);
-	}
-	~WarningCounter() {
-		remove_error_handler(&handler);
-	}
-	static void _count(void *p_self, const char *p_function, const char *p_file, int p_line, const char *p_error, const char *p_message, bool p_editor_notify, ErrorHandlerType p_type) {
-		WarningCounter *self = static_cast<WarningCounter *>(p_self);
-		if (p_type == ERR_HANDLER_WARNING) {
-			self->warnings++;
-		} else {
-			self->errors++;
-		}
-	}
-};
+using TestJRPG::WarningCounter;
 
 static Dictionary trait(int p_code, int p_data_id, int p_value = 0) {
 	Dictionary t;

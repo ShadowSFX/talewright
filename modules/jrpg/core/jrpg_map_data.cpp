@@ -287,6 +287,10 @@ void JRPGMapData::set_events(const Array &p_events) {
 	emit_changed();
 }
 
+PackedInt32Array JRPGMapData::get_event_ids() const {
+	return PackedInt32Array();
+}
+
 void JRPGMapData::_validate_property(PropertyInfo &p_property) const {
 	JRPGSchema::hide_engine_property(p_property);
 }

@@ -573,3 +573,27 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   Detail is reached by choosing it explicitly. Auto is the default layer choice.
 - **Why:** the documented stacking rules, applied to the kinds the tileset knows; no flag a tileset would have to set.
 - **Reversal:** `JRPGMapStroke::add_auto` (one function) and the layer picker's default.
+
+## D-041 — How a game plays its maps (scene manager)
+- **Context:** task 8.6.1 needs a runtime owner of the running game: the current map, transfers between maps
+  (RM-CMD-037: fade through black, the default, or white; facing "Retain" by default) and map music (RM-MPR-009/010:
+  autoplay BGM/BGS while the player is on the map; RM-AUD-010: the same track continues). The help is silent on a
+  "no fade" option, other facings, fade timing, music on maps without autoplay, and saves whose map is gone.
+- **Options:** switch the whole tree per map with Godot's `SceneTree::change_scene_to_file/packed`
+  (`scene/main/scene_tree.h:427-429`), which frees the current scene and so needs autoloads for the game state and
+  everything shown across maps; an autoload singleton; a node that instances map scenes under itself.
+- **Choice:** `JRPGSceneManager` (runtime node, usually the game scene's root): holds the `JRPGGameState`, shows
+  the current map as its first child (a `JRPGMap` scene instance found through the map list), owns internal BGM/BGS
+  `AudioStreamPlayer`s and a fade `CanvasLayer`. `transfer(map_id, cell, direction = retain, fade = black)` checks
+  the destination first (listed, loadable, a map, cell inside) and refuses with one warning, the player staying;
+  with a fade the map changes at the darkest point (0.3 s each way). Talewright's own rules where the help is silent:
+  `FADE_NONE` exists; the four facings besides Retain; a transfer within the current map keeps its instance (events
+  keep their states) and still fades; a map without autoplay leaves the music playing; autoplay without a file
+  stops it; the same track continues on transfers too; cue pan waits for the audio system (task 29:
+  `AudioStreamPlayer` has no pan, `scene/audio/audio_stream_player.cpp:283-293`); `resume()` of a save whose map or
+  cell is gone continues at the System start position with one warning. Autostart (a new game when the scene is
+  ready) is deferred until after every `_ready()`, so a boot script can resume a save first.
+- **Why:** the game state and global presentation (fade, music, later the player, windows) persist across maps
+  without autoloads; the network port can drive the same `transfer()` online (D-007 authority: server).
+- **Reversal:** the manager's API can sit on `change_scene_to_packed` instead; the rules above are each one place in
+  `jrpg_scene_manager.cpp`.

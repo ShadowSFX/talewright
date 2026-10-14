@@ -172,6 +172,9 @@ public:
 	int get_next_event_id() const { return next_event_id; }
 	void set_events(const Array &p_events);
 	Array get_events() const { return events; }
+	// The IDs of the map's events, which saved event states are checked against (JRPGGameState::prune_event_states).
+	// None until event data exists (task 9.1 defines JRPGEventData and reads its IDs here).
+	PackedInt32Array get_event_ids() const;
 
 	JRPGMapData();
 };

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.5.2 Multi-tile stamps",
+  "last_completed": "8.6.1.1 Scene manager node",
   "tasks": [
     {
       "id": "0",
@@ -3220,7 +3220,7 @@
         "plan/specs/05_maps_tiles.md",
         "plan/evidence/jrpg/8.5.2-*"
       ],
-      "commit": "pending",
+      "commit": "33799de79d",
       "notes": ""
     },
     {
@@ -3246,19 +3246,67 @@
       "id": "8.6.1",
       "parent": "8.6",
       "title": "Scene manager, map loading and transfer",
-      "description": "JRPGSceneManager: load map scenes, transfer player (fade), missing map / out-of-bounds handling. Map BGM/BGS autoplay from map data.",
+      "description": "JRPGSceneManager: load map scenes, transfer player (fade), missing map / out-of-bounds handling. Map BGM/BGS autoplay from map data. Split into 8.6.1.1 (the scene manager node, doctested) and 8.6.1.2 (Play From Start and the bridge verification in a running game).",
       "dependencies": [],
       "priority": 1,
       "acceptance_criteria": [
-        "Transfer to an existing map works; a missing map or out-of-bounds cell leaves the player in place with one warning",
-        "After a transfer the map's BGM is playing (game_node_get on the audio player)",
-        "Entering a map calls JRPGGameState.set_events_map(map_id, revision); loading a save calls prune_event_states() with the map's event IDs, and when the saved map_revision differs from the map data, events whose data changed are reset to their data position with one warning (spec 06)"
+        "8.6.1.1 and 8.6.1.2 done"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
       "commit": "",
       "notes": "",
       "status": "pending"
+    },
+    {
+      "id": "8.6.1.1",
+      "parent": "8.6.1",
+      "title": "Scene manager node",
+      "priority": 1,
+      "dependencies": [],
+      "description": "JRPGSceneManager (runtime node): starts a new game from the database (System start position) or resumes a given JRPGGameState; loads map scenes through the map list; transfer(map_id, cell, direction, fade) with black, white or no fade. A map the list lacks, a scene that cannot load or is not a map, or a cell outside the map leaves the player in place with one warning. Entering a map calls JRPGGameState.set_events_map(map_id, revision) and plays the map's autoplay BGM/BGS (the track already playing continues). Resuming prunes the event states of events the map no longer has and warns once when the saved map revision differs (13.1.2 resets the moved events once event data exists). Authority declared (D-007).",
+      "acceptance_criteria": [
+        "Transfer to an existing map works (map node, player position, events map); a missing map, a scene that is not a map or an out-of-bounds cell leaves the player in place with one warning (doctest)",
+        "Entering a map plays its autoplay BGM and BGS; the same track keeps playing (doctest)",
+        "Entering a map calls set_events_map(map_id, revision); resume() calls prune_event_states() with the map's event IDs and warns once when the saved map revision differs from the map data (doctest)"
+      ],
+      "test_strategy": "Doctests with map scenes saved to a temporary folder and a map list.",
+      "status": "done",
+      "files": [
+        "modules/jrpg/runtime/jrpg_scene_manager.{h,cpp}",
+        "modules/jrpg/core/jrpg_map_data.{h,cpp}",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGSceneManager.xml",
+        "modules/jrpg/tests/test_jrpg_scene_manager.h",
+        "modules/jrpg/tests/jrpg_test_warnings.h",
+        "modules/jrpg/tests/test_jrpg_core_regressions.h",
+        "plan/DECISIONS.md",
+        "plan/specs/05_maps_tiles.md",
+        "plan/specs/06_save_format.md"
+      ],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "8.6.1.2",
+      "parent": "8.6.1",
+      "title": "Play From Start",
+      "priority": 1,
+      "dependencies": [
+        "8.6.1.1"
+      ],
+      "description": "The managed addon ships a game scene whose root is a JRPGSceneManager; the workspace's Play From Start runs it (enabled once the System start position names a map), as does the bridge. Verified in the running game through the bridge.",
+      "acceptance_criteria": [
+        "Play From Start runs the game at the System start position (bridge: run, game tree, screenshot)",
+        "After a transfer (game_call) the map's BGM is playing (game_node_get on the audio player)",
+        "A transfer to a missing map or an out-of-bounds cell leaves the player in place with one warning (game logs)"
+      ],
+      "test_strategy": "Doctests (button state) + bridge verification with screenshots and logs.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "8.6.2",
@@ -3372,7 +3420,7 @@
       "test_strategy": "Doctests.",
       "files": [],
       "commit": "",
-      "notes": ""
+      "notes": "JRPGMapData::get_event_ids() (added by 8.6.1.1, empty until now) must return the events' IDs: JRPGSceneManager::resume prunes saved event states with it."
     },
     {
       "id": "9.2",
