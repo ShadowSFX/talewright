@@ -166,6 +166,35 @@ TEST_CASE("[JRPG][MapData] Map data and the map list save and load") {
 	CHECK(list_loaded->get_next_map_id() == 10);
 }
 
+TEST_CASE("[JRPG][MapData] Moving maps keeps the tree order and never puts a map under its own maps") {
+	Ref<JRPGMapList> list;
+	list.instantiate();
+	const int world = list->add_map("World", "res://w.tscn");
+	const int town = list->add_map("Town", "res://t.tscn", world);
+	const int inn = list->add_map("Inn", "res://i.tscn", town);
+	const int cave = list->add_map("Cave", "res://c.tscn");
+	const int field = list->add_map("Field", "res://f.tscn", world);
+	CHECK(list->get_map_ids() == PackedInt32Array({ world, town, inn, field, cave }));
+	CHECK(list->get_children(world) == PackedInt32Array({ town, field }));
+	// The town, with its inn, under the cave.
+	CHECK(list->move_map(town, cave) == OK);
+	CHECK(list->get_map_ids() == PackedInt32Array({ world, field, cave, town, inn }));
+	CHECK(int(list->get_map(inn)["parent_id"]) == town);
+	// Back under the world, before the field.
+	CHECK(list->move_map(town, world, 0) == OK);
+	CHECK(list->get_map_ids() == PackedInt32Array({ world, town, inn, field, cave }));
+	// To the top level, first.
+	CHECK(list->move_map(cave, 0, 0) == OK);
+	CHECK(list->get_children(0) == PackedInt32Array({ cave, world }));
+	ERR_PRINT_OFF;
+	CHECK(list->move_map(world, inn) == ERR_INVALID_PARAMETER); // Under one of its own maps.
+	CHECK(list->move_map(world, world) == ERR_INVALID_PARAMETER);
+	CHECK(list->move_map(99, 0) == ERR_DOES_NOT_EXIST);
+	CHECK(list->move_map(inn, 99) == ERR_DOES_NOT_EXIST);
+	ERR_PRINT_ON;
+	CHECK(list->get_map_ids() == PackedInt32Array({ cave, world, town, inn, field }));
+}
+
 // A map scene file whose root is a JRPGMap with p_map_id.
 String save_map_scene(const String &p_path, int p_map_id, int p_painted) {
 	JRPGMap *root = memnew(JRPGMap);

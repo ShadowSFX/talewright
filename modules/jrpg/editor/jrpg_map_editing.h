@@ -57,4 +57,21 @@ public:
 	// undo action of p_map's scene; cells outside the map are refused, cells already holding p_value are left out.
 	// r_changed: how many cells changed (0: no action).
 	static Error paint(JRPGMap *p_map, int p_layer, const Vector<Vector2i> &p_cells, int p_value, int &r_changed, String *r_message = nullptr);
+
+	// Map tree edits (task 8.3.1): one undo action each in the global history, as the database's (the map list is a
+	// standalone file); the list is saved with the database's files (JRPGDatabaseEditing::mark_unsaved).
+	static Error rename_map(int p_map_id, const String &p_name, String *r_message = nullptr);
+	// Moves a map, with its descendants, under p_parent_id (0: the top level) before its p_index-th new sibling (-1:
+	// last).
+	static Error move_map(int p_map_id, int p_parent_id, int p_index, String *r_message = nullptr);
+	// Deletes a map: its list entry (its children move up) and its scene file, which goes to the system trash so it can
+	// be recovered there. Not undoable, as deleting files; refused while the scene is open in the editor.
+	static Error delete_map(int p_map_id, String *r_message = nullptr);
+	// Opens map p_map_id's scene in the editor.
+	static Error open_map(int p_map_id, String *r_message = nullptr);
+	// Sets properties of p_map's data ({name: value}: the properties its inspector shows, map_id excepted; a new size
+	// keeps the top-left cells) as one undo action of the map scene. Nothing changes unless every value is valid.
+	static Error set_map_properties(JRPGMap *p_map, const Dictionary &p_values, String *r_message = nullptr);
+	// Whether a map property can be set with set_map_properties.
+	static bool is_settable_property(const PropertyInfo &p_property);
 };

@@ -72,6 +72,11 @@ public:
 	Error add_map_with_id(int p_map_id, const String &p_name, const String &p_scene, int p_parent_id = 0);
 	// Removes a map; its children move up to its parent.
 	Error remove_map(int p_map_id);
+	// Moves a map, with its descendants, under p_parent_id (0: the top level), before its p_index-th new sibling (-1 or
+	// past the last: after them). Refused when p_parent_id is the map or one of its descendants.
+	Error move_map(int p_map_id, int p_parent_id, int p_index = -1);
+	// The direct children of p_parent_id (0: the top level), in order.
+	PackedInt32Array get_children(int p_parent_id) const;
 	bool has_map(int p_map_id) const { return _find(p_map_id) >= 0; }
 	Dictionary get_map(int p_map_id) const;
 	PackedInt32Array get_map_ids() const;

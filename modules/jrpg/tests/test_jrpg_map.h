@@ -193,6 +193,24 @@ TEST_CASE("[SceneTree][JRPG][Map] Painting a map: refusals, unchanged cells left
 	String path;
 	CHECK(JRPGMapEditing::create_map("Huge", 1, Vector2i(600, 10), map_id, path, &message) == ERR_PARAMETER_RANGE_ERROR); // Refused before any file is written.
 	CHECK(path.is_empty());
+
+	// Properties: the ones the inspector shows, checked first; without an editor they apply at once.
+	CHECK(JRPGMapEditing::set_map_properties(node, Dictionary({ { "display_name", "Lantern Road" }, { "size", Vector2i(6, 2) } }), &message) == OK);
+	CHECK(map->get_display_name() == "Lantern Road");
+	CHECK(map->get_size() == Vector2i(6, 2));
+	CHECK(map->get_cell(JRPGMapData::LAYER_GROUND, Vector2i(1, 0)) == 5); // The top-left cells stay.
+	CHECK(JRPGMapEditing::set_map_properties(node, Dictionary({ { "layers", Array() } }), &message) == ERR_INVALID_PARAMETER);
+	CHECK(message.contains("\"layers\" is not a map property"));
+	CHECK(JRPGMapEditing::set_map_properties(node, Dictionary({ { "map_id", 3 } }), &message) == ERR_INVALID_PARAMETER); // Read-only.
+	CHECK(JRPGMapEditing::set_map_properties(node, Dictionary({ { "display_name", "X" }, { "encounter_steps", "many" } }), &message) == ERR_INVALID_PARAMETER);
+	CHECK(map->get_display_name() == "Lantern Road"); // All or nothing.
+	CHECK(JRPGMapEditing::set_map_properties(node, Dictionary({ { "size", Vector2i(0, 4) } }), &message) == ERR_PARAMETER_RANGE_ERROR);
+	CHECK(JRPGMapEditing::set_map_properties(node, Dictionary(), &message) == ERR_INVALID_PARAMETER);
+	// Tree edits name maps the list has.
+	CHECK(JRPGMapEditing::rename_map(9999, "Nowhere", &message) == ERR_DOES_NOT_EXIST);
+	CHECK(JRPGMapEditing::move_map(9999, 0, -1, &message) == ERR_DOES_NOT_EXIST);
+	CHECK(JRPGMapEditing::delete_map(9999, &message) == ERR_DOES_NOT_EXIST);
+	CHECK(JRPGMapEditing::open_map(9999, &message) == ERR_DOES_NOT_EXIST);
 	memdelete(node);
 }
 

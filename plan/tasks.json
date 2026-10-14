@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.2 Map cell cache compiler",
+  "last_completed": "8.3.1 Map list authoring API and bridge tools",
   "tasks": [
     {
       "id": "0",
@@ -2858,13 +2858,13 @@
       ],
       "test_strategy": "Doctests.",
       "files": [],
-      "commit": "pending",
+      "commit": "53d32934d3",
       "notes": ""
     },
     {
       "id": "8.3",
       "title": "Map list and properties",
-      "description": "Map tree (create/delete/rename/order), map properties dialog.",
+      "description": "Map tree (create/delete/rename/order), map properties dialog. Split into 8.3.1 (map list authoring API and bridge tools), 8.3.2 (start map checks and the System start position picker), 8.3.3 (map tree and properties UI).",
       "parent": "8",
       "dependencies": [
         "8.1"
@@ -2877,6 +2877,61 @@
         "The System form sets the start position with a map picker (map, cell, direction) (moved from 6.5.3)"
       ],
       "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8.3.1",
+      "parent": "8.3",
+      "title": "Map list authoring API and bridge tools",
+      "description": "JRPGMapEditing: rename and move maps in the tree (undoable, global history; the map list is saved with the database's files), delete a map (list entry removed, scene moved to the system trash; not undoable, as deleting files), set the edited map's properties (undoable in its scene's history), open a map by id. Bridge tools jrpg_map_list, jrpg_map_rename, jrpg_map_move, jrpg_map_delete, jrpg_map_set, jrpg_map_open.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Bridge-driven create/rename (and move, delete, properties), undo round trips in jrpg_bridge_checks.py",
+        "Doctests for the tree operations and refusals"
+      ],
+      "test_strategy": "Doctests + jrpg_bridge_checks.py.",
+      "status": "done",
+      "files": [],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "8.3.2",
+      "parent": "8.3",
+      "title": "Start map checks and start position picker",
+      "description": "JRPGReferenceScanner checks the System start map against the map list and reports a deleted start map with its location (task 5.6 deferral); the System form sets the start position with a map picker (map, cell, direction) (moved from 6.5.3); jrpg_db_set validates start_map_id against the map list.",
+      "dependencies": [
+        "8.3.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "JRPGReferenceScanner reports a deleted start map with its location",
+        "The System form sets the start position with a map picker (map, cell, direction)"
+      ],
+      "test_strategy": "Doctests + bridge.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8.3.3",
+      "parent": "8.3",
+      "title": "Map tree and properties UI",
+      "description": "The workspace Map section's map tree (hierarchy, double-click opens the map scene, context menu New Map / Rename / Properties / Delete, drag to reorder and reparent) and the map properties dialog, on the 8.3.1 API; frontend-design after citing the Godot patterns followed.",
+      "dependencies": [
+        "8.3.2"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Create, rename, move, open and edit a map from the tree, undoable, visible in screenshots",
+        "Editor theme; frontend-design skill applied after citing the Godot patterns followed"
+      ],
+      "test_strategy": "Doctests + bridge (editor_ui_act) + screenshots.",
+      "status": "pending",
       "files": [],
       "commit": "",
       "notes": ""

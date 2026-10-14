@@ -97,7 +97,7 @@ struct Bridge {
 
 TEST_CASE("[JRPG][BridgeTools] The database tools are registered") {
 	Bridge bridge;
-	for (const char *name : { "jrpg_db_list", "jrpg_db_get", "jrpg_db_set", "jrpg_db_create", "jrpg_db_set_maximum", "jrpg_db_clear", "jrpg_db_copy", "jrpg_db_paste", "jrpg_db_generate_curve", "jrpg_db_save", "jrpg_addon_install", "jrpg_tileset_flags", "jrpg_tileset_set_flag", "jrpg_tileset_create", "jrpg_tileset_add_sheet", "jrpg_db_set_image", "jrpg_map_create", "jrpg_map_paint", "jrpg_map_get" }) {
+	for (const char *name : { "jrpg_db_list", "jrpg_db_get", "jrpg_db_set", "jrpg_db_create", "jrpg_db_set_maximum", "jrpg_db_clear", "jrpg_db_copy", "jrpg_db_paste", "jrpg_db_generate_curve", "jrpg_db_save", "jrpg_addon_install", "jrpg_tileset_flags", "jrpg_tileset_set_flag", "jrpg_tileset_create", "jrpg_tileset_add_sheet", "jrpg_db_set_image", "jrpg_map_create", "jrpg_map_paint", "jrpg_map_get", "jrpg_map_list", "jrpg_map_rename", "jrpg_map_move", "jrpg_map_delete", "jrpg_map_open", "jrpg_map_set" }) {
 		CHECK_MESSAGE(bridge.mcp.has_tool(name), name);
 	}
 }
@@ -354,6 +354,17 @@ TEST_CASE("[JRPG][BridgeTools] Map tools: what they refuse without a map") {
 	bridge.call("jrpg_map_create", R"({"name":"Huge","width":0})"); // Refused before any file is written.
 	CHECK(bridge.failed);
 	CHECK(bridge.text.contains("1 to 512"));
+	for (const char *tool : { "jrpg_map_rename", "jrpg_map_move", "jrpg_map_delete", "jrpg_map_open" }) {
+		bridge.call(tool, R"({"map_id":9999,"name":"X"})");
+		CHECK_MESSAGE(bridge.failed, tool);
+		CHECK_MESSAGE(bridge.text.contains("must be the id of a map"), bridge.text);
+	}
+	bridge.call("jrpg_map_set", R"({"values":{"display_name":"X"}})");
+	CHECK(bridge.failed);
+	CHECK(bridge.text.contains("not a map"));
+	const Dictionary listed = bridge.call("jrpg_map_list", "{}");
+	CHECK_FALSE(bridge.failed);
+	CHECK(listed.has("maps"));
 }
 
 } // namespace TestJRPGBridgeTools

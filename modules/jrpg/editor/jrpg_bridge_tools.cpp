@@ -64,6 +64,7 @@
 #include "modules/claude_bridge/claude_bridge_tools.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_map_data.h"
+#include "modules/jrpg/core/jrpg_map_list.h"
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
@@ -1545,6 +1546,144 @@ void tool_map_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_c
 	p_call->complete_data(result);
 }
 
+// Map tree tools (task 8.3.1).
+
+void tool_map_list(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	const Ref<JRPGMapList> list = JRPGMapEditing::get_map_list();
+	Array maps;
+	for (const int id : list->get_map_ids()) {
+		const Dictionary map = list->get_map(id);
+		Dictionary entry;
+		entry["map_id"] = id;
+		entry["name"] = map.get("name", "");
+		entry["parent_id"] = map.get("parent_id", 0);
+		entry["scene"] = map.get("scene", "");
+		maps.push_back(entry);
+	}
+	Dictionary result;
+	result["maps"] = maps; // Tree order: each map's children follow it.
+	result["next_map_id"] = list->get_next_map_id();
+	if (EditorNode::get_singleton()) {
+		const JRPGMap *open = Object::cast_to<JRPGMap>(EditorInterface::get_singleton()->get_edited_scene_root());
+		result["edited_map_id"] = open && open->get_map_data().is_valid() ? open->get_map_data()->get_map_id() : 0;
+	}
+	p_call->complete_data(result);
+}
+
+// A map id argument, or 0 after failing the call.
+int map_id_arg(const Dictionary &p_args, const char *p_key, const Ref<ClaudeBridgeToolCall> &p_call) {
+	int64_t id = 0;
+	if (!int_arg(p_args, p_key, 0, p_call, id)) {
+		return 0;
+	}
+	if (id <= 0 || !JRPGMapEditing::get_map_list()->has_map(int(id))) {
+		p_call->fail(vformat("\"%s\" must be the id of a map (jrpg_map_list lists them).", p_key));
+		return 0;
+	}
+	return int(id);
+}
+
+void tool_map_rename(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	const int id = map_id_arg(p_args, "map_id", p_call);
+	if (!id) {
+		return;
+	}
+	String message;
+	if (JRPGMapEditing::rename_map(id, p_args.get("name", ""), &message) != OK) {
+		p_call->fail(message + " Nothing was changed.");
+		return;
+	}
+	Dictionary result = JRPGMapEditing::get_map_list()->get_map(id);
+	result["undoable"] = true;
+	p_call->complete_data(result);
+}
+
+void tool_map_move(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	const int id = map_id_arg(p_args, "map_id", p_call);
+	int64_t parent = 0;
+	int64_t index = -1;
+	if (!id || !int_arg(p_args, "parent_id", 0, p_call, parent) || !int_arg(p_args, "index", -1, p_call, index)) {
+		return;
+	}
+	String message;
+	if (JRPGMapEditing::move_map(id, int(CLAMP(parent, int64_t(0), int64_t(INT32_MAX))), int(CLAMP(index, int64_t(-1), int64_t(INT32_MAX))), &message) != OK) {
+		p_call->fail(message + " Nothing was changed.");
+		return;
+	}
+	Dictionary result = JRPGMapEditing::get_map_list()->get_map(id);
+	result["siblings"] = JRPGMapEditing::get_map_list()->get_children(int(parent));
+	result["undoable"] = true;
+	p_call->complete_data(result);
+}
+
+void tool_map_delete(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	const int id = map_id_arg(p_args, "map_id", p_call);
+	if (!id) {
+		return;
+	}
+	const String scene = JRPGMapEditing::get_map_list()->get_scene(id);
+	String message;
+	if (JRPGMapEditing::delete_map(id, &message) != OK) {
+		p_call->fail(message);
+		return;
+	}
+	Dictionary result;
+	result["deleted"] = id;
+	result["scene_in_trash"] = scene;
+	result["undoable"] = false;
+	p_call->complete_data(result);
+}
+
+void tool_map_open(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	const int id = map_id_arg(p_args, "map_id", p_call);
+	if (!id) {
+		return;
+	}
+	String message;
+	if (JRPGMapEditing::open_map(id, &message) != OK) {
+		p_call->fail(message);
+		return;
+	}
+	Dictionary result;
+	result["map_id"] = id;
+	result["scene"] = JRPGMapEditing::get_map_list()->get_scene(id);
+	p_call->complete_data(result);
+}
+
+void tool_map_set(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGMap *map = edited_map(p_call);
+	if (!map) {
+		return;
+	}
+	const Ref<JRPGMapData> data = map->get_map_data();
+	const Dictionary values = p_args.get("values", Dictionary());
+	List<PropertyInfo> properties;
+	data->get_property_list(&properties);
+	for (const KeyValue<Variant, Variant> &kv : values) {
+		bool settable = false;
+		for (const PropertyInfo &pi : properties) {
+			settable = settable || (pi.name == StringName(kv.key) && JRPGMapEditing::is_settable_property(pi));
+		}
+		if (!settable) {
+			p_call->fail(vformat("\"%s\" is not a map property that can be set (display_name, note, tileset_id, size, scroll_type, bgm, autoplay_bgm, bgs, autoplay_bgs, battleback, parallax, encounters, encounter_steps, disable_dash); nothing was changed.", kv.key));
+			return;
+		}
+	}
+	Dictionary converted;
+	if (!convert_values(data.ptr(), p_args, p_call, converted)) {
+		return;
+	}
+	String message;
+	if (JRPGMapEditing::set_map_properties(map, converted, &message) != OK) {
+		p_call->fail(message + " Nothing was changed.");
+		return;
+	}
+	Dictionary result = describe_map(data, map->get_scene_file_path());
+	result["changed"] = changed_values(data.ptr(), converted);
+	result["undoable"] = true;
+	p_call->complete_data(result);
+}
+
 Dictionary schema_property(const String &p_type, const String &p_description) {
 	Dictionary property;
 	property["type"] = p_type;
@@ -1803,6 +1942,79 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	map_paint.destructive = false; // Undoable.
 	map_paint.func = &tool_map_paint;
 	r_mcp.register_tool(map_paint);
+
+	const Dictionary map_id_property = schema_property("integer", "Map id (jrpg_map_list lists them).");
+
+	ClaudeBridgeMCP::Tool map_list;
+	map_list.name = "jrpg_map_list";
+	map_list.title = "List the maps";
+	map_list.description = "Lists the project's maps in tree order (each map's children follow it): map_id, name, parent_id (0 for the top level) and scene, plus the next id and the id of the map open in the editor (0 when the edited scene is not a map).";
+	map_list.input_schema = ClaudeBridgeMCP::object_schema(Dictionary());
+	map_list.func = &tool_map_list;
+	r_mcp.register_tool(map_list);
+
+	ClaudeBridgeMCP::Tool map_rename;
+	map_rename.name = "jrpg_map_rename";
+	map_rename.title = "Rename a map";
+	map_rename.description = "Renames a map in the map tree (the editor's name; the name the game shows is the map's display_name, jrpg_map_set). Undoable; the map list is saved with the database (jrpg_db_save).";
+	Dictionary map_rename_properties;
+	map_rename_properties["map_id"] = map_id_property;
+	map_rename_properties["name"] = schema_property("string", "The new name.");
+	map_rename.input_schema = ClaudeBridgeMCP::object_schema(map_rename_properties, PackedStringArray({ "map_id", "name" }));
+	map_rename.read_only = false;
+	map_rename.destructive = false;
+	map_rename.func = &tool_map_rename;
+	r_mcp.register_tool(map_rename);
+
+	ClaudeBridgeMCP::Tool map_move;
+	map_move.name = "jrpg_map_move";
+	map_move.title = "Move a map in the tree";
+	map_move.description = "Moves a map, with the maps under it, under parent_id (0: the top level) before its index-th new sibling (-1 or past the last: after them). A map cannot move under itself or its own maps. Undoable; saved with the database.";
+	Dictionary map_move_properties;
+	map_move_properties["map_id"] = map_id_property;
+	map_move_properties["parent_id"] = schema_property("integer", "The new parent map (0: top level).");
+	map_move_properties["index"] = schema_property("integer", "Position among the new siblings (default -1: last).");
+	map_move.input_schema = ClaudeBridgeMCP::object_schema(map_move_properties, PackedStringArray({ "map_id" }));
+	map_move.read_only = false;
+	map_move.destructive = false;
+	map_move.func = &tool_map_move;
+	r_mcp.register_tool(map_move);
+
+	ClaudeBridgeMCP::Tool map_delete;
+	map_delete.name = "jrpg_map_delete";
+	map_delete.title = "Delete a map";
+	map_delete.description = "Deletes a map: its entry in the map tree (the maps under it move up) and its scene file, moved to the system trash. Not undoable; refused while the map's scene is open in the editor. Data that names the map (the System's start map, transfer events) is then reported as broken by the reference checks.";
+	Dictionary map_delete_properties;
+	map_delete_properties["map_id"] = map_id_property;
+	map_delete.input_schema = ClaudeBridgeMCP::object_schema(map_delete_properties, PackedStringArray({ "map_id" }));
+	map_delete.read_only = false;
+	map_delete.destructive = true;
+	map_delete.func = &tool_map_delete;
+	r_mcp.register_tool(map_delete);
+
+	ClaudeBridgeMCP::Tool map_open;
+	map_open.name = "jrpg_map_open";
+	map_open.title = "Open a map";
+	map_open.description = "Opens a map's scene in the editor, so jrpg_map_paint, jrpg_map_set and jrpg_map_get work on it.";
+	Dictionary map_open_properties;
+	map_open_properties["map_id"] = map_id_property;
+	map_open.input_schema = ClaudeBridgeMCP::object_schema(map_open_properties, PackedStringArray({ "map_id" }));
+	map_open.read_only = false;
+	map_open.destructive = false;
+	map_open.func = &tool_map_open;
+	r_mcp.register_tool(map_open);
+
+	ClaudeBridgeMCP::Tool map_set;
+	map_set.name = "jrpg_map_set";
+	map_set.title = "Set map properties";
+	map_set.description = "Sets properties of the edited map as one undo action of its scene: display_name (the name the game shows), note, tileset_id, size (Godot literal, \"Vector2i(30, 20)\"; a smaller size cuts cells, undo brings them back), scroll_type (0 none, 1 loop vertically, 2 loop horizontally, 3 both), bgm and bgs (audio cue dictionaries), autoplay_bgm, autoplay_bgs, battleback, parallax, encounters, encounter_steps, disable_dash. Nothing changes unless every value is valid.";
+	Dictionary map_set_properties;
+	map_set_properties["values"] = schema_property("object", "{property: value}.");
+	map_set.input_schema = ClaudeBridgeMCP::object_schema(map_set_properties, PackedStringArray({ "values" }));
+	map_set.read_only = false;
+	map_set.destructive = false;
+	map_set.func = &tool_map_set;
+	r_mcp.register_tool(map_set);
 
 	ClaudeBridgeMCP::Tool map_get;
 	map_get.name = "jrpg_map_get";

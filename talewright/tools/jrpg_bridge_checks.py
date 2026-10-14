@@ -340,6 +340,52 @@ def run(checks: Checks) -> None:
         json.dumps(saved_map)[:200],
     )
 
+    # The map tree and map properties (task 8.3.1).
+    second = c.call("jrpg_map_create", {"name": "Second", "width": 4, "height": 3, "open": False})
+
+    def maps() -> Any:
+        return c.call("jrpg_map_list")["maps"]
+
+    c.round_trip(
+        "jrpg_map_rename",
+        maps,
+        lambda: c.call("jrpg_map_rename", {"map_id": second["map_id"], "name": "Riverside"}),
+    )
+    c.round_trip(
+        "jrpg_map_move (under another map)",
+        maps,
+        lambda: c.call("jrpg_map_move", {"map_id": second["map_id"], "parent_id": created_map["map_id"]}),
+    )
+    c.round_trip(
+        "jrpg_map_set (name, size cut, scroll type)",
+        lambda: c.call("jrpg_map_get", {"layer": "ground"}),
+        lambda: c.call(
+            "jrpg_map_set", {"values": {"display_name": "Lantern Road", "size": "Vector2i(3, 2)", "scroll_type": 2}}
+        ),
+    )
+    c.check("jrpg_map_set: refuses the raw layers", c.refused("jrpg_map_set", {"values": {"layers": []}}))
+    c.call("jrpg_map_open", {"map_id": second["map_id"]})
+    time.sleep(2)
+    c.check(
+        "jrpg_map_open: the map is the edited scene", c.call("jrpg_map_list").get("edited_map_id") == second["map_id"]
+    )
+    c.check(
+        "jrpg_map_delete: refused while the map is open", c.refused("jrpg_map_delete", {"map_id": second["map_id"]})
+    )
+    third = c.call("jrpg_map_create", {"name": "Third", "open": False})
+    deleted = c.call("jrpg_map_delete", {"map_id": third["map_id"]})
+    c.check(
+        "jrpg_map_delete: the entry and the scene file are gone",
+        deleted.get("deleted") == third["map_id"]
+        and all(m["map_id"] != third["map_id"] for m in maps())
+        and not (c.project / "jrpg" / "maps" / "map_0003.tscn").exists(),
+        json.dumps(deleted)[:200],
+    )
+    c.check(
+        "jrpg_map_create: ids are not reused after a delete",
+        c.call("jrpg_map_create", {"name": "Fourth", "open": False}).get("map_id") == 4,
+    )
+
     # Saving leaves nothing unsaved, bakes the tile flags and writes the TileSet.
     c.call("jrpg_db_save")
     unsaved = c.call("jrpg_db_list")["unsaved_paths"]

@@ -35,6 +35,13 @@
 				Returns the ID of the map whose scene is [param scene], or 0.
 			</description>
 		</method>
+		<method name="get_children" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<param index="0" name="parent_id" type="int" />
+			<description>
+				Returns the maps directly under [param parent_id] (0 for the top level), in order.
+			</description>
+		</method>
 		<method name="get_map" qualifiers="const">
 			<return type="Dictionary" />
 			<param index="0" name="map_id" type="int" />
@@ -60,6 +67,15 @@
 			<param index="0" name="map_id" type="int" />
 			<description>
 				Returns [code]true[/code] if the list has the map [param map_id].
+			</description>
+		</method>
+		<method name="move_map">
+			<return type="int" enum="Error" />
+			<param index="0" name="map_id" type="int" />
+			<param index="1" name="parent_id" type="int" />
+			<param index="2" name="index" type="int" default="-1" />
+			<description>
+				Moves the map [param map_id], with the maps under it, under [param parent_id] (0 for the top level), before its [param index]-th new sibling ([code]-1[/code] or past the last: after them). Fails when [param parent_id] is the map or one of the maps under it.
 			</description>
 		</method>
 		<method name="remove_map">

@@ -125,6 +125,62 @@ Error JRPGMapList::remove_map(int p_map_id) {
 	return OK;
 }
 
+PackedInt32Array JRPGMapList::get_children(int p_parent_id) const {
+	PackedInt32Array children;
+	for (int i = 0; i < maps.size(); i++) {
+		const Dictionary map = maps[i];
+		if (int(map.get("parent_id", 0)) == p_parent_id) {
+			children.push_back(map.get("map_id", 0));
+		}
+	}
+	return children;
+}
+
+Error JRPGMapList::move_map(int p_map_id, int p_parent_id, int p_index) {
+	const int start = _find(p_map_id);
+	ERR_FAIL_COND_V(start < 0, ERR_DOES_NOT_EXIST);
+	ERR_FAIL_COND_V(p_parent_id != 0 && !has_map(p_parent_id), ERR_DOES_NOT_EXIST);
+	// The list is in tree order: the map's descendants follow it.
+	HashSet<int> family;
+	family.insert(p_map_id);
+	int end = start + 1;
+	while (end < maps.size() && family.has(int(Dictionary(maps[end]).get("parent_id", 0)))) {
+		family.insert(int(Dictionary(maps[end]).get("map_id", 0)));
+		end++;
+	}
+	ERR_FAIL_COND_V_MSG(family.has(p_parent_id), ERR_INVALID_PARAMETER, vformat("JRPGMapList: map %d cannot move under itself or one of its descendants (%d).", p_map_id, p_parent_id));
+	Array block;
+	for (int i = start; i < end; i++) {
+		block.push_back(maps[i]);
+	}
+	for (int i = end - 1; i >= start; i--) {
+		maps.remove_at(i);
+	}
+	Dictionary moved = block[0];
+	moved["parent_id"] = p_parent_id;
+	// Before the p_index-th sibling, or after the new parent's last descendant.
+	const PackedInt32Array siblings = get_children(p_parent_id);
+	int at = -1;
+	if (p_index >= 0 && p_index < siblings.size()) {
+		at = _find(siblings[p_index]);
+	} else if (p_parent_id == 0) {
+		at = maps.size();
+	} else {
+		HashSet<int> parents;
+		parents.insert(p_parent_id);
+		at = _find(p_parent_id) + 1;
+		while (at < maps.size() && parents.has(int(Dictionary(maps[at]).get("parent_id", 0)))) {
+			parents.insert(int(Dictionary(maps[at]).get("map_id", 0)));
+			at++;
+		}
+	}
+	for (int i = 0; i < block.size(); i++) {
+		maps.insert(at + i, block[i]);
+	}
+	emit_changed();
+	return OK;
+}
+
 Dictionary JRPGMapList::get_map(int p_map_id) const {
 	const int index = _find(p_map_id);
 	return index >= 0 ? Dictionary(maps[index]).duplicate() : Dictionary();
@@ -186,6 +242,8 @@ void JRPGMapList::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("add_map", "name", "scene", "parent_id"), &JRPGMapList::add_map, DEFVAL(0));
 	ClassDB::bind_method(D_METHOD("add_map_with_id", "map_id", "name", "scene", "parent_id"), &JRPGMapList::add_map_with_id, DEFVAL(0));
 	ClassDB::bind_method(D_METHOD("remove_map", "map_id"), &JRPGMapList::remove_map);
+	ClassDB::bind_method(D_METHOD("move_map", "map_id", "parent_id", "index"), &JRPGMapList::move_map, DEFVAL(-1));
+	ClassDB::bind_method(D_METHOD("get_children", "parent_id"), &JRPGMapList::get_children);
 	ClassDB::bind_method(D_METHOD("has_map", "map_id"), &JRPGMapList::has_map);
 	ClassDB::bind_method(D_METHOD("get_map", "map_id"), &JRPGMapList::get_map);
 	ClassDB::bind_method(D_METHOD("get_map_ids"), &JRPGMapList::get_map_ids);
