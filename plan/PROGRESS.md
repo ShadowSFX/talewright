@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 22:22 -0600
+- **Updated:** 2026-10-13 22:29 -0600
 - **Current task:** none
-- **Last completed:** 6.5.2.1 Class EXP curve and learnings
-- **Next task:** 6.5.2.2 Parameter curve editor
-- **Done leaf tasks:** 72
+- **Last completed:** 6.5.2.2 Parameter curve editor
+- **Next task:** 6.5.2.3 Actor initial equipment and slice field check
+- **Done leaf tasks:** 73
 <!-- status:end -->
 
 ## Log
@@ -196,4 +196,7 @@
 | 2026-10-13 22:15 -0600 | - | imported 3 new / 0 updated tasks | |
 | 2026-10-13 22:15 -0600 | 6.5.2.1 | started: Class EXP curve and learnings (containers: 6.5.2 pending->in_progress, 6.5 pending->in_progress, 6 pending->in_progress) |  |
 | 2026-10-13 22:22 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-13 22:22 -0600 | 6.5.2.1 | done: Class EXP curve and learnings — Class EXP curve and learnings: EXP table re-baked by the base/growth/extra setters (one undo step with the curve change, from the form or the bridge) and shown read-only as a Level/Total/To Next table; JRPGEditorPropertyList base (trait list rebased on it) + field-spec record lists (JRPGRecordSpecs, JRPGRecordDialog) with learnings (Level, Skill, Note); jrpg_db_get reports read-only data; editor_ui_find matches Tree column titles; doctests (bake on set, record specs); verified live via editor_ui_*: growth edit + undo restores table, add/edit/undo/redo/remove learning, errors 0; full suite 1490/1490 (containers: 6.5.2 in_progress->pending, 6.5 in_progress->pending, 6 in_progress->pending) | pending |
+| 2026-10-13 22:22 -0600 | 6.5.2.1 | done: Class EXP curve and learnings — Class EXP curve and learnings: EXP table re-baked by the base/growth/extra setters (one undo step with the curve change, from the form or the bridge) and shown read-only as a Level/Total/To Next table; JRPGEditorPropertyList base (trait list rebased on it) + field-spec record lists (JRPGRecordSpecs, JRPGRecordDialog) with learnings (Level, Skill, Note); jrpg_db_get reports read-only data; editor_ui_find matches Tree column titles; doctests (bake on set, record specs); verified live via editor_ui_*: growth edit + undo restores table, add/edit/undo/redo/remove learning, errors 0; full suite 1490/1490 (containers: 6.5.2 in_progress->pending, 6.5 in_progress->pending, 6 in_progress->pending) | 581a945334 |
+| 2026-10-13 22:23 -0600 | 6.5.2.2 | started: Parameter curve editor (containers: 6.5.2 pending->in_progress, 6.5 pending->in_progress, 6 pending->in_progress) |  |
+| 2026-10-13 22:29 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 22:29 -0600 | 6.5.2.2 | done: Parameter curve editor — Parameter curve editor: eight curve graphs with 'Max HP: 445 → 4855' buttons in the class form; per-parameter dialog with a large clickable graph, single-level Level/Value editing and Generate Curve from level 1/99 values and a growth shape; JRPGCurves helpers; JRPGClassData::get_param_limits shared with set_param; authoring API generate_param_curve + bridge tool jrpg_db_generate_curve; readable curves in jrpg_db_get; 3 doctests (322 assertions); verified live via editor_ui_*: generate, single-level edit, apply, undo/redo, bridge generate + undo, errors 0; full suite 1493/1493 (containers: 6.5.2 in_progress->pending, 6.5 in_progress->pending, 6 in_progress->pending) | pending |

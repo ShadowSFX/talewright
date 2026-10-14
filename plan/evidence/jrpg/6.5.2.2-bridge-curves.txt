@@ -1,0 +1,27 @@
+# 6.5.2.2 bridge verification: class 1 (Adventurer) parameter curves
+## the eight curve buttons in the form
+['Max HP: 445 → 4855', 'Max MP: 69 → 951', 'Attack: 17 → 213', 'Defense: 17 → 213', 'Magic Attack: 17 → 213', 'Magic Defense: 17 → 213', 'Agility: 17 → 213', 'Luck: 17 → 213']
+[image saved] plan/evidence/jrpg/6.5.2.2-param-curves-form.png
+## open Max HP; generate 300 -> 6000 with growth 3; then set level 50 to 3000
+open_dialogs: ['Max HP Curve']
+summary: Level 1: 300    Level 50: 3908    Level 99: 6000
+[image saved] plan/evidence/jrpg/6.5.2.2-curve-dialog.png
+summary: Level 1: 300    Level 50: 3000    Level 99: 6000
+Max HP: level 1 300, level 50 3000, level 99 6000
+## undo restores the starter curve; redo brings the new one back
+Max HP: level 1 445, level 50 2650, level 99 4855
+Max HP: level 1 300, level 50 3000, level 99 6000
+## jrpg_db_generate_curve: Agility 20 -> 400, growth -4 (bridge), then undo
+{
+  "class": 1,
+  "param": "Agility",
+  "level_1": 20,
+  "level_50": 134,
+  "level_99": 400,
+  "undoable": true
+}
+Agility: level 1 17, level 50 115, level 99 213
+Luck: level 1 17, level 50 115, level 99 213
+## errors
+    "errors": 0,
+    "warnings": 0,

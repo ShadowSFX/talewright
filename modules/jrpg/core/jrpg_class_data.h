@@ -90,6 +90,8 @@ public:
 	PackedInt32Array get_param_curves() const { return param_curves; }
 	int get_param(Param p_param, int p_level) const;
 	void set_param(Param p_param, int p_level, int p_value);
+	// The range a parameter's curve values are kept in (set_param clamps to it; the curve editor uses it).
+	static void get_param_limits(Param p_param, int &r_min, int &r_max);
 
 	void set_learnings(const Array &p_learnings);
 	Array get_learnings() const { return learnings; }

@@ -164,11 +164,17 @@ void JRPGClassData::set_param(Param p_param, int p_level, int p_value) {
 			param_curves.set(i, 0);
 		}
 	}
-	// Ranges documented for the curve editor (RM-CLS-007): max HP 1..9999, max MP 0..9999, others 0..999.
-	const int min_value = p_param == PARAM_MAX_HP ? 1 : 0;
-	const int max_value = (p_param == PARAM_MAX_HP || p_param == PARAM_MAX_MP) ? 9999 : 999;
+	int min_value = 0;
+	int max_value = 0;
+	get_param_limits(p_param, min_value, max_value);
 	param_curves.set(p_param * LEVELS + p_level, CLAMP(p_value, min_value, max_value));
 	emit_changed();
+}
+
+void JRPGClassData::get_param_limits(Param p_param, int &r_min, int &r_max) {
+	// Ranges documented for the curve editor (RM-CLS-007): max HP 1..9999, max MP 0..9999, others 0..999.
+	r_min = p_param == PARAM_MAX_HP ? 1 : 0;
+	r_max = (p_param == PARAM_MAX_HP || p_param == PARAM_MAX_MP) ? 9999 : 999;
 }
 
 void JRPGClassData::set_learnings(const Array &p_learnings) {

@@ -88,6 +88,7 @@ by the editor. Exit codes: 0 ok, 1 the tool reported an error, 2 transport/proto
 | `jrpg_db_get` / `jrpg_db_set` | Read an entry's (or System/Types/Terms) data, with the table each ID property points into, readable trait/effect rows and the read-only (derived) properties / set several properties as one undoable action (all-or-nothing; JSON values, Godot literal strings for engine types) |
 | `jrpg_db_set_maximum` / `jrpg_db_clear` | Change a table's maximum / clear an entry, undoable; refused with the list of references that would break unless `allow_broken_references`; `show_dialog` opens the editor's confirmation dialog instead |
 | `jrpg_db_copy` / `jrpg_db_paste` | Copy an entry to the database clipboard (shared with the Database section) / paste it over an entry of the same table, undoable |
+| `jrpg_db_generate_curve` | Generate one class parameter curve from level 1 and level 99 values and a growth shape (undoable) |
 | `jrpg_db_save` | Save the database files with unsaved changes |
 | `jrpg_db_select` | Show the Database section on a table (or `system`, `types`, `terms`) and select an entry |
 

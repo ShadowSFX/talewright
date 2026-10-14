@@ -31,6 +31,7 @@
 
 #include "jrpg_inspector_plugin.h"
 
+#include "jrpg_curve_editor.h"
 #include "jrpg_database_editing.h"
 #include "jrpg_list_editors.h"
 #include "jrpg_trait_editor.h"
@@ -133,6 +134,10 @@ bool JRPGInspectorPlugin::parse_property(Object *p_object, const Variant::Type p
 			add_property_editor(p_path, editor);
 			return true;
 		}
+	}
+	if (p_type == Variant::PACKED_INT32_ARRAY && p_path == "param_curves" && Object::cast_to<JRPGClassData>(p_object)) {
+		add_property_editor(p_path, memnew(JRPGEditorPropertyParamCurves));
+		return true;
 	}
 	if (p_type == Variant::PACKED_INT64_ARRAY && p_path == "exp_table" && Object::cast_to<JRPGClassData>(p_object)) {
 		add_property_editor(p_path, memnew(JRPGEditorPropertyExpTable));

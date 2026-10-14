@@ -68,6 +68,7 @@
 
 #include "modules/jrpg/editor/jrpg_bootstrap_plugin.h"
 #include "modules/jrpg/editor/jrpg_bridge_tools.h"
+#include "modules/jrpg/editor/jrpg_curve_editor.h"
 #include "modules/jrpg/editor/jrpg_database_editing.h"
 #include "modules/jrpg/editor/jrpg_database_view.h"
 #include "modules/jrpg/editor/jrpg_inspector_plugin.h"
@@ -134,6 +135,9 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_INTERNAL_CLASS(JRPGRecordDialog);
 		GDREGISTER_INTERNAL_CLASS(JRPGEditorPropertyRecords);
 		GDREGISTER_INTERNAL_CLASS(JRPGEditorPropertyExpTable);
+		GDREGISTER_INTERNAL_CLASS(JRPGCurveGraph);
+		GDREGISTER_INTERNAL_CLASS(JRPGCurveDialog);
+		GDREGISTER_INTERNAL_CLASS(JRPGEditorPropertyParamCurves);
 		GDREGISTER_INTERNAL_CLASS(JRPGTraitDialog);
 		GDREGISTER_INTERNAL_CLASS(JRPGEditorPropertyTraits);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspaceShell);

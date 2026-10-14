@@ -33,6 +33,7 @@
 
 #ifdef MODULE_CLAUDE_BRIDGE_ENABLED
 
+#include "jrpg_curve_editor.h"
 #include "jrpg_database_editing.h"
 #include "jrpg_database_view.h"
 #include "jrpg_managed_addon.h"
@@ -45,6 +46,7 @@
 
 #include "modules/claude_bridge/claude_bridge_registry.h"
 #include "modules/claude_bridge/claude_bridge_tools.h"
+#include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_table.h"
 
@@ -412,6 +414,14 @@ void tool_db_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_ca
 				}
 				readable[pi.name] = rows;
 			}
+			if (pi.name == "param_curves" && Object::cast_to<JRPGClassData>(record.ptr())) {
+				PackedStringArray rows;
+				for (int param = 0; param < JRPGCurves::PARAM_COUNT; param++) {
+					const PackedInt32Array values = JRPGCurves::get_param_values(record->get(pi.name), param);
+					rows.push_back(vformat("%s: level 1 %d, level 50 %d, level 99 %d", JRPGCurves::get_param_label(param), values[1], values[50], values[99]));
+				}
+				readable[pi.name] = rows;
+			}
 		}
 	}
 	Dictionary result;
@@ -474,6 +484,47 @@ void tool_db_set(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_ca
 	result["table"] = table;
 	result["class"] = record->get_class();
 	result["changed"] = changed;
+	result["undoable"] = true;
+	p_call->complete_data(result);
+}
+
+void tool_db_generate_curve(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	if (!editing) {
+		return;
+	}
+	const Variant which = p_args.get("param", Variant());
+	int param = -1;
+	if (which.get_type() == Variant::INT || which.get_type() == Variant::FLOAT) {
+		param = which;
+	} else {
+		for (int i = 0; i < JRPGCurves::PARAM_COUNT; i++) {
+			if (JRPGCurves::get_param_label(i).nocasecmp_to(String(which)) == 0) {
+				param = i;
+			}
+		}
+	}
+	if (param < 0 || param >= JRPGCurves::PARAM_COUNT) {
+		PackedStringArray labels;
+		for (int i = 0; i < JRPGCurves::PARAM_COUNT; i++) {
+			labels.push_back(JRPGCurves::get_param_label(i));
+		}
+		p_call->fail(vformat("\"param\" must be 0-7 or one of: %s.", String(", ").join(labels)));
+		return;
+	}
+	const int id = p_args.get("id", 0);
+	if (editing->generate_param_curve(id, param, p_args.get("level_1", 0), p_args.get("level_99", 0), p_args.get("growth", 0)) != OK) {
+		p_call->fail(vformat("Class %d does not exist; nothing was changed.", id));
+		return;
+	}
+	const Ref<JRPGClassData> cls = editing->get_record("classes", id);
+	const PackedInt32Array values = JRPGCurves::get_param_values(cls->get_param_curves(), param);
+	Dictionary result;
+	result["class"] = id;
+	result["param"] = JRPGCurves::get_param_label(param);
+	result["level_1"] = values[1];
+	result["level_50"] = values[50];
+	result["level_99"] = values[99];
 	result["undoable"] = true;
 	p_call->complete_data(result);
 }
@@ -670,6 +721,22 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	set.destructive = false; // Undoable.
 	set.func = &tool_db_set;
 	r_mcp.register_tool(set);
+
+	ClaudeBridgeMCP::Tool curve;
+	curve.name = "jrpg_db_generate_curve";
+	curve.title = "Generate a class parameter curve";
+	curve.description = "Replaces one parameter curve of a class with a curve from the level 1 value to the level 99 value, like Generate Curve in the class form. growth 0 rises evenly; higher values gain more at low levels, lower values at high levels (-10..10). Values are clamped to the parameter's range (Max HP 1-9999, Max MP 0-9999, others 0-999). Undoable.";
+	Dictionary curve_properties;
+	curve_properties["id"] = schema_property("integer", "Class ID.");
+	curve_properties["param"] = schema_property("string", "Parameter: 0-7 or Max HP, Max MP, Attack, Defense, Magic Attack, Magic Defense, Agility, Luck.");
+	curve_properties["level_1"] = schema_property("integer", "Value at level 1.");
+	curve_properties["level_99"] = schema_property("integer", "Value at level 99.");
+	curve_properties["growth"] = schema_property("integer", "Curve shape, -10..10 (default 0).");
+	curve.input_schema = ClaudeBridgeMCP::object_schema(curve_properties, PackedStringArray({ "id", "param", "level_1", "level_99" }));
+	curve.read_only = false;
+	curve.destructive = false; // Undoable.
+	curve.func = &tool_db_generate_curve;
+	r_mcp.register_tool(curve);
 
 	ClaudeBridgeMCP::Tool save;
 	save.name = "jrpg_db_save";

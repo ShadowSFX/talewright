@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "6.5.2.1 Class EXP curve and learnings",
+  "last_completed": "6.5.2.2 Parameter curve editor",
   "tasks": [
     {
       "id": "0",
@@ -2060,7 +2060,7 @@
         "plan/evidence/jrpg/6.5.2.1-class-form.png"
       ],
       "status": "done",
-      "commit": "pending",
+      "commit": "581a945334",
       "notes": "JRPGEditorPropertyList base class now shared by the trait/effect list and the record lists. Inspector edits of one property within 800 ms merge into one undo step (core/object/undo_redo.cpp:97,122), Godot's normal behavior: the transcript waits between steps. editor_ui_find now also matches Tree column titles; jrpg_db_get reports read-only data (exp_table) and lists it under read_only."
     },
     {
@@ -2077,12 +2077,25 @@
       ],
       "test_strategy": "Doctests (curve generation, ranges) + editor_ui_* run.",
       "files": [
+        "modules/jrpg/core/jrpg_class_data.h",
+        "modules/jrpg/core/jrpg_class_data.cpp",
         "modules/jrpg/editor/jrpg_curve_editor.h",
-        "modules/jrpg/editor/jrpg_curve_editor.cpp"
+        "modules/jrpg/editor/jrpg_curve_editor.cpp",
+        "modules/jrpg/editor/jrpg_inspector_plugin.cpp",
+        "modules/jrpg/editor/jrpg_database_editing.h",
+        "modules/jrpg/editor/jrpg_database_editing.cpp",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/tests/test_jrpg_curve_editor.h",
+        "plan/specs/02_database_model.md",
+        "talewright/docs/claude_bridge.md",
+        "plan/evidence/jrpg/6.5.2.2-bridge-curves.txt",
+        "plan/evidence/jrpg/6.5.2.2-param-curves-form.png",
+        "plan/evidence/jrpg/6.5.2.2-curve-dialog.png"
       ],
-      "status": "pending",
-      "commit": "",
-      "notes": ""
+      "status": "done",
+      "commit": "pending",
+      "notes": "frontend-design applied (editor theme only): one memorable element, the curve graphs (accent line over a filled area on the dark surface), everything else native (flat buttons, SpinBoxes, ConfirmationDialog). Fill drawn as quads (draw_primitive) after the first version's overlapping rectangles striped."
     },
     {
       "id": "6.5.2.3",

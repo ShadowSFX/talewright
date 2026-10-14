@@ -101,7 +101,10 @@ Full field lists per table follow the inventory slices (03/04/05). The vertical 
   6.5.3) use the same list with a field-spec dialog (`JRPGRecordSpecs`: int, ID, enum, text and flag fields; an ID
   field can take its table from another field, such as a drop's kind). A class's EXP table is re-baked by the
   base/growth/extra setters, so it never disagrees with the curve, and is shown read-only as a level table.
-  Parameter curves and actor equipment slots come with 6.5.2.2 and 6.5.2.3.
+  Parameter curves (6.5.2.2) are eight small graphs on a fixed scale (0 to the parameter's limit,
+  `JRPGClassData::get_param_limits`); a dialog per parameter edits single levels and generates a curve from the
+  level 1 and 99 values and a growth shape (`JRPGCurves::generate`: t^(2^(-growth/5)), editor-side; the saved curve
+  is plain integers). Actor equipment slots come with 6.5.2.3.
 - Entries added by Change Maximum get their `file::Kind_id` path at once (as the loader and saver would,
   scene/resources/resource_format_text.cpp:633,1942), so inspector edits of an unsaved new entry also go to the
   global history.

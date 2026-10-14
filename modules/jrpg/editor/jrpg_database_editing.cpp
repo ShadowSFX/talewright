@@ -31,6 +31,7 @@
 
 #include "jrpg_database_editing.h"
 
+#include "jrpg_curve_editor.h"
 #include "jrpg_project_setup.h"
 
 #include "core/io/file_access.h"
@@ -38,6 +39,7 @@
 #include "core/object/callable_mp.h"
 #include "editor/editor_undo_redo_manager.h"
 
+#include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 
@@ -199,6 +201,19 @@ Error JRPGDatabaseEditing::set_record_properties(const String &p_table, int p_id
 	}
 	undo_redo->commit_action();
 	return OK;
+}
+
+Error JRPGDatabaseEditing::generate_param_curve(int p_class_id, int p_param, int p_first, int p_last, int p_growth) {
+	const Ref<JRPGClassData> cls = get_record("classes", p_class_id);
+	ERR_FAIL_COND_V_MSG(cls.is_null(), ERR_DOES_NOT_EXIST, vformat("JRPG database: no class %d.", p_class_id));
+	ERR_FAIL_INDEX_V_MSG(p_param, int(JRPGClassData::PARAM_MAX), ERR_INVALID_PARAMETER, "JRPG database: the parameter must be 0 (Max HP) to 7 (Luck).");
+	int min_value = 0;
+	int max_value = 0;
+	JRPGClassData::get_param_limits(JRPGClassData::Param(p_param), min_value, max_value);
+	const PackedInt32Array values = JRPGCurves::generate(p_first, p_last, p_growth, min_value, max_value);
+	Dictionary change;
+	change["param_curves"] = JRPGCurves::set_param_values(cls->get_param_curves(), p_param, values);
+	return set_record_properties("classes", p_class_id, change);
 }
 
 Array JRPGDatabaseEditing::list_entries(const String &p_table, int p_from, int p_count) {
