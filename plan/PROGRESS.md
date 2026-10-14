@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 20:29 -0600
-- **Current task:** 1.8 Fork CI: every Linux job green
-- **Last completed:** 5.7 Epic review: JRPG core
-- **Next task:** 6.1 Managed addon embedding
-- **Done leaf tasks:** 62
+- **Updated:** 2026-10-13 20:34 -0600
+- **Current task:** 6.1 Managed addon embedding
+- **Last completed:** 1.8 Fork CI: every Linux job green
+- **Next task:** none ready (see `tasks.py next`)
+- **Done leaf tasks:** 63
 <!-- status:end -->
 
 ## Log
@@ -162,4 +162,6 @@
 | 2026-10-13 19:50 -0600 | 5.6 | done: Reference scanner — JRPGReferenceScanner (core): collect_references over tables, type lists and system data with locations (traits/effects by code, learnings, drops, enemy actions + state conditions, troop members + page actor, actor class + initial equipment with dual wield, skill/weapon/armor types, elements, animations, starting party); find_uses, find_uses_from, find_dangling (missing/blank), describe; 10 planted dangling kinds each reported, clean fixture empty; event params/encounters/start map assigned to 9.2.2/12.3/8.3; full suite 1465/1465 (containers: 5 in_progress->pending) | dbea2b98f0 |
 | 2026-10-13 19:50 -0600 | 5.7 | started: Epic review: JRPG core (containers: 5 pending->in_progress) |  |
 | 2026-10-13 20:28 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-13 20:29 -0600 | 5.7 | done: Epic review: JRPG core — Fresh-context review of epic 5 (1 high, 8 medium, 18 low + docs/tooling); all 28 fixed: schema_version stamping (-1 unstamped), frozen stored defaults (fingerprints, D-029), KO resist, formula clamp/round/v[N] padding/one warning, integer fixed-point EXP curve, nullable system rules, scanner class dual wield, repair level resync, saturating mul_bp, unsigned RNG span, validate-then-apply streams, equip kind/slot checks, actor id guard, no trade on deserialize, table entry ownership/truncation, party member states, start position required, rule setter clamps, cheap pool updates, stable sub-resource ids, rename fallbacks everywhere, reworded terms, include check inverted; 10 regression doctests; evidence plan/evidence/reviews/epic_5.md; full suite 1475/1475; smoke ALL PASS; core_diff 0 unlisted (containers: 5 in_progress->done) | pending |
+| 2026-10-13 20:29 -0600 | 5.7 | done: Epic review: JRPG core — Fresh-context review of epic 5 (1 high, 8 medium, 18 low + docs/tooling); all 28 fixed: schema_version stamping (-1 unstamped), frozen stored defaults (fingerprints, D-029), KO resist, formula clamp/round/v[N] padding/one warning, integer fixed-point EXP curve, nullable system rules, scanner class dual wield, repair level resync, saturating mul_bp, unsigned RNG span, validate-then-apply streams, equip kind/slot checks, actor id guard, no trade on deserialize, table entry ownership/truncation, party member states, start position required, rule setter clamps, cheap pool updates, stable sub-resource ids, rename fallbacks everywhere, reworded terms, include check inverted; 10 regression doctests; evidence plan/evidence/reviews/epic_5.md; full suite 1475/1475; smoke ALL PASS; core_diff 0 unlisted (containers: 5 in_progress->done) | 7cfb5653ce |
+| 2026-10-13 20:31 -0600 | 6.1 | started: Managed addon embedding (containers: 6 pending->in_progress) |  |
+| 2026-10-13 20:34 -0600 | 1.8 | done: Fork CI: every Linux job green — CI run 38496032936 (commit 913d14eb1a) green on all 20 jobs: godot-cpp builds from RUNNER_TEMP (Linux Mono job incl. glue, doc-test, unit tests), GCC double sanitizer job without fork modules, every clang platform after the enum-cast fixes; clang_check.py gate in static_checks.py (containers: 1 in_progress->done) | pending |

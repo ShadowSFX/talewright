@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "5.7 Epic review: JRPG core",
+  "last_completed": "1.8 Fork CI: every Linux job green",
   "tasks": [
     {
       "id": "0",
@@ -114,7 +114,7 @@
       "dependencies": [
         "0"
       ],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Vanilla editor + templates build",
@@ -123,7 +123,7 @@
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "",
+      "commit": "children",
       "notes": "Closed automatically when all children closed."
     },
     {
@@ -315,8 +315,8 @@
         "modules/jrpg/core/jrpg_troop_data.cpp",
         "modules/jrpg/core/jrpg_usable_data.cpp"
       ],
-      "status": "in_progress",
-      "commit": "",
+      "status": "done",
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -1682,7 +1682,7 @@
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "pending",
+      "commit": "7cfb5653ce",
       "notes": ""
     },
     {
@@ -1693,7 +1693,7 @@
       "dependencies": [
         "5"
       ],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Setup idempotent",
@@ -1710,7 +1710,7 @@
       "description": "Embed res://addons/talewright sources in the binary; version+hash stamps; upgrade tool.",
       "parent": "6",
       "dependencies": [],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Upgrade overwrites untouched files only"
