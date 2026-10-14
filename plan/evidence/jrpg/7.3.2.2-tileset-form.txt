@@ -1,0 +1,38 @@
+# 7.3.2.2 bridge verification: tileset form tiles and flag overlays (scratch project, generated CC0 sheets)
+## empty state: no TileSet yet
+   This tileset has no TileSet yet. Create one, or choose an existing TileSet above.
+  screenshot: plan/evidence/jrpg/7.3.2.2-empty-state.png
+## Create TileSet
+  tileset_uid: uid://b57oivnlvs0ue
+  file: overworld.tres
+## Add Sheet: grass (guessed Autotile), outdoor (guessed Plain Tiles), stone wall (guessed Wall), water (Autotile, 3 frames)
+  add grass.png -> ok []
+  add outdoor.png -> ok []
+  add stone_wall.png -> ok []
+  add water.png -> ok []
+  palette: 35 entries; [('autotile', 'Grass'), ('autotile', 'Water'), ('plain', 'Outdoor'), ('wall', 'Stone Wall')]
+## Passage: a click on the grass kind blocks all its shapes (one action), undo opens it again
+  screenshot: plan/evidence/jrpg/7.3.2.2-passage-blocked.png
+  undo: {'action': 'undo', 'performed': True}
+  screenshot: plan/evidence/jrpg/7.3.2.2-passage-undone.png
+## Entry Sides: the wall blocks entering from the south and west (check boxes follow the selected tile)
+  North: False
+  East: False
+  South: True
+  West: True
+  screenshot: plan/evidence/jrpg/7.3.2.2-entry-sides.png
+## Bush on the grass kind, terrain tag 3 on the water kind
+  screenshot: plan/evidence/jrpg/7.3.2.2-bush.png
+  screenshot: plan/evidence/jrpg/7.3.2.2-terrain-tag.png
+## Save: the database bakes the flags from the TileSet and saves the TileSet with it
+  unsaved before: ['res://jrpg/db/tilesets.tres', 'res://jrpg/tilesets/overworld.tres']
+  saved: ['res://jrpg/db/tilesets.tres', 'res://jrpg/tilesets/overworld.tres']
+  flags_hash: 162707b0e12da647...
+  baked words: 36 (index 0 = empty cell)
+   index 1 Grass: pass 0, no-entry 0, no-exit 0, bush True, tag 0
+   index 34 Stone Wall: pass 0, no-entry 12, no-exit 0, bush False, tag 0
+   index 35 Water: pass 0, no-entry 0, no-exit 0, bush False, tag 3
+  custom data layer lines in overworld.tres: 1
+## errors
+    "errors": 0,
+    "warnings": 0,

@@ -105,8 +105,9 @@ void JRPGTilesetData::_bind_methods() {
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "tileset_uid", PROPERTY_HINT_FILE, "*.tres,*.res"), "set_tileset_uid", "get_tileset_uid");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "palette", PROPERTY_HINT_ARRAY_TYPE, "Dictionary"), "set_palette", "get_palette");
-	ADD_PROPERTY(PropertyInfo(Variant::PACKED_INT32_ARRAY, "flags"), "set_flags", "get_flags");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "flags_hash"), "set_flags_hash", "get_flags_hash");
+	// Baked from the TileSet's custom data when the database is saved (spec 05): stored, never edited by hand.
+	ADD_PROPERTY(PropertyInfo(Variant::PACKED_INT32_ARRAY, "flags", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_READ_ONLY), "set_flags", "get_flags");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "flags_hash", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_READ_ONLY), "set_flags_hash", "get_flags_hash");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "edge_mode", PROPERTY_HINT_ENUM, "Extend,Border"), "set_edge_mode", "get_edge_mode");
 
 	BIND_ENUM_CONSTANT(EDGE_EXTEND);

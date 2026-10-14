@@ -35,6 +35,21 @@ entry's ID is its slot and never moves) and the selected entry's form on the rig
 - Every edit can be undone with the editor's Undo. Changed tables show `(*)`; **Save** writes them, and so do the
   editor's own saves (saving a scene, running the project) and the prompt before quitting or reloading.
 
+### Tilesets
+A tileset's form shows its **TileSet** (a Godot TileSet file; **Create TileSet** makes one of 48 x 48 pixel tiles in
+`res://jrpg/tilesets/`) and its **Tiles**: every tile maps can use, an autotile or wall kind shown once.
+
+- **Add Sheet...** brings in an image: plain tiles (each tile that shows anything), an autotile or a wall laid out
+  as in `talewright/docs/autotile_template.md`. The dialog guesses the kind from the image size and tells which size
+  each kind needs.
+- The buttons above the tiles choose which flag is drawn over them: Passage (ring open, cross blocked, broken ring
+  transparent), Entry Sides and Exit Sides (red bars on blocked sides), Overhead, Ladder, Bush, Counter, Damage Floor
+  and Terrain Tag. A click changes the clicked tile (right-click cycles back; in the side modes, the edge clicked);
+  Enter does the same for the selected tile and the side check boxes set single sides from the keyboard.
+- An autotile or wall kind changes on all its shapes at once. Each click is one Undo step.
+- The flags live in the TileSet's `jrpg_*` custom data layers, so Godot's TileSet editor shows and paints them too;
+  saving the database bakes them into the tileset entry for maps and servers.
+
 ## For tools and Claude Code
 The workspace can be switched from outside the editor through the Claude bridge
 (`talewright/docs/claude_bridge.md`):

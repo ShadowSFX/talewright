@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 118, in_progress: 0, done: 111, blocked: 0, deferred: 3 (of 232)
+**Totals:** pending: 116, in_progress: 0, done: 113, blocked: 0, deferred: 3 (of 232)
 
 ## [x] 0 Bootstrap and task system
 
@@ -149,9 +149,9 @@ Original generated assets, autotile importer and resolver, tileset flags.
 - [x] **7.2** Autotile template + importer (P1) _(deps: 7.1; commit: 76f6d02a50)_
 - [ ] **7.3** JRPGTileset + flags + tileset tab (P1) _(deps: 7.2)_
   - [x] **7.3.1** Tile flag layers, bake and staleness (P1) _(commit: a63c34ca05)_
-  - [ ] **7.3.2** Tileset tab with flag overlays (P1) _(deps: 7.3.1)_
-    - [x] **7.3.2.1** Tileset authoring API (P1) _(deps: 7.3.1; commit: pending)_
-    - [ ] **7.3.2.2** Tileset form with flag overlays (P1) _(deps: 7.3.2.1)_
+  - [x] **7.3.2** Tileset tab with flag overlays (P1) _(deps: 7.3.1)_
+    - [x] **7.3.2.1** Tileset authoring API (P1) _(deps: 7.3.1; commit: 5b15badb20)_
+    - [x] **7.3.2.2** Tileset form with flag overlays (P1) _(deps: 7.3.2.1; commit: pending)_
   - [ ] **7.3.3** Tileset bridge tools (P1) _(deps: 7.3.2)_
 - [ ] **7.4** Autotile resolver (P1) _(deps: 7.2)_
 - [ ] **7.5** Import authoring tools (P2) _(deps: 7.3)_

@@ -37,6 +37,7 @@
 #include "jrpg_param_editor.h"
 #include "jrpg_picker.h"
 #include "jrpg_system_editors.h"
+#include "jrpg_tileset_editor.h"
 #include "jrpg_trait_editor.h"
 
 #include "core/object/callable_mp.h"
@@ -44,6 +45,7 @@
 
 #include "modules/jrpg/core/jrpg_actor_data.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
+#include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_terms_data.h"
@@ -92,6 +94,17 @@ void JRPGInspectorPlugin::parse_begin(Object *p_object) {
 bool JRPGInspectorPlugin::parse_property(Object *p_object, const Variant::Type p_type, const String &p_path, const PropertyHint p_hint, const String &p_hint_text, const BitField<PropertyUsageFlags> p_usage, const bool p_wide) {
 	if (p_path == "name" && Object::cast_to<JRPGEntry>(p_object)) {
 		return true; // Already shown at the top by parse_begin.
+	}
+	if (Object::cast_to<JRPGTilesetData>(p_object) && p_path == "tileset_uid") {
+		// The file picker the hint gives (editor/inspector/editor_properties.cpp:4075-4080), under a plainer name.
+		EditorPropertyPath *editor = memnew(EditorPropertyPath);
+		editor->setup({ "*.tres", "*.res" }, false, false, true);
+		add_property_editor(p_path, editor, false, TTR("TileSet"));
+		return true;
+	}
+	if (Object::cast_to<JRPGTilesetData>(p_object) && p_path == "palette") {
+		add_property_editor(p_path, memnew(JRPGEditorPropertyTiles), false, TTR("Tiles"));
+		return true;
 	}
 	if (p_type == Variant::ARRAY && (p_path == "traits" || p_path == "effects") && Object::cast_to<JRPGEntry>(p_object)) {
 		JRPGEditorPropertyTraits *editor = memnew(JRPGEditorPropertyTraits);

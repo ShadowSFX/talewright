@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 02:01 -0600
+- **Updated:** 2026-10-14 02:25 -0600
 - **Current task:** none
-- **Last completed:** 7.3.2.1 Tileset authoring API
-- **Next task:** 7.3.2.2 Tileset form with flag overlays
-- **Done leaf tasks:** 90
+- **Last completed:** 7.3.2.2 Tileset form with flag overlays
+- **Next task:** 7.3.3 Tileset bridge tools
+- **Done leaf tasks:** 91
 <!-- status:end -->
 
 ## Log
@@ -245,4 +245,6 @@
 | 2026-10-14 01:52 -0600 | - | imported 2 new / 1 updated tasks (containers: 7.3.2 in_progress->pending, 7.3 in_progress->pending, 7 in_progress->pending) | |
 | 2026-10-14 01:52 -0600 | 7.3.2.1 | started: Tileset authoring API (containers: 7.3.2 pending->in_progress, 7.3 pending->in_progress, 7 pending->in_progress) |  |
 | 2026-10-14 02:00 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-14 02:01 -0600 | 7.3.2.1 | done: Tileset authoring API — JRPGDatabaseEditing tileset authoring API: set_tile_flags (masked bits on every tile of the listed palette entries, per-tile other bits kept, validation of mask/passage/indexes/missing tiles, no action when nothing changes), add_tile_sheet (importer wrapped; undo removes source+terrain(+set)+entries, redo re-adds the same source after its terrain, as tile_set_editor.cpp:276-288), create_tileset (new .tres/.res at a tile size with the jrpg_* layers, never replaces, UID registered for a new folder, assignment undoable). JRPGTileFlags field table (keys/labels/masks), tile word read/write, has_entry_tile. Importer refuses a plain sheet with no visible tile and decompresses VRAM images. Doctests for every path without an editor; undo/redo end to end goes through the bridge in 7.3.3. (containers: 7.3.2 in_progress->pending, 7.3 in_progress->pending, 7 in_progress->pending) | pending |
+| 2026-10-14 02:01 -0600 | 7.3.2.1 | done: Tileset authoring API — JRPGDatabaseEditing tileset authoring API: set_tile_flags (masked bits on every tile of the listed palette entries, per-tile other bits kept, validation of mask/passage/indexes/missing tiles, no action when nothing changes), add_tile_sheet (importer wrapped; undo removes source+terrain(+set)+entries, redo re-adds the same source after its terrain, as tile_set_editor.cpp:276-288), create_tileset (new .tres/.res at a tile size with the jrpg_* layers, never replaces, UID registered for a new folder, assignment undoable). JRPGTileFlags field table (keys/labels/masks), tile word read/write, has_entry_tile. Importer refuses a plain sheet with no visible tile and decompresses VRAM images. Doctests for every path without an editor; undo/redo end to end goes through the bridge in 7.3.3. (containers: 7.3.2 in_progress->pending, 7.3 in_progress->pending, 7 in_progress->pending) | 5b15badb20 |
+| 2026-10-14 02:01 -0600 | 7.3.2.2 | started: Tileset form with flag overlays (containers: 7.3.2 pending->in_progress, 7.3 pending->in_progress, 7 pending->in_progress) |  |
+| 2026-10-14 02:25 -0600 | 7.3.2.2 | done: Tileset form with flag overlays — Tileset form: JRPGEditorPropertyTiles (Tiles bottom editor: flat mode toggles in one group, hint line as legend, icon-mode ItemList of tile thumbnails at whole zoom with nearest filter, overlays drawn on the list's draw signal: rings/crosses/broken rings for passage, red edge bars for entry/exit sides, Godot's TileChecked/TileUnchecked for flags, outlined bold numbers for terrain tags, warning icon for missing tiles; click/right-click/Enter/Shift+Enter act through set_tile_flags, side check boxes for the keyboard), empty state with Create TileSet, Add Sheet (lazy EditorFileDialog + JRPGTileSheetDialog guessing the layout and refusing sizes that do not fit), TileSet field relabelled, baked flags hidden and read-only. frontend-design applied after citing editor_properties_array_dict.cpp, tile_map_layer_editor.cpp:474,2207-2251,2477-2478, tile_data_editors.cpp:1272-1329, EditorPropertyFlags. Doctests (click rules, side mapping, layout guess, form driven by clicks/Enter/side boxes, empty states, sheet dialog); bridge evidence plan/evidence/jrpg/7.3.2.2-* (create, 4 sheets via the UI, overlay click + undo, sides, bush, tag, save bakes flags; 0 errors); jrpg_bridge_checks 39/39; guide + spec 05 updated. (containers: 7.3.2 in_progress->done, 7.3 in_progress->pending, 7 in_progress->pending) | pending |

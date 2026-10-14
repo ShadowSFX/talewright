@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "7.3.2.1 Tileset authoring API",
+  "last_completed": "7.3.2.2 Tileset form with flag overlays",
   "tasks": [
     {
       "id": "0",
@@ -2575,10 +2575,10 @@
         "Uses the editor theme; frontend-design skill applied after citing the Godot patterns followed"
       ],
       "test_strategy": "Doctests + bridge (editor_ui_act) + screenshot.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "7.3.2.1",
@@ -2598,7 +2598,7 @@
       "test_strategy": "Doctests.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "5b15badb20",
       "notes": ""
     },
     {
@@ -2615,9 +2615,9 @@
         "Uses the editor theme; frontend-design skill applied after citing the Godot patterns followed"
       ],
       "test_strategy": "Doctests + bridge (editor_ui_act) + screenshot.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
