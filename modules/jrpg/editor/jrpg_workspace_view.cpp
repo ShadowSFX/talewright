@@ -97,7 +97,6 @@ void JRPGWorkspaceView::_notification(int p_what) {
 			message->add_theme_style_override(SceneStringName(panel), frame);
 			title->add_theme_font_override(SceneStringName(font), get_theme_font(SNAME("doc_title"), EditorStringName(EditorFonts)));
 			title->add_theme_font_size_override(SceneStringName(font_size), get_theme_font_size(SNAME("doc_title_size"), EditorStringName(EditorFonts)));
-			continue_mark->add_theme_color_override(SceneStringName(font_color), get_theme_color(SNAME("accent_color"), EditorStringName(Editor)));
 		} break;
 		case NOTIFICATION_RESIZED: {
 			_update_column_width();
@@ -115,6 +114,30 @@ void JRPGWorkspaceView::_notification(int p_what) {
 			}
 		} break;
 	}
+}
+
+Size2 JRPGMessageMark::get_minimum_size() const {
+	return Size2(10, 8) * EDSCALE;
+}
+
+void JRPGMessageMark::_notification(int p_what) {
+	switch (p_what) {
+		case NOTIFICATION_THEME_CHANGED: {
+			queue_redraw();
+		} break;
+		case NOTIFICATION_DRAW: {
+			// A downward triangle at the right end, as the last line of a message box.
+			const Size2 mark = Size2(10, 7) * EDSCALE;
+			const Point2 corner(get_size().x - mark.x, (get_size().y - mark.y) / 2);
+			const Vector<Point2> points({ corner, corner + Vector2(mark.x, 0), corner + Vector2(mark.x / 2, mark.y) });
+			draw_colored_polygon(points, get_theme_color(SNAME("accent_color"), EditorStringName(Editor)));
+		} break;
+	}
+}
+
+JRPGMessageMark::JRPGMessageMark() {
+	set_accessibility_name(TTR("End of message"));
+	set_mouse_filter(MOUSE_FILTER_IGNORE);
 }
 
 JRPGWorkspaceView::JRPGWorkspaceView() {
@@ -158,10 +181,7 @@ JRPGWorkspaceView::JRPGWorkspaceView() {
 	body->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
 	message_box->add_child(body);
 
-	continue_mark = memnew(Label);
-	continue_mark->set_text(U"▼");
-	continue_mark->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_RIGHT);
-	continue_mark->set_accessibility_name(TTR("End of message"));
+	continue_mark = memnew(JRPGMessageMark);
 	message_box->add_child(continue_mark);
 
 	HFlowContainer *actions = memnew(HFlowContainer);

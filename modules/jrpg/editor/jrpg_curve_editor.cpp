@@ -286,7 +286,8 @@ void JRPGEditorPropertyParamCurves::update_property() {
 		int min_value = 0;
 		int max_value = 0;
 		JRPGClassData::get_param_limits(JRPGClassData::Param(p), min_value, max_value);
-		buttons[p]->set_text(vformat(String(U"%s: %d → %d"), JRPGCurves::get_param_label(p), values[1], values[JRPGCurves::LEVELS - 1]));
+		// Level 1 to the last level, with an en dash the default font carries (an arrow sends text shaping to system fonts).
+		buttons[p]->set_text(vformat(String(U"%s: %d – %d"), JRPGCurves::get_param_label(p), values[1], values[JRPGCurves::LEVELS - 1]));
 		graphs[p]->set_curve(values, max_value);
 	}
 }

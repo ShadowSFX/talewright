@@ -34,10 +34,25 @@
 #include "scene/gui/box_container.h"
 
 class Button;
+class JRPGMessageMark;
 class JRPGWorkspaceShell;
 class Label;
 class LinkButton;
 class PanelContainer;
+
+// The message-window motif of the JRPG tab: the small triangle at the end of a message, drawn in the editor's accent
+// color (no font has to carry a triangle glyph; without one, text shaping falls back to the system's fonts).
+class JRPGMessageMark : public Control {
+	GDCLASS(JRPGMessageMark, Control);
+
+protected:
+	void _notification(int p_what);
+
+public:
+	virtual Size2 get_minimum_size() const override;
+
+	JRPGMessageMark();
+};
 
 // Contents of the JRPG main screen. Until the project is set up it shows an introduction: what setting up does, the
 // setup action, a way to turn the workspace off, and a link to the guide. Once res://jrpg/database.tres exists it
@@ -51,7 +66,7 @@ class JRPGWorkspaceView : public VBoxContainer {
 	PanelContainer *message = nullptr;
 	Label *title = nullptr;
 	Label *body = nullptr;
-	Label *continue_mark = nullptr;
+	JRPGMessageMark *continue_mark = nullptr;
 	Button *setup_button = nullptr;
 	Button *turn_off_button = nullptr;
 	LinkButton *guide_link = nullptr;

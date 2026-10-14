@@ -41,6 +41,7 @@ class CenterContainer;
 class JRPGDatabaseView;
 class JRPGMapCanvas;
 class JRPGMapTree;
+class JRPGMessageMark;
 class JRPGTilePalette;
 class Label;
 class OptionButton;
@@ -93,7 +94,7 @@ private:
 	PanelContainer *canvas_message = nullptr;
 	Label *canvas_title = nullptr;
 	Label *canvas_body = nullptr;
-	Label *canvas_mark = nullptr;
+	JRPGMessageMark *canvas_mark = nullptr;
 
 	JRPGDatabaseView *database_view = nullptr;
 

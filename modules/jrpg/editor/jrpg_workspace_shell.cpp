@@ -36,6 +36,7 @@
 #include "jrpg_map_canvas.h"
 #include "jrpg_map_tree.h"
 #include "jrpg_tile_palette.h"
+#include "jrpg_workspace_view.h"
 
 #include "core/io/image.h"
 #include "core/object/callable_mp.h"
@@ -247,7 +248,6 @@ void JRPGWorkspaceShell::_update_theme() {
 	frame->set_content_margin_individual(16 * EDSCALE, 12 * EDSCALE, 16 * EDSCALE, 12 * EDSCALE);
 	canvas_message->add_theme_style_override(SceneStringName(panel), frame);
 	canvas_title->add_theme_font_override(SceneStringName(font), get_theme_font(SNAME("bold"), EditorStringName(EditorFonts)));
-	canvas_mark->add_theme_color_override(SceneStringName(font_color), get_theme_color(SNAME("accent_color"), EditorStringName(Editor)));
 }
 
 void JRPGWorkspaceShell::_notification(int p_what) {
@@ -398,10 +398,7 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 	canvas_body->set_text(TTR("Double-click a map in the Maps list to open it, or create one with New Map."));
 	canvas_body->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
 	message_box->add_child(canvas_body);
-	canvas_mark = memnew(Label);
-	canvas_mark->set_text(U"▼");
-	canvas_mark->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_RIGHT);
-	canvas_mark->set_accessibility_name(TTR("End of message"));
+	canvas_mark = memnew(JRPGMessageMark);
 	message_box->add_child(canvas_mark);
 
 	database_view = memnew(JRPGDatabaseView);
