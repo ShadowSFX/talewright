@@ -26,12 +26,12 @@ import numpy as np
 import PIL
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from asset_gen import audio, battle, characters, interface, tiles  # noqa: E402
+from asset_gen import audio, battle, characters, interface, templates, tiles  # noqa: E402
 from asset_gen.common import TILE, pixel_hash, save_png, to_image  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "talewright" / "assets" / "generated"
-IMAGE_GROUPS = [tiles.generate, characters.generate, battle.generate, interface.generate]
+IMAGE_GROUPS = [tiles.generate, characters.generate, battle.generate, interface.generate, templates.generate]
 
 
 def pcm(sound: audio.Sound) -> Any:
@@ -91,9 +91,19 @@ def main() -> int:
 
     import soundfile  # Only needed to write the Ogg files.
 
+    # Files whose recorded content is unchanged are left alone: Ogg streams carry a random serial number, so
+    # rewriting the same samples would still change the file.
+    previous = json.loads(manifest_path.read_text(encoding="utf-8"))["files"] if manifest_path.exists() else {}
+
+    def unchanged(path: str) -> bool:
+        return previous.get(path) == files[path] and (out / path).exists()
+
     for path, image in images.items():
-        save_png(image, out / path)
+        if not unchanged(path):
+            save_png(image, out / path)
     for path, sound in sounds.items():
+        if unchanged(path):
+            continue
         target = out / path
         target.parent.mkdir(parents=True, exist_ok=True)
         samples = pcm(sound)

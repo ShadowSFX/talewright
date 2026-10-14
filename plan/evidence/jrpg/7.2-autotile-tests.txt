@@ -1,0 +1,7 @@
+# 7.2 doctests: autotile enumeration (brute-force reference), guide tables, sheet imports
+TEST CASE:  [JRPG][Autotile] The 47 blob shapes are the reduced masks in ascending order
+TEST CASE:  [JRPG][Autotile] The template guide's tables are this enumeration
+TEST CASE:  [SceneTree][JRPG][Autotile] Sheets become atlas sources, terrains and palette entries
+[doctest] test cases:   3 |   3 passed | 0 failed | 1520 skipped
+[doctest] assertions: 706 | 706 passed | 0 failed |
+[doctest] Status: SUCCESS!

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGAutotileImporter" inherits="RefCounted" api_type="editor" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Adds tile sheets to a TileSet and lists their tiles in a JRPG tileset's palette.
+	</brief_description>
+	<description>
+		Imports a sheet laid out as one of Talewright's templates ([JRPGAutotile]) or a plain sheet of single tiles. The sheet becomes a new atlas source of the TileSet; autotile and wall sheets get all their shapes as tiles, their animation frames as the tiles' animation (each frame is another block to the right), and Godot terrain peering bits, so Godot's own terrain painter works with them too. The JRPG tileset's palette gets one entry per autotile or wall kind, or one per tile of a plain sheet: [code]{kind, name, source_id, atlas_coords, alternative, frames}[/code].
+		Available in the editor only. It does not create an undo action by itself; the tools that call it do.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_kind_name" qualifiers="static">
+			<return type="String" />
+			<param index="0" name="kind" type="int" enum="JRPGAutotileImporter.SheetKind" />
+			<description>
+				Returns the palette entry kind of [param kind]: [code]"plain"[/code], [code]"autotile"[/code] or [code]"wall"[/code].
+			</description>
+		</method>
+		<method name="import_sheet" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="tileset" type="TileSet" />
+			<param index="1" name="texture" type="Texture2D" />
+			<param index="2" name="kind" type="int" enum="JRPGAutotileImporter.SheetKind" />
+			<param index="3" name="frames" type="int" />
+			<param index="4" name="name" type="String" />
+			<param index="5" name="data" type="JRPGTilesetData" />
+			<description>
+				Imports [param texture] into [param tileset] as a sheet of [param kind] with [param frames] animation frames (1 for a still sheet; only autotile and wall sheets are animated) and appends the palette entries to [param data]. Returns [code]{indexes}[/code], the palette indexes added, or [code]{error}[/code] when the image size does not fit the layout at the tileset's tile size, in which case nothing changes.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="SHEET_PLAIN" value="0" enum="SheetKind">
+			A sheet of single tiles: one palette entry per tile that shows anything.
+		</constant>
+		<constant name="SHEET_AUTOTILE" value="1" enum="SheetKind">
+			A blob autotile sheet: 8 x 6 tiles per frame.
+		</constant>
+		<constant name="SHEET_WALL" value="2" enum="SheetKind">
+			A wall autotile sheet: 4 x 4 tiles.
+		</constant>
+	</constants>
+</class>

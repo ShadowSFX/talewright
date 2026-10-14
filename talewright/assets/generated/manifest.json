@@ -356,6 +356,20 @@
       ],
       "pixels_sha256": "319aa951c50d4e92e722d7aec84685a7c72d95e7a8fe57bd352b8cde885ba819"
     },
+    "templates/blob_template.png": {
+      "size": [
+        384,
+        288
+      ],
+      "pixels_sha256": "4b733c75504c59038773a8ef0ecafc2f618b4f0f755dba7b113fdf67fd0c9c08"
+    },
+    "templates/wall_template.png": {
+      "size": [
+        192,
+        192
+      ],
+      "pixels_sha256": "502d790fbe2db32e37f337ce20747a2558084bda98d32ee71a684e0cab0712a5"
+    },
     "tiles/buildings.png": {
       "size": [
         384,

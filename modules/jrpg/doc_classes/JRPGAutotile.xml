@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGAutotile" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The shapes of Talewright's autotiles and where each one sits on a template sheet.
+	</brief_description>
+	<description>
+		A blob autotile (terrain, water, paths) has one tile for each of the 47 shapes an 8-neighbor mask can take once its corners are reduced: a corner neighbor counts only when both sides next to it are the same kind. Shape [i]i[/i] is the [i]i[/i]-th reduced mask in ascending order and sits at column [i]i[/i] mod 8, row [i]i[/i] div 8 of an 8 x 6 sheet. A wall autotile has 16 shapes, one per 4-neighbor mask, at column [i]m[/i] mod 4, row [i]m[/i] div 4 of a 4 x 4 sheet. The guide [code]talewright/docs/autotile_template.md[/code] lists every shape.
+		Pure logic without nodes: the importer, the map's autotile resolver and the game servers share it.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_blob_cell" qualifiers="static">
+			<return type="Vector2i" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns the sheet cell (column, row) of blob shape [param index].
+			</description>
+		</method>
+		<method name="get_blob_index" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="mask" type="int" />
+			<description>
+				Returns the blob shape index (0 to 46) of any 8-neighbour [param mask]. The mask is reduced first.
+			</description>
+		</method>
+		<method name="get_blob_mask" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns the reduced mask of blob shape [param index], or [code]-1[/code] when [param index] is not 0 to 46.
+			</description>
+		</method>
+		<method name="get_wall_cell" qualifiers="static">
+			<return type="Vector2i" />
+			<param index="0" name="mask4" type="int" />
+			<description>
+				Returns the sheet cell (column, row) of wall shape [param mask4] (0 to 15).
+			</description>
+		</method>
+		<method name="get_wall_mask" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="mask" type="int" />
+			<description>
+				Returns the 4-neighbour wall mask (its N, E, S and W bits) of an 8-neighbour [param mask].
+			</description>
+		</method>
+		<method name="reduce_mask" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="mask" type="int" />
+			<description>
+				Returns [param mask] (0 to 255) with each corner bit cleared unless both of its sides are set.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="NEIGHBOR_N" value="1" enum="Neighbor">
+			The neighbor above.
+		</constant>
+		<constant name="NEIGHBOR_NE" value="2" enum="Neighbor">
+			The neighbor above and to the right.
+		</constant>
+		<constant name="NEIGHBOR_E" value="4" enum="Neighbor">
+			The neighbor to the right.
+		</constant>
+		<constant name="NEIGHBOR_SE" value="8" enum="Neighbor">
+			The neighbor below and to the right.
+		</constant>
+		<constant name="NEIGHBOR_S" value="16" enum="Neighbor">
+			The neighbor below.
+		</constant>
+		<constant name="NEIGHBOR_SW" value="32" enum="Neighbor">
+			The neighbor below and to the left.
+		</constant>
+		<constant name="NEIGHBOR_W" value="64" enum="Neighbor">
+			The neighbor to the left.
+		</constant>
+		<constant name="NEIGHBOR_NW" value="128" enum="Neighbor">
+			The neighbor above and to the left.
+		</constant>
+		<constant name="SIDE_N" value="1" enum="Side">
+			The wall neighbor above.
+		</constant>
+		<constant name="SIDE_E" value="2" enum="Side">
+			The wall neighbor to the right.
+		</constant>
+		<constant name="SIDE_S" value="4" enum="Side">
+			The wall neighbor below.
+		</constant>
+		<constant name="SIDE_W" value="8" enum="Side">
+			The wall neighbor to the left.
+		</constant>
+		<constant name="BLOB_SHAPES" value="47">
+			Number of blob shapes (47).
+		</constant>
+		<constant name="BLOB_COLUMNS" value="8">
+			Columns of a blob sheet (8).
+		</constant>
+		<constant name="BLOB_ROWS" value="6">
+			Rows of a blob sheet (6).
+		</constant>
+		<constant name="WALL_SHAPES" value="16">
+			Number of wall shapes (16).
+		</constant>
+		<constant name="WALL_COLUMNS" value="4">
+			Columns of a wall sheet (4).
+		</constant>
+		<constant name="WALL_ROWS" value="4">
+			Rows of a wall sheet (4).
+		</constant>
+	</constants>
+</class>

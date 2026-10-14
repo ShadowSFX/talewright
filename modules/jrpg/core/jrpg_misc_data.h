@@ -79,7 +79,7 @@ public:
 
 private:
 	String tileset_uid;
-	Array palette; // Dictionaries {kind, source_id, atlas_coords, alternative}; palette index = position + 1.
+	Array palette; // Dictionaries {kind, name, source_id, atlas_coords, alternative[, frames]}; palette index = position + 1.
 	PackedInt32Array flags; // One baked word per palette index (index 0 = empty cell).
 	String flags_hash; // Hash of the TileSet custom data the flags were baked from.
 	EdgeMode edge_mode = EDGE_EXTEND;

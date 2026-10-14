@@ -38,6 +38,7 @@
 #include "modules/jrpg/core/jrpg_actor_state.h"
 #include "modules/jrpg/core/jrpg_armor_data.h"
 #include "modules/jrpg/core/jrpg_audio_cue.h"
+#include "modules/jrpg/core/jrpg_autotile.h"
 #include "modules/jrpg/core/jrpg_battle_rules.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_database.h"
@@ -66,6 +67,7 @@
 #ifdef TOOLS_ENABLED
 #include "editor/plugins/editor_plugin.h"
 
+#include "modules/jrpg/editor/jrpg_autotile_importer.h"
 #include "modules/jrpg/editor/jrpg_bootstrap_plugin.h"
 #include "modules/jrpg/editor/jrpg_bridge_tools.h"
 #include "modules/jrpg/editor/jrpg_curve_editor.h"
@@ -127,6 +129,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGActorState);
 		GDREGISTER_CLASS(JRPGEventState);
 		GDREGISTER_CLASS(JRPGReferenceScanner);
+		GDREGISTER_CLASS(JRPGAutotile);
 		GDREGISTER_CLASS(JRPGGameState);
 	}
 #ifdef TOOLS_ENABLED
@@ -155,6 +158,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspacePlugin);
 		GDREGISTER_INTERNAL_CLASS(JRPGBootstrapPlugin);
 		GDREGISTER_CLASS(JRPGManagedAddon);
+		GDREGISTER_CLASS(JRPGAutotileImporter);
 		GDREGISTER_CLASS(JRPGProjectSetup);
 		GDREGISTER_INTERNAL_CLASS(JRPGSetupDialog);
 		EditorPlugins::add_by_type<JRPGBootstrapPlugin>();

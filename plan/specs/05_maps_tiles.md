@@ -50,7 +50,8 @@ including `JRPGEventAnchor` nodes that follow an event.
 ## Tilesets and tile ids
 - `JRPGTilesetData` (database entry) references its Godot `TileSet` by `uid://` string (`tileset_uid`) and owns an
   ordered **tile palette**. Palette index 0 is "empty"; each other entry
-  is `{kind: plain|autotile|wall, source_id, atlas_coords, alternative, flags}` where `alternative` is Godot's full
+  is `{kind: plain|autotile|wall, name, source_id, atlas_coords, alternative[, frames]}` (flags are baked into a
+  separate table, below) where `alternative` is Godot's full
   alternative id including the transform bits (`TRANSFORM_FLIP_H/V/TRANSPOSE` = bits 12–14,
   `scene/resources/2d/tile_set.h:632-634`), so flipped/rotated tiles are ordinary palette entries.
 - A map cell stores the **palette index** (int32, 0 = empty). For autotile and wall kinds the cell stores the kind's
@@ -91,9 +92,11 @@ that never block (RM-TIL-007); the separate no-exit mask is a Talewright additio
   Godot atlas animation columns (`scene/resources/2d/tile_set.h:754-766`).
 - **Wall kinds:** a 4 × 4 sheet indexed by the 4-neighbour mask (N = 1, E = 2, S = 4, W = 8; cell (mask mod 4,
   mask div 4)), for wall faces where diagonal neighbors don't matter.
-- The importer (`JRPGAutotileImporter`, editor) adds the sheet to the TileSet as an atlas source, creates one palette
-  entry per kind, and sets Godot terrain peering bits (match corners and sides) so the stock terrain painter also
-  works.
+- The importer (`JRPGAutotileImporter`, editor, task 7.2) adds the sheet to the TileSet as an atlas source, creates one
+  palette entry per kind (one per tile for plain sheets), wires animation frames as the tiles' animation (columns =
+  frames, separation = one block) and sets Godot terrain peering bits (match corners and sides for blobs, sides for
+  walls) so the stock terrain painter also works. The shape tables live in core `JRPGAutotile`; the index table and
+  guide sheets are in `talewright/docs/autotile_template.md` and `talewright/assets/generated/templates/`.
 
 ## Autotile resolver (core, deterministic)
 For each cell with an autotile kind, build the 8-neighbour mask from neighbors with the **same kind on the same

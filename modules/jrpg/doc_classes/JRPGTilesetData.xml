@@ -67,7 +67,7 @@
 			Hash of the TileSet custom data [member flags] was baked from, used to detect a stale bake.
 		</member>
 		<member name="palette" type="Array" setter="set_palette" getter="get_palette" default="[]">
-			Tiles maps can use, as dictionaries with [code]kind[/code], [code]source_id[/code], [code]atlas_coords[/code] and [code]alternative[/code]. A map cell's palette index is the entry's position plus one.
+			Tiles maps can use, as dictionaries with [code]kind[/code] ([code]"plain"[/code], [code]"autotile"[/code] or [code]"wall"[/code]), [code]name[/code], [code]source_id[/code], [code]atlas_coords[/code], [code]alternative[/code] and, for animated kinds, [code]frames[/code]. An autotile or wall entry stands for all its shapes, laid out from [code]atlas_coords[/code] as [JRPGAutotile] describes. A map cell's palette index is the entry's position plus one. [JRPGAutotileImporter] adds entries when it imports a sheet.
 		</member>
 		<member name="tileset_uid" type="String" setter="set_tileset_uid" getter="get_tileset_uid" default="&quot;&quot;">
 			Path ([code]uid://[/code] or [code]res://[/code]) of the Godot [TileSet].
