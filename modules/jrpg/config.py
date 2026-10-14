@@ -25,6 +25,7 @@ def get_doc_classes():
         "JRPGRandom",
         "JRPGRandomStreams",
         "JRPGSkillData",
+        "JRPGStatBlock",
         "JRPGStateData",
         "JRPGSystemData",
         "JRPGTable",

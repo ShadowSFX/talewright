@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGStatBlock" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A battler's computed parameters and trait totals.
+	</brief_description>
+	<description>
+		Computes a battler's numbers from its base parameters (class curve or enemy values), equipment bonuses, trait sources (actor, class, equipment, states...) and buff levels. A parameter is (base + equipment) multiplied by each of its Param traits, then by the buff factor, then kept within the project's limits. Ex-parameters add their trait values (base 0); sp-parameters multiply them (base 100%). Values are integers; rates are basis points (10000 = 100%). Results are cached until something changes.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_buff">
+			<return type="void" />
+			<param index="0" name="param" type="int" />
+			<param index="1" name="steps" type="int" />
+			<description>
+				Moves the buff level of [param param] by [param steps] (negative for debuffs), staying within the project's buff limit. A buff and a debuff cancel each other.
+			</description>
+		</method>
+		<method name="add_trait_source">
+			<return type="void" />
+			<param index="0" name="traits" type="Array" />
+			<description>
+				Adds a list of trait dictionaries (for example an equipped weapon's traits).
+			</description>
+		</method>
+		<method name="clear_buffs">
+			<return type="void" />
+			<description>
+				Resets every buff level to 0.
+			</description>
+		</method>
+		<method name="clear_trait_sources">
+			<return type="void" />
+			<description>
+				Removes every trait source.
+			</description>
+		</method>
+		<method name="get_base_params" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<description>
+				Returns the eight base parameters.
+			</description>
+		</method>
+		<method name="get_buff_level" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="param" type="int" />
+			<description>
+				Returns the buff level of [param param].
+			</description>
+		</method>
+		<method name="get_param" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="param" type="int" />
+			<description>
+				Returns the final value of parameter [param param] (in [enum JRPGClassData.Param] order).
+			</description>
+		</method>
+		<method name="get_rules" qualifiers="const">
+			<return type="JRPGBattleRules" />
+			<description>
+				Returns the battle rules used for buffs and limits.
+			</description>
+		</method>
+		<method name="get_sparam" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="sparam" type="int" />
+			<description>
+				Returns sp-parameter [param sparam] in basis points.
+			</description>
+		</method>
+		<method name="get_xparam" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="xparam" type="int" />
+			<description>
+				Returns ex-parameter [param xparam] in basis points.
+			</description>
+		</method>
+		<method name="has_trait" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="code" type="int" />
+			<param index="1" name="data_id" type="int" />
+			<description>
+				Returns [code]true[/code] if any source has a trait with [param code] and [param data_id].
+			</description>
+		</method>
+		<method name="set_base_params">
+			<return type="void" />
+			<param index="0" name="params" type="PackedInt32Array" />
+			<description>
+				Sets the eight base parameters.
+			</description>
+		</method>
+		<method name="set_buff_level">
+			<return type="void" />
+			<param index="0" name="param" type="int" />
+			<param index="1" name="level" type="int" />
+			<description>
+				Sets the buff level of [param param], within the project's buff limit.
+			</description>
+		</method>
+		<method name="set_equipment_params">
+			<return type="void" />
+			<param index="0" name="params" type="PackedInt32Array" />
+			<description>
+				Sets the total flat parameter bonuses of the battler's equipment.
+			</description>
+		</method>
+		<method name="set_rules">
+			<return type="void" />
+			<param index="0" name="rules" type="JRPGBattleRules" />
+			<description>
+				Sets the battle rules that provide buff size, buff limit and parameter limits.
+			</description>
+		</method>
+		<method name="set_trait_sources">
+			<return type="void" />
+			<param index="0" name="sources" type="Array" />
+			<description>
+				Replaces the trait sources with [param sources], an [Array] of trait lists.
+			</description>
+		</method>
+		<method name="trait_product_bp" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="code" type="int" />
+			<param index="1" name="data_id" type="int" />
+			<description>
+				Returns the product of the values of every trait with [param code] and [param data_id], starting at 10000 (100%).
+			</description>
+		</method>
+		<method name="trait_set" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<param index="0" name="code" type="int" />
+			<description>
+				Returns the sorted, unique data IDs of every trait with [param code].
+			</description>
+		</method>
+		<method name="trait_sum" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="code" type="int" />
+			<param index="1" name="data_id" type="int" />
+			<description>
+				Returns the sum of the values of every trait with [param code] and [param data_id], or with any data ID when [param data_id] is negative.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="PARAM_COUNT" value="8">
+			Number of regular parameters.
+		</constant>
+	</constants>
+</class>

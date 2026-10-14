@@ -47,6 +47,7 @@
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_random.h"
 #include "modules/jrpg/core/jrpg_skill_data.h"
+#include "modules/jrpg/core/jrpg_stat_block.h"
 #include "modules/jrpg/core/jrpg_state_data.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
@@ -74,6 +75,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GLOBAL_DEF_BASIC(PropertyInfo(Variant::BOOL, "jrpg/enabled"), false);
 		GDREGISTER_CLASS(JRPGRandom);
 		GDREGISTER_CLASS(JRPGRandomStreams);
+		GDREGISTER_CLASS(JRPGStatBlock);
 		GDREGISTER_CLASS(JRPGEntry);
 		GDREGISTER_CLASS(JRPGTable);
 		GDREGISTER_CLASS(JRPGAudioCue);

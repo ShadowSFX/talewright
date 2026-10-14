@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 18:46 -0600
+- **Updated:** 2026-10-13 18:50 -0600
 - **Current task:** none
-- **Last completed:** 5.4.1 JRPGRandom (PCG32)
-- **Next task:** 5.4.2 Traits, effects, parameters, stat cache, EXP curve
-- **Done leaf tasks:** 54
+- **Last completed:** 5.4.2 Traits, effects, parameters, stat cache, EXP curve
+- **Next task:** 5.4.3 JRPGFormula
+- **Done leaf tasks:** 55
 <!-- status:end -->
 
 ## Log
@@ -136,4 +136,7 @@
 | 2026-10-13 18:42 -0600 | 5.3.3 | done: Enemies, troops, states, animations stub, tilesets data, common events — Core JRPGEnemyData (battler, hue, params clamped to documented 1..999999 / 0..9999 / 0..999, EXP, gold, up to 3 drops 1-in-N 1..1000, action patterns with 7 condition types + rating 1..9, traits), JRPGTroopData (max 8 members with position/hidden, pages) + JRPGTroopPage (turn end, turn A+B*X incl. B=0 rule, enemy/actor HP thresholds in bp, switch, span battle/turn/moment; no condition = never runs), JRPGStateData (icon, 5 restrictions in precedence order, priority 0..100, battle-end/restriction/auto-removal timing with min/max turns/damage chance/walking steps, 4 messages, traits; knockout id 1), JRPGAnimationData stub (effect path), JRPGTilesetData (TileSet uid, palette with full alternative id, baked flag words with spec-05 bit layout + pack/unpack helpers, staleness hash, edge mode), JRPGCommonEventData (trigger, switch). Command lists for troop pages and common events are added by 9.2.2 (recorded there). 5 doctests; docs filled, doctool stable; full suite 1429/1429 (containers: 5.3 in_progress->done, 5 in_progress->pending) | 390a77cfee |
 | 2026-10-13 18:42 -0600 | 5.4.1 | started: JRPGRandom (PCG32) (containers: 5.4 pending->in_progress, 5 pending->in_progress) |  |
 | 2026-10-13 18:46 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-13 18:46 -0600 | 5.4.1 | done: JRPGRandom (PCG32) — JRPGRandom over the vendored PCG32 (thirdparty/misc/pcg.h): seed(seed, sequence), next_u32, unbiased range incl. full 32-bit span and inverted-range guard (pcg32_boundedrand_r divides by bound), chance_bp, pick_weighted, Fisher-Yates shuffle, exact get/set_state with odd-increment check; JRPGRandomStreams: battle, map_ai, encounter, loot, misc as distinct PCG sequences, serialize/deserialize (missing streams kept, malformed reported). 5 doctests: reference vectors for seed 42/sequence 54 (checked with an independent implementation), boundaries + 25% chance over 100k draws, chi-square 100k draws range(0,5) < 20.52, weighted pick/shuffle, stream independence + state round trip. Core boundary checker now also limits angle-bracket thirdparty includes. Full suite 1434/1434 (containers: 5.4 in_progress->pending, 5 in_progress->pending) | pending |
+| 2026-10-13 18:46 -0600 | 5.4.1 | done: JRPGRandom (PCG32) — JRPGRandom over the vendored PCG32 (thirdparty/misc/pcg.h): seed(seed, sequence), next_u32, unbiased range incl. full 32-bit span and inverted-range guard (pcg32_boundedrand_r divides by bound), chance_bp, pick_weighted, Fisher-Yates shuffle, exact get/set_state with odd-increment check; JRPGRandomStreams: battle, map_ai, encounter, loot, misc as distinct PCG sequences, serialize/deserialize (missing streams kept, malformed reported). 5 doctests: reference vectors for seed 42/sequence 54 (checked with an independent implementation), boundaries + 25% chance over 100k draws, chi-square 100k draws range(0,5) < 20.52, weighted pick/shuffle, stream independence + state round trip. Core boundary checker now also limits angle-bracket thirdparty includes. Full suite 1434/1434 (containers: 5.4 in_progress->pending, 5 in_progress->pending) | 00d2e575a7 |
+| 2026-10-13 18:47 -0600 | 5.4.2 | started: Traits, effects, parameters, stat cache, EXP curve (containers: 5.4 pending->in_progress, 5 pending->in_progress) |  |
+| 2026-10-13 18:50 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 18:50 -0600 | 5.4.2 | done: Traits, effects, parameters, stat cache, EXP curve — jrpg_traits.h: Talewright trait/effect codes (own numbering grouped by tab), XParam/SParam/special flags/party abilities, JRPGMath::mul_bp (int64, half away from zero). JRPGStatBlock: params = (base + equipment) x each Param trait (rounded per factor) x buff factor (10000 + level x buff_step_bp) clamped to HP >= 1, others >= 0 and the rules' upper limits; buff levels capped at +-buff_max_levels with cancel semantics; ex-params = trait sums (base 0), sp-params = trait products (base 10000); generic trait_product_bp/trait_sum/trait_set/has_trait; dirty-flag cache. 5 doctests with hand-worked values (120 -> 180 -> 162 -> 243, 33 x 1.5 = 49.5 -> 50, clamps, project limit, 3-level 15 % buffs, 200 % x 95 % = 190 % element rate). EXP table criterion covered by the 5.3.1 hand-computed test (35/107/211/343). Full suite 1439/1439 (containers: 5.4 in_progress->pending, 5 in_progress->pending) | pending |
