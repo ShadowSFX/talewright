@@ -12,9 +12,11 @@ starts the editor on it with the Claude bridge, and checks:
   - saving: jrpg_db_save leaves nothing unsaved and bakes the tile flags.
 
 Usage (from the repository root, after building the editor):
-    python talewright/tools/jrpg_bridge_checks.py [--keep] [--project DIR]
+    python talewright/tools/jrpg_bridge_checks.py [--keep] [--project DIR] [--update-goldens] [--write-evidence]
 --project uses (and empties) DIR instead of a temporary folder; --keep leaves the editor running and the folder in
-place. Exit code 0 when every check passes.
+place; --update-goldens writes talewright/goldens/ from this run and --write-evidence the evidence screenshots under
+plan/evidence/ (both only on purpose: a plain run changes no file of the repository). Exit code 0 when every check
+passes.
 """
 
 from __future__ import annotations
@@ -61,6 +63,7 @@ config/features=PackedStringArray("4.7")
 
 
 UPDATE_GOLDENS = False  # --update-goldens: write the goldens instead of comparing (only on purpose).
+WRITE_EVIDENCE = False  # --write-evidence: copy the evidence screenshots into plan/evidence/ (only on purpose).
 
 
 class Checks:
@@ -564,20 +567,17 @@ def run(checks: Checks) -> None:
         c.refused("jrpg_map_stroke", {"tool": "eyedropper", "layer": 0, "points": [[0, 0]]}),
     )
     capture = c.call("jrpg_map_capture")
-    golden = GOLDENS / "jrpg_map_strokes.png"
-    if UPDATE_GOLDENS:
-        GOLDENS.mkdir(exist_ok=True)
-        shutil.copyfile(capture["path"], golden)
-        print(f"[GOLDEN] wrote {golden.relative_to(ROOT)}")
-    compared = subprocess.run(
-        [sys.executable, str(ROOT / "talewright" / "tools" / "img_compare.py"), capture["path"], str(golden)],
-        capture_output=True,
-        text=True,
-    )
     c.check(
+        "jrpg_map_capture: the capture is the map's size",
+        capture.get("width") == 480 and capture.get("height") == 384,
+        json.dumps(capture)[:200],
+    )
+    compare_golden(
+        c,
+        "jrpg_map_strokes.png",
+        capture.get("path", ""),
         "jrpg_map_capture: the drawn pattern matches the golden image",
-        compared.returncode == 0 and capture.get("width") == 480 and capture.get("height") == 384,
-        (compared.stdout.strip() or compared.stderr.strip()) + " " + json.dumps(capture)[:200],
+        json.dumps(capture)[:200],
     )
 
     # The automatic layer and Set Start Position Here (task 8.4.3.2), after the golden: plain tiles stack on the two
@@ -818,6 +818,10 @@ text = "Opening: the band cuts the top of this line."
 def compare_golden(c: Checks, name: str, image: str, what: str, extra: str = "") -> None:
     """Compares image with talewright/goldens/<name> (img_compare.py); --update-goldens writes it instead."""
     golden = GOLDENS / name
+    if not image or not Path(image).is_file():
+        # No screenshot (the game or the capture failed): nothing to compare, and never a golden written from it.
+        c.check(what, False, f"no image to compare ({image!r}) {extra}")
+        return
     if UPDATE_GOLDENS:
         GOLDENS.mkdir(exist_ok=True)
         shutil.copyfile(image, golden)
@@ -1041,6 +1045,7 @@ color = Color(0.27, 0.43, 0.3, 1)
 [node name="Message" type="JRPGMessageWindow" parent="."]
 
 [node name="Choices" type="JRPGChoiceWindow" parent="."]
+mouse_filter = 2
 message_window = NodePath("../Message")
 """
 CHOICE_SCRIPT = r"""extends Control
@@ -1104,9 +1109,10 @@ def run_choices(c: Checks) -> None:
     c.call("game_wait", {"frames": 6})
     shot = c.call("game_screenshot", {"include_image": False})
     evidence = ROOT / "plan" / "evidence" / "jrpg" / "10.2.2.2-message-and-choice.png"
-    if shot.get("path"):
+    if WRITE_EVIDENCE and shot.get("path"):
         evidence.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(shot["path"], evidence)
+        print(f"[EVIDENCE] wrote {evidence.relative_to(ROOT)}")
     c.call("game_input", {"action": "jrpg_down"})
     c.call("game_wait", {"frames": 6})
     c.call("game_input", {"action": "jrpg_ok"})
@@ -1130,9 +1136,15 @@ def main() -> int:
     ap.add_argument(
         "--update-goldens", action="store_true", help="write the golden images from this run (only on purpose)"
     )
+    ap.add_argument(
+        "--write-evidence",
+        action="store_true",
+        help="copy the evidence screenshots into plan/evidence (only on purpose)",
+    )
     args = ap.parse_args()
-    global UPDATE_GOLDENS
+    global UPDATE_GOLDENS, WRITE_EVIDENCE
     UPDATE_GOLDENS = args.update_goldens
+    WRITE_EVIDENCE = args.write_evidence
     if not bridge.EDITOR.is_file():
         print(f"error: {bridge.EDITOR} not found; build the editor first", file=sys.stderr)
         return 2

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "10.4.1.2.3 Epic 10 review: message text and message window",
+  "last_completed": "10.4.1.3 Epic 10 review: screen stack and checks",
   "tasks": [
     {
       "id": "0",
@@ -4221,10 +4221,10 @@
         "10.4.1.1, 10.4.1.2 and 10.4.1.3 done"
       ],
       "test_strategy": "Doctests + jrpg_bridge_checks.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "10.4.1.1",
@@ -4381,7 +4381,7 @@
         "plan/evidence/reviews/epic_10.md",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "7b8a0c25ef",
       "notes": ""
     },
     {
@@ -4397,9 +4397,15 @@
         "Each finding fixed or answered in the review log, with a doctest"
       ],
       "test_strategy": "Doctests + bridge checks.",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/addon_template/ui/screen_stack.gd",
+        "modules/jrpg/tests/test_jrpg_screen_stack.h",
+        "talewright/tools/jrpg_bridge_checks.py",
+        "plan/evidence/reviews/epic_10.md",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

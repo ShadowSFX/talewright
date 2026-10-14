@@ -901,4 +901,10 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   addon script with the GDScript parser and runs the stack from its embedded source.
 - **Why:** screens are project-editable scripts and scenes (D-004) and the map, the game state and music keep running
   under them.
+- **Amended (epic 10 review B1-B3, B13, B14; task 10.4.1.3):** `push`, `pop`, `replace` and `clear` return whether
+  they acted (`pop` the kept screen or null) and are refused from the start of a fade to its end; the screen being
+  covered or taken off reads no input from the start. Covered screens lose process, focus and mouse (recursive focus
+  and mouse behaviors disabled, so a click cannot reach them) and get back what they had. `pop` frees the screen
+  after the fade and returns null unless asked to keep it. A screen that leaves the tree by itself is taken off and
+  the one under it becomes active.
 - **Reversal:** the script is one file; another stack can replace the `Screens` node.
