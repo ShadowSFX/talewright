@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "5.2.2 Schema versioning and byte-identical persistence",
+  "last_completed": "5.3.1 Actors, classes, types, terms, system",
   "tasks": [
     {
       "id": "0",
@@ -1248,7 +1248,7 @@
         "modules/jrpg/doc_classes/",
         "modules/jrpg/tests/test_jrpg_schema.h"
       ],
-      "commit": "pending",
+      "commit": "3a16fc1f88",
       "notes": "",
       "status": "done"
     },
@@ -1284,10 +1284,32 @@
         "Defaults equal the values written in specs 02/04 (EXP 25/30/10, tp_max 100, tp_start_max 24, buff 25 %/2 levels, crit x2, guard 40 %) and a new System has a start-position slot that validation reports as missing until set"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
-      "files": [],
-      "commit": "",
+      "files": [
+        "modules/jrpg/core/jrpg_actor_data.h",
+        "modules/jrpg/core/jrpg_actor_data.cpp",
+        "modules/jrpg/core/jrpg_class_data.h",
+        "modules/jrpg/core/jrpg_class_data.cpp",
+        "modules/jrpg/core/jrpg_types_data.h",
+        "modules/jrpg/core/jrpg_types_data.cpp",
+        "modules/jrpg/core/jrpg_terms_data.h",
+        "modules/jrpg/core/jrpg_terms_data.cpp",
+        "modules/jrpg/core/jrpg_system_data.h",
+        "modules/jrpg/core/jrpg_system_data.cpp",
+        "modules/jrpg/core/jrpg_battle_rules.h",
+        "modules/jrpg/core/jrpg_battle_rules.cpp",
+        "modules/jrpg/core/jrpg_audio_cue.h",
+        "modules/jrpg/core/jrpg_audio_cue.cpp",
+        "modules/jrpg/core/jrpg_database.h",
+        "modules/jrpg/core/jrpg_database.cpp",
+        "modules/jrpg/doc_classes/",
+        "modules/jrpg/tests/test_jrpg_tables_a.h",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "talewright/tools/fill_class_docs.py"
+      ],
+      "commit": "pending",
       "notes": "",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "5.3.2",

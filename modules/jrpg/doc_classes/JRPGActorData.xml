@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGActorData" inherits="JRPGEntry" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		An actor: a character the player controls.
+	</brief_description>
+	<description>
+		Database entry for a playable character: its name and nickname, class, starting and maximum level, profile, images, starting equipment and traits. Images are stored as [code]uid://[/code] (or [code]res://[/code]) paths so the data does not depend on loaded textures.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_start_level" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the level the actor starts a new game at: [member initial_level], but never above [member max_level].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="battler" type="String" setter="set_battler" getter="get_battler" default="&quot;&quot;">
+			Path of the image used for the actor in side-view battles.
+		</member>
+		<member name="character" type="String" setter="set_character" getter="get_character" default="&quot;&quot;">
+			Path of the actor's character sheet, used on the map.
+		</member>
+		<member name="class_id" type="int" setter="set_class_id" getter="get_class_id" default="1">
+			ID of the actor's class in the classes table. [code]0[/code] means none.
+		</member>
+		<member name="face" type="String" setter="set_face" getter="get_face" default="&quot;&quot;">
+			Path of the actor's face portrait, used in menus and messages.
+		</member>
+		<member name="initial_equipment" type="PackedInt32Array" setter="set_initial_equipment" getter="get_initial_equipment" default="PackedInt32Array()">
+			Item IDs equipped when the game starts, one per equipment slot in the order of [member JRPGTypesData.equip_types]. [code]0[/code] leaves a slot empty.
+		</member>
+		<member name="initial_level" type="int" setter="set_initial_level" getter="get_initial_level" default="1">
+			Level at which the actor starts, from 1 to [constant LEVEL_LIMIT].
+		</member>
+		<member name="max_level" type="int" setter="set_max_level" getter="get_max_level" default="99">
+			Highest level the actor can reach, from 1 to [constant LEVEL_LIMIT].
+		</member>
+		<member name="nickname" type="String" setter="set_nickname" getter="get_nickname" default="&quot;&quot;">
+			A secondary title shown on the status screen.
+		</member>
+		<member name="profile" type="String" setter="set_profile" getter="get_profile" default="&quot;&quot;">
+			Introductory text shown on the status screen.
+		</member>
+		<member name="traits" type="Array" setter="set_traits" getter="get_traits" default="[]">
+			Traits of this actor. Each trait is a [Dictionary] with [code]code[/code], [code]data_id[/code] and [code]value[/code] (rates in basis points, 10000 = 100%).
+		</member>
+	</members>
+	<constants>
+		<constant name="LEVEL_LIMIT" value="99">
+			Highest level an actor can have.
+		</constant>
+	</constants>
+</class>

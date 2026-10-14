@@ -31,11 +31,14 @@
 
 #pragma once
 
+#include "jrpg_system_data.h"
 #include "jrpg_table.h"
+#include "jrpg_terms_data.h"
+#include "jrpg_types_data.h"
 
-// The database manifest (res://jrpg/database.tres): the schema version and one table per kind, each normally saved
-// as its own .tres under res://jrpg/db/ (plan/specs/02_database_model.md). System, types and terms resources join
-// it with their classes (task 5.3).
+// The database manifest (res://jrpg/database.tres): the schema version, one table per kind and the single system,
+// types and terms resources, each normally saved as its own .tres under res://jrpg/db/
+// (plan/specs/02_database_model.md).
 class JRPGDatabase : public Resource {
 	GDCLASS(JRPGDatabase, Resource);
 
@@ -59,6 +62,9 @@ public:
 private:
 	int schema_version = 1;
 	Ref<JRPGTable> tables[TABLE_MAX];
+	Ref<JRPGSystemData> system;
+	Ref<JRPGTypesData> types;
+	Ref<JRPGTermsData> terms;
 
 protected:
 	static void _bind_methods();
@@ -74,6 +80,13 @@ public:
 	void set_table(TableKind p_kind, const Ref<JRPGTable> &p_table);
 	Ref<JRPGTable> get_table(TableKind p_kind) const;
 	Ref<JRPGTable> get_table_by_name(const String &p_name) const;
+
+	void set_system(const Ref<JRPGSystemData> &p_system);
+	Ref<JRPGSystemData> get_system() const { return system; }
+	void set_types(const Ref<JRPGTypesData> &p_types);
+	Ref<JRPGTypesData> get_types() const { return types; }
+	void set_terms(const Ref<JRPGTermsData> &p_terms);
+	Ref<JRPGTermsData> get_terms() const { return terms; }
 
 	// Data format version written by this build. Raise it together with a JRPGSchema migration step.
 	static constexpr int CURRENT_SCHEMA_VERSION = 1;

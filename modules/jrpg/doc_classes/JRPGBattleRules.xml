@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGBattleRules" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Tunable numbers of the JRPG battle system.
+	</brief_description>
+	<description>
+		Holds the battle numbers a project can retune: critical and guard strength, speed variation, buffs, TP, time progression, escape chances and parameter limits. Rates ending in [code]_bp[/code] are basis points (10000 = 100%). The reasons behind the defaults are explained in Talewright's battle defaults guide.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="buff_max_levels" type="int" setter="set_buff_max_levels" getter="get_buff_max_levels" default="2">
+			How many buff (or debuff) levels a parameter can stack.
+		</member>
+		<member name="buff_step_bp" type="int" setter="set_buff_step_bp" getter="get_buff_step_bp" default="2500">
+			Change of a parameter per buff level, as a fraction of its base value.
+		</member>
+		<member name="crit_multiplier_bp" type="int" setter="set_crit_multiplier_bp" getter="get_crit_multiplier_bp" default="20000">
+			Damage multiplier of a critical hit.
+		</member>
+		<member name="escape_agility_percent" type="int" setter="set_escape_agility_percent" getter="get_escape_agility_percent" default="50">
+			How strongly the party's agility advantage over the enemies raises the escape chance.
+		</member>
+		<member name="escape_base_percent" type="int" setter="set_escape_base_percent" getter="get_escape_base_percent" default="50">
+			Escape chance when party and enemies are equally fast.
+		</member>
+		<member name="escape_failure_bonus_percent" type="int" setter="set_escape_failure_bonus_percent" getter="get_escape_failure_bonus_percent" default="15">
+			Escape chance added after each failed attempt in the same battle.
+		</member>
+		<member name="escape_max_percent" type="int" setter="set_escape_max_percent" getter="get_escape_max_percent" default="95">
+			Highest escape chance.
+		</member>
+		<member name="escape_min_percent" type="int" setter="set_escape_min_percent" getter="get_escape_min_percent" default="5">
+			Lowest escape chance.
+		</member>
+		<member name="guard_reduction_bp" type="int" setter="set_guard_reduction_bp" getter="get_guard_reduction_bp" default="4000">
+			Damage reduction for a guarding battler at 100% guard effect.
+		</member>
+		<member name="max_hp_limit" type="int" setter="set_max_hp_limit" getter="get_max_hp_limit" default="9999999">
+			Highest possible max HP.
+		</member>
+		<member name="max_mp_limit" type="int" setter="set_max_mp_limit" getter="get_max_mp_limit" default="9999999">
+			Highest possible max MP.
+		</member>
+		<member name="param_limit" type="int" setter="set_param_limit" getter="get_param_limit" default="999999">
+			Highest possible value of the other parameters.
+		</member>
+		<member name="speed_spread_bp" type="int" setter="set_speed_spread_bp" getter="get_speed_spread_bp" default="1000">
+			Random variation of action speed in turn-based battles.
+		</member>
+		<member name="tp_max" type="int" setter="set_tp_max" getter="get_tp_max" default="100">
+			Highest TP a battler can have.
+		</member>
+		<member name="tp_on_damage_base" type="int" setter="set_tp_on_damage_base" getter="get_tp_on_damage_base" default="2">
+			TP a battler gains whenever it takes HP damage.
+		</member>
+		<member name="tp_on_damage_scale" type="int" setter="set_tp_on_damage_scale" getter="get_tp_on_damage_scale" default="30">
+			Additional TP gained in proportion to the damage taken relative to max HP.
+		</member>
+		<member name="tp_start_max" type="int" setter="set_tp_start_max" getter="get_tp_start_max" default="24">
+			Battlers start each battle with a random TP from 0 to this value.
+		</member>
+		<member name="tpb_fill_steps" type="int" setter="set_tpb_fill_steps" getter="get_tpb_fill_steps" default="240">
+			In time progression battles, how many simulation steps (1/60 s) the fastest battler needs to fill its gauge.
+		</member>
+	</members>
+</class>

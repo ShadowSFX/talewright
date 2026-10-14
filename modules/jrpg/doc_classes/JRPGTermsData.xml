@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGTermsData" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The words a JRPG uses for stats, commands and messages.
+	</brief_description>
+	<description>
+		Holds four groups of terms: basic statuses, parameters, commands and messages. Each term has a name (for example [code]attack[/code]) and a text. Message texts can contain numbered placeholders such as [code]%1[/code]. Terms are translated through keys of the form [code]Terms.&lt;group&gt;.&lt;name&gt;[/code]; the texts stored here are used when no translation exists.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_default_terms" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="group" type="int" enum="JRPGTermsData.TermGroup" />
+			<description>
+				Returns Talewright's default text for every term of [param group].
+			</description>
+		</method>
+		<method name="get_group" qualifiers="const">
+			<return type="Dictionary" />
+			<param index="0" name="group" type="int" enum="JRPGTermsData.TermGroup" />
+			<description>
+				Returns the terms of [param group] as a [Dictionary] of name to text.
+			</description>
+		</method>
+		<method name="get_group_name" qualifiers="static">
+			<return type="String" />
+			<param index="0" name="group" type="int" enum="JRPGTermsData.TermGroup" />
+			<description>
+				Returns the name of [param group], for example [code]"commands"[/code].
+			</description>
+		</method>
+		<method name="get_term" qualifiers="const">
+			<return type="String" />
+			<param index="0" name="group" type="int" enum="JRPGTermsData.TermGroup" />
+			<param index="1" name="name" type="String" />
+			<description>
+				Returns the text of the term [param name] in [param group]. Terms the project has not set fall back to the default text; unknown names return an empty string.
+			</description>
+		</method>
+		<method name="get_translation_key" qualifiers="static">
+			<return type="String" />
+			<param index="0" name="group" type="int" enum="JRPGTermsData.TermGroup" />
+			<param index="1" name="name" type="String" />
+			<description>
+				Returns the translation key of a term, for example [code]Terms.commands.attack[/code].
+			</description>
+		</method>
+		<method name="set_group">
+			<return type="void" />
+			<param index="0" name="group" type="int" enum="JRPGTermsData.TermGroup" />
+			<param index="1" name="terms" type="Dictionary" />
+			<description>
+				Replaces the terms of [param group].
+			</description>
+		</method>
+		<method name="set_term">
+			<return type="void" />
+			<param index="0" name="group" type="int" enum="JRPGTermsData.TermGroup" />
+			<param index="1" name="name" type="String" />
+			<param index="2" name="text" type="String" />
+			<description>
+				Sets the text of the term [param name] in [param group].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="basic" type="Dictionary" setter="set_group" getter="get_group" default="{ &quot;exp&quot;: &quot;Experience&quot;, &quot;exp_short&quot;: &quot;EXP&quot;, &quot;hp&quot;: &quot;Health&quot;, &quot;hp_short&quot;: &quot;HP&quot;, &quot;level&quot;: &quot;Level&quot;, &quot;level_short&quot;: &quot;Lv&quot;, &quot;mp&quot;: &quot;Mana&quot;, &quot;mp_short&quot;: &quot;MP&quot;, &quot;tp&quot;: &quot;Tension&quot;, &quot;tp_short&quot;: &quot;TP&quot; }">
+			Names of basic statuses (level, HP, MP, TP, EXP) and their short forms.
+		</member>
+		<member name="commands" type="Dictionary" setter="set_group" getter="get_group" default="{ &quot;armor&quot;: &quot;Armor&quot;, &quot;attack&quot;: &quot;Attack&quot;, &quot;buy&quot;: &quot;Buy&quot;, &quot;cancel&quot;: &quot;Cancel&quot;, &quot;clear&quot;: &quot;Remove All&quot;, &quot;continue&quot;: &quot;Continue&quot;, &quot;equip&quot;: &quot;Equipment&quot;, &quot;equip_change&quot;: &quot;Change&quot;, &quot;escape&quot;: &quot;Run&quot;, &quot;fight&quot;: &quot;Fight&quot;, &quot;formation&quot;: &quot;Order&quot;, &quot;game_end&quot;: &quot;Quit Game&quot;, &quot;guard&quot;: &quot;Defend&quot;, &quot;item&quot;: &quot;Items&quot;, &quot;key_item&quot;: &quot;Key Items&quot;, &quot;new_game&quot;: &quot;New Game&quot;, &quot;optimize&quot;: &quot;Best Gear&quot;, &quot;options&quot;: &quot;Settings&quot;, &quot;save&quot;: &quot;Save&quot;, &quot;sell&quot;: &quot;Sell&quot;, &quot;skill&quot;: &quot;Skills&quot;, &quot;status&quot;: &quot;Status&quot;, &quot;to_title&quot;: &quot;Back to Title&quot;, &quot;weapon&quot;: &quot;Weapons&quot; }">
+			Labels of menu, battle, shop and title commands.
+		</member>
+		<member name="messages" type="Dictionary" setter="set_group" getter="get_group" default="{ &quot;always_dash&quot;: &quot;Always run&quot;, &quot;autosave&quot;: &quot;Autosave&quot;, &quot;bgm_volume&quot;: &quot;Music volume&quot;, &quot;bgs_volume&quot;: &quot;Ambience volume&quot;, &quot;command_remember&quot;: &quot;Remember last command&quot;, &quot;critical_to_actor&quot;: &quot;A painful critical blow!&quot;, &quot;critical_to_enemy&quot;: &quot;A critical blow!&quot;, &quot;defeat&quot;: &quot;%1 has fallen.&quot;, &quot;emerge&quot;: &quot;%1 approaches!&quot;, &quot;escape_failure&quot;: &quot;The way out is blocked!&quot;, &quot;escape_start&quot;: &quot;%1 tries to run away...&quot;, &quot;exp_next&quot;: &quot;To next %1&quot;, &quot;exp_total&quot;: &quot;Total %1&quot;, &quot;file&quot;: &quot;File&quot;, &quot;level_up&quot;: &quot;%1 is now %2 %3!&quot;, &quot;load_message&quot;: &quot;Choose a file to load.&quot;, &quot;me_volume&quot;: &quot;Jingle volume&quot;, &quot;obtain_exp&quot;: &quot;Gained %1 %2.&quot;, &quot;obtain_gold&quot;: &quot;Found %1 %2.&quot;, &quot;obtain_item&quot;: &quot;Received %1.&quot;, &quot;obtain_skill&quot;: &quot;New skill: %1.&quot;, &quot;party_name&quot;: &quot;%1&apos;s party&quot;, &quot;possession&quot;: &quot;Owned&quot;, &quot;preemptive&quot;: &quot;%1 has the initiative!&quot;, &quot;save_message&quot;: &quot;Choose a file to save to.&quot;, &quot;se_volume&quot;: &quot;Sound volume&quot;, &quot;surprise&quot;: &quot;%1 is caught off guard!&quot;, &quot;touch_ui&quot;: &quot;Touch controls&quot;, &quot;use_item&quot;: &quot;%1 uses %2!&quot;, &quot;victory&quot;: &quot;%1 wins the battle!&quot; }">
+			System message templates, such as battle announcements and rewards.
+		</member>
+		<member name="params" type="Dictionary" setter="set_group" getter="get_group" default="{ &quot;agility&quot;: &quot;Agility&quot;, &quot;attack&quot;: &quot;Attack&quot;, &quot;defense&quot;: &quot;Defense&quot;, &quot;evasion&quot;: &quot;Evasion&quot;, &quot;hit&quot;: &quot;Accuracy&quot;, &quot;luck&quot;: &quot;Luck&quot;, &quot;magic_attack&quot;: &quot;Magic Attack&quot;, &quot;magic_defense&quot;: &quot;Magic Defense&quot;, &quot;max_hp&quot;: &quot;Max Health&quot;, &quot;max_mp&quot;: &quot;Max Mana&quot; }">
+			Names of the battler parameters.
+		</member>
+	</members>
+	<constants>
+		<constant name="BASIC" value="0" enum="TermGroup">
+			Basic status terms.
+		</constant>
+		<constant name="PARAMS" value="1" enum="TermGroup">
+			Parameter terms.
+		</constant>
+		<constant name="COMMANDS" value="2" enum="TermGroup">
+			Command terms.
+		</constant>
+		<constant name="MESSAGES" value="3" enum="TermGroup">
+			Message terms.
+		</constant>
+		<constant name="TERM_GROUP_MAX" value="4" enum="TermGroup">
+			Number of term groups.
+		</constant>
+	</constants>
+</class>

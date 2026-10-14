@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGAudioCue" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A sound or music reference used by JRPG data.
+	</brief_description>
+	<description>
+		Points to an audio file by path and stores how to play it: volume, pitch and pan. The audio is loaded only when the cue is played, so database data never holds audio streams.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="is_empty" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] if no audio file is set.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="pan" type="int" setter="set_pan" getter="get_pan" default="0">
+			Stereo position from -100 (left) to 100 (right).
+		</member>
+		<member name="pitch" type="int" setter="set_pitch" getter="get_pitch" default="100">
+			Playback speed in percent, from 50 to 150.
+		</member>
+		<member name="stream" type="String" setter="set_stream" getter="get_stream" default="&quot;&quot;">
+			Path ([code]uid://[/code] or [code]res://[/code]) of the audio file.
+		</member>
+		<member name="volume" type="int" setter="set_volume" getter="get_volume" default="100">
+			Volume in percent, from 0 to 100.
+		</member>
+	</members>
+</class>

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGSystemData" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Project-wide JRPG settings.
+	</brief_description>
+	<description>
+		Holds the settings that apply to the whole game: title and game ID, starting party and start position, title screen, system music and sounds, window tone and battle rules.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="generate_game_id" qualifiers="static">
+			<return type="String" />
+			<description>
+				Returns a new random game ID made of 16 hexadecimal characters.
+			</description>
+		</method>
+		<method name="get_music" qualifiers="const">
+			<return type="JRPGAudioCue" />
+			<param index="0" name="slot" type="int" enum="JRPGSystemData.Music" />
+			<description>
+				Returns the music cue of [param slot], or [code]null[/code] if none is set.
+			</description>
+		</method>
+		<method name="get_sound" qualifiers="const">
+			<return type="JRPGAudioCue" />
+			<param index="0" name="slot" type="int" enum="JRPGSystemData.Sound" />
+			<description>
+				Returns the sound cue of [param slot], or [code]null[/code] if none is set.
+			</description>
+		</method>
+		<method name="has_start_position" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] if the player start position has been set.
+			</description>
+		</method>
+		<method name="set_music">
+			<return type="void" />
+			<param index="0" name="slot" type="int" enum="JRPGSystemData.Music" />
+			<param index="1" name="cue" type="JRPGAudioCue" />
+			<description>
+				Sets the music cue of [param slot].
+			</description>
+		</method>
+		<method name="set_sound">
+			<return type="void" />
+			<param index="0" name="slot" type="int" enum="JRPGSystemData.Sound" />
+			<param index="1" name="cue" type="JRPGAudioCue" />
+			<description>
+				Sets the sound cue of [param slot].
+			</description>
+		</method>
+		<method name="validate" qualifiers="const">
+			<return type="PackedStringArray" />
+			<description>
+				Returns the problems that prevent starting a new game (for example a missing start position), each as a sentence. The array is empty when the project is ready.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="battle_rules" type="JRPGBattleRules" setter="set_battle_rules" getter="get_battle_rules">
+			The project's battle numbers.
+		</member>
+		<member name="currency_unit" type="String" setter="set_currency_unit" getter="get_currency_unit" default="&quot;Gold&quot;">
+			Name of the game's money, shown wherever an amount of money appears.
+		</member>
+		<member name="draw_game_title" type="bool" setter="set_draw_game_title" getter="is_drawing_game_title" default="true">
+			If [code]true[/code], the title screen draws [member game_title] over the title image.
+		</member>
+		<member name="game_id" type="String" setter="set_game_id" getter="get_game_id" default="&quot;&quot;">
+			Identifier that tells this game apart from others, for example for save data. New projects get a random one.
+		</member>
+		<member name="game_title" type="String" setter="set_game_title" getter="get_game_title" default="&quot;&quot;">
+			The game's name, shown on the title screen and in the window title.
+		</member>
+		<member name="music_battle" type="JRPGAudioCue" setter="set_music" getter="get_music">
+			Music played during battles.
+		</member>
+		<member name="music_defeat" type="JRPGAudioCue" setter="set_music" getter="get_music">
+			Music played when the party loses a battle.
+		</member>
+		<member name="music_title" type="JRPGAudioCue" setter="set_music" getter="get_music">
+			Music played on the title screen.
+		</member>
+		<member name="music_victory" type="JRPGAudioCue" setter="set_music" getter="get_music">
+			Music played when the party wins a battle.
+		</member>
+		<member name="sound_buzzer" type="JRPGAudioCue" setter="set_sound" getter="get_sound">
+			Sound played when the player chooses something that cannot be used.
+		</member>
+		<member name="sound_cancel" type="JRPGAudioCue" setter="set_sound" getter="get_sound">
+			Sound played when the player backs out.
+		</member>
+		<member name="sound_cursor" type="JRPGAudioCue" setter="set_sound" getter="get_sound">
+			Sound played when the cursor moves.
+		</member>
+		<member name="sound_ok" type="JRPGAudioCue" setter="set_sound" getter="get_sound">
+			Sound played when the player confirms a choice.
+		</member>
+		<member name="start_cell" type="Vector2i" setter="set_start_cell" getter="get_start_cell" default="Vector2i(0, 0)">
+			Cell where the player starts a new game.
+		</member>
+		<member name="start_direction" type="int" setter="set_start_direction" getter="get_start_direction" enum="JRPGSystemData.Direction" default="2">
+			Direction the player faces at the start of a new game.
+		</member>
+		<member name="start_map_id" type="int" setter="set_start_map_id" getter="get_start_map_id" default="0">
+			ID of the map where a new game starts. [code]0[/code] means not set; a new game cannot start until it is.
+		</member>
+		<member name="starting_party" type="PackedInt32Array" setter="set_starting_party" getter="get_starting_party" default="PackedInt32Array()">
+			Actor IDs of the party at the start of a new game, in order.
+		</member>
+		<member name="title_image" type="String" setter="set_title_image" getter="get_title_image" default="&quot;&quot;">
+			Path of the title screen image.
+		</member>
+		<member name="window_tone" type="Vector3i" setter="set_window_tone" getter="get_window_tone" default="Vector3i(0, 0, 0)">
+			Tint added to the background of every in-game window, each component from -255 to 255.
+		</member>
+	</members>
+	<constants>
+		<constant name="DIRECTION_UP" value="0" enum="Direction">
+			Facing up.
+		</constant>
+		<constant name="DIRECTION_RIGHT" value="1" enum="Direction">
+			Facing right.
+		</constant>
+		<constant name="DIRECTION_DOWN" value="2" enum="Direction">
+			Facing down.
+		</constant>
+		<constant name="DIRECTION_LEFT" value="3" enum="Direction">
+			Facing left.
+		</constant>
+		<constant name="MUSIC_TITLE" value="0" enum="Music">
+			Title screen music.
+		</constant>
+		<constant name="MUSIC_BATTLE" value="1" enum="Music">
+			Battle music.
+		</constant>
+		<constant name="MUSIC_VICTORY" value="2" enum="Music">
+			Victory music.
+		</constant>
+		<constant name="MUSIC_DEFEAT" value="3" enum="Music">
+			Defeat music.
+		</constant>
+		<constant name="MUSIC_MAX" value="4" enum="Music">
+			Number of music slots.
+		</constant>
+		<constant name="SOUND_CURSOR" value="0" enum="Sound">
+			Cursor sound.
+		</constant>
+		<constant name="SOUND_OK" value="1" enum="Sound">
+			Confirm sound.
+		</constant>
+		<constant name="SOUND_CANCEL" value="2" enum="Sound">
+			Cancel sound.
+		</constant>
+		<constant name="SOUND_BUZZER" value="3" enum="Sound">
+			Sound for choices that cannot be used.
+		</constant>
+		<constant name="SOUND_MAX" value="4" enum="Sound">
+			Number of sound slots.
+		</constant>
+	</constants>
+</class>

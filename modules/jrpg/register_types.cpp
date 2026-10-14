@@ -34,9 +34,16 @@
 #include "core/config/project_settings.h"
 #include "core/object/class_db.h"
 
+#include "modules/jrpg/core/jrpg_actor_data.h"
+#include "modules/jrpg/core/jrpg_audio_cue.h"
+#include "modules/jrpg/core/jrpg_battle_rules.h"
+#include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_entry.h"
+#include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
+#include "modules/jrpg/core/jrpg_terms_data.h"
+#include "modules/jrpg/core/jrpg_types_data.h"
 
 #ifdef TOOLS_ENABLED
 #include "editor/plugins/editor_plugin.h"
@@ -56,6 +63,13 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GLOBAL_DEF_BASIC(PropertyInfo(Variant::BOOL, "jrpg/enabled"), false);
 		GDREGISTER_CLASS(JRPGEntry);
 		GDREGISTER_CLASS(JRPGTable);
+		GDREGISTER_CLASS(JRPGAudioCue);
+		GDREGISTER_CLASS(JRPGBattleRules);
+		GDREGISTER_CLASS(JRPGSystemData);
+		GDREGISTER_CLASS(JRPGTypesData);
+		GDREGISTER_CLASS(JRPGTermsData);
+		GDREGISTER_CLASS(JRPGActorData);
+		GDREGISTER_CLASS(JRPGClassData);
 		GDREGISTER_CLASS(JRPGDatabase);
 	}
 #ifdef TOOLS_ENABLED

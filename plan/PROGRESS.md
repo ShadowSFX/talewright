@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 18:22 -0600
+- **Updated:** 2026-10-13 18:30 -0600
 - **Current task:** none
-- **Last completed:** 5.2.2 Schema versioning and byte-identical persistence
-- **Next task:** 5.3.1 Actors, classes, types, terms, system
-- **Done leaf tasks:** 50
+- **Last completed:** 5.3.1 Actors, classes, types, terms, system
+- **Next task:** 5.3.2 Skills, items, weapons, armors
+- **Done leaf tasks:** 51
 <!-- status:end -->
 
 ## Log
@@ -124,4 +124,7 @@
 | 2026-10-13 18:14 -0600 | 5.2.1 | done: Entry/table/manifest classes — Core JRPGEntry (id = slot + 1 assigned by the table and never stored; name/note; kind_from_class; in-place reset_to_defaults with deep-copied container defaults), JRPGTable (entry_class guarded, set_maximum grow/shrink at the end, clear_entry in place, get_entry 0/out-of-range = none, null slots filled, Kind_N scene-unique ids reimposed on every change so duplicates are repaired; MAX_ENTRIES 100000), JRPGDatabase manifest (12 tables as indexed properties, TableKind enum). Class reference in modules/jrpg/doc_classes (doctool rerun gives no diff) + ProjectSettings.xml entry for jrpg/enabled (ledger row 3, needed by CI doc-test). 6 doctests incl. save/load: sub_resource ids Entry_N, id not stored. Full suite 1410/1410; online authority: shared data (both) (containers: 5.2 in_progress->pending, 5 in_progress->pending) | 43ba9d9de0 |
 | 2026-10-13 18:16 -0600 | 5.2.2 | started: Schema versioning and byte-identical persistence (containers: 5.2 pending->in_progress, 5 pending->in_progress) |  |
 | 2026-10-13 18:22 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-13 18:22 -0600 | 5.2.2 | done: Schema versioning and byte-identical persistence — JRPGSchema core registry: property renames (JRPGEntry::_set, one hop via ClassDB::set_property) and versioned migration steps; JRPGTable/JRPGDatabase CURRENT_SCHEMA_VERSION, upgrade() (tables auto-upgrade once entries load; newer data kept with a warning), JRPGDatabase::load_database(path) loads + upgrades. Doctests: table save->load->save byte-identical (unicode, multi-line note, cleared entry), manifest with an external table file re-saves byte-identically (ext ids seeded by path), v0 fixture with a renamed property migrates through a registered step, newer schema kept. Docs filled, doctool stable; full suite 1414/1414 (containers: 5.2 in_progress->done, 5 in_progress->pending) | pending |
+| 2026-10-13 18:22 -0600 | 5.2.2 | done: Schema versioning and byte-identical persistence — JRPGSchema core registry: property renames (JRPGEntry::_set, one hop via ClassDB::set_property) and versioned migration steps; JRPGTable/JRPGDatabase CURRENT_SCHEMA_VERSION, upgrade() (tables auto-upgrade once entries load; newer data kept with a warning), JRPGDatabase::load_database(path) loads + upgrades. Doctests: table save->load->save byte-identical (unicode, multi-line note, cleared entry), manifest with an external table file re-saves byte-identically (ext ids seeded by path), v0 fixture with a renamed property migrates through a registered step, newer schema kept. Docs filled, doctool stable; full suite 1414/1414 (containers: 5.2 in_progress->done, 5 in_progress->pending) | 3a16fc1f88 |
+| 2026-10-13 18:23 -0600 | 5.3.1 | started: Actors, classes, types, terms, system (containers: 5.3 pending->in_progress, 5 pending->in_progress) |  |
+| 2026-10-13 18:30 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 18:30 -0600 | 5.3.1 | done: Actors, classes, types, terms, system — Core JRPGActorData (nickname, class, initial/max level 1..99, profile, face/character/battler uid paths, initial equipment per slot, traits), JRPGClassData (EXP base/growth/extra 25/30/10 with spec-04 formula + baked int64 table, 8 param curves x levels 0..99 with documented ranges, learnings, traits), JRPGTypesData (5 lists, ID = index + 1, own starter names), JRPGTermsData (basic/params/commands/messages groups with Talewright default wording, fallback to defaults, Terms.<group>.<name> keys), JRPGSystemData (title, game_id generator, currency, starting party, start map/cell/direction with validate() reporting a missing start position, title image, 4 music + 4 UI sound JRPGAudioCue slots, window tone clamp, JRPGBattleRules with spec-04 defaults), manifest gains system/types/terms. 6 doctests: defaults vs specs, start-position validation, EXP hand-computed L2..5 (35/107/211/343) + monotonic table, param ranges, full slice-field save/load round trip, manifest. Class docs for 7 classes via new talewright/tools/fill_class_docs.py (doctool stable). Full suite 1420/1420 (containers: 5.3 in_progress->pending, 5 in_progress->pending) | pending |

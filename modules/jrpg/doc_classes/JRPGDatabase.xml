@@ -90,11 +90,20 @@
 		<member name="states" type="JRPGTable" setter="set_table" getter="get_table">
 			The states table.
 		</member>
+		<member name="system" type="JRPGSystemData" setter="set_system" getter="get_system">
+			The project's system settings.
+		</member>
+		<member name="terms" type="JRPGTermsData" setter="set_terms" getter="get_terms">
+			The words the game uses for stats, commands and messages.
+		</member>
 		<member name="tilesets" type="JRPGTable" setter="set_table" getter="get_table">
 			The tilesets table.
 		</member>
 		<member name="troops" type="JRPGTable" setter="set_table" getter="get_table">
 			The troops table.
+		</member>
+		<member name="types" type="JRPGTypesData" setter="set_types" getter="get_types">
+			The project's element, skill, weapon, armor and equipment type names.
 		</member>
 		<member name="weapons" type="JRPGTable" setter="set_table" getter="get_table">
 			The weapons table.

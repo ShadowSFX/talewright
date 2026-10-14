@@ -84,6 +84,21 @@ Ref<JRPGTable> JRPGDatabase::get_table_by_name(const String &p_name) const {
 	return kind == TABLE_MAX ? Ref<JRPGTable>() : tables[kind];
 }
 
+void JRPGDatabase::set_system(const Ref<JRPGSystemData> &p_system) {
+	system = p_system;
+	emit_changed();
+}
+
+void JRPGDatabase::set_types(const Ref<JRPGTypesData> &p_types) {
+	types = p_types;
+	emit_changed();
+}
+
+void JRPGDatabase::set_terms(const Ref<JRPGTermsData> &p_terms) {
+	terms = p_terms;
+	emit_changed();
+}
+
 void JRPGDatabase::upgrade() {
 	if (schema_version > CURRENT_SCHEMA_VERSION) {
 		WARN_PRINT_ONCE(vformat("JRPGDatabase \"%s\" was saved by a newer Talewright (schema %d, this build knows %d); some data may not load.", get_path(), schema_version, CURRENT_SCHEMA_VERSION));
@@ -114,10 +129,19 @@ void JRPGDatabase::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_table", "kind", "table"), &JRPGDatabase::set_table);
 	ClassDB::bind_method(D_METHOD("get_table", "kind"), &JRPGDatabase::get_table);
 	ClassDB::bind_method(D_METHOD("get_table_by_name", "name"), &JRPGDatabase::get_table_by_name);
+	ClassDB::bind_method(D_METHOD("set_system", "system"), &JRPGDatabase::set_system);
+	ClassDB::bind_method(D_METHOD("get_system"), &JRPGDatabase::get_system);
+	ClassDB::bind_method(D_METHOD("set_types", "types"), &JRPGDatabase::set_types);
+	ClassDB::bind_method(D_METHOD("get_types"), &JRPGDatabase::get_types);
+	ClassDB::bind_method(D_METHOD("set_terms", "terms"), &JRPGDatabase::set_terms);
+	ClassDB::bind_method(D_METHOD("get_terms"), &JRPGDatabase::get_terms);
 	ClassDB::bind_method(D_METHOD("upgrade"), &JRPGDatabase::upgrade);
 	ClassDB::bind_static_method("JRPGDatabase", D_METHOD("load_database", "path"), &JRPGDatabase::load_database);
 
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "schema_version"), "set_schema_version", "get_schema_version");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "system", PROPERTY_HINT_RESOURCE_TYPE, "JRPGSystemData"), "set_system", "get_system");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "types", PROPERTY_HINT_RESOURCE_TYPE, "JRPGTypesData"), "set_types", "get_types");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "terms", PROPERTY_HINT_RESOURCE_TYPE, "JRPGTermsData"), "set_terms", "get_terms");
 	ADD_GROUP("Tables", "");
 	for (int i = 0; i < TABLE_MAX; i++) {
 		ADD_PROPERTYI(PropertyInfo(Variant::OBJECT, TABLE_NAMES[i], PROPERTY_HINT_RESOURCE_TYPE, JRPGTable::get_class_static()), "set_table", "get_table", i);

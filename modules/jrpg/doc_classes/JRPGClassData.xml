@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGClassData" inherits="JRPGEntry" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A class: how an actor levels up and grows.
+	</brief_description>
+	<description>
+		Database entry for an actor class: the EXP curve, the parameter curves per level, the skills learned at each level and class traits. Curves and the EXP table are stored as integer tables so games never evaluate them at runtime.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="bake_exp_table">
+			<return type="void" />
+			<description>
+				Computes the EXP table from [member exp_base], [member exp_growth] and [member exp_extra] for every level up to [constant LEVEL_LIMIT] and stores it in [member exp_table].
+			</description>
+		</method>
+		<method name="compute_total_exp" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="base" type="int" />
+			<param index="1" name="growth" type="int" />
+			<param index="2" name="extra" type="int" />
+			<param index="3" name="level" type="int" />
+			<description>
+				Returns the total EXP needed to reach [param level] with the given curve values: [code]round(base * (level - 1) ^ (1.5 + growth / 100) + extra * (level - 1))[/code]. Level 1 needs 0 EXP.
+			</description>
+		</method>
+		<method name="get_exp_for_level" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="level" type="int" />
+			<description>
+				Returns the total EXP needed to reach [param level], from [member exp_table] when it is baked, otherwise computed.
+			</description>
+		</method>
+		<method name="get_param" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="param" type="int" enum="JRPGClassData.Param" />
+			<param index="1" name="level" type="int" />
+			<description>
+				Returns the value of [param param] at [param level], or [code]0[/code] when the curve has no value yet.
+			</description>
+		</method>
+		<method name="set_param">
+			<return type="void" />
+			<param index="0" name="param" type="int" enum="JRPGClassData.Param" />
+			<param index="1" name="level" type="int" />
+			<param index="2" name="value" type="int" />
+			<description>
+				Sets the value of [param param] at [param level]. Max HP is kept between 1 and 9999, max MP between 0 and 9999, and the other parameters between 0 and 999.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="exp_base" type="int" setter="set_exp_base" getter="get_exp_base" default="25">
+			Overall amount of EXP the curve needs: raising it raises every level's requirement.
+		</member>
+		<member name="exp_extra" type="int" setter="set_exp_extra" getter="get_exp_extra" default="10">
+			EXP added for every level gained, on top of the curve.
+		</member>
+		<member name="exp_growth" type="int" setter="set_exp_growth" getter="get_exp_growth" default="30">
+			How steeply the requirement grows at higher levels, from 0 to 100.
+		</member>
+		<member name="exp_table" type="PackedInt64Array" setter="set_exp_table" getter="get_exp_table" default="PackedInt64Array()">
+			Baked total EXP per level: entry [code]L - 1[/code] is the EXP needed to reach level [code]L[/code]. Empty until [method bake_exp_table] is called.
+		</member>
+		<member name="learnings" type="Array" setter="set_learnings" getter="get_learnings" default="[]">
+			Skills learned by level. Each entry is a [Dictionary] with [code]level[/code], [code]skill_id[/code] and [code]note[/code].
+		</member>
+		<member name="param_curves" type="PackedInt32Array" setter="set_param_curves" getter="get_param_curves" default="PackedInt32Array()">
+			Parameter values per level for the eight parameters, [constant LEVELS] values per parameter. Use [method get_param] and [method set_param] to read and write them.
+		</member>
+		<member name="traits" type="Array" setter="set_traits" getter="get_traits" default="[]">
+			Traits shared by every actor of this class, as dictionaries with [code]code[/code], [code]data_id[/code] and [code]value[/code].
+		</member>
+	</members>
+	<constants>
+		<constant name="PARAM_MAX_HP" value="0" enum="Param">
+			Maximum hit points.
+		</constant>
+		<constant name="PARAM_MAX_MP" value="1" enum="Param">
+			Maximum magic points.
+		</constant>
+		<constant name="PARAM_ATTACK" value="2" enum="Param">
+			Attack.
+		</constant>
+		<constant name="PARAM_DEFENSE" value="3" enum="Param">
+			Defense.
+		</constant>
+		<constant name="PARAM_MAGIC_ATTACK" value="4" enum="Param">
+			Magic attack.
+		</constant>
+		<constant name="PARAM_MAGIC_DEFENSE" value="5" enum="Param">
+			Magic defense.
+		</constant>
+		<constant name="PARAM_AGILITY" value="6" enum="Param">
+			Agility.
+		</constant>
+		<constant name="PARAM_LUCK" value="7" enum="Param">
+			Luck.
+		</constant>
+		<constant name="PARAM_MAX" value="8" enum="Param">
+			Number of parameters.
+		</constant>
+		<constant name="LEVEL_LIMIT" value="99">
+			Highest level of the curves.
+		</constant>
+		<constant name="LEVELS" value="100">
+			Number of values per parameter curve (levels 0 to [constant LEVEL_LIMIT]).
+		</constant>
+	</constants>
+</class>

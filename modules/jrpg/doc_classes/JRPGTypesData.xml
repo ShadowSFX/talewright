@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGTypesData" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The project's type name lists.
+	</brief_description>
+	<description>
+		Holds five lists of names: elements, skill types, weapon types, armor types and equipment slots. Other data refers to a type by its ID, which is its position in the list plus one; [code]0[/code] means none.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_list" qualifiers="const">
+			<return type="PackedStringArray" />
+			<param index="0" name="list" type="int" enum="JRPGTypesData.TypeList" />
+			<description>
+				Returns the names of [param list].
+			</description>
+		</method>
+		<method name="get_type_name" qualifiers="const">
+			<return type="String" />
+			<param index="0" name="list" type="int" enum="JRPGTypesData.TypeList" />
+			<param index="1" name="id" type="int" />
+			<description>
+				Returns the name of type [param id] in [param list], or an empty string for [code]0[/code] and unknown IDs.
+			</description>
+		</method>
+		<method name="set_list">
+			<return type="void" />
+			<param index="0" name="list" type="int" enum="JRPGTypesData.TypeList" />
+			<param index="1" name="names" type="PackedStringArray" />
+			<description>
+				Replaces the names of [param list].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="armor_types" type="PackedStringArray" setter="set_list" getter="get_list" default="PackedStringArray(&quot;Clothing&quot;, &quot;Light Armor&quot;, &quot;Heavy Armor&quot;, &quot;Robe&quot;, &quot;Shield&quot;)">
+			Armor type names.
+		</member>
+		<member name="elements" type="PackedStringArray" setter="set_list" getter="get_list" default="PackedStringArray(&quot;Physical&quot;, &quot;Fire&quot;, &quot;Ice&quot;, &quot;Lightning&quot;, &quot;Water&quot;, &quot;Earth&quot;, &quot;Wind&quot;, &quot;Holy&quot;, &quot;Shadow&quot;)">
+			Element names, used by damage and by element traits.
+		</member>
+		<member name="equip_types" type="PackedStringArray" setter="set_list" getter="get_list" default="PackedStringArray(&quot;Weapon&quot;, &quot;Shield&quot;, &quot;Head&quot;, &quot;Body&quot;, &quot;Accessory&quot;)">
+			Equipment slot names. Slot 1 is the weapon slot.
+		</member>
+		<member name="skill_types" type="PackedStringArray" setter="set_list" getter="get_list" default="PackedStringArray(&quot;Magic&quot;, &quot;Techniques&quot;)">
+			Skill type names.
+		</member>
+		<member name="weapon_types" type="PackedStringArray" setter="set_list" getter="get_list" default="PackedStringArray(&quot;Sword&quot;, &quot;Dagger&quot;, &quot;Axe&quot;, &quot;Spear&quot;, &quot;Bow&quot;, &quot;Staff&quot;, &quot;Fist&quot;)">
+			Weapon type names.
+		</member>
+	</members>
+	<constants>
+		<constant name="ELEMENTS" value="0" enum="TypeList">
+			Elements.
+		</constant>
+		<constant name="SKILL_TYPES" value="1" enum="TypeList">
+			Skill types.
+		</constant>
+		<constant name="WEAPON_TYPES" value="2" enum="TypeList">
+			Weapon types.
+		</constant>
+		<constant name="ARMOR_TYPES" value="3" enum="TypeList">
+			Armor types.
+		</constant>
+		<constant name="EQUIP_TYPES" value="4" enum="TypeList">
+			Equipment slots.
+		</constant>
+		<constant name="TYPE_LIST_MAX" value="5" enum="TypeList">
+			Number of type lists.
+		</constant>
+	</constants>
+</class>
