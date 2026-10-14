@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 89, in_progress: 0, done: 176, blocked: 0, deferred: 3 (of 268)
+**Totals:** pending: 87, in_progress: 0, done: 178, blocked: 0, deferred: 3 (of 268)
 
 ## [x] 0 Bootstrap and task system
 
@@ -202,9 +202,9 @@ JRPGMap scenes, map editor canvas, cell cache, runtime map and movement.
 
 Pages, conditions, triggers, command model with authority, interpreter with presentation port, slice commands, event editor.
 
-- [ ] **9.1** JRPGEvent + pages + conditions + triggers (P1)
-  - [x] **9.1.1** Event data and page selection (core) (P1) _(commit: pending)_
-  - [ ] **9.1.2** Event nodes on the map, page refresh, anchors, id repair on save (P1) _(deps: 9.1.1)_
+- [x] **9.1** JRPGEvent + pages + conditions + triggers (P1)
+  - [x] **9.1.1** Event data and page selection (core) (P1) _(commit: dcecee2cdb)_
+  - [x] **9.1.2** Event nodes on the map, page refresh, anchors, id repair on save (P1) _(deps: 9.1.1; commit: pending)_
 - [ ] **9.2** Command model + registry + authority + script commands (P1) _(deps: 9.1, 3.3)_
   - [ ] **9.2.1** Command storage benchmark (P1)
   - [ ] **9.2.2** Command model, registry, authority, script commands (P1) _(deps: 9.2.1)_

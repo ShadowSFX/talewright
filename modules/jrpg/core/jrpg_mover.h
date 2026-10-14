@@ -36,6 +36,7 @@
 #include "core/math/vector2.h"
 #include "core/math/vector2i.h"
 #include "core/object/ref_counted.h"
+#include "core/templates/hash_set.h"
 
 class JRPGMapCellCache;
 
@@ -69,6 +70,8 @@ private:
 	int64_t walk_start = 0;
 	bool standing = true;
 
+	bool _move(JRPGSystemData::Direction p_direction, const Ref<JRPGMapCellCache> &p_cache, bool p_dash, const HashSet<Vector2i> *p_blocked);
+
 protected:
 	static void _bind_methods();
 
@@ -95,6 +98,9 @@ public:
 	// speed level faster when p_dash. A step the map does not allow only turns the character. Returns whether a step
 	// started.
 	bool move(JRPGSystemData::Direction p_direction, const Ref<JRPGMapCellCache> &p_cache, bool p_dash = false);
+	// As move(), and the cells of p_blocked are taken by characters that block (events Same as characters, task 9.1.2):
+	// a step into one only turns the character, unless it moves through.
+	bool move(JRPGSystemData::Direction p_direction, const Ref<JRPGMapCellCache> &p_cache, bool p_dash, const HashSet<Vector2i> &p_blocked);
 	// Runs one simulation step; returns true when it ends the step under way (the character arrived).
 	bool advance();
 	// Where to draw the character, in cells: its cell, or on the way there (fractional, leaving the previous cell

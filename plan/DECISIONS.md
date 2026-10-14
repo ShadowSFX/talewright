@@ -939,3 +939,24 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   the command model (9.2), move routes with movement (9.6).
 - **Why:** stable ids keep saved games and self switches safe; data events serve servers without scenes (spec 03).
 - **Reversal:** `JRPGEventPage::are_conditions_met` holds the condition rules; `JRPGMapData::add_event` the ids.
+
+## D-057 — Map events while a game runs
+- **Context:** task 9.1.2 puts events on the running map (spec 03: internal event nodes, refresh when conditions
+  change, anchors for extra nodes, duplicate ids repaired on save). The help does not say when an event's facing
+  resets, and Godot has no notion of characters blocking a tile.
+- **Options:** event nodes built by `JRPGMap` (also in the editor) or by the scene manager (only while a game runs);
+  pages picked every step or on change; blocking in the cell cache (static) or per step.
+- **Choice:** the scene manager builds a `JRPGEvent` per event under an internal `Events` node of the map it enters,
+  after `JRPGGameState::set_events_map`: a state the game kept for that map (a resumed game) is used as it is, else a
+  new `JRPGEventState` starts at the event's cell (so every event of the current map is saved, spec 06). Pages are
+  picked again at the start of a simulation step when `JRPGGameState::get_revision()` changed (it rises with every
+  switch, variable, self switch, inventory and party change). When the page changes the event faces the new page's
+  direction, except for the first page after a resume, which keeps the saved facing. Characters are blocked per step:
+  `JRPGMover::move` takes the cells of events Same as characters and not through (the page's option, or a move route's
+  override). Event nodes register with their `JRPGMap` by id; `JRPGEventAnchor` follows its event's node every frame
+  and mirrors its visibility, and stands on the event's starting cell in the editor. The map's editor pre-save runs
+  `repair_event_ids` and warns once per repaired event; a repair raises the map's revision. Bridge runs with events
+  come with the event authoring tools (9.8) and triggers (9.6.2).
+- **Why:** pages read the game state, which only a running game has; refreshing on the revision keeps the cost at
+  one pass per change; blocking per step follows events as they move (9.6).
+- **Reversal:** `JRPGSceneManager::_build_events`, `_refresh_events` and `get_blocked_cells`.

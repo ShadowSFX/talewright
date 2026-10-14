@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGEvent" inherits="Node2D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A map event on the running map.
+	</brief_description>
+	<description>
+		The node a [JRPGSceneManager] builds for each [JRPGEventData] of the map it shows, inside the map. It shows its active page's graphic at its cell: a character from its sheet facing the page's direction and showing its frame, or a tile of the map's tileset; nothing when no page qualifies or once the event is erased. Its z follows the page's priority ([constant JRPGMap.Z_BELOW], [constant JRPGMap.Z_CHARACTERS] or [constant JRPGMap.Z_ABOVE]). An event Same as characters that is not through stops characters stepping onto its cell. Its cell, facing and erased flag are the game state's [JRPGEventState], so a save keeps them; when its page changes it faces the new page's direction.
+		Authority: server. Online, the zone decides the page and the position; this node only shows them.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="blocks_characters" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when characters cannot step onto the event's cell: it is present, its page is Same as characters, and neither the page nor a move route makes it pass through.
+			</description>
+		</method>
+		<method name="get_cell" qualifiers="const">
+			<return type="Vector2i" />
+			<description>
+				Returns the event's cell.
+			</description>
+		</method>
+		<method name="get_cell_size" qualifiers="const">
+			<return type="Vector2i" />
+			<description>
+				Returns the size of the map's cells, in pixels.
+			</description>
+		</method>
+		<method name="get_data" qualifiers="const">
+			<return type="JRPGEventData" />
+			<description>
+				Returns the event's data.
+			</description>
+		</method>
+		<method name="get_direction" qualifiers="const">
+			<return type="int" enum="JRPGSystemData.Direction" />
+			<description>
+				Returns the direction the event faces.
+			</description>
+		</method>
+		<method name="get_event_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the event's id.
+			</description>
+		</method>
+		<method name="get_mover" qualifiers="const">
+			<return type="JRPGMover" />
+			<description>
+				Returns the [JRPGMover] that holds the event's cell and facing.
+			</description>
+		</method>
+		<method name="get_page" qualifiers="const">
+			<return type="JRPGEventPage" />
+			<description>
+				Returns the active page, or [code]null[/code] when no page qualifies.
+			</description>
+		</method>
+		<method name="get_page_index" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the index of the active page, or [code]-1[/code] when no page qualifies.
+			</description>
+		</method>
+		<method name="get_state" qualifiers="const">
+			<return type="JRPGEventState" />
+			<description>
+				Returns the event's state in the game state (cell, facing, erased), which saves keep.
+			</description>
+		</method>
+		<method name="is_present" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when the event shows: a page qualifies and the event is not erased.
+			</description>
+		</method>
+		<method name="refresh_page">
+			<return type="bool" />
+			<param index="0" name="game_state" type="JRPGGameState" />
+			<param index="1" name="map_id" type="int" />
+			<description>
+				Picks the active page in [param game_state] on map [param map_id] and shows it; returns [code]true[/code] when the page changed. The scene manager does this at most once per simulation step, when the game state changed.
+			</description>
+		</method>
+		<method name="set_cell_size">
+			<return type="void" />
+			<param index="0" name="size" type="Vector2i" />
+			<description>
+				Sets the size of the map's cells, in pixels.
+			</description>
+		</method>
+		<method name="update_position">
+			<return type="void" />
+			<description>
+				Moves the node to where its mover is.
+			</description>
+		</method>
+	</methods>
+</class>

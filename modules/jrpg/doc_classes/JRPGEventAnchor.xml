@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGEventAnchor" inherits="Node2D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A node that follows one map event, for extra nodes on an event.
+	</brief_description>
+	<description>
+		Put it in a map scene under the [JRPGMap] with the [member event_id] of an event, and add particles, lights or sounds under it. While a game runs it stands where the event's node is, every frame, and is shown only while the event is (a page qualifies and it is not erased). In the editor, and while the event has no node, it stands on the middle of the event's starting cell.
+		Authority: client. It only follows what the event shows.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="follow">
+			<return type="void" />
+			<description>
+				Moves the anchor to its event now (it also does so every frame).
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="event_id" type="int" setter="set_event_id" getter="get_event_id" default="1">
+			The id of the event this anchor follows, in the map it is under.
+		</member>
+	</members>
+</class>

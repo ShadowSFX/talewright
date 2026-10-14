@@ -31,6 +31,9 @@
 
 #pragma once
 
+#include "core/math/vector2i.h"
+#include "core/templates/hash_set.h"
+#include "core/variant/typed_array.h"
 #include "scene/main/node.h"
 
 class AudioStreamPlayer;
@@ -38,12 +41,14 @@ class CanvasLayer;
 class ColorRect;
 class JRPGAudioCue;
 class JRPGDatabase;
+class JRPGEvent;
 class JRPGGameState;
 class JRPGMap;
 class JRPGMapCellCache;
 class JRPGMapData;
 class JRPGMapList;
 class JRPGPlayer;
+class Node2D;
 class PackedScene;
 
 // Plays a game's maps (task 8.6.1, D-041): holds the game state while a game runs, shows the current map (an instance
@@ -79,6 +84,8 @@ private:
 	int map_id = 0;
 	Ref<JRPGMapCellCache> cell_cache; // The current map's, for movement.
 	JRPGPlayer *player = nullptr; // Inside the current map; outside the tree before the first map.
+	Node2D *events_root = nullptr; // The current map's JRPGEvent nodes ("Events", an internal child of the map).
+	uint64_t refreshed_revision = 0; // The game state's revision the event pages were last picked for.
 	AudioStreamPlayer *bgm_player = nullptr;
 	AudioStreamPlayer *bgs_player = nullptr;
 	CanvasLayer *fade_layer = nullptr;
@@ -118,6 +125,11 @@ private:
 	void _simulation_step();
 	void _sync_player();
 	void _update_camera_limits();
+	// Builds the current map's event nodes (task 9.1.2): states the game keeps (a resumed game) or new ones from the
+	// events' data, then their pages.
+	void _build_events();
+	// Picks every event's page again when the game state changed since the last time (at most once per step).
+	void _refresh_events(bool p_force = false);
 
 protected:
 	void _notification(int p_what);
@@ -157,6 +169,12 @@ public:
 	int get_map_id() const { return map_id; }
 	JRPGPlayer *get_player() const { return player; }
 	Ref<JRPGMapCellCache> get_cell_cache() const { return cell_cache; }
+	// The current map's node of event p_event_id, or null.
+	JRPGEvent *get_event_node(int p_event_id) const;
+	// The current map's event nodes, in the order of the map's events.
+	TypedArray<JRPGEvent> get_event_nodes() const;
+	// The cells characters cannot step onto because an event there blocks them (JRPGEvent::blocks_characters).
+	HashSet<Vector2i> get_blocked_cells() const;
 	// Runs p_steps simulation steps now, as frames would (tests, tools).
 	void run_steps(int p_steps);
 	// Draws the player as the party leader's character again (after the party or the actor's character changed).

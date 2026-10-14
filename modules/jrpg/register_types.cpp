@@ -74,6 +74,8 @@
 #include "modules/jrpg/runtime/jrpg_character_sheet.h"
 #include "modules/jrpg/runtime/jrpg_character_sprite.h"
 #include "modules/jrpg/runtime/jrpg_choice_window.h"
+#include "modules/jrpg/runtime/jrpg_event.h"
+#include "modules/jrpg/runtime/jrpg_event_anchor.h"
 #include "modules/jrpg/runtime/jrpg_gold_window.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 #include "modules/jrpg/runtime/jrpg_map_files.h"
@@ -183,6 +185,8 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGCharacterSprite);
 		GDREGISTER_CLASS(JRPGMap);
 		GDREGISTER_CLASS(JRPGPlayer);
+		GDREGISTER_CLASS(JRPGEvent);
+		GDREGISTER_CLASS(JRPGEventAnchor);
 		GDREGISTER_CLASS(JRPGSceneManager);
 		GDREGISTER_CLASS(JRPGWindow);
 		GDREGISTER_CLASS(JRPGSelectableList);

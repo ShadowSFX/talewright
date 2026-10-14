@@ -199,6 +199,46 @@ int JRPGMap::get_palette_kind(int p_index) const {
 	return p_index > 0 && p_index < kinds.size() ? int(kinds[p_index]) : int(JRPGAutotileResolver::KIND_PLAIN);
 }
 
+bool JRPGMap::get_palette_tile_region(int p_index, Ref<Texture2D> &r_texture, Rect2i &r_region) const {
+	if (tileset.is_null() || p_index <= 0 || p_index >= int(palette_tiles.size())) {
+		return false;
+	}
+	const PaletteTile &tile = palette_tiles[p_index];
+	const Ref<TileSetAtlasSource> source = tileset->has_source(tile.source_id) ? Ref<TileSetAtlasSource>(tileset->get_source(tile.source_id)) : Ref<TileSetAtlasSource>();
+	if (source.is_null() || source->get_texture().is_null()) {
+		return false;
+	}
+	Vector2i coords = tile.coords;
+	if (kinds[p_index] == JRPGAutotileResolver::KIND_BLOB) {
+		coords += JRPGAutotile::get_blob_cell(0); // Shape 0: no neighbor of its kind.
+	} else if (kinds[p_index] == JRPGAutotileResolver::KIND_WALL) {
+		coords += JRPGAutotile::get_wall_cell(0);
+	}
+	if (!source->has_tile(coords)) {
+		return false;
+	}
+	r_texture = source->get_texture();
+	r_region = source->get_tile_texture_region(coords);
+	return true;
+}
+
+void JRPGMap::register_event_node(int p_event_id, Node2D *p_node) {
+	ERR_FAIL_NULL(p_node);
+	event_nodes[p_event_id] = p_node->get_instance_id();
+}
+
+void JRPGMap::unregister_event_node(int p_event_id, const Node2D *p_node) {
+	const ObjectID *known = event_nodes.getptr(p_event_id);
+	if (known && p_node && *known == p_node->get_instance_id()) {
+		event_nodes.erase(p_event_id);
+	}
+}
+
+Node2D *JRPGMap::get_event_node(int p_event_id) const {
+	const ObjectID *known = event_nodes.getptr(p_event_id);
+	return known ? ObjectDB::get_instance<Node2D>(*known) : nullptr;
+}
+
 void JRPGMap::_draw_shadows() {
 	// Each shadowed quarter darkened: bit 1 top left, 2 top right, 4 bottom left, 8 bottom right (spec 05).
 	if (map_data.is_null()) {
@@ -266,11 +306,19 @@ void JRPGMap::_mark_edited() {
 void JRPGMap::_notification(int p_what) {
 	if (p_what == NOTIFICATION_ENTER_TREE) {
 		_queue_rebuild();
-	} else if (p_what == NOTIFICATION_EDITOR_PRE_SAVE && edited && map_data.is_valid()) {
-		// A save that changes the map's cells raises its revision, so a game saved before notices (spec 06; epic 8
-		// review A3). Sent by the editor before it saves the scene (editor/editor_node.cpp:2481).
-		map_data->bump_revision();
-		edited = false;
+	} else if (p_what == NOTIFICATION_EDITOR_PRE_SAVE && map_data.is_valid()) {
+		// Sent by the editor before it saves the scene (editor/editor_node.cpp:2481). Events copied with their ids, or
+		// edited by hand, get new ids first (spec 03, D-056).
+		const Array changes = map_data->repair_event_ids();
+		for (const Variant &entry : changes) {
+			const Dictionary change = entry;
+			WARN_PRINT(vformat("JRPG: map %d had two events with id %d; the later one is now event %d.", map_data->get_map_id(), int(change["old_id"]), int(change["new_id"])));
+		}
+		if (edited || !changes.is_empty()) {
+			// A save that changes the map raises its revision, so a game saved before notices (spec 06; epic 8 review A3).
+			map_data->bump_revision();
+			edited = false;
+		}
 	}
 }
 
@@ -284,6 +332,7 @@ void JRPGMap::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_tile_layer", "layer", "above"), &JRPGMap::get_tile_layer);
 	ClassDB::bind_method(D_METHOD("get_cell_size"), &JRPGMap::get_cell_size);
 	ClassDB::bind_method(D_METHOD("get_palette_kind", "index"), &JRPGMap::get_palette_kind);
+	ClassDB::bind_method(D_METHOD("get_event_node", "event_id"), &JRPGMap::get_event_node);
 
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "map_data", PROPERTY_HINT_RESOURCE_TYPE, "JRPGMapData"), "set_map_data", "get_map_data");
 

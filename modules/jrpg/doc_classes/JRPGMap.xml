@@ -21,6 +21,13 @@
 				Returns the database the map's tileset comes from: the one given with [method set_database], or else the project's ([code]res://jrpg/database.tres[/code]).
 			</description>
 		</method>
+		<method name="get_event_node" qualifiers="const">
+			<return type="Node2D" />
+			<param index="0" name="event_id" type="int" />
+			<description>
+				Returns the node of event [param event_id] while a game runs on this map (a [JRPGEvent]), or [code]null[/code] (always [code]null[/code] in the editor).
+			</description>
+		</method>
 		<method name="get_palette_kind" qualifiers="const">
 			<return type="int" />
 			<param index="0" name="index" type="int" />

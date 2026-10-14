@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.1.1 Event data and page selection (core)",
+  "last_completed": "9.1.2 Event nodes on the map, page refresh, anchors, id repair on save",
   "tasks": [
     {
       "id": "0",
@@ -3626,14 +3626,14 @@
       "description": "JRPGEventData + JRPGEventPage as core data inside JRPGMapData (graphic as uid string); internal JRPGEvent nodes and JRPGEventAnchor; page selection/refresh, priority; trigger data on the page (detection at run time is 9.6.2, with the interpreter and the local port); duplicate event_id reassignment on save. Split into 9.1.1 (core data and page selection) and 9.1.2 (runtime event nodes, refresh, anchor, id repair on save).",
       "parent": "9",
       "dependencies": [],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "9.1.1 and 9.1.2 done"
       ],
       "test_strategy": "Doctests.",
       "files": [],
-      "commit": "",
+      "commit": "children",
       "notes": "JRPGMapData::get_event_ids() (added by 8.6.1.1, empty until now) must return the events' IDs: JRPGSceneManager::resume prunes saved event states with it."
     },
     {
@@ -3664,7 +3664,7 @@
         "modules/jrpg/tests/test_jrpg_core_regressions.h",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "dcecee2cdb",
       "notes": ""
     },
     {
@@ -3682,10 +3682,29 @@
         "A JRPGEventAnchor follows its event when the event moves",
         "Duplicate event_id in saved data is reassigned on save with a warning"
       ],
-      "test_strategy": "Doctests (SceneTree) + bridge run of a map with events.",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "test_strategy": "Doctests (SceneTree); a bridge run of a map with events comes with the event authoring tools (9.8) and the NPC dialog run of triggers (9.6.2), since no bridge tool can place events before them (D-057).",
+      "status": "done",
+      "files": [
+        "modules/jrpg/runtime/jrpg_event.h",
+        "modules/jrpg/runtime/jrpg_event.cpp",
+        "modules/jrpg/runtime/jrpg_event_anchor.h",
+        "modules/jrpg/runtime/jrpg_event_anchor.cpp",
+        "modules/jrpg/runtime/jrpg_map.h",
+        "modules/jrpg/runtime/jrpg_map.cpp",
+        "modules/jrpg/runtime/jrpg_scene_manager.h",
+        "modules/jrpg/runtime/jrpg_scene_manager.cpp",
+        "modules/jrpg/core/jrpg_mover.h",
+        "modules/jrpg/core/jrpg_mover.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGEvent.xml",
+        "modules/jrpg/doc_classes/JRPGEventAnchor.xml",
+        "modules/jrpg/doc_classes/JRPGMap.xml",
+        "modules/jrpg/doc_classes/JRPGSceneManager.xml",
+        "modules/jrpg/tests/test_jrpg_events_runtime.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

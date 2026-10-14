@@ -75,6 +75,14 @@ void JRPGMover::set_through(bool p_through) {
 }
 
 bool JRPGMover::move(JRPGSystemData::Direction p_direction, const Ref<JRPGMapCellCache> &p_cache, bool p_dash) {
+	return _move(p_direction, p_cache, p_dash, nullptr);
+}
+
+bool JRPGMover::move(JRPGSystemData::Direction p_direction, const Ref<JRPGMapCellCache> &p_cache, bool p_dash, const HashSet<Vector2i> &p_blocked) {
+	return _move(p_direction, p_cache, p_dash, &p_blocked);
+}
+
+bool JRPGMover::_move(JRPGSystemData::Direction p_direction, const Ref<JRPGMapCellCache> &p_cache, bool p_dash, const HashSet<Vector2i> *p_blocked) {
 	ERR_FAIL_INDEX_V(int(p_direction), 4, false);
 	ERR_FAIL_COND_V(p_cache.is_null(), false);
 	if (is_moving()) {
@@ -84,8 +92,8 @@ bool JRPGMover::move(JRPGSystemData::Direction p_direction, const Ref<JRPGMapCel
 	// The character's directions and the cache's sides share their order: up/north, right/east, down/south, left/west.
 	const JRPGMapCellCache::Direction side = JRPGMapCellCache::Direction(int(p_direction));
 	const Vector2i next = p_cache->get_neighbor(cell, side);
-	if (next.x < 0 || (!through && !p_cache->can_step(cell, side))) {
-		return false; // Past an edge that does not loop, or not allowed: the character only turns.
+	if (next.x < 0 || (!through && (!p_cache->can_step(cell, side) || (p_blocked && p_blocked->has(next))))) {
+		return false; // Past an edge that does not loop, not allowed, or taken by a character: it only turns.
 	}
 	cell = next;
 	move_steps = get_steps_per_cell(p_dash ? speed + 1 : speed);
@@ -140,7 +148,7 @@ void JRPGMover::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_through", "through"), &JRPGMover::set_through);
 	ClassDB::bind_method(D_METHOD("is_through"), &JRPGMover::is_through);
 	ClassDB::bind_method(D_METHOD("is_moving"), &JRPGMover::is_moving);
-	ClassDB::bind_method(D_METHOD("move", "direction", "cell_cache", "dash"), &JRPGMover::move, DEFVAL(false));
+	ClassDB::bind_method(D_METHOD("move", "direction", "cell_cache", "dash"), static_cast<bool (JRPGMover::*)(JRPGSystemData::Direction, const Ref<JRPGMapCellCache> &, bool)>(&JRPGMover::move), DEFVAL(false));
 	ClassDB::bind_method(D_METHOD("advance"), &JRPGMover::advance);
 	ClassDB::bind_method(D_METHOD("get_position"), &JRPGMover::get_position);
 	ClassDB::bind_method(D_METHOD("get_walk_distance"), &JRPGMover::get_walk_distance);

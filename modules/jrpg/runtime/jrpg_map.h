@@ -31,12 +31,15 @@
 
 #pragma once
 
+#include "core/object/object_id.h"
+#include "core/templates/hash_map.h"
 #include "core/templates/local_vector.h"
 #include "scene/2d/node_2d.h"
 
 #include "modules/jrpg/core/jrpg_map_data.h"
 
 class JRPGDatabase;
+class Texture2D;
 class TileMapLayer;
 class TileSet;
 
@@ -82,6 +85,7 @@ private:
 	bool rebuild_queued = false;
 	int rebuild_count = 0;
 	bool edited = false; // Cells or layout changed since the last save (the editor's pre-save raises the revision).
+	HashMap<int, ObjectID> event_nodes; // The running game's JRPGEvent nodes on this map, by event id.
 
 	void _connect_data(bool p_connect);
 	void _queue_rebuild();
@@ -116,6 +120,15 @@ public:
 	// The JRPGAutotileResolver::Kind of palette index p_index in the tileset the map draws with (KIND_PLAIN for plain
 	// tiles, 0 and indexes the palette does not have, and before the first build).
 	int get_palette_kind(int p_index) const;
+	// The texture and region that draw palette index p_index alone (an autotile or wall as its isolated shape), from
+	// the last build; false for 0, an index the palette does not have, or no TileSet.
+	bool get_palette_tile_region(int p_index, Ref<Texture2D> &r_texture, Rect2i &r_region) const;
+
+	// The running game's event nodes (JRPGEvent, task 9.1.2) register here so others find them by id (anchors).
+	void register_event_node(int p_event_id, Node2D *p_node);
+	void unregister_event_node(int p_event_id, const Node2D *p_node);
+	// The event node of event p_event_id while a game runs on this map, or null (in the editor: always null).
+	Node2D *get_event_node(int p_event_id) const;
 
 	JRPGMap();
 	~JRPGMap();

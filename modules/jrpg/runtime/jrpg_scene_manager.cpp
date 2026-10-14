@@ -48,6 +48,8 @@
 #include "modules/jrpg/core/jrpg_actor_data.h"
 #include "modules/jrpg/core/jrpg_audio_cue.h"
 #include "modules/jrpg/core/jrpg_database.h"
+#include "modules/jrpg/core/jrpg_event_data.h"
+#include "modules/jrpg/core/jrpg_event_state.h"
 #include "modules/jrpg/core/jrpg_game_state.h"
 #include "modules/jrpg/core/jrpg_map_cell_cache.h"
 #include "modules/jrpg/core/jrpg_map_data.h"
@@ -56,6 +58,7 @@
 #include "modules/jrpg/core/jrpg_sim_clock.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
+#include "modules/jrpg/runtime/jrpg_event.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 #include "modules/jrpg/runtime/jrpg_map_files.h"
 #include "modules/jrpg/runtime/jrpg_player.h"
@@ -311,6 +314,7 @@ Error JRPGSceneManager::_enter(const Transfer &p_transfer, JRPGMap *p_instance) 
 		map->add_child(player);
 		player->set_cell_size(map->get_cell_size());
 		player->get_camera()->make_current(); // The map is seen through the player's camera (epic 8 review A12).
+		events_root = nullptr; // The old map's went with it.
 	}
 	const JRPGSystemData::Direction direction = p_transfer.direction == DIRECTION_RETAIN ? game_state->get_player_direction() : JRPGSystemData::Direction(p_transfer.direction);
 	game_state->set_player_position(p_transfer.map_id, p_transfer.cell, direction);
@@ -318,9 +322,81 @@ Error JRPGSceneManager::_enter(const Transfer &p_transfer, JRPGMap *p_instance) 
 	_update_camera_limits();
 	const Ref<JRPGMapData> map_data = map->get_map_data();
 	game_state->set_events_map(p_transfer.map_id, map_data.is_valid() ? map_data->get_revision() : 0);
+	if (!events_root) {
+		_build_events(); // A new map instance: its events, from the states the game keeps for it.
+	}
 	_play_map_audio(map_data);
 	emit_signal(SNAME("map_entered"), p_transfer.map_id);
 	return OK;
+}
+
+void JRPGSceneManager::_build_events() {
+	events_root = memnew(Node2D);
+	events_root->set_name("Events");
+	map->add_child(events_root, false, INTERNAL_MODE_BACK); // After the map's own nodes, under the overhead tiles' z.
+	const Ref<JRPGMapData> map_data = map->get_map_data();
+	if (map_data.is_null()) {
+		return;
+	}
+	for (const Variant &entry : map_data->get_events()) {
+		const Ref<JRPGEventData> event_data = entry;
+		if (event_data.is_null()) {
+			continue;
+		}
+		// A state the game kept (a game resumed on this map) wins; a new one starts from the event's data.
+		Ref<JRPGEventState> state = game_state->get_event_state(event_data->get_event_id());
+		const bool saved = state.is_valid();
+		if (!saved) {
+			state = game_state->ensure_event_state(event_data->get_event_id());
+			state->set_cell(event_data->get_cell());
+		}
+		JRPGEvent *event = memnew(JRPGEvent);
+		event->set_cell_size(map->get_cell_size());
+		event->setup(event_data, state, saved); // Its id names it before it enters the map (and registers there).
+		events_root->add_child(event);
+	}
+	_refresh_events(true);
+}
+
+void JRPGSceneManager::_refresh_events(bool p_force) {
+	if (!events_root || game_state.is_null()) {
+		return;
+	}
+	const uint64_t revision = game_state->get_revision();
+	if (!p_force && revision == refreshed_revision) {
+		return;
+	}
+	refreshed_revision = revision;
+	for (int i = 0; i < events_root->get_child_count(false); i++) {
+		if (JRPGEvent *event = Object::cast_to<JRPGEvent>(events_root->get_child(i, false))) {
+			event->refresh_page(game_state, map_id);
+		}
+	}
+}
+
+JRPGEvent *JRPGSceneManager::get_event_node(int p_event_id) const {
+	return map ? Object::cast_to<JRPGEvent>(map->get_event_node(p_event_id)) : nullptr;
+}
+
+TypedArray<JRPGEvent> JRPGSceneManager::get_event_nodes() const {
+	TypedArray<JRPGEvent> nodes;
+	for (int i = 0; events_root && i < events_root->get_child_count(false); i++) {
+		if (JRPGEvent *event = Object::cast_to<JRPGEvent>(events_root->get_child(i, false))) {
+			nodes.push_back(event);
+		}
+	}
+	return nodes;
+}
+
+HashSet<Vector2i> JRPGSceneManager::get_blocked_cells() const {
+	HashSet<Vector2i> blocked;
+	for (int i = 0; events_root && i < events_root->get_child_count(false); i++) {
+		const JRPGEvent *event = Object::cast_to<JRPGEvent>(events_root->get_child(i, false));
+		if (event && event->blocks_characters()) {
+			blocked.insert(event->get_cell());
+		}
+	}
+	return blocked;
 }
 
 void JRPGSceneManager::_play_map_audio(const Ref<JRPGMapData> &p_data) {
@@ -444,6 +520,7 @@ void JRPGSceneManager::_simulation_step() {
 	if (transferring) {
 		_transfer_step(); // May change the map: the player is then on the new one.
 	}
+	_refresh_events(); // Switches, variables, items or the party changed: pages are picked again (spec 03).
 	const Ref<JRPGMover> mover = player->get_mover();
 	if (mover->advance()) {
 		game_state->increase_steps(); // Arrived on a new cell.
@@ -459,7 +536,7 @@ void JRPGSceneManager::_simulation_step() {
 	}
 	const Ref<JRPGMapData> map_data = map->get_map_data();
 	const bool dash = player->is_dash_held() && map_data.is_valid() && !map_data->is_disable_dash();
-	mover->move(JRPGSystemData::Direction(direction), cell_cache, dash);
+	mover->move(JRPGSystemData::Direction(direction), cell_cache, dash, get_blocked_cells()); // Events Same as characters block.
 	_sync_player(); // Its new cell, or only its new facing when the step was not allowed.
 }
 
@@ -524,6 +601,8 @@ void JRPGSceneManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_map_id"), &JRPGSceneManager::get_map_id);
 	ClassDB::bind_method(D_METHOD("get_player"), &JRPGSceneManager::get_player);
 	ClassDB::bind_method(D_METHOD("get_cell_cache"), &JRPGSceneManager::get_cell_cache);
+	ClassDB::bind_method(D_METHOD("get_event_node", "event_id"), &JRPGSceneManager::get_event_node);
+	ClassDB::bind_method(D_METHOD("get_event_nodes"), &JRPGSceneManager::get_event_nodes);
 	ClassDB::bind_method(D_METHOD("run_steps", "steps"), &JRPGSceneManager::run_steps);
 	ClassDB::bind_method(D_METHOD("refresh_player_character"), &JRPGSceneManager::refresh_player_character);
 	ClassDB::bind_method(D_METHOD("get_bgm_player"), &JRPGSceneManager::get_bgm_player);
