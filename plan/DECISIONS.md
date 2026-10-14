@@ -960,3 +960,18 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** pages read the game state, which only a running game has; refreshing on the revision keeps the cost at
   one pass per change; blocking per step follows events as they move (9.6).
 - **Reversal:** `JRPGSceneManager::_build_events`, `_refresh_events` and `get_blocked_cells`.
+
+## D-058 — Event commands are stored packed (D-007's planned reversal)
+- **Context:** D-007 chose typed command resources gated by a storage benchmark (task 9.2.1). The benchmark
+  (`plan/evidence/jrpg/9.2.1-command-storage-benchmark.md`) loads 10 000 typed commands in 102 ms as text and 31 ms as
+  binary (exported games): over the 30 ms gate. The same commands packed as nested arrays in one resource load in
+  33 ms as text and 13 ms as binary, save in 13 ms and re-save byte for byte; building the typed objects from them
+  takes about 5 ms.
+- **Options:** keep one sub-resource per command and accept slower loads; packed storage behind the same API (the
+  reversal D-007 planned); a custom binary format.
+- **Choice:** `JRPGCommandList` stores its commands as packed data (code, parameters, child lists) in one property;
+  typed `JRPGEventCommand` objects are built from it when a list is first run or edited and packed again when saved.
+  The command classes, their metadata, authority and script commands stay as D-007 describes (task 9.2.2).
+- **Why:** game loads stay under the gate with room for large projects, map scenes stay small and diff cleanly in
+  version control, and the typed API keeps editing and scripting simple.
+- **Reversal:** store `JRPGEventCommand` sub-resources in `JRPGCommandList` directly (the benchmark's typed case).

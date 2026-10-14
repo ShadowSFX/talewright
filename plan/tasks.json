@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.1.2 Event nodes on the map, page refresh, anchors, id repair on save",
+  "last_completed": "9.2.1 Command storage benchmark",
   "tasks": [
     {
       "id": "0",
@@ -3704,7 +3704,7 @@
         "modules/jrpg/tests/test_jrpg_events_runtime.h",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "5ee9f36187",
       "notes": ""
     },
     {
@@ -3737,10 +3737,15 @@
         "Benchmark recorded in plan/evidence; D-007 confirmed or reversed"
       ],
       "test_strategy": "Benchmark script.",
-      "files": [],
-      "commit": "",
+      "files": [
+        "modules/jrpg/tests/test_jrpg_command_storage.h",
+        "plan/evidence/jrpg/9.2.1-command-storage-benchmark.md",
+        "plan/DECISIONS.md",
+        "plan/specs/03_events_interpreter.md"
+      ],
+      "commit": "pending",
       "notes": "",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "9.2.2",
@@ -3759,7 +3764,7 @@
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
       "commit": "",
-      "notes": "",
+      "notes": "D-058 (9.2.1 benchmark): JRPGCommandList stores commands packed (code, parameters, child lists) in one property and builds typed JRPGEventCommand objects when first run or edited; keep the typed API, pack again on save; content_hash over the packed data.",
       "status": "pending"
     },
     {

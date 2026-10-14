@@ -24,6 +24,9 @@ rAthena reference (independent reimplementation, D-015a): dialog suspension, bud
 - `JRPGEventCommand` (Resource, abstract): typed subclasses with `@export`-like properties; branch commands own
   child lists (`JRPGCmdConditionalBranch.then_list/else_list`, `JRPGCmdShowChoices.branches[]` + cancel branch,
   `JRPGCmdLoop.body`, `JRPGCmdBattleProcessing.win/escape/lose` lists). No flat indentation format.
+- **Storage (task 9.2.1, D-058):** the benchmark below failed for one sub-resource per command, so `JRPGCommandList`
+  stores its commands packed (code, parameters, child lists) and builds the typed command objects when a list is
+  first run or edited; the typed API above is unchanged.
 - Common events (`JRPGCommonEventData`): name, trigger (none/autorun/parallel), condition switch, `commands`.
 - Troop battle event pages: conditions (turn end, turn A+B·X, enemy HP ≤%, actor HP ≤%, switch), span
   (battle/turn/moment), `commands`.
