@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGAutotileResolver" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Works out which shape every autotile cell of a map layer shows.
+	</brief_description>
+	<description>
+		A map layer stores one palette index per cell (0 for an empty cell); for an autotile or wall kind the cell stores only the kind, and the resolver works out its shape from the cells around it. A neighbor counts when it holds the same palette index on the same layer. Outside the map, a looping axis wraps around to the other side; otherwise [constant EDGE_BORDER] decides: without it the kind runs on past the edge, with it the kind ends there. Blob kinds use all eight neighbors ([method JRPGAutotile.get_blob_index]), wall kinds the four sides ([method JRPGAutotile.get_wall_mask]).
+		Shapes are never stored with the map: they are resolved when a map loads, and [method update_around] resolves the cells around each edit again. The resolver works on palette indexes only, without a [TileSet] or nodes, so the editor, the game and servers share it.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_neighbor_mask" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="cells" type="PackedInt32Array" />
+			<param index="1" name="size" type="Vector2i" />
+			<param index="2" name="cell" type="Vector2i" />
+			<param index="3" name="flags" type="int" />
+			<description>
+				Returns the neighbor mask of [param cell] for its own palette index (8 bits in the [enum JRPGAutotile.Neighbor] order, before corner reduction). [param cells] holds [param size] cells row by row; [param flags] combines [enum Flags] values.
+			</description>
+		</method>
+		<method name="get_palette_kinds" qualifiers="static">
+			<return type="PackedByteArray" />
+			<param index="0" name="palette" type="Array" />
+			<description>
+				Returns the [enum Kind] of every palette index of a [member JRPGTilesetData.palette], index 0 (the empty cell) included.
+			</description>
+		</method>
+		<method name="resolve_cell" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="cells" type="PackedInt32Array" />
+			<param index="1" name="size" type="Vector2i" />
+			<param index="2" name="kinds" type="PackedByteArray" />
+			<param index="3" name="cell" type="Vector2i" />
+			<param index="4" name="flags" type="int" />
+			<description>
+				Returns the shape of [param cell]: 0 to 46 for a blob kind, 0 to 15 for a wall kind, or [code]-1[/code] for a plain tile, an empty cell or an index [param kinds] does not have.
+			</description>
+		</method>
+		<method name="resolve_layer" qualifiers="static">
+			<return type="PackedByteArray" />
+			<param index="0" name="cells" type="PackedInt32Array" />
+			<param index="1" name="size" type="Vector2i" />
+			<param index="2" name="kinds" type="PackedByteArray" />
+			<param index="3" name="flags" type="int" />
+			<description>
+				Returns the shape of every cell of a layer, one byte per cell in the order of [param cells]. Cells without a shape hold 0.
+			</description>
+		</method>
+		<method name="update_around" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="cells" type="PackedInt32Array" />
+			<param index="1" name="size" type="Vector2i" />
+			<param index="2" name="kinds" type="PackedByteArray" />
+			<param index="3" name="cell" type="Vector2i" />
+			<param index="4" name="flags" type="int" />
+			<param index="5" name="shapes" type="PackedByteArray" />
+			<description>
+				After cell [param cell] of a layer changed, resolves its 3 x 3 neighborhood again (across the edge of a looping map). [param shapes] is the layer's [method resolve_layer] result before the edit. Returns a dictionary with [code skip-lint]shapes[/code], the updated shapes, and [code]changed[/code], the cells whose shape changed (the edited cell is always listed).
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="KIND_PLAIN" value="0" enum="Kind">
+			A plain tile, the empty cell or an unknown palette index: it has no shape.
+		</constant>
+		<constant name="KIND_BLOB" value="1" enum="Kind">
+			A blob autotile kind (47 shapes from eight neighbors).
+		</constant>
+		<constant name="KIND_WALL" value="2" enum="Kind">
+			A wall autotile kind (16 shapes from four sides).
+		</constant>
+		<constant name="LOOP_HORIZONTAL" value="1" enum="Flags">
+			The map loops horizontally: the left and right edges are neighbors.
+		</constant>
+		<constant name="LOOP_VERTICAL" value="2" enum="Flags">
+			The map loops vertically: the top and bottom edges are neighbors.
+		</constant>
+		<constant name="EDGE_BORDER" value="4" enum="Flags">
+			Outside the map counts as another kind, so autotiles draw their edge at the map border. Without it, outside the map counts as the same kind ([member JRPGTilesetData.edge_mode]).
+		</constant>
+	</constants>
+</class>

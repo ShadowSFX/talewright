@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "7.3.3 Tileset bridge tools",
+  "last_completed": "7.4 Autotile resolver",
   "tasks": [
     {
       "id": "0",
@@ -2637,7 +2637,7 @@
       "test_strategy": "Doctests + bridge.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "42229a98dc",
       "notes": ""
     },
     {
@@ -2648,7 +2648,7 @@
       "dependencies": [
         "7.2"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Matches a separate brute-force reference written in the test (direct neighbor counting, no lookup tables) on 100 seeded random maps",
@@ -2656,7 +2656,7 @@
       ],
       "test_strategy": "Doctests.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

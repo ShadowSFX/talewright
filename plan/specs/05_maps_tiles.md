@@ -114,6 +114,12 @@ layer**, reduce it, and look up the shape index. Neighbors outside the map:
 - otherwise the tileset's `edge_mode` decides: `extend` (default; out-of-map counts as the same kind, so terrain runs
   cleanly to the map edge) or `border` (counts as different, drawing an outline at the edge).
 Re-resolve the 3 × 3 neighbourhood of every edited cell. Layers never influence each other.
+Implementation (7.4): `JRPGAutotileResolver` (core) works on one layer's palette indexes with the palette's kinds
+(`get_palette_kinds`) and a flags word (`LOOP_HORIZONTAL`, `LOOP_VERTICAL` from the map's scroll type,
+`EDGE_BORDER` from the tileset's edge mode); "same kind" means the same palette index. `resolve_layer` returns one
+shape byte per cell (blob 0..46, wall 0..15, 0 for plain cells), `update_around` re-resolves the 3 × 3 block
+(wrapping on looping axes) and lists the cells whose shape changed. A diagonal neighbor outside a non-looping edge
+follows the edge mode even when the other axis loops.
 
 ## Character sheets (Talewright format, task 8.7)
 - **One character per image.** Rows are facing directions in the order **up, right, down, left** (clockwise from

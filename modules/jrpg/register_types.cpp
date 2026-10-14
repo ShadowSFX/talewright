@@ -39,6 +39,7 @@
 #include "modules/jrpg/core/jrpg_armor_data.h"
 #include "modules/jrpg/core/jrpg_audio_cue.h"
 #include "modules/jrpg/core/jrpg_autotile.h"
+#include "modules/jrpg/core/jrpg_autotile_resolver.h"
 #include "modules/jrpg/core/jrpg_battle_rules.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_database.h"
@@ -132,6 +133,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGEventState);
 		GDREGISTER_CLASS(JRPGReferenceScanner);
 		GDREGISTER_CLASS(JRPGAutotile);
+		GDREGISTER_CLASS(JRPGAutotileResolver);
 		GDREGISTER_CLASS(JRPGGameState);
 	}
 #ifdef TOOLS_ENABLED

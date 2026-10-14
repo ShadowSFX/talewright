@@ -16,6 +16,7 @@ def get_doc_classes():
         "JRPGArmorData",
         "JRPGAudioCue",
         "JRPGAutotile",
+        "JRPGAutotileResolver",
         "JRPGAutotileImporter",
         "JRPGBattleRules",
         "JRPGClassData",
