@@ -2758,7 +2758,7 @@
       "dependencies": [
         "7"
       ],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Paint/undo/save/run via bridge",
@@ -3512,7 +3512,7 @@
         "8.7",
         "8.8"
       ],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "8.9.1, 8.9.2 and 8.9.3 done"
@@ -3576,7 +3576,7 @@
       "test_strategy": "Doctests + bridge.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "598e9c0c5e",
       "notes": ""
     },
     {
@@ -3594,7 +3594,7 @@
         "CI green on the push"
       ],
       "test_strategy": "Smoke, checks, CI.",
-      "status": "pending",
+      "status": "in_progress",
       "files": [],
       "commit": "",
       "notes": ""
