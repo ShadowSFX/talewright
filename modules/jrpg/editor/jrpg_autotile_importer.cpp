@@ -126,6 +126,27 @@ Error JRPGAutotileImporter::import_sheet(const Ref<TileSet> &p_tileset, const Re
 		return ERR_INVALID_PARAMETER;
 	}
 
+	// A plain sheet makes one tile per cell that shows anything; find them before changing anything.
+	Vector<Vector2i> plain_cells;
+	if (p_kind == SHEET_PLAIN) {
+		Ref<Image> image = p_texture->get_image();
+		if (image.is_valid() && image->is_compressed()) {
+			image = image->duplicate();
+			image->decompress(); // A VRAM-compressed import: get_region needs pixels.
+		}
+		for (int y = 0; y < cells.y; y++) {
+			for (int x = 0; x < cells.x; x++) {
+				if (image.is_null() || image->is_compressed() || !image->get_region(Rect2i(Vector2i(x, y) * tile, tile))->is_invisible()) {
+					plain_cells.push_back(Vector2i(x, y));
+				}
+			}
+		}
+		if (plain_cells.is_empty()) {
+			r_error = "The image has no visible tile.";
+			return ERR_INVALID_PARAMETER;
+		}
+	}
+
 	Ref<TileSetAtlasSource> source;
 	source.instantiate();
 	source->set_name(p_name);
@@ -148,16 +169,9 @@ Error JRPGAutotileImporter::import_sheet(const Ref<TileSet> &p_tileset, const Re
 	};
 
 	if (p_kind == SHEET_PLAIN) {
-		// One tile and one palette entry per cell that shows anything.
-		const Ref<Image> image = p_texture->get_image();
-		for (int y = 0; y < cells.y; y++) {
-			for (int x = 0; x < cells.x; x++) {
-				if (image.is_valid() && image->get_region(Rect2i(Vector2i(x, y) * tile, tile))->is_invisible()) {
-					continue;
-				}
-				source->create_tile(Vector2i(x, y));
-				add_entry(Vector2i(x, y));
-			}
+		for (const Vector2i &cell : plain_cells) {
+			source->create_tile(cell);
+			add_entry(cell);
 		}
 	} else {
 		const Vector2i terrain = add_terrain(p_tileset, blob ? TileSet::TERRAIN_MODE_MATCH_CORNERS_AND_SIDES : TileSet::TERRAIN_MODE_MATCH_SIDES, p_name);

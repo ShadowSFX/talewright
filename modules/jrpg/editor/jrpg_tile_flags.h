@@ -59,6 +59,30 @@ public:
 	static constexpr const char *LAYER_DAMAGE = "jrpg_damage"; // bool
 	static constexpr const char *LAYER_TERRAIN_TAG = "jrpg_terrain_tag"; // int 0..15
 
+	// The parts of a flag word, in the order the tileset form lists them.
+	enum Field {
+		FIELD_PASS,
+		FIELD_NO_ENTRY,
+		FIELD_NO_EXIT,
+		FIELD_OVERHEAD,
+		FIELD_LADDER,
+		FIELD_BUSH,
+		FIELD_COUNTER,
+		FIELD_DAMAGE,
+		FIELD_TERRAIN_TAG,
+		FIELD_MAX,
+	};
+	struct FieldInfo {
+		const char *key; // "pass", "no_entry", ...: the bridge tools' names.
+		const char *label; // "Passage", "Entry Sides", ...: marked for translation (TTRC), shown through TTRGET.
+		int mask; // The field's bits in the word.
+		int shift; // Value = (word & mask) >> shift.
+		int max; // Largest value: 2 for passage, 15 for side masks and the terrain tag, 1 for the others.
+	};
+	static const FieldInfo &get_field(Field p_field);
+	// The field whose bits are exactly p_mask, or FIELD_MAX.
+	static Field find_field(int p_mask);
+
 	// Adds the jrpg_* custom data layers p_tileset lacks; returns how many were added.
 	static int ensure_layers(const Ref<TileSet> &p_tileset);
 	// The flag word of a tile from its custom data (JRPGTilesetData::pack_flags layout); 0 without the layers.
@@ -68,10 +92,17 @@ public:
 	// The atlas coordinates of every tile a palette entry stands for: one for a plain tile, every shape of an
 	// autotile or wall kind.
 	static Vector<Vector2i> get_entry_tiles(const Dictionary &p_entry);
+	// Whether the TileSet has the tile a palette entry names (its first tile, for a kind).
+	static bool has_entry_tile(const Ref<TileSet> &p_tileset, const Dictionary &p_entry);
 	// The flag word of a palette entry (its first tile); 0 when the tile is missing.
 	static int get_entry_flags(const Ref<TileSet> &p_tileset, const Dictionary &p_entry);
 	// Writes p_flags to every tile of a palette entry, adding the layers when needed.
 	static Error set_entry_flags(const Ref<TileSet> &p_tileset, const Dictionary &p_entry, int p_flags);
+	// One word per tile of get_entry_tiles (0 for a tile the TileSet does not have).
+	static PackedInt32Array get_tile_words(const Ref<TileSet> &p_tileset, const Dictionary &p_entry);
+	// Writes one word per tile of get_entry_tiles, adding the layers when needed; tiles the TileSet does not have are
+	// skipped. Returns how many tiles were written.
+	static int set_tile_words(const Ref<TileSet> &p_tileset, const Dictionary &p_entry, const PackedInt32Array &p_words);
 	// The baked table of p_data's palette (index 0, the empty cell, is 0) and the hash of what it was made from.
 	static PackedInt32Array bake(const Ref<TileSet> &p_tileset, const Ref<JRPGTilesetData> &p_data, String &r_hash);
 	static bool is_stale(const Ref<TileSet> &p_tileset, const Ref<JRPGTilesetData> &p_data);

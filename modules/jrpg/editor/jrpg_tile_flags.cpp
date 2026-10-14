@@ -88,7 +88,34 @@ TileData *entry_tile(const Ref<TileSet> &p_tileset, const Dictionary &p_entry, c
 	return atlas->get_tile_data(p_coords, alternative);
 }
 
+const JRPGTileFlags::FieldInfo FIELDS[JRPGTileFlags::FIELD_MAX] = {
+	{ "pass", TTRC("Passage"), JRPGTilesetData::FLAG_PASS_MASK, 0, JRPGTilesetData::PASS_TRANSPARENT },
+	{ "no_entry", TTRC("Entry Sides"), 0xF << JRPGTilesetData::FLAG_NO_ENTRY_SHIFT, JRPGTilesetData::FLAG_NO_ENTRY_SHIFT, 15 },
+	{ "no_exit", TTRC("Exit Sides"), 0xF << JRPGTilesetData::FLAG_NO_EXIT_SHIFT, JRPGTilesetData::FLAG_NO_EXIT_SHIFT, 15 },
+	{ "overhead", TTRC("Overhead"), JRPGTilesetData::FLAG_OVERHEAD, 10, 1 },
+	{ "ladder", TTRC("Ladder"), JRPGTilesetData::FLAG_LADDER, 11, 1 },
+	{ "bush", TTRC("Bush"), JRPGTilesetData::FLAG_BUSH, 12, 1 },
+	{ "counter", TTRC("Counter"), JRPGTilesetData::FLAG_COUNTER, 13, 1 },
+	{ "damage", TTRC("Damage Floor"), JRPGTilesetData::FLAG_DAMAGE, 14, 1 },
+	{ "terrain_tag", TTRC("Terrain Tag"), 0xF << JRPGTilesetData::FLAG_TERRAIN_TAG_SHIFT, JRPGTilesetData::FLAG_TERRAIN_TAG_SHIFT, 15 },
+};
+static_assert(JRPGTilesetData::FLAG_OVERHEAD == 1 << 10 && JRPGTilesetData::FLAG_LADDER == 1 << 11 && JRPGTilesetData::FLAG_BUSH == 1 << 12 && JRPGTilesetData::FLAG_COUNTER == 1 << 13 && JRPGTilesetData::FLAG_DAMAGE == 1 << 14);
+
 } // namespace
+
+const JRPGTileFlags::FieldInfo &JRPGTileFlags::get_field(Field p_field) {
+	CRASH_BAD_INDEX(p_field, FIELD_MAX);
+	return FIELDS[p_field];
+}
+
+JRPGTileFlags::Field JRPGTileFlags::find_field(int p_mask) {
+	for (int i = 0; i < FIELD_MAX; i++) {
+		if (FIELDS[i].mask == p_mask) {
+			return Field(i);
+		}
+	}
+	return FIELD_MAX;
+}
 
 int JRPGTileFlags::ensure_layers(const Ref<TileSet> &p_tileset) {
 	ERR_FAIL_COND_V(p_tileset.is_null(), 0);
@@ -147,6 +174,11 @@ Vector<Vector2i> JRPGTileFlags::get_entry_tiles(const Dictionary &p_entry) {
 	return tiles;
 }
 
+bool JRPGTileFlags::has_entry_tile(const Ref<TileSet> &p_tileset, const Dictionary &p_entry) {
+	ERR_FAIL_COND_V(p_tileset.is_null(), false);
+	return entry_tile(p_tileset, p_entry, get_entry_tiles(p_entry)[0]) != nullptr;
+}
+
 int JRPGTileFlags::get_entry_flags(const Ref<TileSet> &p_tileset, const Dictionary &p_entry) {
 	ERR_FAIL_COND_V(p_tileset.is_null(), 0);
 	const TileData *tile = entry_tile(p_tileset, p_entry, get_entry_tiles(p_entry)[0]);
@@ -155,16 +187,36 @@ int JRPGTileFlags::get_entry_flags(const Ref<TileSet> &p_tileset, const Dictiona
 
 Error JRPGTileFlags::set_entry_flags(const Ref<TileSet> &p_tileset, const Dictionary &p_entry, int p_flags) {
 	ERR_FAIL_COND_V(p_tileset.is_null(), ERR_INVALID_PARAMETER);
-	ensure_layers(p_tileset);
-	bool any = false;
+	PackedInt32Array words;
+	words.resize(get_entry_tiles(p_entry).size());
+	words.fill(p_flags);
+	return set_tile_words(p_tileset, p_entry, words) > 0 ? OK : ERR_DOES_NOT_EXIST;
+}
+
+PackedInt32Array JRPGTileFlags::get_tile_words(const Ref<TileSet> &p_tileset, const Dictionary &p_entry) {
+	PackedInt32Array words;
+	ERR_FAIL_COND_V(p_tileset.is_null(), words);
 	for (const Vector2i &coords : get_entry_tiles(p_entry)) {
-		TileData *tile = entry_tile(p_tileset, p_entry, coords);
+		const TileData *tile = entry_tile(p_tileset, p_entry, coords);
+		words.push_back(tile ? read_tile(p_tileset, tile) : 0);
+	}
+	return words;
+}
+
+int JRPGTileFlags::set_tile_words(const Ref<TileSet> &p_tileset, const Dictionary &p_entry, const PackedInt32Array &p_words) {
+	ERR_FAIL_COND_V(p_tileset.is_null(), 0);
+	const Vector<Vector2i> tiles = get_entry_tiles(p_entry);
+	ERR_FAIL_COND_V_MSG(p_words.size() != tiles.size(), 0, vformat("Expected %d tile flag words, got %d.", tiles.size(), p_words.size()));
+	ensure_layers(p_tileset);
+	int written = 0;
+	for (int i = 0; i < tiles.size(); i++) {
+		TileData *tile = entry_tile(p_tileset, p_entry, tiles[i]);
 		if (tile) {
-			write_tile(p_tileset, tile, p_flags);
-			any = true;
+			write_tile(p_tileset, tile, p_words[i]);
+			written++;
 		}
 	}
-	return any ? OK : ERR_DOES_NOT_EXIST;
+	return written;
 }
 
 PackedInt32Array JRPGTileFlags::bake(const Ref<TileSet> &p_tileset, const Ref<JRPGTilesetData> &p_data, String &r_hash) {

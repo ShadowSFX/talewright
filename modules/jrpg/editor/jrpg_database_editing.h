@@ -31,6 +31,8 @@
 
 #pragma once
 
+#include "jrpg_autotile_importer.h"
+
 #include "core/object/object.h"
 #include "core/object/ref_counted.h"
 #include "core/templates/hash_set.h"
@@ -39,7 +41,9 @@
 class JRPGDatabase;
 class JRPGEntry;
 class JRPGTable;
+class JRPGTilesetData;
 class Resource;
+class TileSet;
 
 // Authoring API for the project's JRPG database (res://jrpg/database.tres), shared by the workspace's Database
 // section and the Claude bridge (D-012): list entries, change a table's maximum, clear, copy and paste entries, and
@@ -68,6 +72,9 @@ class JRPGDatabaseEditing : public Object {
 	void _rebake_tilesets();
 	bool _is_database_file(const Ref<Resource> &p_resource) const;
 	void _on_resource_changed(ObjectID p_owner, ObjectID p_emitter);
+	Ref<JRPGTilesetData> _get_tileset_data(int p_tileset_id, String *r_message);
+	// The do and undo of set_tile_flags: p_words[i] holds one word per tile of palette entry p_entries[i].
+	void _write_tile_words(const Ref<TileSet> &p_tileset, const Array &p_entries, const Array &p_words);
 
 protected:
 	static void _bind_methods();
@@ -106,6 +113,23 @@ public:
 	// Replaces parameter p_param's curve of class p_class_id with one generated from p_first (level 1) to p_last
 	// (level 99) with growth shape p_growth (-10..10, JRPGCurves::generate), clamped to the parameter's range; undoable.
 	Error generate_param_curve(int p_class_id, int p_param, int p_first, int p_last, int p_growth);
+
+	// Tilesets (spec 05). The TileSet of tileset p_tileset_id: the file its tileset_uid names, or null.
+	Ref<TileSet> get_tileset_of(int p_tileset_id);
+	// Sets the bits p_mask of the tile flags (JRPGTilesetData.pack_flags layout) to p_value on the palette entries
+	// p_indexes (1-based) of tileset p_tileset_id, on every tile each entry stands for; the other bits keep each tile's
+	// own value. One undoable action (none when nothing changes); the TileSet is saved with the database, which bakes
+	// the flags then. The jrpg_* layers it adds to the TileSet stay on undo: they read as no flags.
+	Error set_tile_flags(int p_tileset_id, const PackedInt32Array &p_indexes, int p_mask, int p_value, String *r_message = nullptr);
+	// Imports the image at p_texture_path into the TileSet of tileset p_tileset_id and appends its palette entries
+	// (JRPGAutotileImporter.import_sheet), as one undoable action: undo removes the atlas source, the terrain it added
+	// and the entries; redo puts the same source back, as Godot's TileSet editor does when it undoes a deletion
+	// (editor/scene/2d/tiles/tile_set_editor.cpp:276-288). r_indexes: the palette indexes added.
+	Error add_tile_sheet(int p_tileset_id, const String &p_texture_path, JRPGAutotileImporter::SheetKind p_kind, int p_frames, const String &p_name, PackedInt32Array &r_indexes, String *r_message = nullptr);
+	// Creates a TileSet file at p_path (.tres or .res; square tiles of p_tile_size pixels and the jrpg_* flag layers; an
+	// existing file is never replaced) and points tileset p_tileset_id at it by UID. Setting tileset_uid is undoable;
+	// the file stays. The form and the bridge only offer res:// paths.
+	Error create_tileset(int p_tileset_id, const String &p_path, int p_tile_size, String *r_message = nullptr);
 	// Stored data properties (what the bridge reports; the form shows those that apply), and those of them that are not
 	// read-only (derived values such as a class's baked EXP table are read-only). Engine properties are never data.
 	static bool is_data_property(const PropertyInfo &p_property);

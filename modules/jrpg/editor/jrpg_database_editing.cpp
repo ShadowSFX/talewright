@@ -37,13 +37,18 @@
 #include "jrpg_tile_flags.h"
 #include "jrpg_trait_editor.h"
 
+#include "core/io/dir_access.h"
 #include "core/io/file_access.h"
+#include "core/io/resource_loader.h"
 #include "core/io/resource_saver.h"
+#include "core/io/resource_uid.h"
 #include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
 #include "editor/editor_undo_redo_manager.h"
+#include "editor/file_system/editor_file_system.h"
 #include "scene/resources/2d/tile_set.h"
 #include "scene/resources/packed_scene.h"
+#include "scene/resources/texture.h"
 
 #include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_database.h"
@@ -55,13 +60,13 @@ JRPGDatabaseEditing *JRPGDatabaseEditing::singleton = nullptr;
 namespace {
 
 // A refused value: the reason goes to the caller when it asks for it (the bridge reports it), otherwise to the log.
-Error refuse(const String &p_message, String *r_message) {
+Error refuse(const String &p_message, String *r_message, Error p_error = ERR_INVALID_PARAMETER) {
 	if (r_message) {
 		*r_message = p_message.trim_prefix("JRPG database: ");
 	} else {
 		ERR_PRINT(p_message);
 	}
-	return ERR_INVALID_PARAMETER;
+	return p_error;
 }
 
 } // namespace
@@ -511,6 +516,229 @@ Error JRPGDatabaseEditing::create_entry(const String &p_table, const Dictionary 
 	return OK;
 }
 
+Ref<JRPGTilesetData> JRPGDatabaseEditing::_get_tileset_data(int p_tileset_id, String *r_message) {
+	const Ref<JRPGTable> table = get_table("tilesets");
+	if (table.is_null() || p_tileset_id < 1 || p_tileset_id > table->get_maximum()) {
+		refuse(vformat("JRPG database: there is no tileset %d.", p_tileset_id), r_message, ERR_DOES_NOT_EXIST);
+		return Ref<JRPGTilesetData>();
+	}
+	return table->get_entry(p_tileset_id);
+}
+
+Ref<TileSet> JRPGDatabaseEditing::get_tileset_of(int p_tileset_id) {
+	String message; // A missing tileset is no error here.
+	return JRPGTileFlags::load_tileset(_get_tileset_data(p_tileset_id, &message));
+}
+
+void JRPGDatabaseEditing::_write_tile_words(const Ref<TileSet> &p_tileset, const Array &p_entries, const Array &p_words) {
+	ERR_FAIL_COND(p_tileset.is_null() || p_entries.size() != p_words.size());
+	for (int i = 0; i < p_entries.size(); i++) {
+		JRPGTileFlags::set_tile_words(p_tileset, p_entries[i], p_words[i]);
+	}
+	mark_unsaved(p_tileset);
+}
+
+Error JRPGDatabaseEditing::set_tile_flags(int p_tileset_id, const PackedInt32Array &p_indexes, int p_mask, int p_value, String *r_message) {
+	const Ref<JRPGTilesetData> data = _get_tileset_data(p_tileset_id, r_message);
+	if (data.is_null()) {
+		return ERR_DOES_NOT_EXIST;
+	}
+	const Ref<TileSet> tileset = JRPGTileFlags::load_tileset(data);
+	if (tileset.is_null()) {
+		return refuse(vformat("JRPG database: tileset %d has no TileSet; set its tileset_uid or create one first.", p_tileset_id), r_message, ERR_UNCONFIGURED);
+	}
+	int known = 0;
+	for (int i = 0; i < JRPGTileFlags::FIELD_MAX; i++) {
+		known |= JRPGTileFlags::get_field(JRPGTileFlags::Field(i)).mask;
+	}
+	if (p_mask == 0 || (p_mask & ~known)) {
+		return refuse(vformat("JRPG database: the mask 0x%x is not made of tile flag bits (0x%x).", p_mask, known), r_message);
+	}
+	const int pass_bits = p_mask & JRPGTilesetData::FLAG_PASS_MASK;
+	if (pass_bits && (pass_bits != JRPGTilesetData::FLAG_PASS_MASK || (p_value & pass_bits) > JRPGTilesetData::PASS_TRANSPARENT)) {
+		return refuse("JRPG database: the passage is set whole, to 0 (open), 1 (blocked) or 2 (transparent).", r_message);
+	}
+	const Array palette = data->get_palette();
+	if (p_indexes.is_empty()) {
+		return refuse("JRPG database: no palette index to set.", r_message);
+	}
+	Array entries;
+	Array before;
+	Array after;
+	HashSet<int> seen;
+	for (const int index : p_indexes) {
+		if (index < 1 || index > palette.size()) {
+			return refuse(vformat("JRPG database: tileset %d has no palette index %d (1 to %d).", p_tileset_id, index, palette.size()), r_message, ERR_PARAMETER_RANGE_ERROR);
+		}
+		const Dictionary entry = palette[index - 1];
+		if (!JRPGTileFlags::has_entry_tile(tileset, entry)) {
+			return refuse(vformat("JRPG database: palette index %d of tileset %d names a tile its TileSet does not have.", index, p_tileset_id), r_message, ERR_DOES_NOT_EXIST);
+		}
+		if (seen.has(index)) {
+			continue;
+		}
+		seen.insert(index);
+		const PackedInt32Array words = JRPGTileFlags::get_tile_words(tileset, entry);
+		PackedInt32Array changed = words;
+		int32_t *w = changed.ptrw();
+		for (int i = 0; i < changed.size(); i++) {
+			w[i] = (w[i] & ~p_mask) | (p_value & p_mask);
+		}
+		if (changed != words) {
+			entries.push_back(entry);
+			before.push_back(words);
+			after.push_back(changed);
+		}
+	}
+	if (entries.is_empty()) {
+		return OK; // Already so: no action.
+	}
+	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
+	if (!undo_redo) {
+		_write_tile_words(tileset, entries, after);
+		return OK;
+	}
+	const JRPGTileFlags::Field field = JRPGTileFlags::find_field(p_mask);
+	const String what = field == JRPGTileFlags::FIELD_MAX ? TTR("Tile Flags") : TTRGET(JRPGTileFlags::get_field(field).label);
+	const String name = seen.size() == 1 ? vformat(TTR("Set %s of Tile %d"), what, p_indexes[0]) : vformat(TTR("Set %s of %d Tiles"), what, seen.size());
+	undo_redo->create_action_for_history(name, EditorUndoRedoManager::GLOBAL_HISTORY);
+	undo_redo->add_do_method(this, "_write_tile_words", tileset, entries, after);
+	undo_redo->add_undo_method(this, "_write_tile_words", tileset, entries, before);
+	undo_redo->commit_action();
+	return OK;
+}
+
+Error JRPGDatabaseEditing::add_tile_sheet(int p_tileset_id, const String &p_texture_path, JRPGAutotileImporter::SheetKind p_kind, int p_frames, const String &p_name, PackedInt32Array &r_indexes, String *r_message) {
+	r_indexes.clear();
+	const Ref<JRPGTilesetData> data = _get_tileset_data(p_tileset_id, r_message);
+	if (data.is_null()) {
+		return ERR_DOES_NOT_EXIST;
+	}
+	const Ref<TileSet> tileset = JRPGTileFlags::load_tileset(data);
+	if (tileset.is_null()) {
+		return refuse(vformat("JRPG database: tileset %d has no TileSet; set its tileset_uid or create one first.", p_tileset_id), r_message, ERR_UNCONFIGURED);
+	}
+	if (p_kind < JRPGAutotileImporter::SHEET_PLAIN || p_kind > JRPGAutotileImporter::SHEET_WALL) {
+		return refuse(vformat("JRPG database: unknown sheet kind %d.", p_kind), r_message);
+	}
+	if (p_name.strip_edges().is_empty()) {
+		return refuse("JRPG database: a tile sheet needs a name.", r_message);
+	}
+	const Ref<Texture2D> texture = ResourceLoader::exists(p_texture_path) ? ResourceLoader::load(p_texture_path) : Ref<Resource>();
+	if (texture.is_null()) {
+		return refuse(vformat("JRPG database: %s is not an image the project imported.", p_texture_path), r_message, ERR_FILE_NOT_FOUND);
+	}
+	// The terrain counts before the import tell which terrain (and terrain set) it adds.
+	PackedInt32Array terrains_before;
+	for (int set = 0; set < tileset->get_terrain_sets_count(); set++) {
+		terrains_before.push_back(tileset->get_terrains_count(set));
+	}
+	const Array palette_before = data->get_palette().duplicate(true); // Copies: the history must not share arrays.
+	String error;
+	const Error err = JRPGAutotileImporter::import_sheet(tileset, texture, p_kind, p_frames, p_name.strip_edges(), data, r_indexes, error);
+	if (err != OK) {
+		return refuse("JRPG database: " + error, r_message, err);
+	}
+	const Dictionary first = data->get_palette()[r_indexes[0] - 1];
+	const int source_id = first["source_id"];
+	int terrain_set = -1;
+	int terrain = -1;
+	bool new_set = false;
+	for (int set = 0; set < tileset->get_terrain_sets_count(); set++) {
+		const int count = set < terrains_before.size() ? terrains_before[set] : 0;
+		if (tileset->get_terrains_count(set) > count) {
+			terrain_set = set;
+			terrain = count;
+			new_set = set >= terrains_before.size();
+			break;
+		}
+	}
+	mark_unsaved(tileset);
+	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
+	if (!undo_redo) {
+		return OK;
+	}
+	undo_redo->create_action_for_history(vformat(TTR("Add Tile Sheet \"%s\""), p_name.strip_edges()), EditorUndoRedoManager::GLOBAL_HISTORY);
+	// Redo: the terrain before the source, so its tiles keep their terrain peering bits
+	// (scene/resources/2d/tile_set.cpp:5972-5976).
+	if (terrain_set >= 0) {
+		if (new_set) {
+			undo_redo->add_do_method(tileset.ptr(), "add_terrain_set", terrain_set);
+			undo_redo->add_do_method(tileset.ptr(), "set_terrain_set_mode", terrain_set, tileset->get_terrain_set_mode(terrain_set));
+		}
+		undo_redo->add_do_method(tileset.ptr(), "add_terrain", terrain_set, terrain);
+		undo_redo->add_do_method(tileset.ptr(), "set_terrain_name", terrain_set, terrain, tileset->get_terrain_name(terrain_set, terrain));
+		undo_redo->add_do_method(tileset.ptr(), "set_terrain_color", terrain_set, terrain, tileset->get_terrain_color(terrain_set, terrain));
+	}
+	undo_redo->add_do_method(tileset.ptr(), "add_source", tileset->get_source(source_id), source_id);
+	undo_redo->add_do_property(data.ptr(), "palette", data->get_palette().duplicate(true));
+	undo_redo->add_do_method(this, "mark_unsaved", tileset);
+	undo_redo->add_undo_method(tileset.ptr(), "remove_source", source_id);
+	if (terrain_set >= 0) {
+		undo_redo->add_undo_method(tileset.ptr(), "remove_terrain", terrain_set, terrain);
+		if (new_set) {
+			undo_redo->add_undo_method(tileset.ptr(), "remove_terrain_set", terrain_set);
+		}
+	}
+	undo_redo->add_undo_property(data.ptr(), "palette", palette_before);
+	undo_redo->add_undo_method(this, "mark_unsaved", tileset);
+	undo_redo->commit_action(false); // Imported above.
+	return OK;
+}
+
+Error JRPGDatabaseEditing::create_tileset(int p_tileset_id, const String &p_path, int p_tile_size, String *r_message) {
+	const Ref<JRPGTilesetData> data = _get_tileset_data(p_tileset_id, r_message);
+	if (data.is_null()) {
+		return ERR_DOES_NOT_EXIST;
+	}
+	const String extension = p_path.get_extension().to_lower();
+	if (extension != "tres" && extension != "res") {
+		return refuse(vformat("JRPG database: %s is not a .tres or .res file.", p_path), r_message);
+	}
+	if (p_tile_size < 8 || p_tile_size > 512) {
+		return refuse(vformat("JRPG database: a tile size of %d pixels is out of range (8 to 512).", p_tile_size), r_message, ERR_PARAMETER_RANGE_ERROR);
+	}
+	if (FileAccess::exists(p_path)) {
+		return refuse(vformat("JRPG database: %s already exists; choose it as the TileSet instead.", p_path), r_message, ERR_ALREADY_EXISTS);
+	}
+	Ref<TileSet> tileset;
+	tileset.instantiate();
+	tileset->set_tile_size(Vector2i(p_tile_size, p_tile_size));
+	JRPGTileFlags::ensure_layers(tileset);
+	const String folder = p_path.get_base_dir();
+	const bool new_folder = !DirAccess::exists(folder);
+	if (new_folder) {
+		const Error made = DirAccess::make_dir_recursive_absolute(folder);
+		if (made != OK) {
+			return refuse(vformat("JRPG database: could not create the folder %s (%s).", folder, error_names[made]), r_message, made);
+		}
+	}
+	const Error err = ResourceSaver::save(tileset, p_path, ResourceSaver::FLAG_CHANGE_PATH);
+	if (err != OK) {
+		return refuse(vformat("JRPG database: could not save %s (%s).", p_path, error_names[err]), r_message, err);
+	}
+	String reference = p_path;
+	const ResourceUID::ID uid = ResourceLoader::get_resource_uid(p_path);
+	if (p_path.begins_with("res://") && uid != ResourceUID::INVALID_ID) {
+		// The file system registers a new file's UID only in a folder it knows
+		// (editor/file_system/editor_file_system.cpp:2409-2412,2496-2500); a new folder waits for its next scan.
+		if (!ResourceUID::get_singleton()->has_id(uid)) {
+			ResourceUID::get_singleton()->add_id(uid, p_path);
+		}
+		reference = ResourceUID::get_singleton()->id_to_text(uid);
+	}
+	if (EditorFileSystem::get_singleton() && p_path.begins_with("res://")) {
+		if (new_folder) {
+			EditorFileSystem::get_singleton()->scan_changes();
+		} else {
+			EditorFileSystem::get_singleton()->update_file(p_path);
+		}
+	}
+	Dictionary values;
+	values["tileset_uid"] = reference;
+	return set_record_properties("tilesets", p_tileset_id, values);
+}
+
 Error JRPGDatabaseEditing::generate_param_curve(int p_class_id, int p_param, int p_first, int p_last, int p_growth) {
 	const Ref<JRPGClassData> cls = get_record("classes", p_class_id);
 	ERR_FAIL_COND_V_MSG(cls.is_null(), ERR_DOES_NOT_EXIST, vformat("JRPG database: no class %d.", p_class_id));
@@ -735,6 +963,10 @@ void JRPGDatabaseEditing::forget_unsaved(const PackedStringArray &p_paths) {
 }
 
 void JRPGDatabaseEditing::_bind_methods() {
+	// For undo and redo (EditorUndoRedoManager calls methods by name).
+	ClassDB::bind_method(D_METHOD("_write_tile_words", "tileset", "entries", "words"), &JRPGDatabaseEditing::_write_tile_words);
+	ClassDB::bind_method(D_METHOD("mark_unsaved", "resource"), &JRPGDatabaseEditing::mark_unsaved);
+
 	ADD_SIGNAL(MethodInfo("database_changed"));
 	// Emitted just before database_changed when the change is inside one entry of a table (p_id 0: inside a
 	// sub-resource of an entry, whose name did not change).

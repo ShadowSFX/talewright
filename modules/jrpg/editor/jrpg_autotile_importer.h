@@ -60,7 +60,7 @@ public:
 	// Imports p_texture into p_tileset as a new atlas source laid out as p_kind with p_frames animation frames (1 for
 	// still sheets; autotile and wall sheets only) and appends the palette entries to p_data. r_indexes: the palette
 	// indexes added. Fails with r_error, changing nothing, when the image size does not fit the layout at the
-	// tileset's tile size.
+	// tileset's tile size or a plain sheet shows no tile.
 	static Error import_sheet(const Ref<TileSet> &p_tileset, const Ref<Texture2D> &p_texture, SheetKind p_kind, int p_frames, const String &p_name, const Ref<JRPGTilesetData> &p_data, PackedInt32Array &r_indexes, String &r_error);
 	// Script-facing form: {indexes} on success, {error} otherwise.
 	static Dictionary import_sheet_bind(const Ref<TileSet> &p_tileset, const Ref<Texture2D> &p_texture, SheetKind p_kind, int p_frames, const String &p_name, const Ref<JRPGTilesetData> &p_data);

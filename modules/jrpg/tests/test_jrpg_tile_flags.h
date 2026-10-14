@@ -33,6 +33,7 @@
 
 #ifdef TOOLS_ENABLED
 
+#include "core/io/dir_access.h"
 #include "core/io/image.h"
 #include "core/io/resource_loader.h"
 #include "core/io/resource_saver.h"
@@ -187,6 +188,122 @@ TEST_CASE("[SceneTree][JRPG][TileFlags] Saving the database bakes stale tilesets
 	CHECK(saved_data->get_tile_flags(1) == JRPGTilesetData::PASS_BLOCKED);
 	CHECK(saved_data->get_tile_flags(2) == JRPGTilesetData::FLAG_COUNTER);
 	CHECK(saved_data->get_flags_hash() == data->get_flags_hash());
+	memdelete(editing);
+}
+
+// A texture file the importer can load: an ImageTexture saved as a text resource (tests have no import pipeline).
+String save_sheet(const String &p_name, const Vector2i &p_tiles, bool p_visible) {
+	Ref<Image> image = Image::create_empty(p_tiles.x * 48, p_tiles.y * 48, false, Image::FORMAT_RGBA8);
+	if (p_visible) {
+		image->fill(Color(0.2, 0.6, 0.3));
+	}
+	const String path = TestUtils::get_temp_path(p_name + ".tres");
+	REQUIRE(ResourceSaver::save(ImageTexture::create_from_image(image), path) == OK);
+	return path;
+}
+
+TEST_CASE("[SceneTree][JRPG][TileFlags] The tileset authoring API creates a TileSet, adds sheets and sets flags") {
+	JRPGDatabaseEditing *editing = memnew(JRPGDatabaseEditing);
+	Ref<JRPGDatabase> db = JRPGProjectSetup::create_starter_database("Lantern Road");
+	editing->set_database(db);
+	const Ref<JRPGTable> table = db->get_table(JRPGDatabase::TABLE_TILESETS);
+	const Ref<JRPGTilesetData> data = table->get_entry(1);
+	String message;
+
+	// create_tileset.
+	const String folder = TestUtils::get_temp_path("jrpg_authoring_tilesets");
+	if (DirAccess::exists(folder)) {
+		Ref<DirAccess> da = DirAccess::open(folder);
+		REQUIRE(da->erase_contents_recursive() == OK);
+	}
+	const String path = folder.path_join("field.tres");
+	CHECK(editing->create_tileset(1, folder.path_join("field.png"), 48, &message) == ERR_INVALID_PARAMETER);
+	CHECK(message.contains(".tres or .res"));
+	CHECK(editing->create_tileset(1, path, 4, &message) == ERR_PARAMETER_RANGE_ERROR);
+	CHECK(editing->create_tileset(99, path, 48, &message) == ERR_DOES_NOT_EXIST);
+	CHECK(message == "there is no tileset 99.");
+	CHECK(editing->get_tileset_of(1).is_null());
+	REQUIRE(editing->create_tileset(1, path, 48, &message) == OK);
+	CHECK(data->get_tileset_uid() == path); // Outside res:// a path, not a UID.
+	const Ref<TileSet> tileset = editing->get_tileset_of(1);
+	REQUIRE(tileset.is_valid());
+	CHECK(tileset->get_tile_size() == Vector2i(48, 48));
+	CHECK(tileset->get_custom_data_layer_by_name(JRPGTileFlags::LAYER_TERRAIN_TAG) >= 0);
+	CHECK(editing->create_tileset(2, path, 48, &message) == ERR_ALREADY_EXISTS); // Never replaced.
+	CHECK(message.contains("already exists"));
+
+	// add_tile_sheet.
+	const String grass = save_sheet("jrpg_authoring_grass", Vector2i(8, 6), true);
+	const String clear = save_sheet("jrpg_authoring_clear", Vector2i(2, 1), false);
+	PackedInt32Array indexes;
+	CHECK(editing->add_tile_sheet(2, grass, JRPGAutotileImporter::SHEET_AUTOTILE, 1, "Grass", indexes, &message) == ERR_UNCONFIGURED);
+	CHECK(message.contains("has no TileSet"));
+	CHECK(editing->add_tile_sheet(1, folder.path_join("nothing.tres"), JRPGAutotileImporter::SHEET_AUTOTILE, 1, "Grass", indexes, &message) == ERR_FILE_NOT_FOUND);
+	CHECK(editing->add_tile_sheet(1, grass, JRPGAutotileImporter::SHEET_AUTOTILE, 1, "  ", indexes, &message) == ERR_INVALID_PARAMETER);
+	CHECK(editing->add_tile_sheet(1, grass, JRPGAutotileImporter::SHEET_WALL, 1, "Grass", indexes, &message) == ERR_INVALID_PARAMETER);
+	CHECK(message.contains("wall sheet"));
+	CHECK(editing->add_tile_sheet(1, clear, JRPGAutotileImporter::SHEET_PLAIN, 1, "Clear", indexes, &message) == ERR_INVALID_PARAMETER);
+	CHECK(message.contains("no visible tile"));
+	CHECK(data->get_palette().is_empty()); // Refusals change nothing.
+	CHECK(tileset->get_source_count() == 0);
+	CHECK(tileset->get_terrain_sets_count() == 0);
+	REQUIRE(editing->add_tile_sheet(1, grass, JRPGAutotileImporter::SHEET_AUTOTILE, 1, " Grass ", indexes, &message) == OK);
+	CHECK(indexes == PackedInt32Array({ 1 }));
+	CHECK(String(Dictionary(data->get_palette()[0])["name"]) == "Grass");
+	CHECK(tileset->get_source_count() == 1);
+	CHECK(tileset->get_terrains_count(0) == 1);
+	CHECK(editing->get_unsaved_paths().has(path)); // Saved with the database.
+	const String props = save_sheet("jrpg_authoring_props", Vector2i(3, 1), true);
+	REQUIRE(editing->add_tile_sheet(1, props, JRPGAutotileImporter::SHEET_PLAIN, 1, "Props", indexes, &message) == OK);
+	CHECK(indexes == PackedInt32Array({ 2, 3, 4 }));
+
+	// set_tile_flags.
+	const int bush = JRPGTilesetData::FLAG_BUSH;
+	const int pass = JRPGTilesetData::FLAG_PASS_MASK;
+	REQUIRE(editing->set_tile_flags(1, PackedInt32Array({ 1, 3 }), bush, bush, &message) == OK);
+	const Dictionary grass_entry = data->get_palette()[0];
+	const Ref<TileSetAtlasSource> grass_source = tileset->get_source(grass_entry["source_id"]);
+	// One shape gets a terrain tag of its own: setting the passage later keeps it.
+	TileData *odd = grass_source->get_tile_data(JRPGAutotile::get_blob_cell(5), 0);
+	JRPGTileFlags::write_tile(tileset, odd, JRPGTileFlags::read_tile(tileset, odd) | (7 << JRPGTilesetData::FLAG_TERRAIN_TAG_SHIFT));
+	REQUIRE(editing->set_tile_flags(1, PackedInt32Array({ 1 }), pass, JRPGTilesetData::PASS_BLOCKED, &message) == OK);
+	const PackedInt32Array words = JRPGTileFlags::get_tile_words(tileset, grass_entry);
+	REQUIRE(words.size() == JRPGAutotile::BLOB_SHAPES);
+	for (int i = 0; i < words.size(); i++) {
+		CHECK(JRPGTilesetData::get_pass_mode(words[i]) == JRPGTilesetData::PASS_BLOCKED);
+		CHECK((words[i] & bush) == bush);
+		CHECK(JRPGTilesetData::get_terrain_tag(words[i]) == (i == 5 ? 7 : 0));
+	}
+	CHECK(JRPGTileFlags::get_entry_flags(tileset, data->get_palette()[2]) == bush); // Index 3, a plain tile.
+	CHECK(JRPGTileFlags::get_entry_flags(tileset, data->get_palette()[1]) == 0); // Index 2 untouched.
+	// Already so: nothing to do, no error.
+	CHECK(editing->set_tile_flags(1, PackedInt32Array({ 1 }), pass, JRPGTilesetData::PASS_BLOCKED, &message) == OK);
+	// Refusals.
+	CHECK(editing->set_tile_flags(1, PackedInt32Array({ 0 }), bush, bush, &message) == ERR_PARAMETER_RANGE_ERROR);
+	CHECK(message.contains("no palette index 0 (1 to 4)"));
+	CHECK(editing->set_tile_flags(1, PackedInt32Array({ 5 }), bush, bush, &message) == ERR_PARAMETER_RANGE_ERROR);
+	CHECK(editing->set_tile_flags(1, PackedInt32Array(), bush, bush, &message) == ERR_INVALID_PARAMETER);
+	CHECK(editing->set_tile_flags(1, PackedInt32Array({ 1 }), 0, 0, &message) == ERR_INVALID_PARAMETER);
+	CHECK(editing->set_tile_flags(1, PackedInt32Array({ 1 }), 1 << 15, 1 << 15, &message) == ERR_INVALID_PARAMETER);
+	CHECK(editing->set_tile_flags(1, PackedInt32Array({ 1 }), 1, 1, &message) == ERR_INVALID_PARAMETER); // Half the passage.
+	CHECK(editing->set_tile_flags(1, PackedInt32Array({ 1 }), pass, 3, &message) == ERR_INVALID_PARAMETER);
+	CHECK(message.contains("2 (transparent)"));
+	CHECK(editing->set_tile_flags(2, PackedInt32Array({ 1 }), bush, bush, &message) == ERR_UNCONFIGURED);
+	Array palette = data->get_palette();
+	Dictionary ghost = Dictionary(palette[1]).duplicate();
+	ghost["source_id"] = 77;
+	palette.push_back(ghost);
+	data->set_palette(palette);
+	CHECK(editing->set_tile_flags(1, PackedInt32Array({ 5 }), bush, bush, &message) == ERR_DOES_NOT_EXIST);
+	CHECK(message.contains("does not have"));
+	// The field table names what the form and the bridge show.
+	CHECK(JRPGTileFlags::find_field(pass) == JRPGTileFlags::FIELD_PASS);
+	CHECK(JRPGTileFlags::find_field(0xF << JRPGTilesetData::FLAG_NO_EXIT_SHIFT) == JRPGTileFlags::FIELD_NO_EXIT);
+	CHECK(JRPGTileFlags::find_field(bush | pass) == JRPGTileFlags::FIELD_MAX);
+	for (int i = 0; i < JRPGTileFlags::FIELD_MAX; i++) {
+		const JRPGTileFlags::FieldInfo &field = JRPGTileFlags::get_field(JRPGTileFlags::Field(i));
+		CHECK((field.mask >> field.shift) == (field.max == 2 ? 3 : field.max)); // The bits hold the values.
+	}
 	memdelete(editing);
 }
 

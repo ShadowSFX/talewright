@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 01:47 -0600
+- **Updated:** 2026-10-14 02:01 -0600
 - **Current task:** none
-- **Last completed:** 7.3.1 Tile flag layers, bake and staleness
-- **Next task:** 7.3.2 Tileset tab with flag overlays
-- **Done leaf tasks:** 89
+- **Last completed:** 7.3.2.1 Tileset authoring API
+- **Next task:** 7.3.2.2 Tileset form with flag overlays
+- **Done leaf tasks:** 90
 <!-- status:end -->
 
 ## Log
@@ -240,4 +240,9 @@
 | 2026-10-14 01:38 -0600 | 7.2 | done: Autotile template + importer — Core JRPGAutotile (reduce_mask, 256->47 blob index table and inverse, blob/wall sheet cells; bound + documented) and editor JRPGAutotileImporter (sheet -> atlas source with 47 blob / 16 wall tiles, animation frames as tile animation columns with one-block separation, terrain sets/peering bits so Godot's painter works, palette entries {kind,name,source_id,atlas_coords,alternative,frames}; plain sheets one entry per visible tile; wrong sizes and non-square tilesets refused without changes); talewright/docs/autotile_template.md tables checked against the enumeration by a doctest; guide sheets talewright/assets/generated/templates/; generator no longer rewrites unchanged files (Ogg serials). Doctests 706 assertions; evidence plan/evidence/jrpg/7.2-autotile-tests.txt (containers: 7 in_progress->pending) | 76f6d02a50 |
 | 2026-10-14 01:39 -0600 | - | imported 3 new / 1 updated tasks | |
 | 2026-10-14 01:39 -0600 | 7.3.1 | started: Tile flag layers, bake and staleness (containers: 7.3 pending->in_progress, 7 pending->in_progress) |  |
-| 2026-10-14 01:47 -0600 | 7.3.1 | done: Tile flag layers, bake and staleness — JRPGTileFlags (editor): jrpg_* TileSet custom data layers, read/write in the spec 05 word layout, palette-entry flags over all autotile/wall shapes, bake per palette index with a SHA-256 staleness hash; JRPGDatabaseEditing::save_all rebakes stale tilesets and mark_unsaved saves edited TileSets with the database. Doctests: every flag round-trips (5 bits x 16 sides x 3 pass modes), staleness after flag and palette edits, save persists the rebake. Docs + spec 05 updated. (containers: 7.3 in_progress->pending, 7 in_progress->pending) | pending |
+| 2026-10-14 01:47 -0600 | 7.3.1 | done: Tile flag layers, bake and staleness — JRPGTileFlags (editor): jrpg_* TileSet custom data layers, read/write in the spec 05 word layout, palette-entry flags over all autotile/wall shapes, bake per palette index with a SHA-256 staleness hash; JRPGDatabaseEditing::save_all rebakes stale tilesets and mark_unsaved saves edited TileSets with the database. Doctests: every flag round-trips (5 bits x 16 sides x 3 pass modes), staleness after flag and palette edits, save persists the rebake. Docs + spec 05 updated. (containers: 7.3 in_progress->pending, 7 in_progress->pending) | a63c34ca05 |
+| 2026-10-14 01:47 -0600 | 7.3.2 | started: Tileset tab with flag overlays (containers: 7.3 pending->in_progress, 7 pending->in_progress) |  |
+| 2026-10-14 01:52 -0600 | - | imported 2 new / 1 updated tasks (containers: 7.3.2 in_progress->pending, 7.3 in_progress->pending, 7 in_progress->pending) | |
+| 2026-10-14 01:52 -0600 | 7.3.2.1 | started: Tileset authoring API (containers: 7.3.2 pending->in_progress, 7.3 pending->in_progress, 7 pending->in_progress) |  |
+| 2026-10-14 02:00 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-14 02:01 -0600 | 7.3.2.1 | done: Tileset authoring API — JRPGDatabaseEditing tileset authoring API: set_tile_flags (masked bits on every tile of the listed palette entries, per-tile other bits kept, validation of mask/passage/indexes/missing tiles, no action when nothing changes), add_tile_sheet (importer wrapped; undo removes source+terrain(+set)+entries, redo re-adds the same source after its terrain, as tile_set_editor.cpp:276-288), create_tileset (new .tres/.res at a tile size with the jrpg_* layers, never replaces, UID registered for a new folder, assignment undoable). JRPGTileFlags field table (keys/labels/masks), tile word read/write, has_entry_tile. Importer refuses a plain sheet with no visible tile and decompresses VRAM images. Doctests for every path without an editor; undo/redo end to end goes through the bridge in 7.3.3. (containers: 7.3.2 in_progress->pending, 7.3 in_progress->pending, 7 in_progress->pending) | pending |

@@ -26,7 +26,7 @@
 			<param index="4" name="name" type="String" />
 			<param index="5" name="data" type="JRPGTilesetData" />
 			<description>
-				Imports [param texture] into [param tileset] as a sheet of [param kind] with [param frames] animation frames (1 for a still sheet; only autotile and wall sheets are animated) and appends the palette entries to [param data]. Returns [code]{indexes}[/code], the palette indexes added, or [code]{error}[/code] when the image size does not fit the layout at the tileset's tile size, in which case nothing changes.
+				Imports [param texture] into [param tileset] as a sheet of [param kind] with [param frames] animation frames (1 for a still sheet; only autotile and wall sheets are animated) and appends the palette entries to [param data]. Returns [code]{indexes}[/code], the palette indexes added, or [code]{error}[/code] when the image size does not fit the layout at the tileset's tile size or a plain sheet shows no tile, in which case nothing changes.
 			</description>
 		</method>
 	</methods>

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "7.3.1 Tile flag layers, bake and staleness",
+  "last_completed": "7.3.2.1 Tileset authoring API",
   "tasks": [
     {
       "id": "0",
@@ -2558,16 +2558,56 @@
       "test_strategy": "Doctests.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "a63c34ca05",
       "notes": ""
     },
     {
       "id": "7.3.2",
       "parent": "7.3",
       "title": "Tileset tab with flag overlays",
-      "description": "The Database section's tileset form: the TileSet picker, the palette as a grid of tiles with the selected flag drawn over each (passage, four-direction passage, overhead, ladder, bush, counter, damage, terrain tag), a click or Enter toggles or cycles it as one undoable action; adding sheets through JRPGAutotileImporter.",
+      "description": "The Database section's tileset form: the TileSet picker, the palette as a grid of tiles with the selected flag drawn over each (passage, four-direction passage, overhead, ladder, bush, counter, damage, terrain tag), a click or Enter toggles or cycles it as one undoable action; adding sheets through JRPGAutotileImporter. Split into 7.3.2.1 (authoring API) and 7.3.2.2 (the form).",
       "dependencies": [
         "7.3.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Overlay editing toggles a flag on a tile, undoable, and the change is visible in a screenshot",
+        "Uses the editor theme; frontend-design skill applied after citing the Godot patterns followed"
+      ],
+      "test_strategy": "Doctests + bridge (editor_ui_act) + screenshot.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "7.3.2.1",
+      "parent": "7.3.2",
+      "title": "Tileset authoring API",
+      "description": "JRPGDatabaseEditing: set_tile_flags (bits of the flag word on palette entries, every shape of an autotile or wall kind, other bits kept per tile), add_tile_sheet (JRPGAutotileImporter wrapped: undo removes the source, the terrain it added and the palette entries; redo puts back the same source object, as Godot's TileSet editor does), create_tileset (a new TileSet file at the D-034 tile size with the jrpg_* layers, assigned to the entry). Each is one undoable action in the global history; edited TileSets are saved with the database. The importer refuses a plain sheet without visible tiles.",
+      "dependencies": [
+        "7.3.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "set_tile_flags changes only the masked bits of every tile of the listed entries and refuses bad indexes or a tileset without a TileSet",
+        "add_tile_sheet appends the entries and reports image size errors without changing anything",
+        "create_tileset writes the file once (refuses an existing path) and points the entry at it",
+        "Doctests cover each without an editor; undo/redo is covered end to end through the bridge in 7.3.3"
+      ],
+      "test_strategy": "Doctests.",
+      "status": "done",
+      "files": [],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "7.3.2.2",
+      "parent": "7.3.2",
+      "title": "Tileset form with flag overlays",
+      "description": "An EditorProperty for JRPGTilesetData.palette with a full-width bottom editor: flag modes (Passage, Entry Sides, Exit Sides, Overhead, Ladder, Bush, Counter, Damage Floor, Terrain Tag), the palette as an ItemList grid of tile thumbnails with the current flag drawn over each, click or Enter toggles or cycles it (one undoable action through set_tile_flags), side buttons for directional modes, Add Sheet dialog (add_tile_sheet) and an empty state that creates the TileSet (create_tileset).",
+      "dependencies": [
+        "7.3.2.1"
       ],
       "priority": 1,
       "acceptance_criteria": [
