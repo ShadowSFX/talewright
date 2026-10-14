@@ -75,11 +75,14 @@ Ref<JRPGMapList> JRPGMapEditing::get_map_list() {
 	return list;
 }
 
-Error JRPGMapEditing::create_map(const String &p_name, int p_tileset_id, const Vector2i &p_size, int &r_map_id, String &r_path, String *r_message) {
+Error JRPGMapEditing::create_map(const String &p_name, int p_tileset_id, const Vector2i &p_size, int p_parent_id, int &r_map_id, String &r_path, String *r_message) {
 	if (p_size.x < 1 || p_size.y < 1 || p_size.x > JRPGMapData::MAX_SIDE || p_size.y > JRPGMapData::MAX_SIDE) {
 		return refuse(vformat("a map is 1 to %d cells on each axis, not %d x %d.", JRPGMapData::MAX_SIDE, p_size.x, p_size.y), r_message, ERR_PARAMETER_RANGE_ERROR);
 	}
 	const Ref<JRPGMapList> list = get_map_list();
+	if (p_parent_id != 0 && !list->has_map(p_parent_id)) {
+		return refuse(vformat("there is no map %d to create the map under.", p_parent_id), r_message, ERR_DOES_NOT_EXIST);
+	}
 	const int id = list->get_next_map_id();
 	const String path = vformat("res://jrpg/maps/map_%04d.tscn", id);
 	if (FileAccess::exists(path)) {
@@ -105,7 +108,7 @@ Error JRPGMapEditing::create_map(const String &p_name, int p_tileset_id, const V
 	if (err != OK) {
 		return refuse(vformat("could not save %s (%s).", path, error_names[err]), r_message, err);
 	}
-	list->add_map_with_id(id, p_name, path);
+	list->add_map_with_id(id, p_name, path, p_parent_id);
 	err = ResourceSaver::save(list, list->get_path());
 	if (err != OK) {
 		return refuse(vformat("could not save the map list (%s).", error_names[err]), r_message, err);
@@ -234,14 +237,22 @@ Error JRPGMapEditing::move_map(int p_map_id, int p_parent_id, int p_index, Strin
 	return OK;
 }
 
-Error JRPGMapEditing::delete_map(int p_map_id, String *r_message) {
+Error JRPGMapEditing::delete_map(int p_map_id, String *r_message, bool p_close_scene) {
 	const Ref<JRPGMapList> list = get_map_list();
 	if (!list->has_map(p_map_id)) {
 		return refuse(vformat("there is no map %d.", p_map_id), r_message, ERR_DOES_NOT_EXIST);
 	}
 	const String scene = list->get_scene(p_map_id);
 	if (EditorNode::get_singleton() && EditorInterface::get_singleton()->get_open_scenes().has(scene)) {
-		return refuse(vformat("%s is open in the editor; close it first.", scene), r_message, ERR_BUSY);
+		if (!p_close_scene) {
+			return refuse(vformat("%s is open in the editor; close it first.", scene), r_message, ERR_BUSY);
+		}
+		// Its tab becomes the current one (an open scene switches at once), then closes without saving.
+		EditorInterface::get_singleton()->open_scene_from_path(scene);
+		const Node *root = EditorInterface::get_singleton()->get_edited_scene_root();
+		if (!root || root->get_scene_file_path() != scene || EditorInterface::get_singleton()->close_scene() != OK) {
+			return refuse(vformat("could not close %s.", scene), r_message, ERR_BUSY);
+		}
 	}
 	if (!scene.is_empty() && FileAccess::exists(scene)) {
 		const Error trashed = OS::get_singleton()->move_to_trash(ProjectSettings::get_singleton()->globalize_path(scene));
@@ -324,6 +335,18 @@ Error JRPGMapEditing::set_map_properties(JRPGMap *p_map, const Dictionary &p_val
 	}
 	undo_redo->commit_action();
 	return OK;
+}
+
+void JRPGMapEditing::add_inspector_undo(Object *p_undo_redo, Object *p_object, const String &p_property, const Variant &p_value) {
+	EditorUndoRedoManager *undo_redo = Object::cast_to<EditorUndoRedoManager>(p_undo_redo);
+	JRPGMapData *data = Object::cast_to<JRPGMapData>(p_object);
+	if (!undo_redo || !data || p_property != "size") {
+		return;
+	}
+	// Undo runs in the order added: the old size first, then the arrays as they were.
+	undo_redo->add_undo_method(data, "set_layers", data->get_layers());
+	undo_redo->add_undo_method(data, "set_shadows", data->get_shadows());
+	undo_redo->add_undo_method(data, "set_regions", data->get_regions());
 }
 
 Ref<JRPGMapData> JRPGMapEditing::get_open_map_data(int p_map_id) {

@@ -191,7 +191,7 @@ TEST_CASE("[SceneTree][JRPG][Map] Painting a map: refusals, unchanged cells left
 	CHECK(JRPGMapEditing::paint(nullptr, 0, Vector<Vector2i>({ Vector2i() }), 1, changed, &message) == ERR_UNCONFIGURED);
 	int map_id = 0;
 	String path;
-	CHECK(JRPGMapEditing::create_map("Huge", 1, Vector2i(600, 10), map_id, path, &message) == ERR_PARAMETER_RANGE_ERROR); // Refused before any file is written.
+	CHECK(JRPGMapEditing::create_map("Huge", 1, Vector2i(600, 10), 0, map_id, path, &message) == ERR_PARAMETER_RANGE_ERROR); // Refused before any file is written.
 	CHECK(path.is_empty());
 
 	// Properties: the ones the inspector shows, checked first; without an editor they apply at once.

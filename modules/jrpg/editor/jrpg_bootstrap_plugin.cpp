@@ -33,6 +33,7 @@
 
 #include "jrpg_database_editing.h"
 #include "jrpg_inspector_plugin.h" // IWYU pragma: keep (Ref<JRPGInspectorPlugin>::instantiate needs the class).
+#include "jrpg_map_editing.h"
 #include "jrpg_setup_dialog.h"
 #include "jrpg_workspace_plugin.h"
 
@@ -92,6 +93,7 @@ void JRPGBootstrapPlugin::_notification(int p_what) {
 			add_tool_menu_item(TTRGET(SETUP_MENU_ITEM), callable_mp_static(&JRPGSetupDialog::run_setup));
 			inspector_plugin.instantiate();
 			add_inspector_plugin(inspector_plugin);
+			add_undo_redo_inspector_hook_callback(callable_mp_static(&JRPGMapEditing::add_inspector_undo));
 			// Deferred: EditorNode reloads the files in its own handler of the same signal
 			// (editor/editor_node.cpp:1291-1323), which marks them changed.
 			EditorFileSystem::get_singleton()->connect("resources_reload", callable_mp(database_editing, &JRPGDatabaseEditing::forget_unsaved), CONNECT_DEFERRED);
@@ -106,6 +108,7 @@ void JRPGBootstrapPlugin::_notification(int p_what) {
 			remove_tool_menu_item(TTRGET(SETUP_MENU_ITEM));
 			remove_inspector_plugin(inspector_plugin);
 			inspector_plugin.unref();
+			remove_undo_redo_inspector_hook_callback(callable_mp_static(&JRPGMapEditing::add_inspector_undo));
 			setup_dialog = nullptr; // Freed with the editor's base control.
 			workspace = nullptr;
 		} break;

@@ -1427,7 +1427,8 @@ void tool_map_create(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 	int64_t tileset_id = 1;
 	int64_t width = JRPGMapData::DEFAULT_WIDTH;
 	int64_t height = JRPGMapData::DEFAULT_HEIGHT;
-	if (!int_arg(p_args, "tileset_id", 1, p_call, tileset_id) || !int_arg(p_args, "width", JRPGMapData::DEFAULT_WIDTH, p_call, width) || !int_arg(p_args, "height", JRPGMapData::DEFAULT_HEIGHT, p_call, height)) {
+	int64_t parent_id = 0;
+	if (!int_arg(p_args, "tileset_id", 1, p_call, tileset_id) || !int_arg(p_args, "width", JRPGMapData::DEFAULT_WIDTH, p_call, width) || !int_arg(p_args, "height", JRPGMapData::DEFAULT_HEIGHT, p_call, height) || !int_arg(p_args, "parent_id", 0, p_call, parent_id)) {
 		return;
 	}
 	if (name.is_empty()) {
@@ -1438,7 +1439,7 @@ void tool_map_create(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 	String path;
 	String message;
 	const Vector2i size(int(CLAMP(width, int64_t(0), int64_t(INT32_MAX))), int(CLAMP(height, int64_t(0), int64_t(INT32_MAX))));
-	if (JRPGMapEditing::create_map(name, int(CLAMP(tileset_id, int64_t(0), int64_t(INT32_MAX))), size, map_id, path, &message) != OK) {
+	if (JRPGMapEditing::create_map(name, int(CLAMP(tileset_id, int64_t(0), int64_t(INT32_MAX))), size, int(CLAMP(parent_id, int64_t(-1), int64_t(INT32_MAX))), map_id, path, &message) != OK) {
 		p_call->fail(message);
 		return;
 	}
@@ -1449,6 +1450,7 @@ void tool_map_create(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 	result["map_id"] = map_id;
 	result["scene"] = path;
 	result["size"] = Array({ size.x, size.y });
+	result["parent_id"] = parent_id;
 	result["opened"] = bool(p_args.get("open", true));
 	p_call->complete_data(result);
 }
@@ -1634,7 +1636,7 @@ void tool_map_delete(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 	}
 	const String scene = JRPGMapEditing::get_map_list()->get_scene(id);
 	String message;
-	if (JRPGMapEditing::delete_map(id, &message) != OK) {
+	if (JRPGMapEditing::delete_map(id, &message, bool(p_args.get("close_scene", false))) != OK) {
 		p_call->fail(message);
 		return;
 	}
@@ -1928,12 +1930,13 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool map_create;
 	map_create.name = "jrpg_map_create";
 	map_create.title = "Create a map";
-	map_create.description = "Creates a map scene (res://jrpg/maps/map_NNNN.tscn, NNNN its new map id) with a JRPGMap root, lists it in the map list and opens it (open=false to leave it closed). The map uses the database tileset tileset_id (default 1) and is width x height cells (default 20 x 15). Writes files; not undoable, as creating a scene.";
+	map_create.description = "Creates a map scene (res://jrpg/maps/map_NNNN.tscn, NNNN its new map id) with a JRPGMap root, lists it in the map list (the last map under parent_id; default the top level) and opens it (open=false to leave it closed). The map uses the database tileset tileset_id (default 1) and is width x height cells (default 20 x 15). Writes files; not undoable, as creating a scene.";
 	Dictionary map_create_properties;
 	map_create_properties["name"] = schema_property("string", "The map's name.");
 	map_create_properties["tileset_id"] = schema_property("integer", "Database tileset (default 1).");
 	map_create_properties["width"] = schema_property("integer", "Width in cells, 1-512 (default 20).");
 	map_create_properties["height"] = schema_property("integer", "Height in cells, 1-512 (default 15).");
+	map_create_properties["parent_id"] = schema_property("integer", "The map to create it under, as its last child (default 0: the top level).");
 	map_create_properties["open"] = schema_property("boolean", "Open the new map scene in the editor (default true).");
 	map_create.input_schema = ClaudeBridgeMCP::object_schema(map_create_properties, PackedStringArray({ "name" }));
 	map_create.read_only = false;
@@ -1996,9 +1999,10 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool map_delete;
 	map_delete.name = "jrpg_map_delete";
 	map_delete.title = "Delete a map";
-	map_delete.description = "Deletes a map: its entry in the map tree (the maps under it move up) and its scene file, moved to the system trash. Not undoable; refused while the map's scene is open in the editor. Data that names the map (the System's start map, transfer events) is then reported as broken by the reference checks; the result lists it (broken_references).";
+	map_delete.description = "Deletes a map: its entry in the map tree (the maps under it move up) and its scene file, moved to the system trash. Not undoable; refused while the map's scene is open in the editor, unless close_scene is true (its tab closes first, discarding unsaved changes to it). Data that names the map (the System's start map, transfer events) is then reported as broken by the reference checks; the result lists it (broken_references).";
 	Dictionary map_delete_properties;
 	map_delete_properties["map_id"] = map_id_property;
+	map_delete_properties["close_scene"] = schema_property("boolean", "Close the map's scene tab first when it is open, discarding its unsaved changes (default false: refused while open).");
 	map_delete.input_schema = ClaudeBridgeMCP::object_schema(map_delete_properties, PackedStringArray({ "map_id" }));
 	map_delete.read_only = false;
 	map_delete.destructive = true;

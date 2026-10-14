@@ -122,6 +122,7 @@ const ScalarReference SCALAR_REFERENCES[] = {
 	{ "JRPGArmorData", "armor_type_id", ARMOR_TYPES },
 	{ "JRPGArmorData", "equip_type_id", EQUIP_TYPES },
 	{ "JRPGSystemData", "start_map_id", MAPS },
+	{ "JRPGMapData", "tileset_id", "tilesets" }, // A map's data, shown in the Inspector (task 8.3.3).
 	// Troop pages are not entries: collect_entry adds this one only while the page's actor HP condition is on.
 	{ "JRPGTroopPage", "actor_id", "actors" },
 };

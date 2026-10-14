@@ -45,6 +45,7 @@
 
 #include "modules/jrpg/core/jrpg_actor_data.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
+#include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
@@ -81,7 +82,7 @@ JRPGEditorPropertyID::JRPGEditorPropertyID() {
 }
 
 bool JRPGInspectorPlugin::can_handle(Object *p_object) {
-	return Object::cast_to<JRPGEntry>(p_object) || Object::cast_to<JRPGTroopPage>(p_object) || Object::cast_to<JRPGSystemData>(p_object) || Object::cast_to<JRPGTypesData>(p_object) || Object::cast_to<JRPGTermsData>(p_object);
+	return Object::cast_to<JRPGEntry>(p_object) || Object::cast_to<JRPGTroopPage>(p_object) || Object::cast_to<JRPGSystemData>(p_object) || Object::cast_to<JRPGTypesData>(p_object) || Object::cast_to<JRPGTermsData>(p_object) || Object::cast_to<JRPGMapData>(p_object);
 }
 
 void JRPGInspectorPlugin::parse_begin(Object *p_object) {

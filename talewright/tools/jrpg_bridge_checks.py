@@ -415,6 +415,18 @@ def run(checks: Checks) -> None:
         "jrpg_map_create: ids are not reused after a delete",
         c.call("jrpg_map_create", {"name": "Fourth", "open": False}).get("map_id") == 4,
     )
+    c.call("jrpg_map_delete", {"map_id": second["map_id"], "close_scene": True})
+    c.check(
+        "jrpg_map_delete: close_scene closes the open map, then deletes it",
+        all(m["map_id"] != second["map_id"] for m in maps())
+        and c.call("jrpg_map_list").get("edited_map_id") != second["map_id"],
+    )
+    under = c.call("jrpg_map_create", {"name": "Under", "parent_id": created_map["map_id"], "open": False})
+    c.check(
+        "jrpg_map_create: parent_id puts the new map under another one",
+        any(m["map_id"] == under.get("map_id") and m["parent_id"] == created_map["map_id"] for m in maps()),
+        json.dumps(under)[:200],
+    )
 
     # Saving leaves nothing unsaved, bakes the tile flags and writes the TileSet.
     c.call("jrpg_db_save")

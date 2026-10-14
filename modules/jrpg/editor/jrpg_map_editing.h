@@ -52,8 +52,9 @@ public:
 	// The project's map list (res://jrpg/map_list.tres), created empty when the project has none yet.
 	static Ref<JRPGMapList> get_map_list();
 	// Creates res://jrpg/maps/map_NNNN.tscn (NNNN = its new map id) with a JRPGMap root holding a p_size map that uses
-	// tileset p_tileset_id, lists it in the map list and saves both. Files are not undoable (as creating a scene).
-	static Error create_map(const String &p_name, int p_tileset_id, const Vector2i &p_size, int &r_map_id, String &r_path, String *r_message = nullptr);
+	// tileset p_tileset_id, lists it in the map list (the last map under p_parent_id, 0: the top level) and saves both.
+	// Files are not undoable (as creating a scene).
+	static Error create_map(const String &p_name, int p_tileset_id, const Vector2i &p_size, int p_parent_id, int &r_map_id, String &r_path, String *r_message = nullptr);
 	// Writes p_value (a palette index, 0 to erase) to the cells p_cells (map coordinates) of tile layer p_layer as one
 	// undo action of p_map's scene; cells outside the map are refused, cells already holding p_value are left out.
 	// r_changed: how many cells changed (0: no action).
@@ -66,8 +67,10 @@ public:
 	// last).
 	static Error move_map(int p_map_id, int p_parent_id, int p_index, String *r_message = nullptr);
 	// Deletes a map: its list entry (its children move up) and its scene file, which goes to the system trash so it can
-	// be recovered there. Not undoable, as deleting files; refused while the scene is open in the editor.
-	static Error delete_map(int p_map_id, String *r_message = nullptr);
+	// be recovered there. Not undoable, as deleting files. While the scene is open in the editor it is refused, unless
+	// p_close_scene: then its tab closes first, discarding unsaved changes to it (EditorNode::close_scene,
+	// editor/editor_node.cpp:5630-5641).
+	static Error delete_map(int p_map_id, String *r_message = nullptr, bool p_close_scene = false);
 	// Opens map p_map_id's scene in the editor.
 	static Error open_map(int p_map_id, String *r_message = nullptr);
 	// Sets properties of p_map's data ({name: value}: the properties its inspector shows, map_id excepted; a new size
@@ -75,6 +78,10 @@ public:
 	static Error set_map_properties(JRPGMap *p_map, const Dictionary &p_values, String *r_message = nullptr);
 	// Whether a map property can be set with set_map_properties.
 	static bool is_settable_property(const PropertyInfo &p_property);
+	// The inspector's undo hook (EditorPlugin::add_undo_redo_inspector_hook_callback, called from
+	// EditorInspector::_edit_set, editor/inspector/editor_inspector.cpp:5579-5591): a map's size set in the Inspector
+	// cuts or grows its cell arrays, so undo puts the arrays back after the old size, as set_map_properties does.
+	static void add_inspector_undo(Object *p_undo_redo, Object *p_object, const String &p_property, const Variant &p_value);
 
 	// The data of map p_map_id in its scene open in the editor (unsaved edits included), or null when it is not open.
 	static Ref<JRPGMapData> get_open_map_data(int p_map_id);

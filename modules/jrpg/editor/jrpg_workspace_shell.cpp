@@ -33,8 +33,12 @@
 
 #include "jrpg_database_editing.h"
 #include "jrpg_database_view.h"
+#include "jrpg_map_editing.h"
+#include "jrpg_map_tree.h"
 
 #include "core/object/callable_mp.h"
+#include "editor/editor_interface.h"
+#include "editor/editor_node.h"
 #include "editor/editor_string_names.h"
 #include "editor/settings/editor_settings.h"
 #include "editor/themes/editor_scale.h"
@@ -46,10 +50,10 @@
 #include "scene/gui/separator.h"
 #include "scene/gui/split_container.h"
 #include "scene/gui/tab_bar.h"
-#include "scene/gui/tree.h"
 #include "scene/resources/style_box_flat.h"
 
 #include "modules/jrpg/core/jrpg_database.h"
+#include "modules/jrpg/core/jrpg_map_list.h"
 
 JRPGWorkspaceShell *JRPGWorkspaceShell::singleton = nullptr;
 
@@ -140,6 +144,30 @@ void JRPGWorkspaceShell::refresh() {
 	if (get_section() == SECTION_DATABASE) {
 		database_view->refresh();
 	}
+	_update_canvas();
+}
+
+void JRPGWorkspaceShell::_update_canvas() {
+	// Which map the edited scene is, if any (task 8.3.3; the canvas itself draws maps from task 8.4.1).
+	String open_name;
+	const Node *root = EditorNode::get_singleton() ? EditorInterface::get_singleton()->get_edited_scene_root() : nullptr;
+	if (root && !root->get_scene_file_path().is_empty()) {
+		const Ref<JRPGMapList> list = JRPGMapEditing::get_map_list();
+		const int id = list->find_by_scene(root->get_scene_file_path());
+		open_name = id ? String(list->get_map(id).get("name", "")) : String();
+	}
+	if (open_name.is_empty()) {
+		canvas_title->set_text(TTR("No map is open"));
+		canvas_body->set_text(TTR("Double-click a map in the Maps list to open it, or create one with New Map."));
+	} else {
+		canvas_title->set_text(vformat(TTR("%s is open"), open_name));
+		canvas_body->set_text(TTR("Drawing on this canvas is not available yet. The 2D view shows the map meanwhile."));
+	}
+	canvas_show_2d->set_visible(!open_name.is_empty());
+}
+
+void JRPGWorkspaceShell::_show_2d() {
+	EditorInterface::get_singleton()->set_main_screen_editor("2D");
 }
 
 Label *JRPGWorkspaceShell::_make_note(const String &p_text) {
@@ -166,9 +194,7 @@ void JRPGWorkspaceShell::_update_theme() {
 	// Notes are the theme's read-only text color; the canvas is the darker editor surface; the message frame matches
 	// the workspace's empty state (the message-window motif of the JRPG tab).
 	const Color note_color = get_theme_color(SNAME("font_readonly_color"), EditorStringName(Editor));
-	for (Label *label : { maps_empty, palette_empty }) {
-		label->add_theme_color_override(SceneStringName(font_color), note_color);
-	}
+	palette_empty->add_theme_color_override(SceneStringName(font_color), note_color);
 	Ref<StyleBoxFlat> surface;
 	surface.instantiate();
 	surface->set_bg_color(get_theme_color(SNAME("dark_color_2"), EditorStringName(Editor)));
@@ -198,6 +224,16 @@ void JRPGWorkspaceShell::_notification(int p_what) {
 		case NOTIFICATION_VISIBILITY_CHANGED: {
 			if (is_visible_in_tree()) {
 				refresh();
+			}
+		} break;
+		case NOTIFICATION_ENTER_TREE: {
+			if (EditorNode::get_singleton()) {
+				EditorNode::get_singleton()->connect(SNAME("scene_changed"), callable_mp(this, &JRPGWorkspaceShell::_update_canvas));
+			}
+		} break;
+		case NOTIFICATION_EXIT_TREE: {
+			if (EditorNode::get_singleton()) {
+				EditorNode::get_singleton()->disconnect(SNAME("scene_changed"), callable_mp(this, &JRPGWorkspaceShell::_update_canvas));
 			}
 		} break;
 	}
@@ -242,27 +278,18 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 	VSplitContainer *side = memnew(VSplitContainer);
 	side->set_custom_minimum_size(Size2(160, 0) * EDSCALE);
 	map_section->add_child(side);
-	const String side_titles[2] = { TTR("Maps"), TTR("Palette") };
-	VBoxContainer *side_panels[2];
-	for (int i = 0; i < 2; i++) {
-		side_panels[i] = memnew(VBoxContainer);
-		side_panels[i]->set_v_size_flags(SIZE_EXPAND_FILL);
-		Label *header = memnew(Label);
-		header->set_text(side_titles[i]);
-		header->set_theme_type_variation("HeaderSmall");
-		side_panels[i]->add_child(header);
-		side->add_child(side_panels[i]);
-	}
-	map_tree = memnew(Tree);
-	map_tree->set_hide_root(true);
+	map_tree = memnew(JRPGMapTree);
 	map_tree->set_v_size_flags(SIZE_EXPAND_FILL);
-	map_tree->set_visible(false); // Shown once maps exist (map list, task 8.3).
-	map_tree->set_accessibility_name(TTR("Maps"));
-	side_panels[0]->add_child(map_tree);
-	maps_empty = _make_note(TTR("No maps yet. Maps you create are listed here."));
-	side_panels[0]->add_child(maps_empty);
+	side->add_child(map_tree);
+	VBoxContainer *palette_panel = memnew(VBoxContainer);
+	palette_panel->set_v_size_flags(SIZE_EXPAND_FILL);
+	side->add_child(palette_panel);
+	Label *palette_header = memnew(Label);
+	palette_header->set_text(TTR("Palette"));
+	palette_header->set_theme_type_variation("HeaderSmall");
+	palette_panel->add_child(palette_header);
 	palette_empty = _make_note(TTR("Open a map to choose its tiles."));
-	side_panels[1]->add_child(palette_empty);
+	palette_panel->add_child(palette_empty);
 
 	VBoxContainer *work = memnew(VBoxContainer);
 	work->set_h_size_flags(SIZE_EXPAND_FILL);
@@ -306,12 +333,15 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 	VBoxContainer *message_box = memnew(VBoxContainer);
 	canvas_message->add_child(message_box);
 	canvas_title = memnew(Label);
-	canvas_title->set_text(TTR("No map is open"));
 	message_box->add_child(canvas_title);
 	canvas_body = memnew(Label);
-	canvas_body->set_text(TTR("Maps open here for drawing tiles, placing events and painting regions. Creating maps comes next in this workspace; the Database tab already shows your starter data."));
 	canvas_body->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
 	message_box->add_child(canvas_body);
+	canvas_show_2d = memnew(Button);
+	canvas_show_2d->set_text(TTR("Show in 2D View"));
+	canvas_show_2d->set_h_size_flags(SIZE_SHRINK_BEGIN);
+	canvas_show_2d->connect(SceneStringName(pressed), callable_mp(this, &JRPGWorkspaceShell::_show_2d));
+	message_box->add_child(canvas_show_2d);
 	canvas_mark = memnew(Label);
 	canvas_mark->set_text(U"▼");
 	canvas_mark->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_RIGHT);
@@ -323,6 +353,7 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 	database_view->set_visible(false);
 	add_child(database_view);
 	sections[SECTION_DATABASE] = database_view;
+	_update_canvas();
 }
 
 JRPGWorkspaceShell::~JRPGWorkspaceShell() {

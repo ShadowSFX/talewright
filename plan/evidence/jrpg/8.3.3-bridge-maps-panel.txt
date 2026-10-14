@@ -1,0 +1,55 @@
+# 8.3.3 bridge verification: the Maps panel
+## empty state: a note and New Map
+  note: ['No maps yet. New Map creates the first one.']
+  screenshot: plan/evidence/jrpg/8.3.3-empty.png
+## New Map in the empty state: World, 30 x 20 cells
+  screenshot: plan/evidence/jrpg/8.3.3-new-map.png
+  create 'World': ok
+  map list: [(1, 'World', 0)] | edited: 1
+## New Map Under This One (World): Town; then under Town: Inn; then Field at the top level from the header button
+  menu 'New Map Under This One...': ok ['New Map']
+  create 'Town': ok
+  menu 'New Map Under This One...': ok ['New Map']
+  create 'Inn': ok
+  create 'Field': ok
+  map list: [(1, 'World', 0), (2, 'Town', 1), (3, 'Inn', 2), (4, 'Field', 0)] | edited: 4
+  rows: ['World | 0001', 'Town | 0002', 'Inn | 0003', 'Field | 0004'] | selected: Field
+## Rename (F2 / menu): Inn becomes Old Inn in place; undo and redo
+  menu 'Rename': ok []
+  in-place editor: (the tree's in-place LineEdit)
+  map list: [(1, 'World', 0), (2, 'Town', 1), (3, 'Old Inn', 2), (4, 'Field', 0)] | edited: 4
+  after undo:
+  map list: [(1, 'World', 0), (2, 'Town', 1), (3, 'Inn', 2), (4, 'Field', 0)] | edited: 4
+  after redo:
+  map list: [(1, 'World', 0), (2, 'Town', 1), (3, 'Old Inn', 2), (4, 'Field', 0)] | edited: 4
+## Move Up (menu, Ctrl+Up): Field goes before World; undo puts it back
+  menu 'Move Up': ok []
+  map list: [(4, 'Field', 0), (1, 'World', 0), (2, 'Town', 1), (3, 'Old Inn', 2)] | edited: 4
+  screenshot: plan/evidence/jrpg/8.3.3-tree.png
+  after undo:
+  map list: [(1, 'World', 0), (2, 'Town', 1), (3, 'Old Inn', 2), (4, 'Field', 0)] | edited: 4
+## Open (double click): Town becomes the edited scene, bold in the tree; the canvas names it
+  map list: [(4, 'Field', 0), (1, 'World', 0), (2, 'Town', 1), (3, 'Old Inn', 2)] | edited: 2
+  canvas: ['Town is open']
+## Properties: Town's map data in the Inspector; width 24 -> 10 cuts cells, undo brings them back
+  menu 'Properties': ok []
+  Inspector shows the map data: yes
+  before: size [24, 18] painted {'ground': 432, 'ground_detail': 0, 'objects': 0, 'upper': 0}
+  width 10: size [10, 18] painted {'ground': 180, 'ground_detail': 0, 'objects': 0, 'upper': 0}
+  screenshot: plan/evidence/jrpg/8.3.3-properties.png
+  undo: size [24, 18] painted {'ground': 432, 'ground_detail': 0, 'objects': 0, 'upper': 0}
+## Delete: Old Inn after its confirmation (its open tab closes); then Field, the start map, whose confirmation names the System
+  menu 'Delete...': ok ['Delete Map 3']
+  dialog: [('Delete Map 3', '')]
+  confirm: ok
+  map list: [(4, 'Field', 0), (1, 'World', 0), (2, 'Town', 1)] | edited: 2
+  rows: ['Field | 0004', 'World | 0001', 'Town | 0002'] | selected: None
+  menu 'Delete...': ok ['Delete Map 4']
+  warning: ['These still name the map and will point at nothing:\nSystem, start_map_id: map 4']
+  screenshot: plan/evidence/jrpg/8.3.3-delete-start-map.png
+  confirm: ok
+  map list: [(1, 'World', 0), (2, 'Town', 1)] | edited: 2
+  dangling: ['System, start_map_id: map 4 (missing)']
+## errors
+    "errors": 0,
+    "warnings": 0,

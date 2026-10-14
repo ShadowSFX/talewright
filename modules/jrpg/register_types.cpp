@@ -84,6 +84,7 @@
 #include "modules/jrpg/editor/jrpg_list_editors.h"
 #include "modules/jrpg/editor/jrpg_managed_addon.h"
 #include "modules/jrpg/editor/jrpg_map_editing.h"
+#include "modules/jrpg/editor/jrpg_map_tree.h"
 #include "modules/jrpg/editor/jrpg_param_editor.h"
 #include "modules/jrpg/editor/jrpg_picker.h"
 #include "modules/jrpg/editor/jrpg_project_setup.h"
@@ -166,10 +167,12 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_INTERNAL_CLASS(JRPGEditorPropertyIDList);
 		GDREGISTER_INTERNAL_CLASS(JRPGEditorPropertyTypeList);
 		GDREGISTER_INTERNAL_CLASS(JRPGEditorPropertyTerms);
+		GDREGISTER_INTERNAL_CLASS(JRPGEditorPropertyStartPosition);
 		GDREGISTER_INTERNAL_CLASS(JRPGTraitDialog);
 		GDREGISTER_INTERNAL_CLASS(JRPGEditorPropertyTraits);
 		GDREGISTER_INTERNAL_CLASS(JRPGTileSheetDialog);
 		GDREGISTER_INTERNAL_CLASS(JRPGEditorPropertyTiles);
+		GDREGISTER_INTERNAL_CLASS(JRPGMapTree);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspaceShell);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspaceView);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspacePlugin);

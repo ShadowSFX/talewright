@@ -539,3 +539,16 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** an unpainted cell has nothing to stand on, so walking into the void is never a surprise; a bush or damage
   decoration on an upper layer works over any ground without editing the ground tile.
 - **Reversal:** `JRPGMapCellCache::_compile_cell` (one place) and the fixture table of its doctest.
+
+## D-038 — Map properties are edited in the Inspector dock
+- **Context:** task 8.3.3 asked for a map properties dialog in the workspace's Maps panel. A map's properties live in
+  its scene (`JRPGMap.map_data`, D-006), so editing them needs the scene open, and undo belongs to that scene's
+  history.
+- **Options:** a dialog holding its own EditorInspector or form; or Properties opens the map and shows its
+  `JRPGMapData` in the editor's Inspector dock (`EditorInterface::inspect_object`).
+- **Choice:** the Inspector dock. The map's tileset is an ID picker there (JRPGInspectorPlugin), and an editor undo
+  hook (`JRPGMapEditing::add_inspector_undo`, `EditorPlugin::add_undo_redo_inspector_hook_callback`) makes undo of a
+  smaller size bring the cut cells back, as `jrpg_map_set` does.
+- **Why:** one place to edit map data, the editor's own inspector (resources, audio cues, undo per scene, favorites)
+  with nothing duplicated; the dock stays visible beside the JRPG workspace.
+- **Reversal:** wrap an EditorInspector in a dialog opened by `JRPGMapTree::_inspect_map`; the undo hook stays.
