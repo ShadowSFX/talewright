@@ -66,7 +66,7 @@ void JRPGTilesetData::set_flags_hash(const String &p_hash) {
 }
 
 void JRPGTilesetData::set_edge_mode(EdgeMode p_mode) {
-	ERR_FAIL_INDEX(p_mode, EDGE_BORDER + 1);
+	ERR_FAIL_INDEX(int(p_mode), EDGE_BORDER + 1);
 	edge_mode = p_mode;
 	emit_changed();
 }
@@ -122,7 +122,7 @@ void JRPGTilesetData::_bind_methods() {
 }
 
 void JRPGCommonEventData::set_trigger(Trigger p_trigger) {
-	ERR_FAIL_INDEX(p_trigger, TRIGGER_PARALLEL + 1);
+	ERR_FAIL_INDEX(int(p_trigger), TRIGGER_PARALLEL + 1);
 	trigger = p_trigger;
 	emit_changed();
 }

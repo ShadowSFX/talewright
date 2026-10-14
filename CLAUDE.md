@@ -37,7 +37,9 @@ and move on to the next ready task.
 6. Self-review: re-read the diff line by line, clang-format, no new warnings. Run
    `python talewright/tools/static_checks.py` (the CI static-check hooks on the files the next push brings, plus fork
    checks; needs `python -m pip install --user prek`) and review every file a hook rewrote — codespell's automatic
-   fixes have renamed identifiers before (D-027). CI fails on any push that skips this.
+   fixes have renamed identifiers before (D-027). It also compiles every fork translation unit with clang's
+   diagnostics (`talewright/tools/clang_check.py`): MSVC accepts code that CI's clang builds reject (D-028).
+   CI fails on any push that skips this.
 7. `python plan/tools/tasks.py done <id> -m "<what was done>"`, then ONE commit for the task containing code
    and tracker files: message `"<id>: <summary>"`. Then `python plan/tools/tasks.py stamp` (fills the hash;
    the stamp is committed with the next task).
@@ -78,6 +80,8 @@ and move on to the next ready task.
 - Regression smoke after every epic: `python talewright/tools/smoke_samples.py` (plain_2d/plain_3d editor
   open, run, export + exported run; full log in `talewright/build_logs/smoke-*.log`).
 - JRPG core boundary (run before committing jrpg changes): `python modules/jrpg/tests/check_core_includes.py`.
+- Clang diagnostics on fork C++ (part of static_checks.py): `python talewright/tools/clang_check.py` — uses
+  Visual Studio's clang-tidy and the `compile_commands.json` the `editor` build profile writes.
 - Tests: `bin/<editor binary> --test` (all) or `--test --test-case="*[JRPG]*"`; module tests live in
   `modules/<m>/tests/*.h` (auto-included when built with `tests=yes`, which `dev_mode=yes` enables).
 - Tracker: `python plan/tools/tasks.py validate|render|next|show <id>|start <id>|done <id> -m ..|block <id> -m ..|defer <id> -m ..|stamp|import <file>`.

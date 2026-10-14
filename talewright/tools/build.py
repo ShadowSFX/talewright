@@ -39,7 +39,8 @@ TALEWRIGHT_MODULES = ("jrpg", "mmo", "claude_bridge")
 # OpenGL cover Talewright's needs. Recorded in plan/research/godot_current_state.md.
 COMMON = ["platform=windows", "d3d12=no"]
 PROFILES = {
-    "editor": [*COMMON, "target=editor", "dev_mode=yes"],
+    # compiledb=yes keeps compile_commands.json current for talewright/tools/clang_check.py.
+    "editor": [*COMMON, "target=editor", "dev_mode=yes", "compiledb=yes"],
     # Own binary name and object files (SConstruct:258,630-633,1051), so checking vanilla never replaces the editor.
     "editor-vanilla": [*COMMON, "target=editor", "dev_mode=yes", "extra_suffix=vanilla"],
     "template_release": [*COMMON, "target=template_release"],

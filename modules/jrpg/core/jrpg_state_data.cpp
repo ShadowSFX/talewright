@@ -39,7 +39,7 @@ void JRPGStateData::set_icon_index(int p_index) {
 }
 
 void JRPGStateData::set_restriction(Restriction p_restriction) {
-	ERR_FAIL_INDEX(p_restriction, RESTRICTION_CANNOT_MOVE + 1);
+	ERR_FAIL_INDEX(int(p_restriction), RESTRICTION_CANNOT_MOVE + 1);
 	restriction = p_restriction;
 	emit_changed();
 }
@@ -60,7 +60,7 @@ void JRPGStateData::set_remove_by_restriction(bool p_enabled) {
 }
 
 void JRPGStateData::set_auto_removal(AutoRemoval p_timing) {
-	ERR_FAIL_INDEX(p_timing, AUTO_REMOVAL_TURN_END + 1);
+	ERR_FAIL_INDEX(int(p_timing), AUTO_REMOVAL_TURN_END + 1);
 	auto_removal = p_timing;
 	emit_changed();
 }

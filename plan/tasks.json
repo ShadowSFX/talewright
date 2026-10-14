@@ -292,14 +292,28 @@
       "acceptance_criteria": [
         "Every job of the next CI run on origin/talewright that pushes these changes concludes success (verified with gh run view), or a failing job is shown to fail identically on upstream 4.7.2-stable and recorded",
         "core_diff_check lists every changed upstream file; static_checks.py passes",
-        "The fork modules are still built and tested by the clang ASan/UBSan and ThreadSanitizer jobs"
+        "The fork modules are still built and tested by the clang ASan/UBSan and ThreadSanitizer jobs",
+        "talewright/tools/clang_check.py reports 0 clang diagnostics in fork code and runs inside static_checks.py"
       ],
       "test_strategy": "Push; gh run view <run> --json jobs; on failure download the job log with gh api --allow-escape-sequences and fix the cause.",
       "files": [
         ".github/actions/godot-cpp-build/action.yml",
         ".github/workflows/linux_builds.yml",
         "plan/UPSTREAM_PATCHES.md",
-        "plan/DECISIONS.md"
+        "plan/DECISIONS.md",
+        "talewright/tools/clang_check.py",
+        "talewright/tools/static_checks.py",
+        "talewright/tools/build.py",
+        "CLAUDE.md",
+        "modules/claude_bridge/claude_bridge_mcp.h",
+        "modules/claude_bridge/claude_bridge_mcp.cpp",
+        "modules/claude_bridge/tests/test_claude_bridge.h",
+        "modules/jrpg/core/jrpg_item_data.cpp",
+        "modules/jrpg/core/jrpg_misc_data.cpp",
+        "modules/jrpg/core/jrpg_state_data.cpp",
+        "modules/jrpg/core/jrpg_system_data.cpp",
+        "modules/jrpg/core/jrpg_troop_data.cpp",
+        "modules/jrpg/core/jrpg_usable_data.cpp"
       ],
       "status": "in_progress",
       "commit": "",
@@ -1582,7 +1596,7 @@
         "modules/jrpg/tests/test_jrpg_actor_state.h",
         "plan/specs/06_save_format.md"
       ],
-      "commit": "pending",
+      "commit": "1295b2eb53",
       "notes": "",
       "status": "done"
     },

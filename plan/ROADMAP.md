@@ -100,7 +100,7 @@ modules/jrpg with pure-logic core (no Node dependency), database, game state, RN
   - [x] **5.4.3** JRPGFormula (P1) _(deps: 5.4.2; commit: bebdd8b95a)_
 - [ ] **5.5** Game state core (P1) _(deps: 5.4)_
   - [x] **5.5.1** JRPGGameState core (P1) _(commit: f357cf1e53)_
-  - [x] **5.5.2** Runtime actor state (P1) _(deps: 5.5.1; commit: pending)_
+  - [x] **5.5.2** Runtime actor state (P1) _(deps: 5.5.1; commit: 1295b2eb53)_
   - [ ] **5.5.3** Event runtime state (P1) _(deps: 5.5.1)_
   - [ ] **5.5.4** Actor equipment, class change and reference repair (P1) _(deps: 5.5.2)_
 - [ ] **5.6** Reference scanner (P2) _(deps: 5.5)_

@@ -4,7 +4,8 @@
 CI runs `prek run --files <changed files>` with the repository's .pre-commit-config.yaml. This script runs the same
 hooks on the files a push would bring (default: everything that differs from origin/talewright, committed or not,
 plus untracked files), then the fork's own checks: Talewright license headers (Godot's copyright-headers hook skips
-the fork modules), the jrpg core include boundary and the upstream-patch ledger.
+the fork modules), the jrpg core include boundary, the upstream-patch ledger and clang's diagnostics on the fork's
+C++ (talewright/tools/clang_check.py; skipped when clang-tidy or compile_commands.json is missing).
 
 Usage (any directory inside the repository):
     python talewright/tools/static_checks.py            # files changed since origin/talewright
@@ -100,6 +101,19 @@ def main() -> int:
         if check.returncode != 0:
             print(check.stdout)
         ok &= check.returncode == 0
+
+    # clang's diagnostics on every fork translation unit (CI builds with clang on most platforms; MSVC misses some).
+    clang = subprocess.run(
+        [sys.executable, "talewright/tools/clang_check.py"], cwd=root, capture_output=True, text=True
+    )
+    last = (clang.stdout.strip().splitlines() or [""])[-1]
+    if clang.returncode == 2:
+        print("[SKIP] clang diagnostics: " + last)
+    else:
+        print(("[PASS] " if clang.returncode == 0 else "[FAIL] ") + "clang diagnostics: " + last)
+        if clang.returncode != 0:
+            print(clang.stdout)
+        ok &= clang.returncode == 0
 
     print("ALL PASS" if ok else "FAILURES")
     return 0 if ok else 1

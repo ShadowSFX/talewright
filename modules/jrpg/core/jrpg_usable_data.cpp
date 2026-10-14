@@ -44,14 +44,14 @@ void JRPGUsableData::set_description(const String &p_text) {
 }
 
 void JRPGUsableData::set_target_side(TargetSide p_side) {
-	ERR_FAIL_INDEX(p_side, SIDE_USER + 1);
+	ERR_FAIL_INDEX(int(p_side), SIDE_USER + 1);
 	target_side = p_side;
 	notify_property_list_changed();
 	emit_changed();
 }
 
 void JRPGUsableData::set_target_count(TargetCount p_count) {
-	ERR_FAIL_INDEX(p_count, COUNT_RANDOM + 1);
+	ERR_FAIL_INDEX(int(p_count), COUNT_RANDOM + 1);
 	target_count = p_count;
 	notify_property_list_changed();
 	emit_changed();
@@ -63,13 +63,13 @@ void JRPGUsableData::set_random_targets(int p_count) {
 }
 
 void JRPGUsableData::set_target_status(TargetStatus p_status) {
-	ERR_FAIL_INDEX(p_status, STATUS_ANY + 1);
+	ERR_FAIL_INDEX(int(p_status), STATUS_ANY + 1);
 	target_status = p_status;
 	emit_changed();
 }
 
 void JRPGUsableData::set_occasion(Occasion p_occasion) {
-	ERR_FAIL_INDEX(p_occasion, OCCASION_NEVER + 1);
+	ERR_FAIL_INDEX(int(p_occasion), OCCASION_NEVER + 1);
 	occasion = p_occasion;
 	emit_changed();
 }
@@ -95,7 +95,7 @@ void JRPGUsableData::set_tp_gain(int p_tp) {
 }
 
 void JRPGUsableData::set_hit_type(HitType p_type) {
-	ERR_FAIL_INDEX(p_type, HIT_MAGICAL + 1);
+	ERR_FAIL_INDEX(int(p_type), HIT_MAGICAL + 1);
 	hit_type = p_type;
 	emit_changed();
 }
@@ -106,7 +106,7 @@ void JRPGUsableData::set_animation_id(int p_id) {
 }
 
 void JRPGUsableData::set_damage_type(DamageType p_type) {
-	ERR_FAIL_INDEX(p_type, DRAIN_MP + 1);
+	ERR_FAIL_INDEX(int(p_type), DRAIN_MP + 1);
 	damage_type = p_type;
 	notify_property_list_changed();
 	emit_changed();

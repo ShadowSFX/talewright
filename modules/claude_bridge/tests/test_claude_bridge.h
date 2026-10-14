@@ -379,14 +379,14 @@ TEST_CASE("[ClaudeBridge][MCP] Notifications, ping, errors and batches") {
 
 	ClaudeBridgeMCP::Reply r = mcp.handle("{not json", 0);
 	CHECK(r.http_status == 400);
-	CHECK(int(Dictionary(parse_obj(r.body)["error"])["code"]) == ClaudeBridgeMCP::ERR_PARSE);
+	CHECK(int(Dictionary(parse_obj(r.body)["error"])["code"]) == ClaudeBridgeMCP::RPC_PARSE_ERROR);
 
 	r = mcp.handle(R"([{"jsonrpc":"2.0","id":1,"method":"ping"}])", 0);
 	CHECK(r.http_status == 400);
-	CHECK(int(Dictionary(parse_obj(r.body)["error"])["code"]) == ClaudeBridgeMCP::ERR_INVALID_REQUEST);
+	CHECK(int(Dictionary(parse_obj(r.body)["error"])["code"]) == ClaudeBridgeMCP::RPC_INVALID_REQUEST);
 
 	r = mcp.handle(R"({"jsonrpc":"2.0","id":2,"method":"nope"})", 0);
-	CHECK(int(Dictionary(parse_obj(r.body)["error"])["code"]) == ClaudeBridgeMCP::ERR_METHOD_NOT_FOUND);
+	CHECK(int(Dictionary(parse_obj(r.body)["error"])["code"]) == ClaudeBridgeMCP::RPC_METHOD_NOT_FOUND);
 
 	r = mcp.handle(R"({"jsonrpc":"1.0","id":2,"method":"ping"})", 0);
 	CHECK(r.http_status == 400);
@@ -429,10 +429,10 @@ TEST_CASE("[ClaudeBridge][MCP] tools/list and tools/call (sync, error, unknown, 
 	CHECK(bool(res["isError"]));
 
 	r = mcp.handle(R"({"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"missing"}})", 0);
-	CHECK(int(Dictionary(parse_obj(r.body)["error"])["code"]) == ClaudeBridgeMCP::ERR_INVALID_PARAMS);
+	CHECK(int(Dictionary(parse_obj(r.body)["error"])["code"]) == ClaudeBridgeMCP::RPC_INVALID_PARAMS);
 
 	r = mcp.handle(R"({"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"sync","arguments":[1]}})", 0);
-	CHECK(int(Dictionary(parse_obj(r.body)["error"])["code"]) == ClaudeBridgeMCP::ERR_INVALID_PARAMS);
+	CHECK(int(Dictionary(parse_obj(r.body)["error"])["code"]) == ClaudeBridgeMCP::RPC_INVALID_PARAMS);
 
 	r = mcp.handle(R"({"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"async","arguments":{}}})", 1000);
 	CHECK(r.pending);

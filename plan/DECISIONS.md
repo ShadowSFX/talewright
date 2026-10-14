@@ -398,3 +398,10 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   sanitizers), and the fork modules stay covered by the clang ASan/UBSan and ThreadSanitizer jobs, which passed with
   them in the same run.
 - **Reversal:** revert ledger rows 4–5; if upstream later shrinks that build, re-enable the fork modules in it.
+- **Follow-up (run 38493196969):** clang builds on every other platform then failed on
+  `-Wtautological-constant-out-of-range-compare` (an enum argument checked against a bound outside the enum's range)
+  that MSVC never reports. Enum arguments are now cast to `int` in `ERR_FAIL_INDEX`, and
+  `talewright/tools/clang_check.py` compiles every fork translation unit (plus `tests/test_main.cpp` for the doctest
+  headers) with clang's diagnostics and Godot's clang warning set through Visual Studio's `clang-tidy` and the
+  `compile_commands.json` written by the `editor` build profile. `static_checks.py` runs it before every push.
+  GCC-only warnings (`-Wlogical-op`, `-Wduplicated-branches`, ...) still need CI: no GCC toolchain is installed.

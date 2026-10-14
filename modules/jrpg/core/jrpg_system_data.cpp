@@ -73,7 +73,7 @@ void JRPGSystemData::set_start_cell(const Vector2i &p_cell) {
 }
 
 void JRPGSystemData::set_start_direction(Direction p_direction) {
-	ERR_FAIL_INDEX(p_direction, 4);
+	ERR_FAIL_INDEX(int(p_direction), 4);
 	start_direction = p_direction;
 	emit_changed();
 }

@@ -210,18 +210,18 @@ ClaudeBridgeMCP::Reply ClaudeBridgeMCP::handle(const String &p_body, uint64_t p_
 	JSON json;
 	if (json.parse(p_body) != OK) {
 		reply.http_status = 400;
-		reply.body = make_error(Variant(), ERR_PARSE, "Parse error: " + json.get_error_message());
+		reply.body = make_error(Variant(), RPC_PARSE_ERROR, "Parse error: " + json.get_error_message());
 		return reply;
 	}
 	const Variant data = json.get_data();
 	if (data.get_type() == Variant::ARRAY) {
 		reply.http_status = 400;
-		reply.body = make_error(Variant(), ERR_INVALID_REQUEST, "Batch requests are not supported.");
+		reply.body = make_error(Variant(), RPC_INVALID_REQUEST, "Batch requests are not supported.");
 		return reply;
 	}
 	if (data.get_type() != Variant::DICTIONARY) {
 		reply.http_status = 400;
-		reply.body = make_error(Variant(), ERR_INVALID_REQUEST, "Expected a JSON-RPC object.");
+		reply.body = make_error(Variant(), RPC_INVALID_REQUEST, "Expected a JSON-RPC object.");
 		return reply;
 	}
 	const Dictionary msg = data;
@@ -229,7 +229,7 @@ ClaudeBridgeMCP::Reply ClaudeBridgeMCP::handle(const String &p_body, uint64_t p_
 	const Variant id = has_id ? msg["id"] : Variant();
 	if (has_id && msg["id"].get_type() != Variant::STRING && msg["id"].get_type() != Variant::FLOAT && msg["id"].get_type() != Variant::INT) {
 		reply.http_status = 400;
-		reply.body = make_error(Variant(), ERR_INVALID_REQUEST, "Invalid id.");
+		reply.body = make_error(Variant(), RPC_INVALID_REQUEST, "Invalid id.");
 		return reply;
 	}
 	if (!msg.has("method") && (msg.has("result") || msg.has("error"))) {
@@ -238,19 +238,19 @@ ClaudeBridgeMCP::Reply ClaudeBridgeMCP::handle(const String &p_body, uint64_t p_
 	}
 	if (msg.has("id") && msg["id"].get_type() == Variant::NIL) {
 		reply.http_status = 400; // MCP forbids null request ids.
-		reply.body = make_error(Variant(), ERR_INVALID_REQUEST, "Request id must not be null.");
+		reply.body = make_error(Variant(), RPC_INVALID_REQUEST, "Request id must not be null.");
 		return reply;
 	}
 	if (String(msg.get("jsonrpc", "")) != "2.0" || msg.get("method", Variant()).get_type() != Variant::STRING) {
 		reply.http_status = 400;
-		reply.body = make_error(id, ERR_INVALID_REQUEST, "Invalid JSON-RPC 2.0 request.");
+		reply.body = make_error(id, RPC_INVALID_REQUEST, "Invalid JSON-RPC 2.0 request.");
 		return reply;
 	}
 	const String method = msg["method"];
 	const Variant params_v = msg.get("params", Dictionary());
 	if (params_v.get_type() != Variant::DICTIONARY) {
 		reply.http_status = has_id ? 200 : 202;
-		reply.body = has_id ? make_error(id, ERR_INVALID_PARAMS, "params must be an object.") : String();
+		reply.body = has_id ? make_error(id, RPC_INVALID_PARAMS, "params must be an object.") : String();
 		return reply;
 	}
 	const Dictionary params = params_v;
@@ -271,12 +271,12 @@ ClaudeBridgeMCP::Reply ClaudeBridgeMCP::handle(const String &p_body, uint64_t p_
 	} else if (method == "tools/call") {
 		const String name = params.get("name", "");
 		if (!tools.has(name)) {
-			reply.body = make_error(id, ERR_INVALID_PARAMS, "Unknown tool: " + name);
+			reply.body = make_error(id, RPC_INVALID_PARAMS, "Unknown tool: " + name);
 			return reply;
 		}
 		const Variant args_v = params.get("arguments", Dictionary());
 		if (args_v.get_type() != Variant::DICTIONARY) {
-			reply.body = make_error(id, ERR_INVALID_PARAMS, "arguments must be an object.");
+			reply.body = make_error(id, RPC_INVALID_PARAMS, "arguments must be an object.");
 			return reply;
 		}
 		const Tool &tool = tools[name];
@@ -291,13 +291,13 @@ ClaudeBridgeMCP::Reply ClaudeBridgeMCP::handle(const String &p_body, uint64_t p_
 			reply.call = call;
 		}
 	} else {
-		reply.body = make_error(id, ERR_METHOD_NOT_FOUND, "Method not found: " + method);
+		reply.body = make_error(id, RPC_METHOD_NOT_FOUND, "Method not found: " + method);
 	}
 	return reply;
 }
 
 String ClaudeBridgeMCP::finish(const Variant &p_id, const Ref<ClaudeBridgeToolCall> &p_call) const {
-	ERR_FAIL_COND_V(p_call.is_null(), make_error(p_id, ERR_INTERNAL, "Missing call."));
+	ERR_FAIL_COND_V(p_call.is_null(), make_error(p_id, RPC_INTERNAL_ERROR, "Missing call."));
 	if (!p_call->is_done()) {
 		Ref<ClaudeBridgeToolCall> timed_out;
 		timed_out.instantiate();

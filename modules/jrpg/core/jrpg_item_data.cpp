@@ -34,7 +34,7 @@
 #include "core/object/class_db.h"
 
 void JRPGItemData::set_item_type(ItemType p_type) {
-	ERR_FAIL_INDEX(p_type, ITEM_HIDDEN_B + 1);
+	ERR_FAIL_INDEX(int(p_type), ITEM_HIDDEN_B + 1);
 	item_type = p_type;
 	emit_changed();
 }

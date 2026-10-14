@@ -94,7 +94,7 @@ void JRPGTroopPage::set_switch_id(int p_id) {
 }
 
 void JRPGTroopPage::set_span(Span p_span) {
-	ERR_FAIL_INDEX(p_span, SPAN_MOMENT + 1);
+	ERR_FAIL_INDEX(int(p_span), SPAN_MOMENT + 1);
 	span = p_span;
 	emit_changed();
 }
