@@ -36,6 +36,7 @@
 #include "modules/jrpg/core/jrpg_system_data.h"
 
 class AudioStreamPlayer;
+class Font;
 class ImageTexture;
 class JRPGDatabase;
 class Texture2D;
@@ -84,6 +85,7 @@ private:
 	bool scroll_down_visible = false;
 	bool pause_visible = false;
 	bool frame_visible = true;
+	bool dim_visible = false;
 
 	Ref<ImageTexture> toned_back; // The back with the tone in use added; null when that tone is zero.
 	Ref<JRPGDatabase> database; // Null: the project's (JRPGDatabase::PROJECT_PATH).
@@ -107,6 +109,7 @@ protected:
 		int frame_margin = DEFAULT_FRAME_MARGIN;
 		int mark_offset = DEFAULT_MARK_OFFSET;
 		int icon_size = DEFAULT_ICON_SIZE;
+		Color dim_color;
 	} theme_cache;
 
 	void _notification(int p_what);
@@ -121,6 +124,12 @@ protected:
 	// when it is an AtlasTexture (as StyleBoxTexture::draw, scene/resources/style_box_texture.cpp:166-185; epic 10
 	// review A6). Call while drawing.
 	void draw_nine_patch(const Ref<Texture2D> &p_texture, const Rect2 &p_rect, real_t p_margin, const Color &p_modulate = Color(1, 1, 1)) const;
+	// Theme items another window type owns (text windows share the message window's font, D-053): this window's own
+	// override first, then p_type's item. Control skips a control's overrides when asked for another type
+	// (scene/gui/control.cpp, get_theme_font and the like; epic 10 review A18).
+	Ref<Font> _get_shared_font(const StringName &p_name, const StringName &p_type) const;
+	int _get_shared_font_size(const StringName &p_name, const StringName &p_type) const;
+	int _get_shared_constant(const StringName &p_name, const StringName &p_type) const;
 
 public:
 	// Adds the built-in skin to Godot's default theme when that theme has none yet (and exists: it is made with the
@@ -163,6 +172,10 @@ public:
 	// Whether the back and border are drawn (message windows on a dimmed or transparent background draw none).
 	void set_frame_visible(bool p_visible);
 	bool is_frame_visible() const { return frame_visible; }
+	// Whether a translucent band (theme item dim_color) is drawn over the window's area, under the frame: the Dim
+	// background of messages and choices (epic 10 review A12).
+	void set_dim_visible(bool p_visible);
+	bool is_dim_visible() const { return dim_visible; }
 
 	// Where the contents go: the window's rectangle inside the padding, in its own coordinates.
 	Rect2 get_content_rect() const;

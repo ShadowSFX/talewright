@@ -4,7 +4,7 @@
 		The number input window: 1 to 8 digits, changed one at a time.
 	</brief_description>
 	<description>
-		Asks for a number as Input Number does. [code]jrpg_up[/code] and [code]jrpg_down[/code] change the digit under the cursor (9 goes round to 0 and back), [code]jrpg_left[/code] and [code]jrpg_right[/code] move between digits (round at the ends), repeating while held; [code]jrpg_ok[/code] enters the number ([signal number_entered]). There is no cancel. The window sits at the right, beside the message window named by [member message_window].
+		Asks for a number as Input Number does. [code]jrpg_up[/code] and [code]jrpg_down[/code] change the digit under the cursor (9 goes round to 0 and back), [code]jrpg_left[/code] and [code]jrpg_right[/code] move between digits (round at the ends), repeating while held; [code]jrpg_ok[/code] enters the number ([signal number_entered]). There is no cancel. The window sits at the right, beside the message window named by [member message_window], and stays on the screen. Its digits use the [JRPGMessageWindow]'s font, font size and line height, and the cursor the [JRPGSelectableList]'s [theme_item JRPGSelectableList.cursor_margin], unless the window's own theme overrides set them.
 		Authority: client. Online, the server checks the number against the digits it asked for.
 	</description>
 	<tutorials>

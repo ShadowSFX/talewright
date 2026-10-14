@@ -862,6 +862,16 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   key repeats (RM-INP-004) moved to `JRPGInputReader` (shared by the list and the number input).
 - **Why:** the windows reuse the list and the window; the interpreter's presentation port (task 9.4) decides when to
   show them (the reference shows choices as soon as the message text is out; the test scene asks for OK first).
+- **Amended (epic 10 review A9-A12, A17, A18, A20; task 10.4.1.2.2):** a choice holding an icon is shown (blank
+  means nothing but blanks and codes that show nothing); when every choice is blank nothing is shown, an error is
+  printed and the choices end as cancel would end them (the cancel branch when cancel is refused), on the next idle
+  frame, so an event never waits for a choice that cannot be made. A cancel index that is no choice is an error and
+  refuses cancel. Choice and number windows are kept on the screen. The Dim background is `JRPGWindow`'s band
+  (`dim_visible`, theme item `dim_color`), shared by messages, their name box and choices. Coded item text is laid
+  out by one walk that both measures (choice width, sizes and icons included) and draws (an ellipsis at the end, room
+  for the right text). Text windows read the message window's text items and the list's cursor margin unless their
+  own theme overrides set them (Control skips a control's overrides when asked for another theme type). A theme type
+  variation of a list gets the list's font size in the default theme, as subclasses do.
 - **Reversal:** `JRPGChoiceWindow::_place` and `show_choices`, `JRPGNumberInputWindow::_process_input`.
 
 ## D-054 — The screen stack (managed addon)

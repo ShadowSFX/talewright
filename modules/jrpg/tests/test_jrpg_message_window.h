@@ -204,6 +204,7 @@ TEST_CASE("[SceneTree][JRPG][MessageWindow] Placement, background, face and the 
 	run_frames(1); // The window's layout (deferred) leaves the name box where it is: it is not contents.
 	CHECK(window->get_rect() == Rect2(0, 0, screen.x, height));
 	CHECK(!window->is_frame_visible()); // A dimmed band instead of the frame.
+	CHECK(window->is_dim_visible());
 	JRPGWindow *box = window->get_name_box();
 	CHECK(box->is_visible());
 	CHECK(box->get_position().y == height); // Below a message at the top.

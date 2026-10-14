@@ -255,6 +255,17 @@ TEST_CASE("[SceneTree][JRPG][SelectableList] The mouse points, chooses, cancels 
 	memdelete(list);
 }
 
+TEST_CASE("[SceneTree][JRPG][SelectableList] A theme type variation keeps the list's font size") {
+	// Epic 10 review A20: the default theme answers its default 16 px for any type, the variation's too.
+	JRPGSelectableList *list = add_list(3, 3);
+	list->set_theme_type_variation("TestListVariation");
+	run_frames(1);
+	CHECK(list->get_theme_font_size(SceneStringName(font_size)) == JRPGSelectableList::DEFAULT_FONT_SIZE);
+	list->add_theme_font_size_override(SceneStringName(font_size), 30); // An override still wins.
+	CHECK(list->get_theme_font_size(SceneStringName(font_size)) == 30);
+	memdelete(list);
+}
+
 TEST_CASE("[SceneTree][JRPG][SelectableList] Sounds come from the System data's cues") {
 	bool own_audio = false;
 	if (!AudioServer::get_singleton()) {

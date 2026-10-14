@@ -4,7 +4,7 @@
 		The choice window: the choices beside the message window, the default one selected, cancel refused, a choice or a branch.
 	</brief_description>
 	<description>
-		Shows choices as Show Choices does: a [JRPGSelectableList] as wide as the widest choice, beside the message window named by [member message_window] (above a message in the lower part of the screen, below one at the top; at the bottom of the screen without a message), at the left, middle or right. Choices may hold control codes for colors, icons and sizes. Blank choices are not shown, and [signal choice_made] reports the index a choice had among those given. The cursor starts on the default choice. Cancel is refused ([constant CANCEL_DISALLOWED]), picks a choice, or is a branch of its own ([constant CANCEL_BRANCH]). After a choice the window lets go of the focus and cannot take it again (not even by a click) until [method show_choices], so a second press chooses nothing.
+		Shows choices as Show Choices does: a [JRPGSelectableList] as wide as the widest choice, beside the message window named by [member message_window] (above a message in the lower part of the screen, below one at the top; at the bottom of the screen without a message), at the left, middle or right. Choices may hold control codes for colors, icons and sizes; the window is as wide as the widest choice as drawn, and stays on the screen. Blank choices are not shown (see [method is_blank_choice]), and [signal choice_made] reports the index a choice had among those given. The cursor starts on the default choice. Cancel is refused ([constant CANCEL_DISALLOWED]), picks a choice, or is a branch of its own ([constant CANCEL_BRANCH]). After a choice the window lets go of the focus and cannot take it again (not even by a click) until [method show_choices], so a second press chooses nothing.
 		Authority: client. Online, the server checks the index it receives.
 	</description>
 	<tutorials>
@@ -22,6 +22,13 @@
 				Returns where the window was placed by the last [method show_choices].
 			</description>
 		</method>
+		<method name="is_blank_choice" qualifiers="static">
+			<return type="bool" />
+			<param index="0" name="choice" type="String" />
+			<description>
+				Returns [code]true[/code] when [param choice] is left out: nothing but blanks and control codes that show nothing. A choice with an icon ([code]\I[n][/code]) is shown.
+			</description>
+		</method>
 		<method name="show_choices">
 			<return type="void" />
 			<param index="0" name="choices" type="PackedStringArray" />
@@ -30,7 +37,7 @@
 			<param index="3" name="placement" type="int" enum="JRPGChoiceWindow.Placement" default="2" />
 			<param index="4" name="background" type="int" enum="JRPGMessageWindow.Background" default="0" />
 			<description>
-				Shows [param choices] with the cursor on [param default] (an index among the choices given). [param cancel] is [constant CANCEL_DISALLOWED], [constant CANCEL_BRANCH] or the index of the choice cancel picks. [param placement] puts the window at the left, middle or right; [param background] is the window frame or none. Opens the window and gives it the focus.
+				Shows [param choices] with the cursor on [param default] (an index among the choices given). [param cancel] is [constant CANCEL_DISALLOWED], [constant CANCEL_BRANCH] or the index of the choice cancel picks. A [param cancel] that is none of these is an error, and cancel is refused. [param placement] puts the window at the left, middle or right; [param background] is the window frame, a dimmed band ([member JRPGWindow.dim_visible]) or none. Opens the window and gives it the focus. When every choice is blank, nothing is shown (an error) and [signal choice_made] reports the choice cancel picks, or [constant CANCEL_BRANCH] when cancel is refused, on the next idle frame, so the game never waits for a choice that cannot be made.
 			</description>
 		</method>
 	</methods>

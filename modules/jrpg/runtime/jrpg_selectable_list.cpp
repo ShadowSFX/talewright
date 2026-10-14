@@ -63,13 +63,18 @@ void JRPGSelectableList::ensure_default_theme() {
 void JRPGSelectableList::_update_theme_item_cache() {
 	ensure_default_theme();
 	// A theme with a default font size answers it for any type (scene/resources/theme.cpp:670-672), so a class
-	// extending the list (choices) would get that size before reaching the list's own: its type gets the list's size.
+	// extending the list (choices) or a theme type variation would get that size before reaching the list's own: in
+	// the default theme, those types get the list's size (epic 10 review A20). Project themes still come first.
 	ThemeDB *themes = ThemeDB::get_singleton();
 	const Ref<Theme> theme = themes ? themes->get_default_theme() : Ref<Theme>();
-	if (theme.is_valid() && get_class_name() != get_class_static() && !theme->has_font_size_nocheck(SceneStringName(font_size), get_class_name())) {
-		theme->set_block_signals(true);
-		theme->set_font_size(SceneStringName(font_size), get_class_name(), DEFAULT_FONT_SIZE);
-		theme->set_block_signals(false);
+	if (theme.is_valid()) {
+		for (const StringName &type : { get_class_name(), get_theme_type_variation() }) {
+			if (type != StringName() && type != get_class_static() && !theme->has_font_size_nocheck(SceneStringName(font_size), type)) {
+				theme->set_block_signals(true);
+				theme->set_font_size(SceneStringName(font_size), type, DEFAULT_FONT_SIZE);
+				theme->set_block_signals(false);
+			}
+		}
 	}
 	JRPGWindow::_update_theme_item_cache();
 }
@@ -367,14 +372,14 @@ void JRPGSelectableList::gui_input(const Ref<InputEvent> &p_event) {
 	}
 }
 
-void JRPGSelectableList::_draw_coded_text(const String &p_text, const Rect2 &p_area, const Color &p_color, bool p_enabled) {
-	// Text with control codes (choices): colors, icons and sizes; the codes that act over time do nothing here.
+real_t JRPGSelectableList::_layout_coded_text(const String &p_text, const Rect2 &p_area, const Color &p_color, bool p_enabled, bool p_draw) {
 	const Ref<Font> font = theme_cache.font;
 	if (font.is_null()) {
-		return;
+		return 0;
 	}
 	const PackedColorArray palette = JRPGMessageWindow::get_default_text_colors();
 	const Ref<Texture2D> icons = get_icon_set_texture();
+	const real_t end = p_area.get_end().x;
 	real_t x = p_area.position.x;
 	int size = theme_cache.font_size;
 	Color color = p_color;
@@ -383,19 +388,35 @@ void JRPGSelectableList::_draw_coded_text(const String &p_text, const Rect2 &p_a
 		switch (int(op.get("op", -1))) {
 			case JRPGMessageText::OP_TEXT: {
 				const String run = op.get("text", "");
-				const real_t ascent = font->get_ascent(size);
-				const real_t baseline = p_area.position.y + (p_area.size.y - font->get_height(size)) / 2 + ascent;
-				const real_t room = p_area.get_end().x - x;
-				if (room <= 0) {
-					return; // Past the item's end.
+				const real_t width = font->get_string_size(run, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x;
+				if (p_draw && x + width > end + CMP_EPSILON) {
+					// The rest does not fit: this run ends with an ellipsis, as plain items do (epic 10 review A17).
+					Ref<TextLine> line;
+					line.instantiate();
+					line->add_string(run, font, size);
+					line->set_width(MAX(real_t(0), end - x));
+					line->set_text_overrun_behavior(TextServer::OVERRUN_TRIM_ELLIPSIS);
+					line->draw(get_canvas_item(), Point2(x, p_area.position.y + (p_area.size.y - line->get_size().y) / 2), color);
+					return end - p_area.position.x;
 				}
-				draw_string(font, Point2(x, baseline), run, HORIZONTAL_ALIGNMENT_LEFT, room, size, color, TextServer::JUSTIFICATION_NONE);
-				x += font->get_string_size(run, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x;
+				if (p_draw) {
+					const real_t baseline = p_area.position.y + (p_area.size.y - font->get_height(size)) / 2 + font->get_ascent(size);
+					draw_string(font, Point2(x, baseline), run, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color);
+				}
+				x += width;
 			} break;
 			case JRPGMessageText::OP_ICON: {
-				const Rect2 region = get_icon_region(op.get("index", 0));
 				const real_t side = MIN(real_t(ICON_SIZE), p_area.size.y - 4);
-				if (icons.is_valid() && region.has_area() && x + side <= p_area.get_end().x) {
+				if (p_draw && x + side > end + CMP_EPSILON) {
+					const String ellipsis = String::chr(0x2026);
+					if (x + font->get_string_size(ellipsis, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x <= end) {
+						const real_t baseline = p_area.position.y + (p_area.size.y - font->get_height(size)) / 2 + font->get_ascent(size);
+						draw_string(font, Point2(x, baseline), ellipsis, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color);
+					}
+					return end - p_area.position.x;
+				}
+				const Rect2 region = get_icon_region(op.get("index", 0));
+				if (p_draw && icons.is_valid() && region.has_area()) {
 					draw_texture_rect_region(icons, Rect2(x, p_area.position.y + (p_area.size.y - side) / 2, side, side), region, Color(1, 1, 1, p_color.a));
 				}
 				x += side + 4;
@@ -419,6 +440,14 @@ void JRPGSelectableList::_draw_coded_text(const String &p_text, const Rect2 &p_a
 				break;
 		}
 	}
+	return x - p_area.position.x;
+}
+
+real_t JRPGSelectableList::get_text_width(const String &p_text) {
+	if (!p_text.contains_char('\\')) {
+		return theme_cache.font.is_valid() ? theme_cache.font->get_string_size(p_text, HORIZONTAL_ALIGNMENT_LEFT, -1, theme_cache.font_size).x : 0;
+	}
+	return _layout_coded_text(p_text, Rect2(0, 0, 0, theme_cache.item_height), Color(), true, false);
 }
 
 void JRPGSelectableList::unhandled_input(const Ref<InputEvent> &p_event) {
@@ -480,15 +509,16 @@ void JRPGSelectableList::_notification(int p_what) {
 					right->add_string(right_text, theme_cache.font, theme_cache.font_size);
 					right->draw(ci, Point2(end - right->get_size().x, rect.position.y + (rect.size.y - right->get_size().y) / 2), color);
 				}
+				const real_t text_end = end - (right.is_valid() ? right->get_size().x + 8 : 0); // The text stops before the right text.
 				const String text = item.get("text", "");
 				if (text.contains_char('\\')) {
-					_draw_coded_text(text, Rect2(x, rect.position.y, end - x, rect.size.y), color, bool(item.get("enabled", true)));
+					_layout_coded_text(text, Rect2(x, rect.position.y, MAX(real_t(0), text_end - x), rect.size.y), color, bool(item.get("enabled", true)), true);
 					continue;
 				}
 				Ref<TextLine> line;
 				line.instantiate();
 				line->add_string(text, theme_cache.font, theme_cache.font_size);
-				line->set_width(MAX(real_t(0), end - x - (right.is_valid() ? right->get_size().x + 8 : 0)));
+				line->set_width(MAX(real_t(0), text_end - x));
 				line->set_text_overrun_behavior(TextServer::OVERRUN_TRIM_ELLIPSIS);
 				line->draw(ci, Point2(x, rect.position.y + (rect.size.y - line->get_size().y) / 2), color);
 			}
@@ -514,6 +544,7 @@ void JRPGSelectableList::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_cancellable", "cancellable"), &JRPGSelectableList::set_cancellable);
 	ClassDB::bind_method(D_METHOD("is_cancellable"), &JRPGSelectableList::is_cancellable);
 	ClassDB::bind_method(D_METHOD("get_item_rect", "index"), &JRPGSelectableList::get_item_rect);
+	ClassDB::bind_method(D_METHOD("get_text_width", "text"), &JRPGSelectableList::get_text_width);
 	ClassDB::bind_method(D_METHOD("get_item_at_position", "position"), &JRPGSelectableList::get_item_at_position);
 	ClassDB::bind_method(D_METHOD("set_page_mode", "mode"), &JRPGSelectableList::set_page_mode);
 	ClassDB::bind_method(D_METHOD("get_page_mode"), &JRPGSelectableList::get_page_mode);

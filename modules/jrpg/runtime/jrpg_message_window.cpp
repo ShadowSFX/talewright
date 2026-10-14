@@ -50,7 +50,6 @@ void JRPGMessageWindow::ensure_default_theme() {
 	theme->set_block_signals(true); // As JRPGWindow::ensure_default_skin: nothing has read these yet.
 	theme->set_font_size(SNAME("font_size"), type, DEFAULT_FONT_SIZE);
 	theme->set_constant(SNAME("line_height"), type, DEFAULT_LINE_HEIGHT);
-	theme->set_color(SNAME("dim_color"), type, Color(0, 0, 0, 0.6));
 	theme->set_block_signals(false);
 }
 
@@ -217,6 +216,7 @@ void JRPGMessageWindow::_apply_placement() {
 	set_position(Point2(0, y));
 	set_size(Size2(screen.x, height));
 	set_frame_visible(background == BACKGROUND_WINDOW);
+	set_dim_visible(background == BACKGROUND_DIM);
 	_update_name_box();
 }
 
@@ -228,6 +228,7 @@ void JRPGMessageWindow::_update_name_box() {
 	name_label->set_text(speaker);
 	name_label->add_theme_font_size_override(SceneStringName(font_size), theme_cache.font_size);
 	name_box->set_frame_visible(background == BACKGROUND_WINDOW);
+	name_box->set_dim_visible(background == BACKGROUND_DIM);
 	const Size2 box = name_box->get_combined_minimum_size();
 	// Above the message window, or below it when the message is at the top of the screen.
 	name_box->set_position(Point2(0, placement == PLACEMENT_TOP ? get_size().y : -box.y));
@@ -414,9 +415,6 @@ void JRPGMessageWindow::_notification(int p_what) {
 		} break;
 		case NOTIFICATION_DRAW: {
 			const Rect2 content = get_content_rect();
-			if (background == BACKGROUND_DIM) {
-				draw_rect(get_open_rect(), theme_cache.dim_color);
-			}
 			if (!is_open()) {
 				break; // The text shows once the window is open.
 			}
@@ -494,7 +492,6 @@ void JRPGMessageWindow::_bind_methods() {
 	BIND_THEME_ITEM(Theme::DATA_TYPE_FONT, JRPGMessageWindow, font);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_FONT_SIZE, JRPGMessageWindow, font_size);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, JRPGMessageWindow, line_height);
-	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, JRPGMessageWindow, dim_color);
 }
 
 JRPGMessageWindow::JRPGMessageWindow() {

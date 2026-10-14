@@ -4,7 +4,7 @@
 		The gold window: the party's gold and the currency unit.
 	</brief_description>
 	<description>
-		Shows the party's [member gold] with the [member currency_unit] after it, at the top right of the screen, as a message's [code]\$[/code] code asks for ([signal JRPGMessageWindow.gold_window_requested]) and menus show it.
+		Shows the party's [member gold] with the [member currency_unit] after it, at the top right of the screen, as a message's [code]\$[/code] code asks for ([signal JRPGMessageWindow.gold_window_requested]) and menus show it. The text uses the [JRPGMessageWindow]'s font, font size and line height, unless the window's own theme overrides set them.
 		Authority: client. It shows the gold the game state holds (the server's, online).
 	</description>
 	<tutorials>

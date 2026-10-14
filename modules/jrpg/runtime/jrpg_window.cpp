@@ -84,6 +84,7 @@ void JRPGWindow::ensure_default_skin() {
 	theme->set_constant(SNAME("frame_margin"), type, DEFAULT_FRAME_MARGIN);
 	theme->set_constant(SNAME("mark_offset"), type, DEFAULT_MARK_OFFSET);
 	theme->set_constant(SNAME("icon_size"), type, DEFAULT_ICON_SIZE);
+	theme->set_color(SNAME("dim_color"), type, Color(0, 0, 0, 0.6));
 	theme->set_block_signals(false);
 }
 
@@ -218,6 +219,23 @@ void JRPGWindow::set_pause_visible(bool p_visible) {
 void JRPGWindow::set_frame_visible(bool p_visible) {
 	frame_visible = p_visible;
 	queue_redraw();
+}
+
+void JRPGWindow::set_dim_visible(bool p_visible) {
+	dim_visible = p_visible;
+	queue_redraw();
+}
+
+Ref<Font> JRPGWindow::_get_shared_font(const StringName &p_name, const StringName &p_type) const {
+	return has_theme_font_override(p_name) ? get_theme_font(p_name) : get_theme_font(p_name, p_type);
+}
+
+int JRPGWindow::_get_shared_font_size(const StringName &p_name, const StringName &p_type) const {
+	return has_theme_font_size_override(p_name) ? get_theme_font_size(p_name) : get_theme_font_size(p_name, p_type);
+}
+
+int JRPGWindow::_get_shared_constant(const StringName &p_name, const StringName &p_type) const {
+	return has_theme_constant_override(p_name) ? get_theme_constant(p_name) : get_theme_constant(p_name, p_type);
 }
 
 Rect2 JRPGWindow::get_icon_region(int p_index) const {
@@ -388,6 +406,9 @@ void JRPGWindow::_notification(int p_what) {
 				rs->canvas_item_set_clip(ci, true);
 				rs->canvas_item_add_set_transform(ci, Transform2D(0, Size2(1, openness), 0, Vector2(0, size.y * (1.0 - openness) / 2.0)));
 			}
+			if (dim_visible) {
+				draw_rect(Rect2(Point2(), size), theme_cache.dim_color); // Squashed into the band, as the frame.
+			}
 			if (frame_visible) {
 				for (const Ref<Texture2D> &layer : { get_back_texture(), theme_cache.border }) {
 					draw_nine_patch(layer, Rect2(Point2(), size), theme_cache.frame_margin);
@@ -438,6 +459,8 @@ void JRPGWindow::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_pause_visible"), &JRPGWindow::is_pause_visible);
 	ClassDB::bind_method(D_METHOD("set_frame_visible", "visible"), &JRPGWindow::set_frame_visible);
 	ClassDB::bind_method(D_METHOD("is_frame_visible"), &JRPGWindow::is_frame_visible);
+	ClassDB::bind_method(D_METHOD("set_dim_visible", "visible"), &JRPGWindow::set_dim_visible);
+	ClassDB::bind_method(D_METHOD("is_dim_visible"), &JRPGWindow::is_dim_visible);
 	ClassDB::bind_method(D_METHOD("get_icon_set_texture"), &JRPGWindow::get_icon_set_texture);
 	ClassDB::bind_method(D_METHOD("get_icon_size"), &JRPGWindow::get_icon_size);
 	ClassDB::bind_method(D_METHOD("get_icon_region", "index"), &JRPGWindow::get_icon_region);
@@ -461,6 +484,7 @@ void JRPGWindow::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "scroll_down_visible"), "set_scroll_down_visible", "is_scroll_down_visible");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "pause_visible"), "set_pause_visible", "is_pause_visible");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "frame_visible"), "set_frame_visible", "is_frame_visible");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "dim_visible"), "set_dim_visible", "is_dim_visible");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "database", PROPERTY_HINT_RESOURCE_TYPE, "JRPGDatabase"), "set_database", "get_database");
 
 	ADD_SIGNAL(MethodInfo("opened"));
@@ -482,6 +506,7 @@ void JRPGWindow::_bind_methods() {
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, JRPGWindow, padding);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, JRPGWindow, frame_margin);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, JRPGWindow, mark_offset);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, JRPGWindow, dim_color);
 }
 
 JRPGWindow::JRPGWindow() {

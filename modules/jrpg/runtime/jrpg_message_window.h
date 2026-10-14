@@ -118,7 +118,6 @@ private:
 		Ref<Font> font;
 		int font_size = DEFAULT_FONT_SIZE;
 		int line_height = DEFAULT_LINE_HEIGHT;
-		Color dim_color;
 	} theme_cache;
 
 	real_t _text_left() const;
@@ -140,7 +139,7 @@ protected:
 public:
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
 
-	// Adds the message window's defaults (font size, line height, dim color) to Godot's default theme.
+	// Adds the message window's defaults (font size, line height) to Godot's default theme.
 	static void ensure_default_theme();
 	// Talewright's default text colors (\C[n]): white, then a palette of 31 colors.
 	static PackedColorArray get_default_text_colors();

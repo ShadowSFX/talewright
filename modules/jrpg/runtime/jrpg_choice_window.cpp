@@ -34,16 +34,32 @@
 #include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
 #include "scene/main/viewport.h"
-#include "scene/resources/font.h"
 
 #include "modules/jrpg/core/jrpg_message_text.h"
 
+bool JRPGChoiceWindow::is_blank_choice(const String &p_choice) {
+	if (!JRPGMessageText::strip(p_choice).strip_edges().is_empty()) {
+		return false;
+	}
+	for (const Variant &entry : JRPGMessageText::parse(p_choice)) {
+		if (int(Dictionary(entry).get("op", -1)) == JRPGMessageText::OP_ICON) {
+			return false; // An icon alone is something to choose (epic 10 review A9).
+		}
+	}
+	return true;
+}
+
 void JRPGChoiceWindow::show_choices(const PackedStringArray &p_choices, int p_default, int p_cancel, Placement p_placement, JRPGMessageWindow::Background p_background) {
+	if (p_cancel != CANCEL_DISALLOWED && p_cancel != CANCEL_BRANCH && (p_cancel < 0 || p_cancel >= p_choices.size())) {
+		// Epic 10 review A10: a cancel that picks no given choice is refused.
+		ERR_PRINT(vformat("JRPGChoiceWindow: cancel %d picks none of the %d choices; cancel is refused.", p_cancel, p_choices.size()));
+		p_cancel = CANCEL_DISALLOWED;
+	}
 	shown_indexes.clear();
 	Array list;
 	int start = 0;
 	for (int i = 0; i < p_choices.size(); i++) {
-		if (JRPGMessageText::strip(p_choices[i]).strip_edges().is_empty()) {
+		if (is_blank_choice(p_choices[i])) {
 			continue; // Blank choices are not shown.
 		}
 		if (i == p_default) {
@@ -60,6 +76,19 @@ void JRPGChoiceWindow::show_choices(const PackedStringArray &p_choices, int p_de
 	set_cancellable(p_cancel != CANCEL_DISALLOWED);
 	placement = p_placement;
 	set_frame_visible(p_background == JRPGMessageWindow::BACKGROUND_WINDOW);
+	set_dim_visible(p_background == JRPGMessageWindow::BACKGROUND_DIM);
+	if (list.is_empty()) {
+		// Nothing to choose: the game must not wait for ever (epic 10 review A9). Answered as cancel would be, or as
+		// the cancel branch when cancel is refused, after the caller has connected.
+		ERR_PRINT("JRPGChoiceWindow: every choice is blank; nothing is shown and the choices end as cancelled.");
+		answered = true;
+		set_focus_mode(FOCUS_NONE);
+		if (!is_closed() && !is_closing()) {
+			close(); // Earlier choices may still show.
+		}
+		callable_mp(this, &JRPGChoiceWindow::_emit_choice).call_deferred(p_cancel == CANCEL_DISALLOWED ? CANCEL_BRANCH : p_cancel);
+		return;
+	}
 	answered = false;
 	set_focus_mode(FOCUS_ALL);
 	_place();
@@ -75,23 +104,16 @@ void JRPGChoiceWindow::_place() {
 	if (!is_inside_tree()) {
 		return;
 	}
-	// As wide as the widest choice (icons count as their size), as tall as the choices.
-	const Ref<Font> font = get_theme_font(SceneStringName(font));
-	const int font_size = get_theme_font_size(SceneStringName(font_size));
+	// As wide as the widest choice (as the list lays it out: sizes and icons count), as tall as the choices; never
+	// larger than the screen (the list scrolls then).
 	const int item_height = get_theme_constant(SNAME("item_height"));
 	const int padding = get_theme_constant(SNAME("padding"));
 	real_t widest = 0;
 	for (int i = 0; i < get_item_count(); i++) {
-		const String text = get_item_text(i);
-		int icons = 0;
-		for (const Variant &entry : JRPGMessageText::parse(text)) {
-			icons += int(Dictionary(entry).get("op", -1)) == JRPGMessageText::OP_ICON ? 1 : 0;
-		}
-		const real_t width = font.is_valid() ? font->get_string_size(JRPGMessageText::strip(text), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x : 0;
-		widest = MAX(widest, width + icons * (ICON_SIZE + 4));
+		widest = MAX(widest, get_text_width(get_item_text(i)));
 	}
 	const Size2 screen = get_viewport_rect().size;
-	const Size2 size(CLAMP(Math::ceil(widest) + 8 + padding * 2, real_t(MIN_WIDTH), screen.x), get_item_count() * item_height + padding * 2);
+	const Size2 size(CLAMP(Math::ceil(widest) + 8 + padding * 2, real_t(MIN_WIDTH), screen.x), MIN(real_t(get_item_count() * item_height + padding * 2), screen.y));
 	real_t x = screen.x - size.x;
 	if (placement == PLACEMENT_LEFT) {
 		x = 0;
@@ -105,8 +127,13 @@ void JRPGChoiceWindow::_place() {
 		// Above a message in the lower half of the screen, below one at the top.
 		y = beside.position.y > screen.y / 4 ? beside.position.y - size.y : beside.get_end().y;
 	}
-	set_global_position(Point2(x, y));
+	// On the screen whatever the message's place (epic 10 review A11).
+	set_global_position(Point2(CLAMP(x, real_t(0), screen.x - size.x), CLAMP(y, real_t(0), screen.y - size.y)));
 	set_size(size);
+}
+
+void JRPGChoiceWindow::_emit_choice(int p_index) {
+	emit_signal(SNAME("choice_made"), p_index);
 }
 
 void JRPGChoiceWindow::_on_item_chosen(int p_item) {
@@ -133,6 +160,7 @@ void JRPGChoiceWindow::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_message_window"), &JRPGChoiceWindow::get_message_window);
 	ClassDB::bind_method(D_METHOD("get_cancel_choice"), &JRPGChoiceWindow::get_cancel_choice);
 	ClassDB::bind_method(D_METHOD("get_placement"), &JRPGChoiceWindow::get_placement);
+	ClassDB::bind_static_method("JRPGChoiceWindow", D_METHOD("is_blank_choice", "choice"), &JRPGChoiceWindow::is_blank_choice);
 
 	ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "message_window", PROPERTY_HINT_NODE_PATH_VALID_TYPES, "Control"), "set_message_window", "get_message_window");
 

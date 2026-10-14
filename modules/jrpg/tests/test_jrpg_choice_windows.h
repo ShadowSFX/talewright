@@ -33,6 +33,7 @@
 
 #include "core/input/input.h"
 #include "core/input/input_map.h"
+#include "core/object/message_queue.h"
 #include "scene/main/scene_tree.h"
 #include "scene/main/window.h"
 #include "tests/signal_watcher.h"
@@ -108,6 +109,88 @@ TEST_CASE("[SceneTree][JRPG][ChoiceWindow] Choices: default, blank ones left out
 	SIGNAL_CHECK_FALSE("choice_made");
 	CHECK(choices->has_focus());
 	SIGNAL_UNWATCH(choices, "choice_made");
+	memdelete(choices);
+}
+
+TEST_CASE("[SceneTree][JRPG][ChoiceWindow] Icon choices show; all blank ends as cancelled; a bad cancel is refused") {
+	ensure_actions();
+	JRPGChoiceWindow *choices = memnew(JRPGChoiceWindow);
+	SceneTree::get_singleton()->get_root()->add_child(choices);
+	// Epic 10 review A9: an icon alone is a choice; colors and blanks are not.
+	CHECK_FALSE(JRPGChoiceWindow::is_blank_choice("\\I[3]"));
+	CHECK(JRPGChoiceWindow::is_blank_choice("\\C[2]  "));
+	choices->show_choices(PackedStringArray({ "\\I[3]", " ", "No" }));
+	CHECK(choices->get_item_count() == 2);
+
+	SIGNAL_WATCH(choices, "choice_made");
+	ERR_PRINT_OFF;
+	choices->show_choices(PackedStringArray({ "", "\\C[2] " }), 0, JRPGChoiceWindow::CANCEL_DISALLOWED);
+	ERR_PRINT_ON;
+	CHECK(choices->get_item_count() == 0);
+	CHECK(choices->get_focus_mode() == Control::FOCUS_NONE);
+	SIGNAL_CHECK_FALSE("choice_made"); // After the caller has connected...
+	MessageQueue::get_singleton()->flush();
+	SIGNAL_CHECK("choice_made", emitted(JRPGChoiceWindow::CANCEL_BRANCH)); // ...as the cancel branch.
+	ERR_PRINT_OFF;
+	choices->show_choices(PackedStringArray({ "", "" }), 0, 1);
+	ERR_PRINT_ON;
+	MessageQueue::get_singleton()->flush();
+	SIGNAL_CHECK("choice_made", emitted(1)); // Or as the choice cancel picks.
+
+	// Epic 10 review A10: a cancel index that is no choice is an error, and cancel is refused.
+	ERR_PRINT_OFF;
+	choices->show_choices(PackedStringArray({ "Yes", "No" }), 0, 2);
+	ERR_PRINT_ON;
+	CHECK((choices->get_cancel_choice() == JRPGChoiceWindow::CANCEL_DISALLOWED && !choices->is_cancellable()));
+	run_frames(1);
+	tap("jrpg_cancel");
+	SIGNAL_CHECK_FALSE("choice_made");
+	SIGNAL_UNWATCH(choices, "choice_made");
+
+	// Epic 10 review A12: the Dim background is a band, not nothing.
+	choices->show_choices(PackedStringArray({ "Yes", "No" }), 0, JRPGChoiceWindow::CANCEL_DISALLOWED, JRPGChoiceWindow::PLACEMENT_RIGHT, JRPGMessageWindow::BACKGROUND_DIM);
+	CHECK((choices->is_dim_visible() && !choices->is_frame_visible()));
+	choices->show_choices(PackedStringArray({ "Yes", "No" }));
+	CHECK((!choices->is_dim_visible() && choices->is_frame_visible()));
+	memdelete(choices);
+}
+
+TEST_CASE("[SceneTree][JRPG][ChoiceWindow] Widths follow size codes and icons; the windows stay on the screen") {
+	ensure_actions();
+	Node *root = SceneTree::get_singleton()->get_root();
+	JRPGChoiceWindow *choices = memnew(JRPGChoiceWindow);
+	root->add_child(choices);
+	// Epic 10 review A17: sizes and icons count as the list draws them.
+	const real_t plain = choices->get_text_width("North");
+	CHECK(plain > 0);
+	CHECK(choices->get_text_width("\\{\\{North") > plain);
+	CHECK(choices->get_text_width("\\C[2]North") == doctest::Approx(plain));
+	CHECK(choices->get_text_width("\\I[1]North") == doctest::Approx(plain + JRPGSelectableList::ICON_SIZE + 4));
+	choices->show_choices(PackedStringArray({ "North" }));
+	const real_t narrow = choices->get_size().x;
+	choices->show_choices(PackedStringArray({ "\\FS[60]North and further north" }));
+	CHECK(choices->get_size().x > narrow);
+	run_frames(1); // Drawn without errors.
+
+	// Epic 10 review A11: beside a tall control, the window would leave the screen; it is kept on it.
+	Control *beside = memnew(Control);
+	beside->set_name("Beside");
+	root->add_child(beside);
+	const Size2 screen = choices->get_viewport_rect().size;
+	beside->set_position(Point2(0, 10));
+	beside->set_size(Size2(screen.x, screen.y - 15)); // Its top in the upper quarter: the window goes below it.
+	choices->set_message_window(NodePath("../Beside"));
+	choices->show_choices(PackedStringArray({ "One", "Two", "Three", "Four", "Five", "Six" }));
+	Rect2 rect = choices->get_global_rect();
+	CHECK((rect.position.y >= 0 && rect.get_end().y <= screen.y));
+	JRPGNumberInputWindow *input = memnew(JRPGNumberInputWindow);
+	root->add_child(input);
+	input->set_message_window(NodePath("../Beside"));
+	input->start(4);
+	rect = input->get_global_rect();
+	CHECK((rect.position.y >= 0 && rect.get_end().y <= screen.y));
+	memdelete(input);
+	memdelete(beside);
 	memdelete(choices);
 }
 
@@ -188,6 +271,12 @@ TEST_CASE("[SceneTree][JRPG][NumberInputWindow] Digits change, the cursor moves,
 	CHECK((input->get_digits() == JRPGNumberInputWindow::MAX_DIGITS && input->get_value() == 0));
 	input->start(2, 12345);
 	CHECK(input->get_value() == 45);
+	// The window's own theme overrides come before the message window's items (epic 10 review A18).
+	const int padding = input->get_theme_constant("padding");
+	input->add_theme_constant_override("line_height", 50);
+	input->start(2);
+	CHECK(input->get_size().y == 50 + padding * 2);
+	run_frames(1); // Drawn without errors, with the list's cursor margin.
 	SIGNAL_UNWATCH(input, "number_entered");
 	memdelete(input);
 }
@@ -202,6 +291,9 @@ TEST_CASE("[SceneTree][JRPG][GoldWindow] The gold and its unit, at the top right
 	gold->set_gold(-5);
 	CHECK(gold->get_gold() == 0);
 	run_frames(1); // Drawn without errors.
+	gold->add_theme_constant_override("line_height", 44); // Its own override first (epic 10 review A18).
+	gold->show_gold(10, "Crowns");
+	CHECK(gold->get_size().y == 44 + gold->get_theme_constant("padding") * 2);
 	memdelete(gold);
 }
 

@@ -41,7 +41,7 @@ void JRPGGoldWindow::show_gold(int64_t p_gold, const String &p_unit) {
 	currency_unit = p_unit;
 	if (is_inside_tree()) {
 		JRPGMessageWindow::ensure_default_theme();
-		const int line_height = get_theme_constant(SNAME("line_height"), SNAME("JRPGMessageWindow"));
+		const int line_height = _get_shared_constant(SNAME("line_height"), SNAME("JRPGMessageWindow"));
 		const int padding = get_theme_constant(SNAME("padding"));
 		const Size2 size(WIDTH, line_height + padding * 2);
 		set_global_position(Point2(get_viewport_rect().size.x - size.x, 0));
@@ -67,11 +67,13 @@ void JRPGGoldWindow::_notification(int p_what) {
 	if (p_what != NOTIFICATION_DRAW) {
 		return;
 	}
+	// The message window's text, unless this window overrides it (epic 10 review A18). Drawn while opening too: the
+	// window clips its contents to the opening band.
 	JRPGMessageWindow::ensure_default_theme();
-	const Ref<Font> font = get_theme_font(SceneStringName(font), SNAME("JRPGMessageWindow"));
-	const int font_size = get_theme_font_size(SceneStringName(font_size), SNAME("JRPGMessageWindow"));
-	const int line_height = get_theme_constant(SNAME("line_height"), SNAME("JRPGMessageWindow"));
-	if (font.is_null() || !is_open()) {
+	const Ref<Font> font = _get_shared_font(SceneStringName(font), SNAME("JRPGMessageWindow"));
+	const int font_size = _get_shared_font_size(SceneStringName(font_size), SNAME("JRPGMessageWindow"));
+	const int line_height = _get_shared_constant(SNAME("line_height"), SNAME("JRPGMessageWindow"));
+	if (font.is_null()) {
 		return;
 	}
 	// The amount right-aligned, the unit after it in the system label color.

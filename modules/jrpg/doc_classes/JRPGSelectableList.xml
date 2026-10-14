@@ -61,6 +61,13 @@
 				Returns the text of the item [param index].
 			</description>
 		</method>
+		<method name="get_text_width">
+			<return type="float" />
+			<param index="0" name="text" type="String" />
+			<description>
+				Returns the width [param text] takes in an item as the list draws it (control codes for sizes and icons included), without the item's icon, right text and margins.
+			</description>
+		</method>
 		<method name="is_item_enabled" qualifiers="const">
 			<return type="bool" />
 			<param index="0" name="index" type="int" />

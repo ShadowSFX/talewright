@@ -32,6 +32,7 @@
 #include "jrpg_number_input_window.h"
 
 #include "jrpg_message_window.h"
+#include "jrpg_selectable_list.h"
 
 #include "core/input/input_event.h"
 #include "core/object/class_db.h"
@@ -75,7 +76,7 @@ void JRPGNumberInputWindow::_place() {
 		return;
 	}
 	JRPGMessageWindow::ensure_default_theme();
-	const int line_height = get_theme_constant(SNAME("line_height"), SNAME("JRPGMessageWindow"));
+	const int line_height = _get_shared_constant(SNAME("line_height"), SNAME("JRPGMessageWindow"));
 	const int padding = get_theme_constant(SNAME("padding"));
 	const Size2 size(digits * DIGIT_WIDTH + padding * 2 + 8, line_height + padding * 2);
 	const Size2 screen = get_viewport_rect().size;
@@ -85,7 +86,8 @@ void JRPGNumberInputWindow::_place() {
 		const Rect2 beside = message->get_global_rect();
 		y = beside.position.y > screen.y / 4 ? beside.position.y - size.y : beside.get_end().y;
 	}
-	set_global_position(Point2(screen.x - size.x, y));
+	// On the screen whatever the message's place (epic 10 review A11).
+	set_global_position(Point2(MAX(real_t(0), screen.x - size.x), CLAMP(y, real_t(0), MAX(real_t(0), screen.y - size.y))));
 	set_size(size);
 }
 
@@ -140,17 +142,20 @@ void JRPGNumberInputWindow::_notification(int p_what) {
 			}
 		} break;
 		case NOTIFICATION_DRAW: {
+			// The message window's text and the list's cursor margin, unless this window overrides them (epic 10 review A18).
 			JRPGMessageWindow::ensure_default_theme();
-			const Ref<Font> font = get_theme_font(SceneStringName(font), SNAME("JRPGMessageWindow"));
-			const int font_size = get_theme_font_size(SceneStringName(font_size), SNAME("JRPGMessageWindow"));
-			const int line_height = get_theme_constant(SNAME("line_height"), SNAME("JRPGMessageWindow"));
+			JRPGSelectableList::ensure_default_theme();
+			const Ref<Font> font = _get_shared_font(SceneStringName(font), SNAME("JRPGMessageWindow"));
+			const int font_size = _get_shared_font_size(SceneStringName(font_size), SNAME("JRPGMessageWindow"));
+			const int line_height = _get_shared_constant(SNAME("line_height"), SNAME("JRPGMessageWindow"));
+			const int cursor_margin = _get_shared_constant(SNAME("cursor_margin"), SNAME("JRPGSelectableList"));
 			const Rect2 content = get_content_rect();
 			const real_t left = content.get_end().x - digits * DIGIT_WIDTH - 4;
 			const Ref<Texture2D> cursor_texture = get_cursor_texture();
 			for (int i = 0; i < digits; i++) {
 				const Rect2 cell(left + i * DIGIT_WIDTH, content.position.y, DIGIT_WIDTH, line_height);
 				if (i == cursor && active && cursor_texture.is_valid()) {
-					draw_nine_patch(cursor_texture, cell, 8);
+					draw_nine_patch(cursor_texture, cell, cursor_margin);
 				}
 				if (font.is_valid()) {
 					const String digit = itos(get_digit(i));

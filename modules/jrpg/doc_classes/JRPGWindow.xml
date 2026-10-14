@@ -138,6 +138,9 @@
 		<member name="database" type="JRPGDatabase" setter="set_database" getter="get_database">
 			The database whose System data gives the interface sounds and the window tone. If [code]null[/code], the project's database is used (see [method get_effective_database]); it is not stored in the window.
 		</member>
+		<member name="dim_visible" type="bool" setter="set_dim_visible" getter="is_dim_visible" default="false">
+			If [code]true[/code], a translucent band of [theme_item dim_color] is drawn over the window's area, under the frame: the Dim background of messages and choices.
+		</member>
 		<member name="frame_visible" type="bool" setter="set_frame_visible" getter="is_frame_visible" default="true">
 			If [code]true[/code], the back and the border are drawn. Message windows on a dimmed or transparent background draw neither.
 		</member>
@@ -194,6 +197,9 @@
 		</constant>
 	</constants>
 	<theme_items>
+		<theme_item name="dim_color" data_type="color" type="Color" default="Color(0, 0, 0, 0.6)">
+			The color of the band drawn when [member dim_visible] is [code]true[/code].
+		</theme_item>
 		<theme_item name="frame_margin" data_type="constant" type="int" default="16">
 			The margins of the [theme_item back] and [theme_item border] nine-slices, in pixels: corners keep their size, edges and the middle stretch.
 		</theme_item>

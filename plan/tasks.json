@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "10.4.1.2.1 Epic 10 review: window, skin and data",
+  "last_completed": "10.4.1.2.2 Epic 10 review: lists, choices, number and gold windows",
   "tasks": [
     {
       "id": "0",
@@ -4310,7 +4310,7 @@
         "plan/evidence/reviews/epic_10.md",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "629d4c5407",
       "notes": ""
     },
     {
@@ -4327,9 +4327,31 @@
         "Goldens regenerated on purpose where the drawing changes"
       ],
       "test_strategy": "Doctests + bridge goldens.",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/runtime/jrpg_window.h",
+        "modules/jrpg/runtime/jrpg_window.cpp",
+        "modules/jrpg/runtime/jrpg_selectable_list.h",
+        "modules/jrpg/runtime/jrpg_selectable_list.cpp",
+        "modules/jrpg/runtime/jrpg_choice_window.h",
+        "modules/jrpg/runtime/jrpg_choice_window.cpp",
+        "modules/jrpg/runtime/jrpg_number_input_window.cpp",
+        "modules/jrpg/runtime/jrpg_gold_window.cpp",
+        "modules/jrpg/runtime/jrpg_message_window.h",
+        "modules/jrpg/runtime/jrpg_message_window.cpp",
+        "modules/jrpg/doc_classes/JRPGWindow.xml",
+        "modules/jrpg/doc_classes/JRPGSelectableList.xml",
+        "modules/jrpg/doc_classes/JRPGChoiceWindow.xml",
+        "modules/jrpg/doc_classes/JRPGNumberInputWindow.xml",
+        "modules/jrpg/doc_classes/JRPGGoldWindow.xml",
+        "modules/jrpg/doc_classes/JRPGMessageWindow.xml",
+        "modules/jrpg/tests/test_jrpg_choice_windows.h",
+        "modules/jrpg/tests/test_jrpg_selectable_list.h",
+        "modules/jrpg/tests/test_jrpg_message_window.h",
+        "plan/evidence/reviews/epic_10.md",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

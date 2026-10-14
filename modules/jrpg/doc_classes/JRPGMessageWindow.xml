@@ -15,7 +15,7 @@
 		<method name="ensure_default_theme" qualifiers="static">
 			<return type="void" />
 			<description>
-				Adds the message window's defaults (font size, line height, dim color) to the default theme under the [code skip-lint]JRPGMessageWindow[/code] theme type, unless they are there already.
+				Adds the message window's defaults (font size, line height) to the default theme under the [code skip-lint]JRPGMessageWindow[/code] theme type, unless they are there already.
 			</description>
 		</method>
 		<method name="get_background" qualifiers="const">
@@ -118,7 +118,7 @@
 			The window frame.
 		</constant>
 		<constant name="BACKGROUND_DIM" value="1" enum="Background">
-			A dimmed band behind the text instead of the window frame.
+			A dimmed band behind the text instead of the window frame ([member JRPGWindow.dim_visible], whose color is the [theme_item JRPGWindow.dim_color] theme item).
 		</constant>
 		<constant name="BACKGROUND_TRANSPARENT" value="2" enum="Background">
 			No background: the text alone.
@@ -164,9 +164,6 @@
 		</constant>
 	</constants>
 	<theme_items>
-		<theme_item name="dim_color" data_type="color" type="Color" default="Color(0, 0, 0, 0.6)">
-			The color of the dimmed band of [constant BACKGROUND_DIM].
-		</theme_item>
 		<theme_item name="line_height" data_type="constant" type="int" default="36">
 			The height of a line of text, in pixels.
 		</theme_item>

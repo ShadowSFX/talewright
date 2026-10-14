@@ -99,7 +99,9 @@ private:
 	void _cancel();
 	void _select_by_player(int p_index);
 	void _process_input(double p_delta);
-	void _draw_coded_text(const String &p_text, const Rect2 &p_area, const Color &p_color, bool p_enabled);
+	// Lays text with control codes (choices) out in p_area: colors, icons and sizes (the codes that act over time do
+	// nothing here); draws it when p_draw, cut with an ellipsis at the area's end. Returns the width it takes.
+	real_t _layout_coded_text(const String &p_text, const Rect2 &p_area, const Color &p_color, bool p_enabled, bool p_draw);
 
 protected:
 	void _notification(int p_what);
@@ -139,6 +141,9 @@ public:
 	void set_cancellable(bool p_cancellable) { cancellable = p_cancellable; }
 	bool is_cancellable() const { return cancellable; }
 
+	// The width p_text takes in an item (control codes, size codes and icons included), without the item's icon,
+	// right text and margins (epic 10 review A17: choice windows are as wide as their widest choice).
+	real_t get_text_width(const String &p_text);
 	// Where item p_index is drawn, in the list's own coordinates.
 	Rect2 get_item_rect(int p_index) const;
 	// The item at p_position (the list's coordinates), or -1.
