@@ -192,6 +192,152 @@ public:
 	virtual ExecuteResult execute(Object *p_context) override;
 };
 
+// Loop (RM-CMD-011; task 9.5.1.3): runs body again and again until Break Loop (or Exit Event Processing, or a jump
+// out of it). An empty loop never ends: the interpreter spreads it over steps and warns (D-060).
+// Authority (D-007): server.
+class JRPGLoopCommand : public JRPGEventCommand {
+	GDCLASS(JRPGLoopCommand, JRPGEventCommand);
+
+	Ref<JRPGCommandList> body;
+
+protected:
+	static void _bind_methods();
+
+public:
+	void set_body(const Ref<JRPGCommandList> &p_list) { body = p_list; }
+	Ref<JRPGCommandList> get_body() const { return body; }
+
+	virtual StringName get_code() const override { return "loop"; }
+	virtual Category get_category() const override { return CATEGORY_FLOW_CONTROL; }
+	virtual String get_display_name() const override { return "Loop"; }
+	virtual String get_summary() const override { return "Loop"; }
+	virtual Authority get_authority() const override { return AUTHORITY_SERVER; }
+	virtual PackedStringArray get_child_list_names() const override { return PackedStringArray({ "body" }); }
+	virtual ExecuteResult execute(Object *p_context) override;
+};
+
+// Break Loop (RM-CMD-012; task 9.5.1.3): leaves the innermost loop; the event goes on after it. Outside a loop it
+// does nothing.
+// Authority (D-007): server.
+class JRPGBreakLoopCommand : public JRPGEventCommand {
+	GDCLASS(JRPGBreakLoopCommand, JRPGEventCommand);
+
+public:
+	virtual StringName get_code() const override { return "break_loop"; }
+	virtual Category get_category() const override { return CATEGORY_FLOW_CONTROL; }
+	virtual String get_display_name() const override { return "Break Loop"; }
+	virtual String get_summary() const override { return "Break Loop"; }
+	virtual Authority get_authority() const override { return AUTHORITY_SERVER; }
+	virtual ExecuteResult execute(Object *p_context) override;
+};
+
+// Exit Event Processing (RM-CMD-013; task 9.5.1.3): ends the run at once (a common event it is inside included).
+// Authority (D-007): server.
+class JRPGExitEventCommand : public JRPGEventCommand {
+	GDCLASS(JRPGExitEventCommand, JRPGEventCommand);
+
+public:
+	virtual StringName get_code() const override { return "exit_event"; }
+	virtual Category get_category() const override { return CATEGORY_FLOW_CONTROL; }
+	virtual String get_display_name() const override { return "Exit Event Processing"; }
+	virtual String get_summary() const override { return "Exit Event Processing"; }
+	virtual Authority get_authority() const override { return AUTHORITY_SERVER; }
+	virtual ExecuteResult execute(Object *p_context) override;
+};
+
+// Common Event (RM-CMD-014; task 9.5.1.3): runs common event common_event_id, then goes on (JRPGInterpreter::
+// call_common_event: a missing one or one called too deep is skipped with a warning).
+// Authority (D-007): server.
+class JRPGCommonEventCommand : public JRPGEventCommand {
+	GDCLASS(JRPGCommonEventCommand, JRPGEventCommand);
+
+	int common_event_id = 1;
+
+protected:
+	static void _bind_methods();
+
+public:
+	void set_common_event_id(int p_id) { common_event_id = p_id; }
+	int get_common_event_id() const { return common_event_id; }
+
+	virtual StringName get_code() const override { return "common_event"; }
+	virtual Category get_category() const override { return CATEGORY_FLOW_CONTROL; }
+	virtual String get_display_name() const override { return "Common Event"; }
+	virtual String get_summary() const override;
+	virtual Authority get_authority() const override { return AUTHORITY_SERVER; }
+	virtual bool can_wait() const override { return true; } // The common event's commands may wait.
+	virtual Dictionary get_id_parameters() const override;
+	virtual ExecuteResult execute(Object *p_context) override;
+};
+
+// Label (RM-CMD-015; task 9.5.1.3): marks a place Jump to Label goes to; does nothing when run.
+// Authority (D-007): server.
+class JRPGLabelCommand : public JRPGEventCommand {
+	GDCLASS(JRPGLabelCommand, JRPGEventCommand);
+
+	String label_name;
+
+protected:
+	static void _bind_methods();
+
+public:
+	void set_label_name(const String &p_name) { label_name = p_name; }
+	String get_label_name() const { return label_name; }
+
+	virtual StringName get_code() const override { return "label"; }
+	virtual Category get_category() const override { return CATEGORY_FLOW_CONTROL; }
+	virtual String get_display_name() const override { return "Label"; }
+	virtual String get_summary() const override { return "Label: " + label_name; }
+	virtual Authority get_authority() const override { return AUTHORITY_SERVER; }
+	virtual String get_label() const override { return label_name; }
+	virtual ExecuteResult execute(Object *p_context) override { return EXECUTE_CONTINUE; }
+};
+
+// Jump to Label (RM-CMD-016; task 9.5.1.3): goes on after the label label_name of the same page (the list it is in or
+// one around it, JRPGInterpreter::jump_to_label); without one, the event goes on with a warning.
+// Authority (D-007): server.
+class JRPGJumpToLabelCommand : public JRPGEventCommand {
+	GDCLASS(JRPGJumpToLabelCommand, JRPGEventCommand);
+
+	String label_name;
+
+protected:
+	static void _bind_methods();
+
+public:
+	void set_label_name(const String &p_name) { label_name = p_name; }
+	String get_label_name() const { return label_name; }
+
+	virtual StringName get_code() const override { return "jump_to_label"; }
+	virtual Category get_category() const override { return CATEGORY_FLOW_CONTROL; }
+	virtual String get_display_name() const override { return "Jump to Label"; }
+	virtual String get_summary() const override { return "Jump to Label: " + label_name; }
+	virtual Authority get_authority() const override { return AUTHORITY_SERVER; }
+	virtual ExecuteResult execute(Object *p_context) override;
+};
+
+// Comment (RM-CMD-017; task 9.5.1.3): a note in the event's commands; does nothing when run.
+// Authority (D-007): server (nothing to present).
+class JRPGCommentCommand : public JRPGEventCommand {
+	GDCLASS(JRPGCommentCommand, JRPGEventCommand);
+
+	String text;
+
+protected:
+	static void _bind_methods();
+
+public:
+	void set_text(const String &p_text) { text = p_text; }
+	String get_text() const { return text; }
+
+	virtual StringName get_code() const override { return "comment"; }
+	virtual Category get_category() const override { return CATEGORY_FLOW_CONTROL; }
+	virtual String get_display_name() const override { return "Comment"; }
+	virtual String get_summary() const override;
+	virtual Authority get_authority() const override { return AUTHORITY_SERVER; }
+	virtual ExecuteResult execute(Object *p_context) override { return EXECUTE_CONTINUE; }
+};
+
 VARIANT_ENUM_CAST(JRPGConditionalBranchCommand::Condition);
 VARIANT_ENUM_CAST(JRPGConditionalBranchCommand::Comparison);
 VARIANT_ENUM_CAST(JRPGConditionalBranchCommand::ActorCheck);

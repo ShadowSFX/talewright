@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGExitEventCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: ends the event's commands at once.
+	</brief_description>
+	<description>
+		Ends the current event's contents: no later command runs. Inside a common event that an event called, it ends that common event, and the caller goes on after the call ([method JRPGInterpreter.exit]).
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+</class>

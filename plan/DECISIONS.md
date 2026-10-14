@@ -1167,3 +1167,18 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   command and the reference scanner reads the ID parameters of the active kind; false-with-warning never crashes or
   silently runs a branch.
 - **Reversal:** `JRPGConditionalBranchCommand`, `JRPGInterpreter::set_event`.
+
+## D-067 — Flow commands; Exit Event Processing ends the common event it is in
+- **Context:** task 9.5.1.3 makes the interpreter's flow operations (D-060) into commands: Loop, Break Loop, Exit
+  Event Processing, Common Event, Label, Jump to Label, Comment (RM-CMD-011..017). The help says Exit "ends the current
+  event's contents"; D-060's `exit()` ended the whole run, which inside a called common event also ended the caller.
+- **Options:** Exit ends the whole run; or the innermost called common event (its contents being the current ones),
+  else the run.
+- **Choice:** codes `loop` (child list `body`, a loop frame), `break_loop` (no-op outside a loop), `exit_event`,
+  `common_event` (`common_event_id`, an ID parameter of `common_events`), `label` / `jump_to_label` (`label_name`;
+  same page: the current list or one around it), `comment` (`text`; does nothing). `JRPGInterpreter::exit()` now
+  ends the innermost frame a common event call pushed (the caller goes on after the call), and the whole run only
+  when no called common event is running (a run that is itself a common event ends).
+- **Why:** reads the help literally: a called common event's contents are the current event's contents; a common
+  event used as a subroutine can bail out without ending the event that called it.
+- **Reversal:** `JRPGInterpreter::exit` (D-060 amended) and the command classes.

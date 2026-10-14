@@ -450,3 +450,85 @@ void JRPGConditionalBranchCommand::_bind_methods() {
 	BIND_CONSTANT(REPEAT_DELAY_STEPS);
 	BIND_CONSTANT(REPEAT_INTERVAL_STEPS);
 }
+
+// Loop, Break Loop, Exit Event Processing, Common Event, Label, Jump to Label, Comment.
+
+JRPGEventCommand::ExecuteResult JRPGLoopCommand::execute(Object *p_context) {
+	JRPGInterpreter *interpreter = Object::cast_to<JRPGInterpreter>(p_context);
+	ERR_FAIL_NULL_V(interpreter, EXECUTE_CONTINUE);
+	interpreter->push_list(body, true);
+	return EXECUTE_CONTINUE;
+}
+
+void JRPGLoopCommand::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_body", "list"), &JRPGLoopCommand::set_body);
+	ClassDB::bind_method(D_METHOD("get_body"), &JRPGLoopCommand::get_body);
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "body", PROPERTY_HINT_RESOURCE_TYPE, "JRPGCommandList"), "set_body", "get_body");
+}
+
+JRPGEventCommand::ExecuteResult JRPGBreakLoopCommand::execute(Object *p_context) {
+	JRPGInterpreter *interpreter = Object::cast_to<JRPGInterpreter>(p_context);
+	ERR_FAIL_NULL_V(interpreter, EXECUTE_CONTINUE);
+	interpreter->break_loop(); // Outside a loop: nothing.
+	return EXECUTE_CONTINUE;
+}
+
+JRPGEventCommand::ExecuteResult JRPGExitEventCommand::execute(Object *p_context) {
+	JRPGInterpreter *interpreter = Object::cast_to<JRPGInterpreter>(p_context);
+	ERR_FAIL_NULL_V(interpreter, EXECUTE_CONTINUE);
+	interpreter->exit();
+	return EXECUTE_CONTINUE;
+}
+
+String JRPGCommonEventCommand::get_summary() const {
+	return vformat("Common Event: %d", common_event_id);
+}
+
+Dictionary JRPGCommonEventCommand::get_id_parameters() const {
+	Dictionary ids;
+	ids["common_event_id"] = JRPGDatabase::get_table_name(JRPGDatabase::TABLE_COMMON_EVENTS);
+	return ids;
+}
+
+JRPGEventCommand::ExecuteResult JRPGCommonEventCommand::execute(Object *p_context) {
+	JRPGInterpreter *interpreter = Object::cast_to<JRPGInterpreter>(p_context);
+	ERR_FAIL_NULL_V(interpreter, EXECUTE_CONTINUE);
+	interpreter->call_common_event(common_event_id);
+	return EXECUTE_CONTINUE;
+}
+
+void JRPGCommonEventCommand::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_common_event_id", "id"), &JRPGCommonEventCommand::set_common_event_id);
+	ClassDB::bind_method(D_METHOD("get_common_event_id"), &JRPGCommonEventCommand::get_common_event_id);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "common_event_id", PROPERTY_HINT_RANGE, "1,100000,1"), "set_common_event_id", "get_common_event_id");
+}
+
+void JRPGLabelCommand::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_label_name", "name"), &JRPGLabelCommand::set_label_name);
+	ClassDB::bind_method(D_METHOD("get_label_name"), &JRPGLabelCommand::get_label_name);
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "label_name"), "set_label_name", "get_label_name");
+}
+
+JRPGEventCommand::ExecuteResult JRPGJumpToLabelCommand::execute(Object *p_context) {
+	JRPGInterpreter *interpreter = Object::cast_to<JRPGInterpreter>(p_context);
+	ERR_FAIL_NULL_V(interpreter, EXECUTE_CONTINUE);
+	interpreter->jump_to_label(label_name); // Not found: a warning, and the event goes on.
+	return EXECUTE_CONTINUE;
+}
+
+void JRPGJumpToLabelCommand::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_label_name", "name"), &JRPGJumpToLabelCommand::set_label_name);
+	ClassDB::bind_method(D_METHOD("get_label_name"), &JRPGJumpToLabelCommand::get_label_name);
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "label_name"), "set_label_name", "get_label_name");
+}
+
+String JRPGCommentCommand::get_summary() const {
+	const int end = text.find_char('\n');
+	return "Comment: " + (end < 0 ? text : text.substr(0, end) + "...");
+}
+
+void JRPGCommentCommand::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_text", "text"), &JRPGCommentCommand::set_text);
+	ClassDB::bind_method(D_METHOD("get_text"), &JRPGCommentCommand::get_text);
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "text", PROPERTY_HINT_MULTILINE_TEXT), "set_text", "get_text");
+}

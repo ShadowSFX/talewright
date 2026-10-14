@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGBreakLoopCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: leaves the innermost loop.
+	</brief_description>
+	<description>
+		Leaves the innermost [JRPGLoopCommand] it is in; the event goes on with the command after that loop. Outside a loop it does nothing.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+</class>

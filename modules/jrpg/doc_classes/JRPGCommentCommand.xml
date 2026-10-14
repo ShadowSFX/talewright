@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGCommentCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: a note that does nothing.
+	</brief_description>
+	<description>
+		A note in an event's commands, for whoever reads them: it does nothing when run.
+		Authority: server (nothing to present).
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="text" type="String" setter="set_text" getter="get_text" default="&quot;&quot;">
+			The note.
+		</member>
+	</members>
+</class>

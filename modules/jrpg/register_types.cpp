@@ -191,10 +191,24 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGShowChoicesCommand);
 		GDREGISTER_CLASS(JRPGInputNumberCommand);
 		GDREGISTER_CLASS(JRPGConditionalBranchCommand);
+		GDREGISTER_CLASS(JRPGLoopCommand);
+		GDREGISTER_CLASS(JRPGBreakLoopCommand);
+		GDREGISTER_CLASS(JRPGExitEventCommand);
+		GDREGISTER_CLASS(JRPGCommonEventCommand);
+		GDREGISTER_CLASS(JRPGLabelCommand);
+		GDREGISTER_CLASS(JRPGJumpToLabelCommand);
+		GDREGISTER_CLASS(JRPGCommentCommand);
 		JRPGCommandRegistry::register_command(JRPGShowTextCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGShowChoicesCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGInputNumberCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGConditionalBranchCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGLoopCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGBreakLoopCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGExitEventCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGCommonEventCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGLabelCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGJumpToLabelCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGCommentCommand::get_class_static());
 		GDREGISTER_CLASS(JRPGReferenceScanner);
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotile); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotileResolver);

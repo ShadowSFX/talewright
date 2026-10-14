@@ -147,7 +147,8 @@ public:
 	// with a warning, when the database has no such common event or the frames are MAX_DEPTH deep (a common event that
 	// calls itself).
 	bool call_common_event(int p_id);
-	// Ends the run (Exit Event Processing).
+	// Exit Event Processing (RM-CMD-013): ends the current event's contents, which inside a called common event are
+	// that common event's (the caller goes on after the call); otherwise ends the run.
 	void exit();
 	// Waits p_steps simulation steps after the current one before the next command.
 	void wait_steps(int p_steps);

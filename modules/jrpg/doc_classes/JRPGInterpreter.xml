@@ -33,7 +33,7 @@
 		<method name="exit">
 			<return type="void" />
 			<description>
-				Ends the run (Exit Event Processing).
+				Exit Event Processing: ends the current event's contents. Inside a common event the run called ([method call_common_event]), that is the common event: the caller goes on after the call. Otherwise the run ends.
 			</description>
 		</method>
 		<method name="get_current_command" qualifiers="const">

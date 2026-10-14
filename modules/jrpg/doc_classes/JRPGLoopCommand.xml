@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGLoopCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: runs its commands again and again until Break Loop.
+	</brief_description>
+	<description>
+		Runs [member body] again and again until a [JRPGBreakLoopCommand] inside it leaves the loop (or [JRPGExitEventCommand] ends the event, or a [JRPGJumpToLabelCommand] goes out of it); the event then goes on after the loop. Loops nest. A loop that never waits is spread over simulation steps, with a warning, so it never freezes the game.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="body" type="JRPGCommandList" setter="set_body" getter="get_body">
+			The commands that repeat.
+		</member>
+	</members>
+</class>

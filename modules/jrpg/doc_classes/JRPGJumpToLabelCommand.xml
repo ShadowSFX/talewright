@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGJumpToLabelCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: goes on after a label of the same page.
+	</brief_description>
+	<description>
+		Goes on with the command after the label named [member label_name], looked for in the list the command is in, then in the lists around it, on the same page ([method JRPGInterpreter.jump_to_label]). Without such a label the event goes on after this command, with a warning.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="label_name" type="String" setter="set_label_name" getter="get_label_name" default="&quot;&quot;">
+			The label to go to.
+		</member>
+	</members>
+</class>

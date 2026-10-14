@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGCommonEventCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: runs a common event, then goes on.
+	</brief_description>
+	<description>
+		Runs common event [member common_event_id] like a subroutine: the event goes on with its next command once the common event has finished. A common event the database lacks, or one called too deep (a common event that calls itself), is skipped with a warning ([method JRPGInterpreter.call_common_event]).
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="common_event_id" type="int" setter="set_common_event_id" getter="get_common_event_id" default="1">
+			The common event to run.
+		</member>
+	</members>
+</class>

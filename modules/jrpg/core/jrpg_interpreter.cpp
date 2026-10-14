@@ -248,6 +248,16 @@ bool JRPGInterpreter::call_common_event(int p_id) {
 }
 
 void JRPGInterpreter::exit() {
+	// The current event's contents: inside a called common event, that common event (the caller goes on after the
+	// call); otherwise the whole run.
+	for (int i = frames.size() - 1; i > 0; i--) {
+		if (frames[i].common_event_id > 0) {
+			frames.resize(i);
+			wait_left = 0;
+			flow_changed = true;
+			return;
+		}
+	}
 	_withdraw_request();
 	frames.clear();
 	wait_left = 0;
