@@ -110,6 +110,14 @@ enum SpecialFlag {
 	FLAG_PRESERVE_TP,
 };
 
+// How a defeated enemy leaves the battle (Collapse Effect trait, RM-TRT-025; Talewright's list, D-032).
+enum CollapseEffect {
+	COLLAPSE_NORMAL, // Fades out.
+	COLLAPSE_BOSS, // A longer effect with the Boss Collapse sounds.
+	COLLAPSE_INSTANT, // Vanishes at once.
+	COLLAPSE_STAYS, // Remains on screen.
+};
+
 enum PartyAbility {
 	ABILITY_HALF_ENCOUNTERS,
 	ABILITY_NO_ENCOUNTERS,

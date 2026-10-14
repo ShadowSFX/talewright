@@ -1,0 +1,31 @@
+# 6.5.1 bridge verification: trait and effect editors (scratch project; class 1 Adventurer, item 1 Herb Tonic)
+## class 1 traits (stored) and the list rows
+[{"code": 40, "data_id": 1, "value": 0}, {"code": 41, "data_id": 1, "value": 0}, {"code": 41, "data_id": 2, "value": 0}, {"code": 41, "data_id": 5, "value": 0}, {"code": 20, "data_id": 1, "value": 0}, {"code": 11, "data_id": 0, "value": 9500}, {"code": 11, "data_id": 1, "value": 500}]
+['Equip Weapon | Sword', 'Equip Armor | Clothing', 'Equip Armor | Light Armor', 'Equip Armor | Shield', 'Attack Element | Physical', 'Ex-Parameter | Hit Rate + 95%', 'Ex-Parameter | Evasion Rate + 5%']
+## Add Trait: Rates tab, Element Rate, Fire, 150%
+preview: Element Rate: Fire × 150%
+[{"code": 40, "data_id": 1, "value": 0}, {"code": 41, "data_id": 1, "value": 0}, {"code": 41, "data_id": 2, "value": 0}, {"code": 41, "data_id": 5, "value": 0}, {"code": 20, "data_id": 1, "value": 0}, {"code": 11, "data_id": 0, "value": 9500}, {"code": 11, "data_id": 1, "value": 500}, {"code": 1, "data_id": 2, "value": 15000}]
+## undo, then redo
+[{"code": 40, "data_id": 1, "value": 0}, {"code": 41, "data_id": 1, "value": 0}, {"code": 41, "data_id": 2, "value": 0}, {"code": 41, "data_id": 5, "value": 0}, {"code": 20, "data_id": 1, "value": 0}, {"code": 11, "data_id": 0, "value": 9500}, {"code": 11, "data_id": 1, "value": 500}]
+[{"code": 40, "data_id": 1, "value": 0}, {"code": 41, "data_id": 1, "value": 0}, {"code": 41, "data_id": 2, "value": 0}, {"code": 41, "data_id": 5, "value": 0}, {"code": 20, "data_id": 1, "value": 0}, {"code": 11, "data_id": 0, "value": 9500}, {"code": 11, "data_id": 1, "value": 500}, {"code": 1, "data_id": 2, "value": 15000}]
+## double-click 'Hit Rate + 95%': the Edit Trait dialog opens on it; set 90% and apply
+open_dialogs: ['Edit Trait']
+Ex-Parameter radio pressed: True
+data: Hit Rate
+['Equip Weapon | Sword', 'Equip Armor | Clothing', 'Equip Armor | Light Armor', 'Equip Armor | Shield', 'Attack Element | Physical', 'Ex-Parameter | Hit Rate + 90%', 'Ex-Parameter | Evasion Rate + 5%', 'Element Rate | Fire × 150%']
+## select the Fire row and press Remove
+['Equip Weapon | Sword', 'Equip Armor | Clothing', 'Equip Armor | Light Armor', 'Equip Armor | Shield', 'Attack Element | Physical', 'Ex-Parameter | Hit Rate + 90%', 'Ex-Parameter | Evasion Rate + 5%']
+## item 1: double-click 'Recover HP', set the flat part to 500, apply
+[{"code": 1, "data_id": 0, "value1": 0, "value2": 300}]
+spins: [0.0, 300.0]
+[{"code": 1, "data_id": 0, "value1": 0, "value2": 500}]
+['Recover HP | 0% + 500']
+## save and errors
+{
+  "saved": [
+    "res://jrpg/db/classes.tres",
+    "res://jrpg/db/items.tres"
+  ]
+}
+    "errors": 0,
+    "warnings": 0,

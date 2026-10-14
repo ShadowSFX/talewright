@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "6.5.0 Bridge: editor UI interaction tools",
+  "last_completed": "6.5.1 Trait and effect editors",
   "tasks": [
     {
       "id": "0",
@@ -1972,7 +1972,7 @@
         "talewright/docs/claude_bridge.md"
       ],
       "status": "done",
-      "commit": "pending",
+      "commit": "130bb48a21",
       "notes": "Live run (plan/evidence/jrpg/6.5.0-bridge-editor-ui.txt): Change Maximum opened, set and confirmed through the dialog; entry selected in the list; name typed into the form's EditorPropertyText; undo/redo of that inspector edit (confirms the 6.4.2 form edits land in the global history); Save pressed; refusals for disabled buttons, unknown actions and paths outside the editor. editor_ui_act keeps MCP's destructive hint: it reaches anything a user can click."
     },
     {
@@ -1988,10 +1988,25 @@
         "Edit traits/effects via UI; undo works"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
-      "files": [],
-      "commit": "",
-      "notes": "",
-      "status": "pending"
+      "files": [
+        "modules/jrpg/core/jrpg_traits.h",
+        "modules/jrpg/editor/jrpg_trait_editor.h",
+        "modules/jrpg/editor/jrpg_trait_editor.cpp",
+        "modules/jrpg/editor/jrpg_inspector_plugin.h",
+        "modules/jrpg/editor/jrpg_inspector_plugin.cpp",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/tests/test_jrpg_trait_editor.h",
+        "plan/specs/02_database_model.md",
+        "plan/DECISIONS.md",
+        "plan/evidence/jrpg/6.5.1-bridge-traits-effects.txt",
+        "plan/evidence/jrpg/6.5.1-traits-list.png",
+        "plan/evidence/jrpg/6.5.1-add-trait-dialog.png",
+        "plan/evidence/jrpg/6.5.1-add-effect-dialog.png"
+      ],
+      "commit": "pending",
+      "notes": "frontend-design applied; Godot patterns followed: EditorProperty bottom editor like EditorPropertyArray, Tree with column titles, flat icon buttons, ConfirmationDialog + TabContainer, CheckBox rows in a ButtonGroup. Memorable element: the dialog's preview line reads exactly like the list row it creates. Verified live through editor_ui_* (6.5.0): add, undo/redo, edit by double-click (dialog pre-filled), remove, a two-value effect, save (one-line .tres diffs, integers).",
+      "status": "done"
     },
     {
       "id": "6.5.2",

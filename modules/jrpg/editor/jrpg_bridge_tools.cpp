@@ -38,6 +38,7 @@
 #include "jrpg_managed_addon.h"
 #include "jrpg_project_setup.h"
 #include "jrpg_setup_dialog.h"
+#include "jrpg_trait_editor.h"
 #include "jrpg_workspace_shell.h"
 
 #include "editor/editor_interface.h"
@@ -388,6 +389,7 @@ void tool_db_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_ca
 	}
 	Dictionary properties;
 	Dictionary id_targets;
+	Dictionary readable;
 	List<PropertyInfo> list;
 	record->get_property_list(&list);
 	for (const PropertyInfo &pi : list) {
@@ -396,6 +398,15 @@ void tool_db_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_ca
 			const String target = JRPGReferenceScanner::get_id_target(record.ptr(), pi.name);
 			if (!target.is_empty()) {
 				id_targets[pi.name] = target;
+			}
+			if (pi.type == Variant::ARRAY && (pi.name == "traits" || pi.name == "effects") && Object::cast_to<JRPGEntry>(record.ptr())) {
+				// The rows the form's list shows ("Element Rate: Fire × 150%"), in stored order.
+				PackedStringArray rows;
+				for (const Variant &entry : Array(record->get(pi.name))) {
+					const PackedStringArray row = JRPGTraitKinds::describe(pi.name == "effects", entry, editing->get_database());
+					rows.push_back(row[1].is_empty() ? row[0] : row[0] + ": " + row[1]);
+				}
+				readable[pi.name] = rows;
 			}
 		}
 	}
@@ -406,6 +417,7 @@ void tool_db_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_ca
 	result["unsaved"] = editing->is_unsaved(record);
 	result["properties"] = properties;
 	result["id_targets"] = id_targets; // Integer properties that hold an ID, and the table or type list they point into.
+	result["readable"] = readable; // Traits and effects as the form lists them.
 	p_call->complete_data(result);
 }
 
@@ -636,7 +648,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool get;
 	get.name = "jrpg_db_get";
 	get.title = "Read a JRPG database entry";
-	get.description = "Returns an entry's editable properties (or System, Types, Terms data) as JSON, with id_targets naming the table or type list each ID property points into, the sub-resource path and whether its file has unsaved changes.";
+	get.description = "Returns an entry's editable properties (or System, Types, Terms data) as JSON, with id_targets naming the table or type list each ID property points into, readable traits and effects as the form lists them (\"Element Rate: Fire × 150%\"), the sub-resource path and whether its file has unsaved changes.";
 	get.input_schema = ClaudeBridgeMCP::object_schema(record_properties, PackedStringArray({ "table" }));
 	get.func = &tool_db_get;
 	r_mcp.register_tool(get);

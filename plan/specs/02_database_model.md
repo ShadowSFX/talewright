@@ -93,7 +93,11 @@ Full field lists per table follow the inventory slices (03/04/05). The vertical 
   hold one ID (`JRPGReferenceScanner.get_id_target`, one table shared with the scanner) are searchable lists of the
   target's entries ("0003  Fire"; 0 None, -1 Normal Attack where the range allows it, missing IDs shown as such);
   the name is shown first. Engine `resource_*` properties are hidden from inspectors (the table owns paths and
-  scene-unique ids). Custom `EditorProperty`s for traits/effects/curves come with the per-tab tasks (6.5.x).
+  scene-unique ids). Traits and effects (task 6.5.1) are a two-column list (Type, Content: "Fire × 150%") edited
+  through a dialog with one tab per group (traits: Rates, Parameters, Attack, Skills, Equipment, Other; effects:
+  Recover, States, Parameters, Other) and one radio row per kind; `JRPGTraitKinds` (editor) holds each code's
+  label, data list and value style; percentages are entered in percent and stored in basis points. Collapse effect
+  values: D-032. Curves and other lists come with the per-tab tasks (6.5.2, 6.5.3).
 - Entries added by Change Maximum get their `file::Kind_id` path at once (as the loader and saver would,
   scene/resources/resource_format_text.cpp:633,1942), so inspector edits of an unsaved new entry also go to the
   global history.

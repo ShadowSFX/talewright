@@ -58,7 +58,7 @@ public:
 	JRPGEditorPropertyID();
 };
 
-// Adds the ID pickers to every inspector that shows JRPG data: the Database section's entry form and the main
+// Adds the ID pickers and the trait and effect lists (JRPGEditorPropertyTraits) to every inspector that shows JRPG data: the Database section's entry form and the main
 // Inspector (EditorInspectorPlugin, editor/inspector/editor_inspector.h:339). An entry's name moves to the top: the
 // inspector lists the most derived class first, which would put it last.
 class JRPGInspectorPlugin : public EditorInspectorPlugin {

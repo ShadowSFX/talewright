@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 127, in_progress: 0, done: 84, blocked: 0, deferred: 3 (of 214)
+**Totals:** pending: 126, in_progress: 0, done: 85, blocked: 0, deferred: 3 (of 214)
 
 ## [x] 0 Bootstrap and task system
 
@@ -118,8 +118,8 @@ Setup tool, managed addon, main-screen workspace, database editor, authoring API
   - [x] **6.4.1** Database window, tabs and entry list (P1) _(commit: 8c57162b56)_
   - [x] **6.4.2** Entry form, undo, save, ID pickers (P1) _(deps: 6.4.1; commit: 25423f20df)_
 - [ ] **6.5** Database tab forms (slice) (P1) _(deps: 6.4)_
-  - [x] **6.5.0** Bridge: editor UI interaction tools (P1) _(commit: pending)_
-  - [ ] **6.5.1** Trait and effect editors (P1) _(deps: 6.5.0)_
+  - [x] **6.5.0** Bridge: editor UI interaction tools (P1) _(commit: 130bb48a21)_
+  - [x] **6.5.1** Trait and effect editors (P1) _(deps: 6.5.0; commit: pending)_
   - [ ] **6.5.2** Actors, classes, skills, items forms (P1) _(deps: 6.5.1)_
   - [ ] **6.5.3** Weapons, armors, enemies, troops, states, system, types, terms forms (P1) _(deps: 6.5.2)_
 - [ ] **6.6** Database authoring API + bridge tools (P1) _(deps: 6.5)_

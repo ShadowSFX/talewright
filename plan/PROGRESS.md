@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 22:02 -0600
+- **Updated:** 2026-10-13 22:13 -0600
 - **Current task:** none
-- **Last completed:** 6.5.0 Bridge: editor UI interaction tools
-- **Next task:** 6.5.1 Trait and effect editors
-- **Done leaf tasks:** 70
+- **Last completed:** 6.5.1 Trait and effect editors
+- **Next task:** 6.5.2 Actors, classes, skills, items forms
+- **Done leaf tasks:** 71
 <!-- status:end -->
 
 ## Log
@@ -189,4 +189,7 @@
 | 2026-10-13 21:53 -0600 | - | imported 1 new / 1 updated tasks | |
 | 2026-10-13 21:53 -0600 | 6.5.0 | started: Bridge: editor UI interaction tools (containers: 6.5 pending->in_progress, 6 pending->in_progress) |  |
 | 2026-10-13 22:02 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-13 22:02 -0600 | 6.5.0 | done: Bridge: editor UI interaction tools — Bridge editor UI tools (D-031): editor_ui_find (visible controls/dialogs by text, tooltip, placeholder, accessibility name, list items, class; scoped by path) and editor_ui_act (press, toggle, set_text, submit, set_value, select, activate, confirm, cancel through each control's own signals; containers act through their inner control; hidden, disabled and read-only controls refuse); doctest 56 assertions; verified live on the Database view: Change Maximum dialog filled and confirmed, name typed in the form, undo/redo, Save pressed, errors 0; full suite 1485/1485 (containers: 6.5 in_progress->pending, 6 in_progress->pending) | pending |
+| 2026-10-13 22:02 -0600 | 6.5.0 | done: Bridge: editor UI interaction tools — Bridge editor UI tools (D-031): editor_ui_find (visible controls/dialogs by text, tooltip, placeholder, accessibility name, list items, class; scoped by path) and editor_ui_act (press, toggle, set_text, submit, set_value, select, activate, confirm, cancel through each control's own signals; containers act through their inner control; hidden, disabled and read-only controls refuse); doctest 56 assertions; verified live on the Database view: Change Maximum dialog filled and confirmed, name typed in the form, undo/redo, Save pressed, errors 0; full suite 1485/1485 (containers: 6.5 in_progress->pending, 6 in_progress->pending) | 130bb48a21 |
+| 2026-10-13 22:03 -0600 | 6.5.1 | started: Trait and effect editors (containers: 6.5 pending->in_progress, 6 pending->in_progress) |  |
+| 2026-10-13 22:13 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 22:13 -0600 | 6.5.1 | done: Trait and effect editors — Trait and effect editors: JRPGEditorPropertyTraits (Type/Content list with Add, Edit, Remove, double-click edits; inspector undo) and JRPGTraitDialog (tab per group, radio row per kind with data picker and values, live preview of the list row) for traits (25 kinds, 6 tabs) and effects (13 kinds, 4 tabs); JRPGTraitKinds table/formatting (percent shown, basis points stored; values left alone keep their exact stored amount); CollapseEffect values (D-032); jrpg_db_get returns readable trait/effect rows; 3 doctests (236 assertions); verified live via editor_ui_*: add, undo/redo, edit, remove, Recover HP two-value edit, save with one-line .tres diffs, errors 0; full suite 1488/1488 (containers: 6.5 in_progress->pending, 6 in_progress->pending) | pending |
