@@ -562,6 +562,7 @@ Dictionary JRPGMapCanvas::get_state() const {
 	brush["tool"] = JRPGMapEditSession::get_tool_name(session->get_tool()).to_lower();
 	brush["layer"] = session->get_layer();
 	brush["value"] = session->get_value();
+	brush["region"] = session->get_region();
 	state["brush"] = brush;
 	if (map_data.is_valid()) {
 		const Vector2i cell_size = map->get_cell_size();

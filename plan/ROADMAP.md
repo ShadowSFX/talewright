@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 103, in_progress: 0, done: 137, blocked: 0, deferred: 3 (of 243)
+**Totals:** pending: 104, in_progress: 0, done: 138, blocked: 0, deferred: 3 (of 245)
 
 ## [x] 0 Bootstrap and task system
 
@@ -178,8 +178,10 @@ JRPGMap scenes, map editor canvas, cell cache, runtime map and movement.
   - [x] **8.4.2** Drawing tools with undo patches (P1) _(deps: 8.4.1; commit: bf93360f24)_
   - [x] **8.4.3** Shadow, region, event modes and auto-layer (P1) _(deps: 8.4.2)_
     - [x] **8.4.3.1** Region mode and shadow pen (P1) _(deps: 8.4.2; commit: 998d1fb7d6)_
-    - [x] **8.4.3.2** Automatic layer and Set Start Position Here (P1) _(deps: 8.4.3.1; commit: pending)_
+    - [x] **8.4.3.2** Automatic layer and Set Start Position Here (P1) _(deps: 8.4.3.1; commit: ed702fbd73)_
 - [ ] **8.5** Tile palette (P1) _(deps: 8.4)_
+  - [x] **8.5.1** Palette panel (P1) _(deps: 8.4; commit: pending)_
+  - [ ] **8.5.2** Multi-tile stamps (P1) _(deps: 8.5.1)_
 - [ ] **8.6** Runtime map, cell-step movement, camera, transfer (P1) _(deps: 8.2)_
   - [ ] **8.6.1** Scene manager, map loading and transfer (P1)
   - [ ] **8.6.2** Player movement, passability, dash, camera (P1) _(deps: 8.6.1)_

@@ -1,0 +1,22 @@
+# 8.5.1 bridge verification: the Palette panel
+## no map open
+  note: 'Open a map to choose its tiles.'
+  palette entries: 48
+## the map's tileset by sheet; the tile drawn is outlined in its tab
+  tabs: ['Grass', 'Dirt Path', 'Water', 'Outdoor', 'Buildings'] | open: None
+  brush: {'mode': 'tiles', 'tool': 'pencil', 'layer': -1, 'value': 1, 'region': 1} | palette: {'sheets': 5, 'current_sheet': 0}
+  note: 'Drawing with 0001  Grass on the layer its kind belongs to. Right-click a tile on the map to draw with it.'
+  screenshot: plan/evidence/jrpg/8.5.1-grass.png
+## a tile of the Outdoor sheet becomes the tile drawn (as a click there or the eyedropper would): its tab opens
+  brush: {'mode': 'tiles', 'tool': 'eraser', 'layer': -1, 'value': 12, 'region': 1} | palette: {'sheets': 5, 'current_sheet': 3}
+  tabs: ['Grass', 'Dirt Path', 'Water', 'Outdoor', 'Buildings'] | open: None
+  note: 'Erasing the top-most tile of each cell.'
+  brush: {'mode': 'tiles', 'tool': 'pencil', 'layer': -1, 'value': 12, 'region': 1} | palette: {'sheets': 5, 'current_sheet': 3}
+  screenshot: plan/evidence/jrpg/8.5.1-outdoor.png
+## the Buildings sheet
+  brush: {'mode': 'tiles', 'tool': 'pencil', 'layer': -1, 'value': 40, 'region': 1} | palette: {'sheets': 5, 'current_sheet': 4}
+  tabs: ['Grass', 'Dirt Path', 'Water', 'Outdoor', 'Buildings'] | open: None
+  screenshot: plan/evidence/jrpg/8.5.1-buildings.png
+## errors
+    "errors": 0,
+    "warnings": 0,

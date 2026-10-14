@@ -35,6 +35,7 @@
 #include "jrpg_database_view.h"
 #include "jrpg_map_canvas.h"
 #include "jrpg_map_tree.h"
+#include "jrpg_tile_palette.h"
 
 #include "core/io/image.h"
 #include "core/object/callable_mp.h"
@@ -56,7 +57,6 @@
 
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_map_data.h"
-#include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 
@@ -193,37 +193,6 @@ void JRPGWorkspaceShell::_sync_brush() {
 	region_picker->set_visible(mode == JRPGMapEditSession::MODE_REGIONS);
 	region_picker->set_editable(map != nullptr);
 	region_picker->set_value_no_signal(session->get_region());
-	if (!map) {
-		palette_empty->set_text(TTR("Open a map to choose its tiles."));
-		return;
-	}
-	if (mode == JRPGMapEditSession::MODE_REGIONS) {
-		palette_empty->set_text(vformat(TTR("Painting region %d. Right-click a cell to paint its region."), session->get_region()));
-		return;
-	}
-	if (mode == JRPGMapEditSession::MODE_EVENTS) {
-		palette_empty->set_text(TTR("Right-click a cell to set where new games begin."));
-		return;
-	}
-	// The tile drawn, until the palette lists the tileset (task 8.5): its index and its sheet's name.
-	String tile = TTR("nothing (erasing)");
-	if (session->get_value() > 0) {
-		tile = vformat("%04d", session->get_value());
-		JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
-		const Ref<JRPGDatabase> db = editing ? editing->get_database() : Ref<JRPGDatabase>();
-		const Ref<JRPGTable> tilesets = db.is_valid() ? db->get_table(JRPGDatabase::TABLE_TILESETS) : Ref<JRPGTable>();
-		const int tileset_id = map->get_map_data().is_valid() ? map->get_map_data()->get_tileset_id() : 0;
-		const Ref<JRPGTilesetData> tileset = tilesets.is_valid() && tilesets->has_entry(tileset_id) ? Ref<JRPGTilesetData>(tilesets->get_entry(tileset_id)) : Ref<JRPGTilesetData>();
-		const Array palette = tileset.is_valid() ? tileset->get_palette() : Array();
-		if (session->get_value() <= palette.size()) {
-			tile += "  " + String(Dictionary(palette[session->get_value() - 1]).get("name", ""));
-		}
-	}
-	if (session->get_layer() == JRPGMapEditSession::LAYER_AUTO) {
-		palette_empty->set_text(vformat(TTR("Drawing with %s on the layer its kind belongs to. Right-click a tile on the map to draw with it."), tile));
-	} else {
-		palette_empty->set_text(vformat(TTR("Drawing with %s on the %s layer. Right-click a tile on the map to draw with it."), tile, layer_picker->get_item_text(session->get_layer() + 1)));
-	}
 }
 
 void JRPGWorkspaceShell::_mode_toggled(bool p_on, int p_mode) {
@@ -250,14 +219,6 @@ void JRPGWorkspaceShell::_layer_selected(int p_index) {
 	map_canvas->get_session()->set_layer(p_index - 1); // Item 0 is Auto.
 }
 
-Label *JRPGWorkspaceShell::_make_note(const String &p_text) {
-	Label *note = memnew(Label);
-	note->set_text(p_text);
-	note->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
-	note->set_custom_minimum_size(Size2(120, 0) * EDSCALE); // Wraps instead of forcing the panel wider.
-	return note;
-}
-
 void JRPGWorkspaceShell::_update_theme() {
 	for (int i = 0; i < SECTION_MAX; i++) {
 		tabs->set_tab_icon(i, get_editor_theme_icon(SECTION_ICONS[i]));
@@ -271,10 +232,8 @@ void JRPGWorkspaceShell::_update_theme() {
 		tool_buttons[i]->set_button_icon(TOOL_ICONS[i] ? get_editor_theme_icon(TOOL_ICONS[i]) : make_tool_icon(i, get_theme_color(SNAME("font_color"), EditorStringName(Editor))));
 	}
 
-	// Notes are the theme's read-only text color; the canvas is the darker editor surface; the message frame matches
-	// the workspace's empty state (the message-window motif of the JRPG tab).
-	const Color note_color = get_theme_color(SNAME("font_readonly_color"), EditorStringName(Editor));
-	palette_empty->add_theme_color_override(SceneStringName(font_color), note_color);
+	// The canvas is the darker editor surface; the message frame matches the workspace's empty state (the
+	// message-window motif of the JRPG tab).
 	Ref<StyleBoxFlat> surface;
 	surface.instantiate();
 	surface->set_bg_color(get_theme_color(SNAME("dark_color_2"), EditorStringName(Editor)));
@@ -351,15 +310,9 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 	map_tree = memnew(JRPGMapTree);
 	map_tree->set_v_size_flags(SIZE_EXPAND_FILL);
 	side->add_child(map_tree);
-	VBoxContainer *palette_panel = memnew(VBoxContainer);
-	palette_panel->set_v_size_flags(SIZE_EXPAND_FILL);
-	side->add_child(palette_panel);
-	Label *palette_header = memnew(Label);
-	palette_header->set_text(TTR("Palette"));
-	palette_header->set_theme_type_variation("HeaderSmall");
-	palette_panel->add_child(palette_header);
-	palette_empty = _make_note(TTR("Open a map to choose its tiles."));
-	palette_panel->add_child(palette_empty);
+	palette = memnew(JRPGTilePalette);
+	palette->set_v_size_flags(SIZE_EXPAND_FILL);
+	side->add_child(palette);
 
 	VBoxContainer *work = memnew(VBoxContainer);
 	work->set_h_size_flags(SIZE_EXPAND_FILL);
@@ -428,6 +381,7 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 	map_canvas->set_visible(false);
 	map_canvas->connect(SNAME("map_changed"), callable_mp(this, &JRPGWorkspaceShell::_update_canvas));
 	map_canvas->get_session()->connect(SNAME("brush_changed"), callable_mp(this, &JRPGWorkspaceShell::_sync_brush));
+	palette->set_session(map_canvas->get_session());
 	canvas_panel->add_child(map_canvas);
 	canvas_center = memnew(CenterContainer);
 	CenterContainer *center = canvas_center;

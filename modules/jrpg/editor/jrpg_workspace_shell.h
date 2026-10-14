@@ -41,6 +41,7 @@ class CenterContainer;
 class JRPGDatabaseView;
 class JRPGMapCanvas;
 class JRPGMapTree;
+class JRPGTilePalette;
 class Label;
 class OptionButton;
 class PanelContainer;
@@ -79,7 +80,7 @@ private:
 	Control *sections[SECTION_MAX] = {};
 
 	JRPGMapTree *map_tree = nullptr;
-	Label *palette_empty = nullptr;
+	JRPGTilePalette *palette = nullptr;
 	Ref<ButtonGroup> mode_group;
 	Button *mode_buttons[MODE_MAX] = {};
 	Ref<ButtonGroup> tool_group;
@@ -104,7 +105,6 @@ private:
 	void _layer_selected(int p_index);
 	void _region_changed(double p_value);
 	void _update_theme();
-	Label *_make_note(const String &p_text);
 
 protected:
 	void _notification(int p_what);
@@ -122,6 +122,7 @@ public:
 	JRPGDatabaseView *get_database_view() const { return database_view; }
 	JRPGMapTree *get_map_tree() const { return map_tree; }
 	JRPGMapCanvas *get_map_canvas() const { return map_canvas; }
+	JRPGTilePalette *get_palette() const { return palette; }
 	void refresh();
 
 	JRPGWorkspaceShell();

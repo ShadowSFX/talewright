@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.4.3.2 Automatic layer and Set Start Position Here",
+  "last_completed": "8.5.1 Palette panel",
   "tasks": [
     {
       "id": "0",
@@ -3140,13 +3140,13 @@
         "plan/DECISIONS.md",
         "plan/evidence/jrpg/8.4.3.2-*"
       ],
-      "commit": "pending",
+      "commit": "ed702fbd73",
       "notes": ""
     },
     {
       "id": "8.5",
       "title": "Tile palette",
-      "description": "Tabs, multi-tile stamps, eyedropper.",
+      "description": "Tabs, multi-tile stamps, eyedropper. Split into 8.5.1 (the palette panel: sheet tabs, tile grid, choosing the tile drawn) and 8.5.2 (multi-tile stamps).",
       "parent": "8",
       "dependencies": [
         "8.4"
@@ -3154,9 +3154,58 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "2x2 stamp paints correctly"
+        "8.5.1 and 8.5.2 done"
       ],
       "test_strategy": "Bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8.5.1",
+      "parent": "8.5",
+      "title": "Palette panel",
+      "priority": 1,
+      "dependencies": [
+        "8.4"
+      ],
+      "description": "The workspace's Palette panel shows the open map's tileset: one tab per sheet (TileSet source), plain sheets laid out on their own grid, autotile and wall kinds as their isolated shape; clicking a tile makes it the tile drawn; the eyedropper's pick shows there (its sheet's tab, highlighted). Empty states for no map, no TileSet, an empty palette. Bridge: jrpg_map_view reads and sets the brush (tool, layer, tile, region).",
+      "acceptance_criteria": [
+        "Choosing a tile in the palette sets the brush; picking on the map selects it in the palette",
+        "Bridge-driven brush changes with screenshots"
+      ],
+      "test_strategy": "Doctests (layout, click to choose) + bridge screenshots.",
+      "status": "done",
+      "files": [
+        "modules/jrpg/editor/jrpg_tile_palette.{h,cpp}",
+        "modules/jrpg/editor/jrpg_workspace_shell.{h,cpp}",
+        "modules/jrpg/editor/jrpg_tileset_editor.{h,cpp}",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/editor/jrpg_map_canvas.cpp",
+        "modules/jrpg/runtime/jrpg_map.{h,cpp}",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/tests/test_jrpg_tile_palette.h",
+        "talewright/docs/claude_bridge.md",
+        "plan/evidence/jrpg/8.5.1-*"
+      ],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "8.5.2",
+      "parent": "8.5",
+      "title": "Multi-tile stamps",
+      "priority": 1,
+      "dependencies": [
+        "8.5.1"
+      ],
+      "description": "Dragging over the palette selects a rectangle of tiles (a stamp); right-dragging on the map picks one from the map (RM-MAP-016). Pencil, rectangle, ellipse and fill draw the stamp tiled, anchored where the stroke starts; the automatic layer places each tile by its kind. Bridge: jrpg_map_stroke takes a stamp.",
+      "acceptance_criteria": [
+        "2x2 stamp paints correctly (doctest + bridge)",
+        "Undo restores the layers exactly"
+      ],
+      "test_strategy": "Doctests + jrpg_bridge_checks + bridge screenshots.",
+      "status": "pending",
       "files": [],
       "commit": "",
       "notes": ""

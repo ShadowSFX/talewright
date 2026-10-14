@@ -94,6 +94,7 @@
 #include "modules/jrpg/editor/jrpg_setup_dialog.h"
 #include "modules/jrpg/editor/jrpg_system_editors.h"
 #include "modules/jrpg/editor/jrpg_tile_flags.h"
+#include "modules/jrpg/editor/jrpg_tile_palette.h"
 #include "modules/jrpg/editor/jrpg_tileset_editor.h"
 #include "modules/jrpg/editor/jrpg_trait_editor.h"
 #include "modules/jrpg/editor/jrpg_workspace_plugin.h"
@@ -177,6 +178,8 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_INTERNAL_CLASS(JRPGTileSheetDialog);
 		GDREGISTER_INTERNAL_CLASS(JRPGEditorPropertyTiles);
 		GDREGISTER_INTERNAL_CLASS(JRPGMapTree);
+		GDREGISTER_INTERNAL_CLASS(JRPGTilePaletteGrid);
+		GDREGISTER_INTERNAL_CLASS(JRPGTilePalette);
 		GDREGISTER_INTERNAL_CLASS(JRPGMapEditSession);
 		GDREGISTER_INTERNAL_CLASS(JRPGMapCanvas);
 		GDREGISTER_INTERNAL_CLASS(JRPGMapStroke);

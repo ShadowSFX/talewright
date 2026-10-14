@@ -287,12 +287,12 @@ Dictionary JRPGEditorPropertyTiles::_entry(int p_item) const {
 	return p_item >= 0 && p_item < palette.size() ? Dictionary(palette[p_item]) : Dictionary();
 }
 
-Ref<Texture2D> JRPGEditorPropertyTiles::_thumbnail(const Dictionary &p_entry) const {
+Ref<Texture2D> JRPGEditorPropertyTiles::make_thumbnail(const Ref<TileSet> &p_tileset, const Dictionary &p_entry) {
 	const int source_id = p_entry.get("source_id", TileSet::INVALID_SOURCE);
-	if (tileset.is_null() || !tileset->has_source(source_id) || !JRPGTileFlags::has_entry_tile(tileset, p_entry)) {
+	if (p_tileset.is_null() || !p_tileset->has_source(source_id) || !JRPGTileFlags::has_entry_tile(p_tileset, p_entry)) {
 		return Ref<Texture2D>();
 	}
-	const Ref<TileSetAtlasSource> atlas = tileset->get_source(source_id);
+	const Ref<TileSetAtlasSource> atlas = p_tileset->get_source(source_id);
 	if (atlas.is_null() || atlas->get_texture().is_null()) {
 		return Ref<Texture2D>();
 	}
@@ -579,7 +579,7 @@ void JRPGEditorPropertyTiles::update_property() {
 	}
 	for (int i = 0; i < palette.size(); i++) {
 		const Dictionary entry = palette[i];
-		const Ref<Texture2D> thumbnail = _thumbnail(entry);
+		const Ref<Texture2D> thumbnail = make_thumbnail(tileset, entry);
 		const int item = list->add_icon_item(thumbnail.is_valid() ? thumbnail : placeholder);
 		String tooltip = vformat(TTR("Tile %d: %s (%s)"), i + 1, String(entry.get("name", "")), kind_label(entry.get("kind", "plain")));
 		if (thumbnail.is_null()) {

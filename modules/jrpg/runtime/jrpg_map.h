@@ -80,7 +80,6 @@ private:
 	void _on_cells_changed(int p_layer, const PackedInt32Array &p_cells);
 	void _update_cell(int p_layer, const Vector2i &p_cell);
 	void _draw_shadows();
-	Ref<JRPGTilesetData> _find_tileset_data() const;
 
 protected:
 	void _notification(int p_what);
@@ -101,6 +100,8 @@ public:
 	TileMapLayer *get_tile_layer(int p_layer, bool p_above) const;
 	// The size of one cell in the map's local coordinates: its TileSet's tile size (DEFAULT_CELL_SIZE without one).
 	Vector2i get_cell_size() const;
+	// The database tileset the map's data names (tileset_id), or null; read now, not from the last build.
+	Ref<JRPGTilesetData> find_tileset_data() const;
 	// The JRPGAutotileResolver::Kind of palette index p_index in the tileset the map draws with (KIND_PLAIN for plain
 	// tiles, 0 and indexes the palette does not have, and before the first build).
 	int get_palette_kind(int p_index) const;

@@ -126,7 +126,6 @@ class JRPGEditorPropertyTiles : public EditorProperty {
 	void _tileset_changed();
 	void _refresh();
 	Dictionary _entry(int p_item) const;
-	Ref<Texture2D> _thumbnail(const Dictionary &p_entry) const;
 	Rect2 _tile_rect(int p_item);
 	int _selected() const;
 	void _draw_overlays();
@@ -161,6 +160,9 @@ public:
 	static Rect2 icon_rect(const Rect2 &p_item_rect, const Size2 &p_icon_size, int p_v_separation, float p_scroll, float p_width, bool p_rtl);
 	// Whether a palette entry's shapes carry different flags (painted one by one in Godot's TileSet editor).
 	static bool is_mixed(const Ref<TileSet> &p_tileset, const Dictionary &p_entry);
+	// The image of palette entry p_entry in p_tileset: a kind shows its first shape (an isolated patch for autotiles and
+	// walls); null when the TileSet does not have the tile.
+	static Ref<Texture2D> make_thumbnail(const Ref<TileSet> &p_tileset, const Dictionary &p_entry);
 
 	JRPGEditorPropertyTiles();
 };

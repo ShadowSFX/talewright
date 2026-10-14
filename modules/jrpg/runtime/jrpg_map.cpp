@@ -89,7 +89,10 @@ void JRPGMap::_queue_rebuild() {
 	}
 }
 
-Ref<JRPGTilesetData> JRPGMap::_find_tileset_data() const {
+Ref<JRPGTilesetData> JRPGMap::find_tileset_data() const {
+	if (map_data.is_null()) {
+		return Ref<JRPGTilesetData>();
+	}
 	const Ref<JRPGDatabase> db = get_database();
 	const Ref<JRPGTable> tilesets = db.is_valid() ? db->get_table(JRPGDatabase::TABLE_TILESETS) : Ref<JRPGTable>();
 	const int id = map_data->get_tileset_id();
@@ -116,7 +119,7 @@ void JRPGMap::rebuild() {
 	if (map_data.is_null()) {
 		return;
 	}
-	tileset_data = _find_tileset_data();
+	tileset_data = find_tileset_data();
 	if (tileset_data.is_valid()) {
 		// A new palette, flags baked again or another TileSet: drawn again.
 		tileset_data->connect(CoreStringName(changed), callable_mp(this, &JRPGMap::_queue_rebuild));

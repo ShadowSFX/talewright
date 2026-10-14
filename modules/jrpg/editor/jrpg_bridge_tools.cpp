@@ -44,6 +44,7 @@
 #include "jrpg_project_setup.h"
 #include "jrpg_setup_dialog.h"
 #include "jrpg_tile_flags.h"
+#include "jrpg_tile_palette.h"
 #include "jrpg_trait_editor.h"
 #include "jrpg_workspace_shell.h"
 
@@ -156,6 +157,9 @@ void tool_workspace_state(const Dictionary &p_args, const Ref<ClaudeBridgeToolCa
 	p_call->complete_data(workspace_state());
 }
 
+bool int_arg(const Dictionary &p_args, const String &p_key, int64_t p_default, const Ref<ClaudeBridgeToolCall> &p_call, int64_t &r_value);
+int map_layer(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call);
+
 void tool_map_view(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
 	JRPGWorkspaceShell *shell = JRPGWorkspaceShell::get_singleton();
 	if (!shell) {
@@ -174,6 +178,40 @@ void tool_map_view(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_
 			return;
 		}
 	}
+	// The brush, checked whole before anything changes.
+	const Ref<JRPGMapEditSession> session = canvas->get_session();
+	JRPGMapEditSession::Tool tool = session->get_tool();
+	if (p_args.has("tool")) {
+		tool = JRPGMapEditSession::find_tool(p_args["tool"]);
+		if (tool == JRPGMapEditSession::TOOL_MAX) {
+			p_call->fail("\"tool\" must be pencil, rectangle, ellipse, fill, shadow, eraser or eyedropper.");
+			return;
+		}
+	}
+	int brush_layer = session->get_layer();
+	if (p_args.has("layer")) {
+		if (String(p_args["layer"]).strip_edges().to_lower() == "auto") {
+			brush_layer = JRPGMapEditSession::LAYER_AUTO;
+		} else {
+			brush_layer = map_layer(p_args, p_call); // -1 after failing the call (not LAYER_AUTO here).
+			if (brush_layer < 0) {
+				return;
+			}
+		}
+	}
+	int64_t brush_value = session->get_value();
+	int64_t brush_region = session->get_region();
+	if (!int_arg(p_args, "value", brush_value, p_call, brush_value) || !int_arg(p_args, "region", brush_region, p_call, brush_region)) {
+		return;
+	}
+	if (brush_value < 0 || brush_region < 1 || brush_region > 255) {
+		p_call->fail("\"value\" is a palette index (0 or more) and \"region\" a region ID (1-255).");
+		return;
+	}
+	session->set_tool(tool);
+	session->set_layer(brush_layer);
+	session->set_value(int(MIN(brush_value, int64_t(INT32_MAX))));
+	session->set_region(int(brush_region));
 	Vector2i center;
 	if (p_args.has("center_cell")) {
 		const Array cell = p_args["center_cell"].get_type() == Variant::ARRAY ? Array(p_args["center_cell"]) : Array();
@@ -196,7 +234,13 @@ void tool_map_view(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_
 	if (p_args.has("center_cell")) {
 		canvas->center_on_cell(center);
 	}
-	p_call->complete_data(canvas->get_state());
+	Dictionary state = canvas->get_state();
+	Dictionary palette;
+	JRPGTilePalette *tiles = shell->get_palette();
+	palette["sheets"] = tiles->get_sheet_count();
+	palette["current_sheet"] = tiles->get_current_sheet();
+	state["palette"] = palette;
+	p_call->complete_data(state);
 }
 
 void tool_workspace_select(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
@@ -2074,12 +2118,16 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool map_view;
 	map_view.name = "jrpg_map_view";
 	map_view.title = "View the map canvas";
-	map_view.description = "Reads, and optionally changes, the view of the JRPG workspace's map canvas (the Map section; jrpg_workspace_select shows it), which draws the map open in the editor: fit=true shows the whole map, zoom sets the scale (1 = one screen pixel per map pixel, 1/32 to 8), center_cell puts a cell in the middle, grid shows or hides the cell grid. Applied in that order. Returns map_id, scene, zoom, center_cell, visible_cells ([x, y, width, height], clipped to the map), grid, hovered_cell and the brush the canvas tools draw with (mode, tool, layer, value). Each map tab keeps its own view.";
+	map_view.description = "Reads, and optionally changes, the view of the JRPG workspace's map canvas (the Map section; jrpg_workspace_select shows it), which draws the map open in the editor: fit=true shows the whole map, zoom sets the scale (1 = one screen pixel per map pixel, 1/32 to 8), center_cell puts a cell in the middle, grid shows or hides the cell grid; tool, layer, value and region set the brush the canvas tools draw with (as the toolbar and the Palette panel do). Applied in that order. Returns map_id, scene, zoom, center_cell, visible_cells ([x, y, width, height], clipped to the map), grid, hovered_cell, the brush (mode, tool, layer: -1 auto, value, region) and the Palette panel (sheets, current_sheet). Each map tab keeps its own view.";
 	Dictionary map_view_properties;
 	map_view_properties["fit"] = schema_property("boolean", "Show the whole map, centered.");
 	map_view_properties["zoom"] = schema_property("number", "Scale, 1/32 to 8.");
 	map_view_properties["center_cell"] = schema_property("array", "[x, y] cell to put in the middle.");
 	map_view_properties["grid"] = schema_property("boolean", "Show the cell grid.");
+	map_view_properties["tool"] = schema_property("string", "The canvas tool: pencil, rectangle, ellipse, fill, shadow, eraser or eyedropper.");
+	map_view_properties["layer"] = schema_property("string", "The layer the tools draw on: auto, ground, ground_detail, objects, upper (or 0-3).");
+	map_view_properties["value"] = schema_property("integer", "The palette index drawn (as choosing it in the Palette panel).");
+	map_view_properties["region"] = schema_property("integer", "The region ID painted in Regions mode, 1-255.");
 	map_view.input_schema = ClaudeBridgeMCP::object_schema(map_view_properties);
 	map_view.read_only = false;
 	map_view.destructive = false; // Only changes what the editor shows.
