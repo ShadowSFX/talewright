@@ -50,5 +50,28 @@
 				Returns the references to [param first_id] and higher IDs of [param target], for example before shrinking a table to [code]first_id - 1[/code] entries.
 			</description>
 		</method>
+		<method name="get_id_target" qualifiers="static">
+			<return type="String" />
+			<param index="0" name="object" type="Object" />
+			<param index="1" name="property" type="String" />
+			<description>
+				Returns the table name (such as [code]"classes"[/code]) or type list (such as [code]"elements"[/code]) that the integer [param property] of [param object] points into when it holds one database ID, or an empty string when it is not such a reference. The editor uses this to show ID properties as lists of entries.
+			</description>
+		</method>
+		<method name="get_target_label" qualifiers="static">
+			<return type="String" />
+			<param index="0" name="target" type="String" />
+			<description>
+				Returns the singular label of a table or type list for reports, such as [code]"Skill type"[/code] for [code]"skill_types"[/code]. Unknown names are returned unchanged.
+			</description>
+		</method>
+		<method name="get_target_names" qualifiers="static">
+			<return type="PackedStringArray" />
+			<param index="0" name="database" type="JRPGDatabase" />
+			<param index="1" name="target" type="String" />
+			<description>
+				Returns the names of the entries of a table, or the names of a type list, from [param database]. Index [code]i[/code] holds the name of ID [code]i + 1[/code]; an empty name is an empty entry.
+			</description>
+		</method>
 	</methods>
 </class>

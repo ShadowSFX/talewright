@@ -36,13 +36,16 @@
 
 class Button;
 class ConfirmationDialog;
+class EditorInspector;
 class ItemList;
 class Label;
 class SpinBox;
 
 // The Database section of the JRPG workspace (task 6.4): tables on the left (an ItemList like Project Settings'
 // sections), the selected table's entries in the middle ("0001  Hero", ID = slot) with Change Maximum, Clear, Copy and
-// Paste, and the entry form on the right (task 6.4.2). Unsaved tables carry "(*)" like scene tabs. Changing the
+// Paste, and the entry form on the right: an embedded EditorInspector like the Import dock's
+// (editor/docks/import_dock.cpp:794-799), with ID pickers from JRPGInspectorPlugin (task 6.4.2). Its edits are the
+// inspector's own undoable actions, in the global history. Unsaved tables carry "(*)" like scene tabs. Changing the
 // maximum or clearing an entry that other data still uses lists those references before confirming
 // (JRPGReferenceScanner). All edits go through JRPGDatabaseEditing (undoable). Editor theme only.
 class JRPGDatabaseView : public VBoxContainer {
@@ -60,8 +63,10 @@ class JRPGDatabaseView : public VBoxContainer {
 	Button *copy_button = nullptr;
 	Button *paste_button = nullptr;
 	VBoxContainer *form = nullptr;
+	Label *form_title = nullptr;
 	Label *form_hint = nullptr;
 	Button *inspect_button = nullptr;
+	EditorInspector *inspector = nullptr;
 
 	ConfirmationDialog *maximum_dialog = nullptr;
 	Label *maximum_prompt = nullptr;
@@ -84,6 +89,8 @@ class JRPGDatabaseView : public VBoxContainer {
 	void _refresh_tables();
 	void _refresh_entries();
 	void _update_buttons();
+	Ref<Resource> _selected_record() const;
+	void _sync_form();
 	static void _fill_uses(ItemList *p_list, const Array &p_uses);
 
 	void _on_table_selected(int p_index);
@@ -108,6 +115,7 @@ public:
 	bool select_table(const String &p_table);
 	bool select_entry(int p_id);
 	String get_selected_table() const { return _selected_table(); }
+	EditorInspector *get_form_inspector() const { return inspector; }
 	int get_selected_entry() const { return _selected_entry(); }
 	// What the Change Maximum... and Clear buttons do, for the bridge's show_dialog option: opens the dialog on the
 	// selected table with p_count entered; clears the selected entry, asking first when other data uses it.

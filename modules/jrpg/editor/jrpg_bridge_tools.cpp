@@ -342,6 +342,125 @@ void tool_db_save(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_c
 	p_call->complete_data(result);
 }
 
+// The record named by "table" and "id" (System, Types and Terms take no id), or null after failing the call.
+Ref<Resource> database_record(JRPGDatabaseEditing *p_editing, const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call) {
+	const String name = p_args.get("table", "");
+	if (name == "system" || name == "types" || name == "terms") {
+		return p_editing->get_record(name, 0);
+	}
+	const Ref<JRPGTable> table = database_table(p_editing, p_args, p_call);
+	const int id = table.is_valid() ? database_id(table, p_args, p_call) : 0;
+	return id > 0 ? p_editing->get_record(name, id) : Ref<Resource>();
+}
+
+// JSON has one number type: whole numbers inside lists and dictionaries (traits, effects...) become integers, as the
+// editor stores them, so a saved .tres does not change "11" into "11.0".
+Variant whole_numbers(const Variant &p_value) {
+	switch (p_value.get_type()) {
+		case Variant::FLOAT: {
+			const double d = p_value;
+			return (Math::is_finite(d) && d == Math::floor(d) && Math::abs(d) < 9.0e15) ? Variant(int64_t(d)) : p_value;
+		}
+		case Variant::ARRAY: {
+			Array out;
+			for (const Variant &v : Array(p_value)) {
+				out.push_back(whole_numbers(v));
+			}
+			return out;
+		}
+		case Variant::DICTIONARY: {
+			Dictionary out;
+			for (const KeyValue<Variant, Variant> &kv : Dictionary(p_value)) {
+				out[kv.key] = whole_numbers(kv.value);
+			}
+			return out;
+		}
+		default:
+			return p_value;
+	}
+}
+
+void tool_db_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	const Ref<Resource> record = editing ? database_record(editing, p_args, p_call) : Ref<Resource>();
+	if (record.is_null()) {
+		return;
+	}
+	Dictionary properties;
+	Dictionary id_targets;
+	List<PropertyInfo> list;
+	record->get_property_list(&list);
+	for (const PropertyInfo &pi : list) {
+		if (pi.name == "id" || JRPGDatabaseEditing::is_editable_property(pi)) {
+			properties[pi.name] = ClaudeBridgeTools::variant_to_json(record->get(pi.name));
+			const String target = JRPGReferenceScanner::get_id_target(record.ptr(), pi.name);
+			if (!target.is_empty()) {
+				id_targets[pi.name] = target;
+			}
+		}
+	}
+	Dictionary result;
+	result["table"] = p_args.get("table", "");
+	result["class"] = record->get_class();
+	result["path"] = record->get_path();
+	result["unsaved"] = editing->is_unsaved(record);
+	result["properties"] = properties;
+	result["id_targets"] = id_targets; // Integer properties that hold an ID, and the table or type list they point into.
+	p_call->complete_data(result);
+}
+
+void tool_db_set(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	const Ref<Resource> record = editing ? database_record(editing, p_args, p_call) : Ref<Resource>();
+	if (record.is_null()) {
+		return;
+	}
+	const Dictionary values = p_args.get("values", Dictionary());
+	if (values.is_empty()) {
+		p_call->fail("\"values\" must be an object such as {\"name\": \"Fire\", \"price\": 50}.");
+		return;
+	}
+	List<PropertyInfo> list;
+	record->get_property_list(&list);
+	Dictionary converted;
+	for (const KeyValue<Variant, Variant> &kv : values) {
+		const String name = kv.key;
+		const PropertyInfo *info = nullptr;
+		for (const PropertyInfo &pi : list) {
+			if (pi.name == name && JRPGDatabaseEditing::is_editable_property(pi)) {
+				info = &pi;
+				break;
+			}
+		}
+		if (!info) {
+			p_call->fail(vformat("%s has no editable property \"%s\" (jrpg_db_get lists them); nothing was changed.", record->get_class(), name));
+			return;
+		}
+		bool ok = false;
+		const Variant value = info->type == Variant::OBJECT ? ClaudeBridgeTools::json_to_resource(kv.value, info->hint_string, ok) : ClaudeBridgeTools::json_to_value(whole_numbers(kv.value), info->type, ok);
+		if (!ok) {
+			p_call->fail(vformat("\"%s\" takes a %s; nothing was changed.", name, info->type == Variant::OBJECT ? info->hint_string : Variant::get_type_name(info->type)));
+			return;
+		}
+		converted[name] = value;
+	}
+	const String table = p_args.get("table", "");
+	if (editing->set_record_properties(table, p_args.get("id", 0), converted) != OK) {
+		p_call->fail("The values were refused; see the editor log. Nothing was changed.");
+		return;
+	}
+	Dictionary changed;
+	for (const KeyValue<Variant, Variant> &kv : converted) {
+		changed[kv.key] = ClaudeBridgeTools::variant_to_json(record->get(StringName(kv.key)));
+	}
+	Dictionary result;
+	result["table"] = table;
+	result["class"] = record->get_class();
+	result["changed"] = changed;
+	result["undoable"] = true;
+	p_call->complete_data(result);
+}
+
 void tool_db_select(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
 	JRPGWorkspaceShell *shell = JRPGWorkspaceShell::get_singleton();
 	if (!shell) {
@@ -509,6 +628,31 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	paste.func = &tool_db_copy_paste;
 	paste.userdata = reinterpret_cast<void *>(1); // Non-null: paste.
 	r_mcp.register_tool(paste);
+
+	Dictionary record_properties;
+	record_properties["table"] = schema_property("string", "Table name, or system, types or terms (these take no id).");
+	record_properties["id"] = id_property;
+
+	ClaudeBridgeMCP::Tool get;
+	get.name = "jrpg_db_get";
+	get.title = "Read a JRPG database entry";
+	get.description = "Returns an entry's editable properties (or System, Types, Terms data) as JSON, with id_targets naming the table or type list each ID property points into, the sub-resource path and whether its file has unsaved changes.";
+	get.input_schema = ClaudeBridgeMCP::object_schema(record_properties, PackedStringArray({ "table" }));
+	get.func = &tool_db_get;
+	r_mcp.register_tool(get);
+
+	ClaudeBridgeMCP::Tool set;
+	set.name = "jrpg_db_set";
+	set.title = "Edit a JRPG database entry";
+	set.description = "Sets properties of an entry (or System, Types, Terms data) as one undoable editor action, like editing them in the Database section's form. Values use JSON; math and engine types use Godot literal strings such as \"Color(1, 0, 0, 1)\"; resources are res:// paths. Every value is checked first: nothing changes unless all are valid. Save with jrpg_db_save.";
+	Dictionary set_properties = record_properties.duplicate();
+	Dictionary values_property = schema_property("object", "Property names and new values, e.g. {\"name\": \"Fire\", \"mp_cost\": 5}.");
+	set_properties["values"] = values_property;
+	set.input_schema = ClaudeBridgeMCP::object_schema(set_properties, PackedStringArray({ "table", "values" }));
+	set.read_only = false;
+	set.destructive = false; // Undoable.
+	set.func = &tool_db_set;
+	r_mcp.register_tool(set);
 
 	ClaudeBridgeMCP::Tool save;
 	save.name = "jrpg_db_save";

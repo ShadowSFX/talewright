@@ -36,11 +36,11 @@
 #include "jrpg_class_data.h"
 #include "jrpg_database.h"
 #include "jrpg_enemy_data.h"
-#include "jrpg_skill_data.h"
 #include "jrpg_state_data.h"
 #include "jrpg_traits.h"
 #include "jrpg_troop_data.h"
 #include "jrpg_types_data.h"
+#include "jrpg_usable_data.h"
 #include "jrpg_weapon_data.h"
 
 #include "core/object/class_db.h"
@@ -100,6 +100,29 @@ String effect_target(int p_code) {
 	}
 }
 
+// Integer properties that hold one ID, shared by the scanner and the editor's ID pickers (get_id_target). Subclass rows
+// come before base-class rows so references keep their order within an entry.
+struct ScalarReference {
+	const char *object_class;
+	const char *property;
+	const char *target;
+};
+
+const ScalarReference SCALAR_REFERENCES[] = {
+	{ "JRPGActorData", "class_id", "classes" },
+	{ "JRPGSkillData", "skill_type_id", SKILL_TYPES },
+	{ "JRPGSkillData", "required_weapon_type_1", WEAPON_TYPES },
+	{ "JRPGSkillData", "required_weapon_type_2", WEAPON_TYPES },
+	{ "JRPGUsableData", "animation_id", "animations" },
+	{ "JRPGUsableData", "damage_element_id", ELEMENTS },
+	{ "JRPGWeaponData", "weapon_type_id", WEAPON_TYPES },
+	{ "JRPGWeaponData", "animation_id", "animations" },
+	{ "JRPGArmorData", "armor_type_id", ARMOR_TYPES },
+	{ "JRPGArmorData", "equip_type_id", EQUIP_TYPES },
+	// Troop pages are not entries: collect_entry adds this one only while the page's actor HP condition is on.
+	{ "JRPGTroopPage", "actor_id", "actors" },
+};
+
 struct Collector {
 	Array refs;
 	String source;
@@ -143,8 +166,12 @@ bool has_dual_wield(const Array &p_traits) {
 }
 
 void collect_entry(Collector &c, const Ref<JRPGDatabase> &p_database, const Ref<JRPGEntry> &p_entry) {
+	for (const ScalarReference &ref : SCALAR_REFERENCES) {
+		if (p_entry->is_class(ref.object_class)) {
+			c.add(ref.property, ref.target, p_entry->get(ref.property));
+		}
+	}
 	if (const JRPGActorData *actor = Object::cast_to<JRPGActorData>(p_entry.ptr())) {
-		c.add("class_id", table(JRPGDatabase::TABLE_CLASSES), actor->get_class_id());
 		// Slot 1 holds a weapon, and slot 2 too when the actor or its class has dual wield (RM-TRT-022). Equipment
 		// and states can also give dual wield during play; initial equipment follows the database setup only.
 		bool dual_wield = has_dual_wield(actor->get_traits());
@@ -166,21 +193,10 @@ void collect_entry(Collector &c, const Ref<JRPGDatabase> &p_database, const Ref<
 		}
 		c.add_traits(class_data->get_traits());
 	} else if (const JRPGUsableData *usable = Object::cast_to<JRPGUsableData>(p_entry.ptr())) {
-		if (const JRPGSkillData *skill = Object::cast_to<JRPGSkillData>(usable)) {
-			c.add("skill_type_id", SKILL_TYPES, skill->get_skill_type_id());
-			c.add("required_weapon_type_1", WEAPON_TYPES, skill->get_required_weapon_type_1());
-			c.add("required_weapon_type_2", WEAPON_TYPES, skill->get_required_weapon_type_2());
-		}
-		c.add("animation_id", table(JRPGDatabase::TABLE_ANIMATIONS), usable->get_animation_id());
-		c.add("damage_element_id", ELEMENTS, usable->get_damage_element_id());
 		c.add_list("effects", usable->get_effects(), "data_id", effect_target);
 	} else if (const JRPGWeaponData *weapon = Object::cast_to<JRPGWeaponData>(p_entry.ptr())) {
-		c.add("weapon_type_id", WEAPON_TYPES, weapon->get_weapon_type_id());
-		c.add("animation_id", table(JRPGDatabase::TABLE_ANIMATIONS), weapon->get_animation_id());
 		c.add_traits(weapon->get_traits());
 	} else if (const JRPGArmorData *armor = Object::cast_to<JRPGArmorData>(p_entry.ptr())) {
-		c.add("armor_type_id", ARMOR_TYPES, armor->get_armor_type_id());
-		c.add("equip_type_id", EQUIP_TYPES, armor->get_equip_type_id());
 		c.add_traits(armor->get_traits());
 	} else if (const JRPGEnemyData *enemy = Object::cast_to<JRPGEnemyData>(p_entry.ptr())) {
 		const Array drops = enemy->get_drops();
@@ -365,6 +381,47 @@ Array JRPGReferenceScanner::find_dangling(const Ref<JRPGDatabase> &p_database) {
 	return dangling;
 }
 
+String JRPGReferenceScanner::get_id_target(const Object *p_object, const String &p_property) {
+	if (!p_object) {
+		return String();
+	}
+	for (const ScalarReference &ref : SCALAR_REFERENCES) {
+		if (p_property == ref.property && p_object->is_class(ref.object_class)) {
+			return ref.target;
+		}
+	}
+	return String();
+}
+
+PackedStringArray JRPGReferenceScanner::get_target_names(const Ref<JRPGDatabase> &p_database, const String &p_target) {
+	PackedStringArray names;
+	ERR_FAIL_COND_V(p_database.is_null(), names);
+	const JRPGDatabase::TableKind kind = JRPGDatabase::find_table_kind(p_target);
+	if (kind != JRPGDatabase::TABLE_MAX) {
+		const Ref<JRPGTable> table = p_database->get_table(kind);
+		if (table.is_valid()) {
+			names.resize(table->get_maximum());
+			for (int id = 1; id <= table->get_maximum(); id++) {
+				names.set(id - 1, table->get_entry(id)->get_entry_name());
+			}
+		}
+		return names;
+	}
+	const Ref<JRPGTypesData> types = p_database->get_types();
+	const char *const lists[] = { ELEMENTS, SKILL_TYPES, WEAPON_TYPES, ARMOR_TYPES, EQUIP_TYPES };
+	const JRPGTypesData::TypeList kinds[] = { JRPGTypesData::ELEMENTS, JRPGTypesData::SKILL_TYPES, JRPGTypesData::WEAPON_TYPES, JRPGTypesData::ARMOR_TYPES, JRPGTypesData::EQUIP_TYPES };
+	for (int i = 0; i < 5; i++) {
+		if (p_target == lists[i]) {
+			return types.is_valid() ? types->get_list(kinds[i]) : names;
+		}
+	}
+	ERR_FAIL_V_MSG(names, vformat("JRPGReferenceScanner: unknown target \"%s\".", p_target));
+}
+
+String JRPGReferenceScanner::get_target_label(const String &p_target) {
+	return label(p_target);
+}
+
 String JRPGReferenceScanner::describe(const Dictionary &p_reference) {
 	const String source = p_reference.get("source", "");
 	const String where = source == "system" ? String("System") : vformat("%s %d", label(source), int(p_reference.get("source_id", 0)));
@@ -377,4 +434,7 @@ void JRPGReferenceScanner::_bind_methods() {
 	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("find_uses_from", "database", "target", "first_id"), &JRPGReferenceScanner::find_uses_from);
 	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("find_dangling", "database"), &JRPGReferenceScanner::find_dangling);
 	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("describe", "reference"), &JRPGReferenceScanner::describe);
+	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("get_id_target", "object", "property"), &JRPGReferenceScanner::get_id_target);
+	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("get_target_names", "database", "target"), &JRPGReferenceScanner::get_target_names);
+	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("get_target_label", "target"), &JRPGReferenceScanner::get_target_label);
 }

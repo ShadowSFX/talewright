@@ -257,6 +257,73 @@ TEST_CASE("[JRPG][DatabaseEditing] List, change maximum, clear, copy, paste and 
 	CHECK(JRPGDatabaseEditing::get_singleton() == nullptr);
 }
 
+TEST_CASE("[JRPG][DatabaseEditing] Records are read and edited by property; new entries get their file paths") {
+	JRPGDatabaseEditing *editing = memnew(JRPGDatabaseEditing);
+	const String dir = TestUtils::get_temp_path("jrpg_database_records");
+	Ref<JRPGDatabase> db = database_in_folder(dir);
+	editing->set_database(db);
+	const Ref<JRPGTable> items = db->get_table(JRPGDatabase::TABLE_ITEMS);
+
+	CHECK(editing->get_record("items", 1) == items->get_entry(1));
+	CHECK(editing->get_record("system", 0) == db->get_system());
+	CHECK(editing->get_record("types", 7) == db->get_types()); // The id is ignored for System, Types and Terms.
+	CHECK(editing->get_record("terms", 0) == db->get_terms());
+	CHECK(editing->get_record("items", items->get_maximum() + 1).is_null());
+	CHECK(editing->get_record("nope", 1).is_null());
+
+	// Loaded entries carry "file::Item_n" paths; entries added later get theirs at once, so the inspector's undo of an
+	// unsaved entry lands in the global history.
+	CHECK(items->get_entry(1)->get_path() == items->get_path() + "::Item_1");
+	const int count = items->get_maximum();
+	CHECK(editing->set_maximum("items", count + 1) == OK);
+	CHECK(items->get_entry(count + 1)->get_path() == items->get_path() + "::Item_" + itos(count + 1));
+	const Ref<JRPGEntry> removed = items->get_entry(count + 1);
+	CHECK(editing->set_maximum("items", count) == OK);
+	CHECK(editing->set_maximum("items", count + 1) == OK); // A new object takes over the path of the removed one.
+	CHECK(items->get_entry(count + 1) != removed);
+	CHECK(items->get_entry(count + 1)->get_path() == items->get_path() + "::Item_" + itos(count + 1));
+	CHECK(removed->get_path().is_empty());
+
+	Dictionary values;
+	values["name"] = "Dew Drop";
+	values["price"] = 75;
+	CHECK(editing->set_record_properties("items", 2, values) == OK);
+	const Ref<JRPGItemData> dew = items->get_entry(2);
+	CHECK(dew->get_entry_name() == "Dew Drop");
+	CHECK(dew->get_price() == 75);
+	CHECK(editing->is_unsaved(items));
+
+	Dictionary title;
+	title["game_title"] = "Other Road";
+	CHECK(editing->set_record_properties("system", 0, title) == OK);
+	CHECK(db->get_system()->get_game_title() == "Other Road");
+	CHECK(editing->is_unsaved(db->get_system()));
+
+	// Refused as a whole: an unknown property, the read-only id, an engine property, a wrong type, nothing at all.
+	Dictionary unknown;
+	unknown["name"] = "Changed";
+	unknown["nope"] = 1;
+	Dictionary read_only;
+	read_only["id"] = 9;
+	Dictionary engine;
+	engine["resource_name"] = "x";
+	Dictionary wrong_type;
+	wrong_type["price"] = "cheap";
+	ERR_PRINT_OFF;
+	CHECK(editing->set_record_properties("items", 2, unknown) == ERR_INVALID_PARAMETER);
+	CHECK(editing->set_record_properties("items", 2, read_only) == ERR_INVALID_PARAMETER);
+	CHECK(editing->set_record_properties("items", 2, engine) == ERR_INVALID_PARAMETER);
+	CHECK(editing->set_record_properties("items", 2, wrong_type) == ERR_INVALID_PARAMETER);
+	CHECK(editing->set_record_properties("items", 2, Dictionary()) == ERR_INVALID_PARAMETER);
+	CHECK(editing->set_record_properties("items", 0, values) == ERR_DOES_NOT_EXIST);
+	ERR_PRINT_ON;
+	CHECK(dew->get_entry_name() == "Dew Drop"); // Nothing from the refused calls was applied.
+	CHECK(dew->get_id() == 2);
+	CHECK(dew->get_price() == 75);
+
+	memdelete(editing);
+}
+
 } // namespace TestJRPGDatabaseEditing
 
 #endif // TOOLS_ENABLED

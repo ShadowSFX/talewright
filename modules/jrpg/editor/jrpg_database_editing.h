@@ -74,6 +74,15 @@ public:
 	// Table names in database order ("actors" ... "common_events").
 	static PackedStringArray get_table_names();
 
+	// The entry p_id of a table, or the System, Types or Terms data for "system", "types", "terms" (p_id ignored).
+	Ref<Resource> get_record(const String &p_table, int p_id);
+	// Sets properties of a record ({name: value}) as one undoable action (the bridge's authoring tool). Each value must
+	// have its property's type; the read-only "id" and engine properties (resource_*, script, metadata) are refused,
+	// and nothing changes unless every value is valid.
+	Error set_record_properties(const String &p_table, int p_id, const Dictionary &p_values);
+	// Stored, inspector-visible, writable data properties (what the form edits and the bridge reports).
+	static bool is_editable_property(const PropertyInfo &p_property);
+
 	// [{id, name}] for IDs p_from .. p_from + p_count - 1 (clamped to the table).
 	Array list_entries(const String &p_table, int p_from, int p_count);
 	// References that shrinking p_table to p_count would cut (JRPGReferenceScanner.find_uses_from).

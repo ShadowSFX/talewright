@@ -32,6 +32,7 @@
 #include "jrpg_bootstrap_plugin.h"
 
 #include "jrpg_database_editing.h"
+#include "jrpg_inspector_plugin.h" // IWYU pragma: keep (Ref<JRPGInspectorPlugin>::instantiate needs the class).
 #include "jrpg_setup_dialog.h"
 #include "jrpg_workspace_plugin.h"
 
@@ -83,6 +84,8 @@ void JRPGBootstrapPlugin::_notification(int p_what) {
 			setup_dialog = memnew(JRPGSetupDialog);
 			EditorInterface::get_singleton()->get_base_control()->add_child(setup_dialog);
 			add_tool_menu_item(TTR(SETUP_MENU_ITEM), callable_mp_static(&JRPGSetupDialog::run_setup));
+			inspector_plugin.instantiate();
+			add_inspector_plugin(inspector_plugin);
 			// Deferred: EditorNode reloads the files in its own handler of the same signal
 			// (editor/editor_node.cpp:1291-1323), which marks them changed.
 			EditorFileSystem::get_singleton()->connect("resources_reload", callable_mp(database_editing, &JRPGDatabaseEditing::forget_unsaved), CONNECT_DEFERRED);
@@ -95,6 +98,8 @@ void JRPGBootstrapPlugin::_notification(int p_what) {
 			ProjectSettings::get_singleton()->disconnect("settings_changed", callable_mp(this, &JRPGBootstrapPlugin::_on_project_settings_changed));
 			EditorFileSystem::get_singleton()->disconnect("resources_reload", callable_mp(database_editing, &JRPGDatabaseEditing::forget_unsaved));
 			remove_tool_menu_item(TTR(SETUP_MENU_ITEM));
+			remove_inspector_plugin(inspector_plugin);
+			inspector_plugin.unref();
 			setup_dialog = nullptr; // Freed with the editor's base control.
 			workspace = nullptr;
 		} break;

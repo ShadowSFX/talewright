@@ -253,4 +253,45 @@ TEST_CASE("[JRPG][ReferenceScanner] Planted dangling references are each reporte
 	ERR_PRINT_ON;
 }
 
+TEST_CASE("[JRPG][ReferenceScanner] ID properties name the table or type list they point into") {
+	Ref<JRPGActorData> actor;
+	actor.instantiate();
+	CHECK(JRPGReferenceScanner::get_id_target(actor.ptr(), "class_id") == "classes");
+	CHECK(JRPGReferenceScanner::get_id_target(actor.ptr(), "initial_level").is_empty()); // A number, not an ID.
+	CHECK(JRPGReferenceScanner::get_id_target(actor.ptr(), "skill_type_id").is_empty()); // A skill property.
+	Ref<JRPGSkillData> skill;
+	skill.instantiate();
+	CHECK(JRPGReferenceScanner::get_id_target(skill.ptr(), "skill_type_id") == "skill_types");
+	CHECK(JRPGReferenceScanner::get_id_target(skill.ptr(), "required_weapon_type_2") == "weapon_types");
+	CHECK(JRPGReferenceScanner::get_id_target(skill.ptr(), "animation_id") == "animations"); // From JRPGUsableData.
+	CHECK(JRPGReferenceScanner::get_id_target(skill.ptr(), "damage_element_id") == "elements");
+	Ref<JRPGWeaponData> weapon;
+	weapon.instantiate();
+	CHECK(JRPGReferenceScanner::get_id_target(weapon.ptr(), "weapon_type_id") == "weapon_types");
+	CHECK(JRPGReferenceScanner::get_id_target(weapon.ptr(), "animation_id") == "animations");
+	Ref<JRPGArmorData> armor;
+	armor.instantiate();
+	CHECK(JRPGReferenceScanner::get_id_target(armor.ptr(), "equip_type_id") == "equip_types");
+	CHECK(JRPGReferenceScanner::get_id_target(armor.ptr(), "armor_type_id") == "armor_types");
+	Ref<JRPGTroopPage> page;
+	page.instantiate();
+	CHECK(JRPGReferenceScanner::get_id_target(page.ptr(), "actor_id") == "actors");
+	CHECK(JRPGReferenceScanner::get_id_target(nullptr, "class_id").is_empty());
+
+	// Every target is a real table or type list, with a label for reports and pickers.
+	Ref<JRPGDatabase> db = make_clean_database();
+	db->get_types()->set_list(JRPGTypesData::ELEMENTS, PackedStringArray({ "Fire", "" }));
+	for (const char *target : { "classes", "animations", "actors", "skill_types", "weapon_types", "armor_types", "equip_types", "elements" }) {
+		CHECK_MESSAGE(JRPGReferenceScanner::get_target_label(target) != String(target), target);
+	}
+	const PackedStringArray classes = JRPGReferenceScanner::get_target_names(db, "classes");
+	REQUIRE(classes.size() == 2);
+	CHECK(classes[0] == "Class 1");
+	CHECK(JRPGReferenceScanner::get_target_names(db, "elements") == PackedStringArray({ "Fire", "" }));
+	ERR_PRINT_OFF;
+	CHECK(JRPGReferenceScanner::get_target_names(db, "nope").is_empty());
+	CHECK(JRPGReferenceScanner::get_target_names(Ref<JRPGDatabase>(), "classes").is_empty());
+	ERR_PRINT_ON;
+}
+
 } // namespace TestJRPGReferenceScanner

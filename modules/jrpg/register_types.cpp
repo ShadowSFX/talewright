@@ -70,6 +70,7 @@
 #include "modules/jrpg/editor/jrpg_bridge_tools.h"
 #include "modules/jrpg/editor/jrpg_database_editing.h"
 #include "modules/jrpg/editor/jrpg_database_view.h"
+#include "modules/jrpg/editor/jrpg_inspector_plugin.h"
 #include "modules/jrpg/editor/jrpg_managed_addon.h"
 #include "modules/jrpg/editor/jrpg_project_setup.h"
 #include "modules/jrpg/editor/jrpg_setup_dialog.h"
@@ -125,6 +126,8 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) {
 		GDREGISTER_INTERNAL_CLASS(JRPGDatabaseEditing);
 		GDREGISTER_INTERNAL_CLASS(JRPGDatabaseView);
+		GDREGISTER_INTERNAL_CLASS(JRPGEditorPropertyID);
+		GDREGISTER_INTERNAL_CLASS(JRPGInspectorPlugin);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspaceShell);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspaceView);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspacePlugin);

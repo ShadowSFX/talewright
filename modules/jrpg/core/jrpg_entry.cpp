@@ -105,6 +105,9 @@ bool JRPGEntry::_set(const StringName &p_name, const Variant &p_value) {
 void JRPGEntry::_validate_property(PropertyInfo &p_property) const {
 	if (p_property.name == "id") {
 		p_property.usage = PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY;
+	} else if (p_property.name.begins_with("resource_")) {
+		// The table owns an entry's path and scene-unique id; editing them in the inspector would detach the entry.
+		p_property.usage &= ~PROPERTY_USAGE_EDITOR;
 	}
 }
 

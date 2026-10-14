@@ -88,8 +88,15 @@ Full field lists per table follow the inventory slices (03/04/05). The vertical 
 - Saves record the database schema version and a content hash of the tables used (spec 06).
 
 ## Editing rules
-- The database editor edits one entry at a time through `EditorInspector` (never the whole table, to avoid huge
-  inspectors); custom `EditorProperty`s for traits/effects/curves/ID pickers.
+- The database editor edits one entry at a time through an embedded `EditorInspector` (never the whole table, to
+  avoid huge inspectors; task 6.4.2). `JRPGInspectorPlugin` serves it and the main Inspector: integer properties that
+  hold one ID (`JRPGReferenceScanner.get_id_target`, one table shared with the scanner) are searchable lists of the
+  target's entries ("0003  Fire"; 0 None, -1 Normal Attack where the range allows it, missing IDs shown as such);
+  the name is shown first. Engine `resource_*` properties are hidden from inspectors (the table owns paths and
+  scene-unique ids). Custom `EditorProperty`s for traits/effects/curves come with the per-tab tasks (6.5.x).
+- Entries added by Change Maximum get their `file::Kind_id` path at once (as the loader and saver would,
+  scene/resources/resource_format_text.cpp:633,1942), so inspector edits of an unsaved new entry also go to the
+  global history.
 - List operations (task 6.4.1, `JRPGDatabaseEditing`, shared by the workspace's Database section and the `jrpg_db_*`
   bridge tools): Change Maximum, Clear, Copy, Paste. The clipboard holds a deep copy taken at copy time; paste only
   into the same table; each paste gets its own arrays and dictionaries (`JRPGEntry.assign_from`). Change Maximum and

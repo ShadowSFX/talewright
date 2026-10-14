@@ -56,10 +56,24 @@ void JRPGDatabaseEditing::_watch(const Ref<Resource> &p_resource, const Ref<Reso
 
 void JRPGDatabaseEditing::_watch_table(const Ref<JRPGTable> &p_table) {
 	_watch(p_table, p_table);
-	// Entries are sub-resources saved inside the table file: a change to one makes the table unsaved.
+	const String file = p_table->get_path();
+	const bool own_file = !file.is_empty() && !file.contains("::");
 	for (int id = 1; id <= p_table->get_maximum(); id++) {
-		_watch(p_table->get_entry(id), p_table);
+		const Ref<JRPGEntry> entry = p_table->get_entry(id);
+		// Entries are sub-resources saved inside the table file: a change to one makes the table unsaved.
+		_watch(entry, p_table);
+		// New entries get the "file::Kind_id" path the loader and saver give sub-resources
+		// (scene/resources/resource_format_text.cpp:633,1942) right away: the inspector routes the undo of a path-less
+		// resource to the open scene instead of the global history (editor/editor_undo_redo_manager.cpp:82-86).
+		const String path = file + "::" + entry->get_scene_unique_id();
+		if (own_file && entry->get_path() != path) {
+			entry->set_path(path, true); // Takes over from an entry removed by Change Maximum.
+		}
 	}
+}
+
+bool JRPGDatabaseEditing::is_editable_property(const PropertyInfo &p_property) {
+	return (p_property.usage & PROPERTY_USAGE_STORAGE) && (p_property.usage & PROPERTY_USAGE_EDITOR) && !(p_property.usage & PROPERTY_USAGE_READ_ONLY) && !p_property.name.begins_with("resource_") && p_property.name != "script" && !p_property.name.begins_with("metadata/");
 }
 
 bool JRPGDatabaseEditing::_is_database_file(const Ref<Resource> &p_resource) const {
@@ -126,6 +140,61 @@ PackedStringArray JRPGDatabaseEditing::get_table_names() {
 		names.push_back(JRPGDatabase::get_table_name(JRPGDatabase::TableKind(kind)));
 	}
 	return names;
+}
+
+Ref<Resource> JRPGDatabaseEditing::get_record(const String &p_table, int p_id) {
+	const Ref<JRPGDatabase> db = get_database();
+	if (db.is_null()) {
+		return Ref<Resource>();
+	}
+	if (p_table == "system") {
+		return db->get_system();
+	}
+	if (p_table == "types") {
+		return db->get_types();
+	}
+	if (p_table == "terms") {
+		return db->get_terms();
+	}
+	const Ref<JRPGTable> table = db->get_table_by_name(p_table);
+	return table.is_valid() ? Ref<Resource>(table->get_entry(p_id)) : Ref<Resource>();
+}
+
+Error JRPGDatabaseEditing::set_record_properties(const String &p_table, int p_id, const Dictionary &p_values) {
+	const Ref<Resource> record = get_record(p_table, p_id);
+	ERR_FAIL_COND_V_MSG(record.is_null(), ERR_DOES_NOT_EXIST, vformat("JRPG database: no record %d in \"%s\".", p_id, p_table));
+	ERR_FAIL_COND_V_MSG(p_values.is_empty(), ERR_INVALID_PARAMETER, "JRPG database: no properties to set.");
+	List<PropertyInfo> props;
+	record->get_property_list(&props);
+	// Every value is checked before anything changes, so a call either applies completely or not at all.
+	for (const KeyValue<Variant, Variant> &kv : p_values) {
+		const String name = kv.key;
+		const PropertyInfo *info = nullptr;
+		for (const PropertyInfo &pi : props) {
+			if (pi.name == name) {
+				info = &pi;
+				break;
+			}
+		}
+		ERR_FAIL_COND_V_MSG(!info || !is_editable_property(*info), ERR_INVALID_PARAMETER, vformat("JRPG database: %s has no editable property \"%s\".", record->get_class(), name));
+		ERR_FAIL_COND_V_MSG(kv.value.get_type() != info->type && !(info->type == Variant::OBJECT && kv.value.get_type() == Variant::NIL), ERR_INVALID_PARAMETER, vformat("JRPG database: \"%s\" takes a %s.", name, Variant::get_type_name(info->type)));
+	}
+	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
+	if (!undo_redo) {
+		for (const KeyValue<Variant, Variant> &kv : p_values) {
+			record->set(StringName(kv.key), kv.value);
+		}
+		return OK;
+	}
+	const String name = p_values.size() == 1 ? String(p_values.keys()[0]) : vformat(TTR("%d properties"), p_values.size());
+	undo_redo->create_action_for_history(vformat(TTR("Set %s"), name), EditorUndoRedoManager::GLOBAL_HISTORY);
+	undo_redo->force_fixed_history();
+	for (const KeyValue<Variant, Variant> &kv : p_values) {
+		undo_redo->add_do_property(record.ptr(), kv.key, kv.value);
+		undo_redo->add_undo_property(record.ptr(), kv.key, record->get(StringName(kv.key)));
+	}
+	undo_redo->commit_action();
+	return OK;
 }
 
 Array JRPGDatabaseEditing::list_entries(const String &p_table, int p_from, int p_count) {

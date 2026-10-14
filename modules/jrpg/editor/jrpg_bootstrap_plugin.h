@@ -34,6 +34,7 @@
 #include "editor/plugins/editor_plugin.h"
 
 class JRPGDatabaseEditing;
+class JRPGInspectorPlugin;
 class JRPGSetupDialog;
 class JRPGWorkspacePlugin;
 
@@ -49,6 +50,7 @@ class JRPGBootstrapPlugin : public EditorPlugin {
 	JRPGWorkspacePlugin *workspace = nullptr;
 	JRPGSetupDialog *setup_dialog = nullptr;
 	JRPGDatabaseEditing *database_editing = nullptr;
+	Ref<JRPGInspectorPlugin> inspector_plugin; // ID pickers in every inspector that shows JRPG data.
 
 	void _sync_workspace();
 	void _on_project_settings_changed();

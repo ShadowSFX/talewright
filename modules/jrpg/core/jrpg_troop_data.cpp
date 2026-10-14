@@ -112,6 +112,12 @@ bool JRPGTroopPage::_set(const StringName &p_name, const Variant &p_value) {
 	return JRPGSchema::set_renamed(this, p_name, p_value);
 }
 
+void JRPGTroopPage::_validate_property(PropertyInfo &p_property) const {
+	if (p_property.name.begins_with("resource_")) {
+		p_property.usage &= ~PROPERTY_USAGE_EDITOR; // The troop owns its pages' paths and scene-unique ids.
+	}
+}
+
 void JRPGTroopPage::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_turn_end", "enabled"), &JRPGTroopPage::set_turn_end);
 	ClassDB::bind_method(D_METHOD("is_turn_end"), &JRPGTroopPage::is_turn_end);

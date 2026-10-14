@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "6.4.1 Database window, tabs and entry list",
+  "last_completed": "6.4.2 Entry form, undo, save, ID pickers",
   "tasks": [
     {
       "id": "0",
@@ -1845,15 +1845,15 @@
       "dependencies": [
         "6.3"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Create/rename/undo/save via UI and bridge"
       ],
       "test_strategy": "Bridge.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "6.4.1",
@@ -1888,7 +1888,7 @@
         "plan/evidence/jrpg/6.4.1-change-maximum-dialog.png",
         "plan/evidence/jrpg/6.4.1-clear-dialog.png"
       ],
-      "commit": "pending",
+      "commit": "8c57162b56",
       "notes": "Godot patterns followed: main-screen section (Project Settings section list as ItemList), ItemList entry list (draws only visible rows, scene/gui/item_list.cpp:1496-1530), ConfirmationDialog + SpinBox, flat toolbar buttons with editor icons, '(*)' unsaved marker like scene tabs. Self-review fixes before done: dialogs act on the entry they were opened for (a bridge select could change the selection under an open dialog); database undo actions pinned to GLOBAL_HISTORY (path-less new entries were routed to the open scene: editor/editor_undo_redo_manager.cpp:82-86); saves use FLAG_REPLACE_SUBRESOURCE_PATHS so new entries get file::Kind_id paths; entries are re-watched only on the table's own changed signal (not per keystroke).",
       "status": "done"
     },
@@ -1905,10 +1905,35 @@
         "Rename + undo + save via bridge; minimal .tres diff"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
-      "files": [],
-      "commit": "",
-      "notes": "From 6.4.1: build the form on JRPGDatabaseEditing (database_changed signal, unsaved tracking, save via JRPGBootstrapPlugin::save_external_data). Inspector edits of an entry with no path (added by Change Maximum, not saved yet) route to the open scene's undo history (editor/editor_undo_redo_manager.cpp:82-86): the embedded form must create its actions for GLOBAL_HISTORY. Unsaved marks follow 'changed' signals, so undoing back to the saved state still shows '(*)' (accepted; revisit if confusing). JRPGDatabaseView::form is the VBoxContainer that hosts the form (currently a hint + Open in Inspector).",
-      "status": "pending"
+      "files": [
+        "modules/jrpg/core/jrpg_entry.cpp",
+        "modules/jrpg/core/jrpg_reference_scanner.h",
+        "modules/jrpg/core/jrpg_reference_scanner.cpp",
+        "modules/jrpg/core/jrpg_troop_data.h",
+        "modules/jrpg/core/jrpg_troop_data.cpp",
+        "modules/jrpg/doc_classes/JRPGReferenceScanner.xml",
+        "modules/jrpg/editor/jrpg_inspector_plugin.h",
+        "modules/jrpg/editor/jrpg_inspector_plugin.cpp",
+        "modules/jrpg/editor/jrpg_database_view.h",
+        "modules/jrpg/editor/jrpg_database_view.cpp",
+        "modules/jrpg/editor/jrpg_database_editing.h",
+        "modules/jrpg/editor/jrpg_database_editing.cpp",
+        "modules/jrpg/editor/jrpg_bootstrap_plugin.h",
+        "modules/jrpg/editor/jrpg_bootstrap_plugin.cpp",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/tests/test_jrpg_database.h",
+        "modules/jrpg/tests/test_jrpg_database_editing.h",
+        "modules/jrpg/tests/test_jrpg_reference_scanner.h",
+        "plan/specs/02_database_model.md",
+        "talewright/docs/claude_bridge.md",
+        "plan/evidence/jrpg/6.4.2-bridge-rename-undo-save.txt",
+        "plan/evidence/jrpg/6.4.2-entry-form-actor.png",
+        "plan/evidence/jrpg/6.4.2-entry-form-skill.png"
+      ],
+      "commit": "pending",
+      "notes": "Godot patterns followed: embedded EditorInspector like the Import dock (editor/docks/import_dock.cpp:794-799), EditorInspectorPlugin + EditorProperty with a searchable OptionButton like EditorPropertyEnum (editor/inspector/editor_properties.cpp:944-1010). Typing in the form uses EditorInspector's own undo actions; their routing to the global history follows from entries always having file::Kind_id paths (editor/editor_undo_redo_manager.cpp:82-90) and was verified live only through the bridge's jrpg_db_set + editor_undo_redo (no bridge tool types into editor controls). Equipment slots (PackedInt32Array) and trait/effect lists still use the generic editors: per-tab tasks 6.5.x.",
+      "status": "done"
     },
     {
       "id": "6.5",

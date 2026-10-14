@@ -38,6 +38,8 @@
 #include "tests/test_utils.h"
 
 #include "modules/jrpg/core/jrpg_database.h"
+#include "modules/jrpg/core/jrpg_skill_data.h"
+#include "modules/jrpg/core/jrpg_troop_data.h"
 
 namespace TestJRPGDatabase {
 
@@ -175,6 +177,33 @@ TEST_CASE("[JRPG][Database] The manifest holds one table per kind") {
 	CHECK(db->get_table_by_name("items") == items);
 	CHECK(db->get("items") == Variant(items)); // Exposed as one property per table.
 	CHECK(db->get_table_by_name("weapons").is_null());
+}
+
+// Usage of a property as the inspector sees it (validated), or 0 when the object has no such property.
+static uint32_t usage_of(const Object *p_object, const String &p_name) {
+	List<PropertyInfo> props;
+	p_object->get_property_list(&props);
+	for (const PropertyInfo &pi : props) {
+		if (pi.name == p_name) {
+			return pi.usage;
+		}
+	}
+	return 0;
+}
+
+TEST_CASE("[JRPG][Database] Entries and troop pages hide the engine's resource properties from inspectors") {
+	Ref<JRPGSkillData> skill;
+	skill.instantiate();
+	Ref<JRPGTroopPage> page;
+	page.instantiate();
+	for (const Object *object : { static_cast<const Object *>(skill.ptr()), static_cast<const Object *>(page.ptr()) }) {
+		CHECK((usage_of(object, "resource_path") & PROPERTY_USAGE_EDITOR) == 0);
+		CHECK((usage_of(object, "resource_name") & PROPERTY_USAGE_EDITOR) == 0);
+		CHECK((usage_of(object, "resource_name") & PROPERTY_USAGE_STORAGE) != 0); // Still saved as before.
+		CHECK((usage_of(object, "resource_local_to_scene") & PROPERTY_USAGE_EDITOR) == 0);
+	}
+	CHECK((usage_of(skill.ptr(), "name") & PROPERTY_USAGE_EDITOR) != 0);
+	CHECK(usage_of(skill.ptr(), "id") == (PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY));
 }
 
 } // namespace TestJRPGDatabase

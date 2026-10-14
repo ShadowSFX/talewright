@@ -36,6 +36,7 @@
 #include "core/object/callable_mp.h"
 #include "editor/editor_interface.h"
 #include "editor/editor_string_names.h"
+#include "editor/inspector/editor_inspector.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/button.h"
 #include "scene/gui/dialogs.h"
@@ -95,6 +96,30 @@ void JRPGDatabaseView::refresh() {
 	_refresh_tables();
 	_refresh_entries();
 	_update_buttons();
+	_sync_form();
+}
+
+Ref<Resource> JRPGDatabaseView::_selected_record() const {
+	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
+	const String key = _selected_table();
+	if (!editing || key.is_empty()) {
+		return Ref<Resource>();
+	}
+	const Ref<JRPGTable> table = editing->get_table(key);
+	return table.is_valid() ? Ref<Resource>(table->get_entry(_selected_entry())) : single_resource(editing->get_database(), key);
+}
+
+void JRPGDatabaseView::_sync_form() {
+	const Ref<Resource> record = _selected_record();
+	// Re-editing the same object would rebuild the form under the user's cursor; its values refresh by themselves
+	// (editor/inspector/editor_inspector.cpp:6047-6064).
+	if (inspector->get_edited_object() != record.ptr()) {
+		inspector->edit(record.ptr());
+	}
+	inspector->set_visible(record.is_valid());
+	form_hint->set_visible(record.is_null());
+	const Ref<JRPGEntry> entry = record;
+	form_title->set_text(entry.is_valid() ? vformat("%s %d", entry->get_kind(), entry->get_id()) : (record.is_valid() ? _selected_table().capitalize() : String()));
 }
 
 void JRPGDatabaseView::_refresh_tables() {
@@ -136,7 +161,7 @@ void JRPGDatabaseView::_refresh_entries() {
 	maximum_button->set_visible(table.is_valid());
 	if (table.is_null()) {
 		table_title->set_text(key.is_empty() ? String() : key.capitalize());
-		form_hint->set_text(key.is_empty() ? TTR("Set up the project to edit its database.") : vformat(TTR("Open %s in the Inspector to edit it."), key.capitalize()));
+		form_hint->set_text(key.is_empty() ? TTR("Set up the project to edit its database.") : String());
 		return;
 	}
 	table_title->set_text(vformat(TTR("%s (%d)"), key.capitalize(), table->get_maximum()));
@@ -169,8 +194,8 @@ void JRPGDatabaseView::_update_buttons() {
 	paste_button->set_disabled(!has_entry || !editing || !editing->can_paste(key));
 	inspect_button->set_disabled(key.is_empty() || (entries->is_visible() && !has_entry));
 	const Ref<JRPGTable> table = (editing && entries->is_visible()) ? editing->get_table(key) : Ref<JRPGTable>();
-	if (table.is_valid()) {
-		form_hint->set_text(has_entry ? vformat(TTR("Open %s %d in the Inspector to edit its fields."), table->get_kind(), _selected_entry()) : TTR("Select an entry to edit it."));
+	if (table.is_valid() && !has_entry) {
+		form_hint->set_text(table->get_maximum() == 0 ? TTR("This table has no entries. Use Change Maximum to add some.") : TTR("Select an entry to edit it."));
 	}
 }
 
@@ -188,11 +213,13 @@ void JRPGDatabaseView::_fill_uses(ItemList *p_list, const Array &p_uses) {
 void JRPGDatabaseView::_on_table_selected(int p_index) {
 	_refresh_entries();
 	_update_buttons();
+	_sync_form();
 }
 
 void JRPGDatabaseView::_on_entry_selected(int p_index) {
 	selected_ids[_selected_table()] = entries->get_item_metadata(p_index);
 	_update_buttons();
+	_sync_form();
 }
 
 void JRPGDatabaseView::_on_save_pressed() {
@@ -267,12 +294,9 @@ void JRPGDatabaseView::_on_paste_pressed() {
 }
 
 void JRPGDatabaseView::_on_inspect_pressed() {
-	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
-	const String key = _selected_table();
-	const Ref<JRPGTable> table = editing->get_table(key);
-	const Ref<Resource> resource = table.is_valid() ? Ref<Resource>(table->get_entry(_selected_entry())) : single_resource(editing->get_database(), key);
-	if (resource.is_valid()) {
-		EditorInterface::get_singleton()->edit_resource(resource);
+	const Ref<Resource> record = _selected_record();
+	if (record.is_valid()) {
+		EditorInterface::get_singleton()->edit_resource(record);
 	}
 }
 
@@ -412,18 +436,33 @@ JRPGDatabaseView::JRPGDatabaseView() {
 	}
 
 	form = memnew(VBoxContainer);
-	form->set_custom_minimum_size(Size2(220, 0) * EDSCALE);
+	form->set_custom_minimum_size(Size2(260, 0) * EDSCALE);
 	form->set_h_size_flags(SIZE_EXPAND_FILL);
 	form->set_stretch_ratio(1.5);
 	work->add_child(form);
+	HBoxContainer *form_header = memnew(HBoxContainer);
+	form->add_child(form_header);
+	form_title = memnew(Label);
+	form_title->set_theme_type_variation("HeaderSmall");
+	form_title->set_h_size_flags(SIZE_EXPAND_FILL);
+	form_header->add_child(form_title);
+	inspect_button = memnew(Button);
+	inspect_button->set_text(TTR("Open in Inspector"));
+	inspect_button->set_theme_type_variation("FlatButton");
+	inspect_button->set_tooltip_text(TTR("Shows this entry in the Inspector dock too, with room for long lists."));
+	inspect_button->connect(SceneStringName(pressed), callable_mp(this, &JRPGDatabaseView::_on_inspect_pressed));
+	form_header->add_child(inspect_button);
 	form_hint = memnew(Label);
 	form_hint->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
 	form->add_child(form_hint);
-	inspect_button = memnew(Button);
-	inspect_button->set_text(TTR("Open in Inspector"));
-	inspect_button->set_h_size_flags(SIZE_SHRINK_BEGIN);
-	inspect_button->connect(SceneStringName(pressed), callable_mp(this, &JRPGDatabaseView::_on_inspect_pressed));
-	form->add_child(inspect_button);
+	inspector = memnew(EditorInspector);
+	inspector->set_v_size_flags(SIZE_EXPAND_FILL);
+	inspector->set_use_doc_hints(true);
+	inspector->set_hide_script(true);
+	inspector->set_hide_metadata(true);
+	inspector->set_accessibility_name(TTR("Entry form"));
+	inspector->set_visible(false);
+	form->add_child(inspector);
 
 	maximum_dialog = memnew(ConfirmationDialog);
 	maximum_dialog->set_title(TTR("Change Maximum"));

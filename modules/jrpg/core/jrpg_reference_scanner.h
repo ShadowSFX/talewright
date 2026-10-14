@@ -60,4 +60,11 @@ public:
 	static Array find_dangling(const Ref<JRPGDatabase> &p_database);
 	// "Skill 4, effects[1].data_id: state 12" — where a reference is, for reports.
 	static String describe(const Dictionary &p_reference);
+	// The table or type list that an integer property holding one ID points into ("classes", "elements"...), or an
+	// empty string when p_property of p_object is not such a reference. Used by the editor's ID pickers.
+	static String get_id_target(const Object *p_object, const String &p_property);
+	// The names of a table's entries or of a type list; index i is ID i + 1 (an empty name is an empty entry).
+	static PackedStringArray get_target_names(const Ref<JRPGDatabase> &p_database, const String &p_target);
+	// "Skill type" for "skill_types": the singular label of a table or type list.
+	static String get_target_label(const String &p_target);
 };

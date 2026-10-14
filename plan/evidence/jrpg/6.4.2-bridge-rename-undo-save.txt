@@ -1,0 +1,81 @@
+# 6.4.2 bridge verification (scratch project committed to git after jrpg_setup_project)
+## git status of res://jrpg before
+(clean)
+## jrpg_db_set table=actors id=1 values={name: Aria}
+{
+  "table": "actors",
+  "class": "JRPGActorData",
+  "changed": {
+    "name": "Aria"
+  },
+  "undoable": true
+}
+## jrpg_db_list (unsaved files)
+  "unsaved_paths": [
+    "res://jrpg/db/actors.tres"
+  ]
+}
+## jrpg_db_save
+{
+  "saved": [
+    "res://jrpg/db/actors.tres"
+  ]
+}
+## git diff after the rename
+--- a/jrpg/db/actors.tres
++++ b/jrpg/db/actors.tres
+-name = "Hero"
++name = "Aria"
+(diff stat:  1 file changed, 1 insertion(+), 1 deletion(-))
+## editor_undo_redo action=undo
+{
+  "action": "undo",
+  "performed": true
+}
+## jrpg_db_get table=actors id=1 (name)
+    "name": "Hero",
+## jrpg_db_save
+{
+  "saved": [
+    "res://jrpg/db/actors.tres"
+  ]
+}
+## git diff after undo + save (expected: none)
+(diff stat: )
+## jrpg_db_set with one unknown property (all-or-nothing)
+JRPGActorData has no editable property "nope" (jrpg_db_get lists them); nothing was changed.
+## jrpg_db_get table=actors id=1 (name unchanged)
+    "name": "Hero",
+## jrpg_db_set traits from JSON numbers
+{
+  "table": "actors",
+  "class": "JRPGActorData",
+  "changed": {
+    "traits": [
+      {
+        "code": 1,
+        "data_id": 2,
+        "value": 5000
+      }
+    ]
+  },
+  "undoable": true
+}
+## jrpg_db_save + git diff (integers, not 1.0)
+--- a/jrpg/db/actors.tres
++++ b/jrpg/db/actors.tres
++traits = [{
++"code": 1,
++"data_id": 2,
++"value": 5000
++}]
+(diff stat:  1 file changed, 5 insertions(+))
+## editor_undo_redo action=undo + save + git diff (expected: none)
+(diff stat: )
+## jrpg_db_get table=system (game title) and set it
+  "changed": {
+    "game_title": "Lantern Road"
+  },
+## get_logs errors_only=true
+    "errors": 0,
+    "warnings": 0,

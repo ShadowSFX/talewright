@@ -66,6 +66,7 @@ private:
 protected:
 	static void _bind_methods();
 	bool _set(const StringName &p_name, const Variant &p_value);
+	void _validate_property(PropertyInfo &p_property) const;
 
 public:
 	void set_turn_end(bool p_enabled);
