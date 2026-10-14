@@ -47,6 +47,25 @@
 				Returns the skin's selection cursor, a nine-slice image, for windows that draw their own contents.
 			</description>
 		</method>
+		<method name="get_icon_region" qualifiers="const">
+			<return type="Rect2" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns the region of icon [param index] in [theme_item icon_set]: icon n is at column n modulo the icons a row holds, row n divided by them. Returns an empty rectangle when the set has no such icon.
+			</description>
+		</method>
+		<method name="get_icon_set_texture" qualifiers="const">
+			<return type="Texture2D" />
+			<description>
+				Returns the icon set the window draws icons from ([theme_item icon_set]).
+			</description>
+		</method>
+		<method name="get_icon_size" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the size of one icon of the icon set, in pixels ([theme_item icon_size]).
+			</description>
+		</method>
 		<method name="get_open_rect" qualifiers="const">
 			<return type="Rect2" />
 			<description>
@@ -85,6 +104,9 @@
 		</method>
 	</methods>
 	<members>
+		<member name="frame_visible" type="bool" setter="set_frame_visible" getter="is_frame_visible" default="true">
+			If [code]true[/code], the back and the border are drawn. Message windows on a dimmed or transparent background draw neither.
+		</member>
 		<member name="mouse_filter" type="int" setter="set_mouse_filter" getter="get_mouse_filter" overrides="Control" enum="Control.MouseFilter" default="0" />
 		<member name="openness" type="float" setter="set_openness" getter="get_openness" default="1.0">
 			How open the window is, from 0 (closed, nothing drawn) to 1 (open). Setting it shows the window at once and stops any opening or closing, without a signal.
@@ -127,10 +149,16 @@
 		<constant name="ARROW_SIZE" value="16">
 			The size of each mark in [theme_item arrows].
 		</constant>
+		<constant name="DEFAULT_ICON_SIZE" value="32">
+			The built-in skin's [theme_item icon_size].
+		</constant>
 	</constants>
 	<theme_items>
 		<theme_item name="frame_margin" data_type="constant" type="int" default="16">
 			The margins of the [theme_item back] and [theme_item border] nine-slices, in pixels: corners keep their size, edges and the middle stretch.
+		</theme_item>
+		<theme_item name="icon_size" data_type="constant" type="int" default="32">
+			The size of one icon of [theme_item icon_set], in pixels.
 		</theme_item>
 		<theme_item name="padding" data_type="constant" type="int" default="12">
 			Space between the window's edge and its contents, in pixels.
@@ -146,6 +174,9 @@
 		</theme_item>
 		<theme_item name="cursor" data_type="icon" type="Texture2D">
 			The selection cursor of lists, a nine-slice image.
+		</theme_item>
+		<theme_item name="icon_set" data_type="icon" type="Texture2D">
+			The icon set: square icons of [theme_item icon_size] pixels in rows, an entry's icon index counting from the top left, row by row. Talewright's built-in set holds 16 icons a row.
 		</theme_item>
 	</theme_items>
 </class>

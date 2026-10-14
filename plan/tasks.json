@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "10.2.1 Control-code parser and text layout",
+  "last_completed": "10.2.2.1 Message window: layout, letter by letter, waits, face, name box",
   "tasks": [
     {
       "id": "0",
@@ -4116,7 +4116,7 @@
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
-      "commit": "pending",
+      "commit": "5a4eaa96c8",
       "notes": "Scope: the core parser and expansion (JRPGMessageText: expand, parse, strip). Laying out the parsed text (fonts, sizes, icons, positions, typewriter reveal) needs the window's font and is drawn by the message window, so it is part of 10.2.2.",
       "status": "done"
     },
@@ -4124,19 +4124,55 @@
       "id": "10.2.2",
       "parent": "10.2",
       "title": "Message window, choices, number input, gold window",
-      "description": "Typewriter, face, name box, positions, background, choices/number input windows, fast-forward.",
+      "description": "Typewriter, face, name box, positions, background, choices/number input windows, fast-forward. Split into 10.2.2.1 (message window: layout of the parsed codes, letter-by-letter display, waits, skipping, pause mark, face, name box, positions, backgrounds; icon set in the built-in skin) and 10.2.2.2 (choice, number input and gold windows; the end-to-end bridge scene).",
       "dependencies": [
         "10.2.1"
       ],
       "priority": 1,
       "acceptance_criteria": [
-        "A test scene shows a message with a face and then a 3-way choice; bridge input advances, picks choice 2 and the returned index is 1; screenshot as evidence"
+        "10.2.2.1 and 10.2.2.2 done"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
       "commit": "",
       "notes": "",
       "status": "pending"
+    },
+    {
+      "id": "10.2.2.1",
+      "parent": "10.2.2",
+      "title": "Message window: layout, letter by letter, waits, face, name box",
+      "priority": 1,
+      "dependencies": [],
+      "description": "JRPGMessageWindow (runtime JRPGWindow): lays out JRPGMessageText operations (text colors from a palette, icons from the icon set, size steps and sizes, x/y positions, lines), reveals one character a frame at 60 frames a second, honors timed waits, waits for input and instant display, shows the pause mark when waiting, skips to the next wait for input on OK or cancel, ends with or without waiting for the player; face on the left, a name box above, bottom/middle/top positions, window/dim/transparent backgrounds; the gold window code asks for it with a signal. The generated icon set joins the built-in skin (icon_set theme item). Authority: client.",
+      "acceptance_criteria": [
+        "Doctests: layout positions (colors, icons, size steps, PX/PY, lines), reveal timing per frame and after waits, wait for input and pause mark, instant display, skip, no input wait, face and name box placement, positions and backgrounds",
+        "Golden screenshot of a message with a face, a name box, colors and an icon through the bridge"
+      ],
+      "test_strategy": "Doctests + bridge golden.",
+      "status": "done",
+      "files": [],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "10.2.2.2",
+      "parent": "10.2.2",
+      "title": "Choice, number input and gold windows; message and choice end to end",
+      "priority": 1,
+      "dependencies": [
+        "10.2.2.1"
+      ],
+      "description": "JRPGChoiceWindow (a JRPGSelectableList sized to its choices, default choice, cancel behavior, placed beside the message window), JRPGNumberInputWindow (1 to 8 digits, up/down per digit, left/right between digits), JRPGGoldWindow (the party's gold with the currency unit). Authority: client.",
+      "acceptance_criteria": [
+        "Doctests for each window",
+        "A test scene shows a message with a face and then a 3-way choice; bridge input advances, picks choice 2 and the returned index is 1; screenshot as evidence"
+      ],
+      "test_strategy": "Doctests + bridge.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "10.3",

@@ -64,7 +64,13 @@ struct JRPGAddonFile {
 
 
 # The built-in window skin (D-049): file stem in talewright/assets/generated/system -> name in the generated header.
-DEFAULT_SKIN = {"window_back": "BACK", "window_border": "BORDER", "window_cursor": "CURSOR", "window_arrows": "ARROWS"}
+DEFAULT_SKIN = {
+    "window_back": "BACK",
+    "window_border": "BORDER",
+    "window_cursor": "CURSOR",
+    "window_arrows": "ARROWS",
+    "icons": "ICONS",
+}
 
 
 def make_default_skin(target, source, env):

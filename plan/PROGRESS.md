@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 11:22 -0600
+- **Updated:** 2026-10-14 11:40 -0600
 - **Current task:** none
-- **Last completed:** 10.2.1 Control-code parser and text layout
-- **Next task:** 10.2.2 Message window, choices, number input, gold window
-- **Done leaf tasks:** 123
+- **Last completed:** 10.2.2.1 Message window: layout, letter by letter, waits, face, name box
+- **Next task:** 10.2.2.2 Choice, number input and gold windows; message and choice end to end
+- **Done leaf tasks:** 124
 <!-- status:end -->
 
 ## Log
@@ -327,4 +327,7 @@
 | 2026-10-14 11:10 -0600 | 10.1.2 | done: Selectable list: cursor, navigation, paging, key repeat, mouse, UI sounds — JRPGSelectableList (runtime JRPGWindow): items (text, enabled, icon, right_text) in columns and rows with the skin's cursor (dimmed without focus), input while focused (D-050): moves with wrap on a fresh press only, repeats after 24 then every 6 frames, page actions, OK/buzzer on disabled, cancel; own press detection (edge or GUI event, keys held at focus ignored); mouse hover/click/right-click/wheel; cursor/OK/cancel/buzzer sounds from the System data of its database (project's by default), player made with the first sound. JRPGWindow processing routed through _update_process for subclasses. Doctests (4 cases), bridge: sounds per action (stream and last sound) and golden talewright/goldens/jrpg_list.png (178/178), 1589 editor tests, 1479 release-template tests, static checks ALL PASS. (containers: 10.1 in_progress->done, 10 in_progress->pending) | 1cd9059380 |
 | 2026-10-14 11:12 -0600 | 10.2.1 | started: Control-code parser and text layout (containers: 10.2 pending->in_progress, 10 pending->in_progress) |  |
 | 2026-10-14 11:12 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-14 11:22 -0600 | 10.2.1 | done: Control-code parser and text layout — JRPGMessageText (core, static; D-051): expand() replaces \V[n] (nested, up to 8 passes), \N[n], \P[n] (1-based party order), \G from a game state; parse() turns the remaining codes into operations (text, new line, color, icon, size steps and size, gold window, waits of 15/60 frames, wait for input, instant on/off, no input wait, x/y position), any case, unknown or malformed codes shown as written, \ as a backslash; strip() gives the plain text. Layout and drawing moved to 10.2.2 (note). Doctests for every code (4 cases), 1593 editor tests, 1483 release-template tests, static checks ALL PASS. (containers: 10.2 in_progress->pending, 10 in_progress->pending) | pending |
+| 2026-10-14 11:22 -0600 | 10.2.1 | done: Control-code parser and text layout — JRPGMessageText (core, static; D-051): expand() replaces \V[n] (nested, up to 8 passes), \N[n], \P[n] (1-based party order), \G from a game state; parse() turns the remaining codes into operations (text, new line, color, icon, size steps and size, gold window, waits of 15/60 frames, wait for input, instant on/off, no input wait, x/y position), any case, unknown or malformed codes shown as written, \ as a backslash; strip() gives the plain text. Layout and drawing moved to 10.2.2 (note). Doctests for every code (4 cases), 1593 editor tests, 1483 release-template tests, static checks ALL PASS. (containers: 10.2 in_progress->pending, 10 in_progress->pending) | 5a4eaa96c8 |
+| 2026-10-14 11:23 -0600 | - | imported 2 new / 1 updated tasks | |
+| 2026-10-14 11:23 -0600 | 10.2.2.1 | started: Message window: layout, letter by letter, waits, face, name box (containers: 10.2.2 pending->in_progress, 10.2 pending->in_progress, 10 pending->in_progress) |  |
+| 2026-10-14 11:40 -0600 | 10.2.2.1 | done: Message window: layout, letter by letter, waits, face, name box — JRPGMessageWindow (runtime JRPGWindow, D-052): lays out JRPGMessageText operations (32-color palette, icons from the icon set, size steps/sizes, PX/PY, lines), reveals one character a frame at 60 fps (time-based), timed waits, waits for input with the pause mark, instant display, OK/cancel skip to the next wait for input, click anywhere as OK, no input wait, gold window request signal; face, name box above (below when at the top), top/middle/bottom placement, window/dim/transparent backgrounds. JRPGWindow: frame_visible, icon_set/icon_size theme items with the generated icon set in the built-in skin, get_icon_region; layout skips internal children. JRPGInputReader shared by list and message window. Doctests (5 cases), bridge golden talewright/goldens/jrpg_message.png and read-to-end check (182/182), 1598 editor tests, 1488 release-template tests, static checks ALL PASS. (containers: 10.2.2 in_progress->pending, 10.2 in_progress->pending, 10 in_progress->pending) | pending |

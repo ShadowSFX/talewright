@@ -41,6 +41,7 @@ def get_doc_classes():
         "JRPGMapList",
         "JRPGMapShapes",
         "JRPGMessageText",
+        "JRPGMessageWindow",
         "JRPGMover",
         "JRPGProjectSetup",
         "JRPGPlayer",

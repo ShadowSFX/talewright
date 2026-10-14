@@ -787,3 +787,27 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** servers and clients share the expansion; windows and tests read the same operations; RichTextLabel cannot
   place text at an absolute position (`\PX`, `\PY`) and its BBCode would need escaping of every message.
 - **Reversal:** the rules are in `jrpg_message_text.cpp` (`expand`, `parse`); the wait lengths are its constants.
+
+## D-052 — The message window: letter by letter, skipping, layout
+- **Context:** task 10.2.2.1 draws Show Text (RM-CMD-001: face on the left, a speaker name above, up to four lines,
+  Window/other backgrounds, Bottom/Middle/Top). The help does not give the letter speed, what OK does while the text
+  appears, the size of a size step, how `\PX`/`\PY` count, the text colors (they come from the reference's skin image,
+  which Talewright neither has nor copies) or where the name goes when the message is at the top.
+- **Options:** Godot's `RichTextLabel` with `visible_characters`, or the window's own layout with `draw_string`;
+  letters per frame counted in frames or in time.
+- **Choice:** `JRPGMessageWindow` (runtime `JRPGWindow`) lays the `JRPGMessageText` operations out itself (no
+  wrapping: lines are the text's own; one line height for all lines, the theme's `line_height`; `\PX`/`\PY` from the
+  text area's top left inside the padding, the face included) and draws the revealed characters with `draw_string`
+  (each run shaped by Godot's text server). One character a frame at 60 frames a second, counted in time (the same at
+  any frame rate); an icon counts as one character. `\.` and `\|` wait 15 and 60 frames: the next letter comes when
+  the wait ends. OK or cancel while the text appears shows the rest at once up to the next `\!`, timed waits
+  included; a click anywhere on the screen counts as OK (RM-INP-001). A size step is 6 pixels, sizes from 8 to 96.
+  The text colors are Talewright's own 32-color palette (`text_colors`, settable per window). The name box goes above
+  the message, below it when the message is at the top. Dim is a flat translucent band (`dim_color`). The icon set
+  joins the built-in skin (`icon_set`, 32-pixel icons), so `\I[n]` draws without project files. The window's layout
+  never moves its internal parts (the name box): `get_child(i, false)`, as internal children are counted by default
+  (`scene/main/node.h:536-537`).
+- **Why:** `RichTextLabel` cannot place text at an absolute position and its BBCode would need escaping; drawing runs
+  ourselves keeps the reveal, waits and positions exact and testable.
+- **Reversal:** `JRPGMessageWindow::_layout` (layout), `_advance` (reveal, waits), `_press` (skipping); the palette is
+  `get_default_text_colors`.

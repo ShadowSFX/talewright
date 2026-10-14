@@ -56,6 +56,7 @@ void JRPGWindow::ensure_default_skin() {
 		{ "border", JRPG_SKIN_BORDER, JRPG_SKIN_BORDER_SIZE },
 		{ "cursor", JRPG_SKIN_CURSOR, JRPG_SKIN_CURSOR_SIZE },
 		{ "arrows", JRPG_SKIN_ARROWS, JRPG_SKIN_ARROWS_SIZE },
+		{ "icon_set", JRPG_SKIN_ICONS, JRPG_SKIN_ICONS_SIZE },
 	};
 	// No change to announce: no control has read these items yet, and a theme change here would notify every control
 	// again from inside this one's theme update (scene/resources/theme.cpp:1679-1688 emits signals only).
@@ -71,6 +72,7 @@ void JRPGWindow::ensure_default_skin() {
 	}
 	theme->set_constant(SNAME("padding"), type, DEFAULT_PADDING);
 	theme->set_constant(SNAME("frame_margin"), type, DEFAULT_FRAME_MARGIN);
+	theme->set_constant(SNAME("icon_size"), type, DEFAULT_ICON_SIZE);
 	theme->set_block_signals(false);
 }
 
@@ -170,6 +172,21 @@ void JRPGWindow::set_pause_visible(bool p_visible) {
 	queue_redraw();
 }
 
+void JRPGWindow::set_frame_visible(bool p_visible) {
+	frame_visible = p_visible;
+	queue_redraw();
+}
+
+Rect2 JRPGWindow::get_icon_region(int p_index) const {
+	const Ref<Texture2D> icons = theme_cache.icon_set;
+	const int size = MAX(1, theme_cache.icon_size);
+	const int per_row = icons.is_valid() ? int(icons->get_width()) / size : 0;
+	if (per_row <= 0 || p_index < 0 || p_index / per_row >= int(icons->get_height()) / size) {
+		return Rect2();
+	}
+	return Rect2((p_index % per_row) * size, (p_index / per_row) * size, size, size);
+}
+
 Rect2 JRPGWindow::get_content_rect() const {
 	const real_t padding = MAX(theme_cache.padding, 0);
 	return Rect2(Point2(padding, padding), (get_size() - Size2(padding, padding) * 2).maxf(0));
@@ -186,8 +203,8 @@ Ref<Texture2D> JRPGWindow::get_back_texture() const {
 
 Size2 JRPGWindow::get_minimum_size() const {
 	Size2 minimum;
-	for (int i = 0; i < get_child_count(); i++) {
-		const Control *child = as_sortable_control(get_child(i), SortableVisibilityMode::VISIBLE);
+	for (int i = 0; i < get_child_count(false); i++) { // Internal children are the window's own parts (a name box).
+		const Control *child = as_sortable_control(get_child(i, false), SortableVisibilityMode::VISIBLE);
 		if (child) {
 			minimum = minimum.max(child->get_combined_minimum_size());
 		}
@@ -206,8 +223,8 @@ void JRPGWindow::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_SORT_CHILDREN: {
 			const Rect2 content = get_content_rect();
-			for (int i = 0; i < get_child_count(); i++) {
-				Control *child = as_sortable_control(get_child(i));
+			for (int i = 0; i < get_child_count(false); i++) { // Not the window's own internal parts.
+				Control *child = as_sortable_control(get_child(i, false));
 				if (child) {
 					fit_child_in_rect(child, content);
 				}
@@ -245,7 +262,7 @@ void JRPGWindow::_notification(int p_what) {
 			const Rect2 rect(Point2(), size);
 			const Vector2 margin(theme_cache.frame_margin, theme_cache.frame_margin);
 			for (const Ref<Texture2D> &layer : { get_back_texture(), theme_cache.border }) {
-				if (layer.is_valid()) {
+				if (layer.is_valid() && frame_visible) {
 					rs->canvas_item_add_nine_patch(ci, rect, Rect2(Point2(), layer->get_size()), layer->get_rid(), margin, margin);
 				}
 			}
@@ -281,6 +298,11 @@ void JRPGWindow::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_scroll_down_visible"), &JRPGWindow::is_scroll_down_visible);
 	ClassDB::bind_method(D_METHOD("set_pause_visible", "visible"), &JRPGWindow::set_pause_visible);
 	ClassDB::bind_method(D_METHOD("is_pause_visible"), &JRPGWindow::is_pause_visible);
+	ClassDB::bind_method(D_METHOD("set_frame_visible", "visible"), &JRPGWindow::set_frame_visible);
+	ClassDB::bind_method(D_METHOD("is_frame_visible"), &JRPGWindow::is_frame_visible);
+	ClassDB::bind_method(D_METHOD("get_icon_set_texture"), &JRPGWindow::get_icon_set_texture);
+	ClassDB::bind_method(D_METHOD("get_icon_size"), &JRPGWindow::get_icon_size);
+	ClassDB::bind_method(D_METHOD("get_icon_region", "index"), &JRPGWindow::get_icon_region);
 	ClassDB::bind_method(D_METHOD("get_content_rect"), &JRPGWindow::get_content_rect);
 	ClassDB::bind_method(D_METHOD("get_open_rect"), &JRPGWindow::get_open_rect);
 	ClassDB::bind_method(D_METHOD("get_back_texture"), &JRPGWindow::get_back_texture);
@@ -293,6 +315,7 @@ void JRPGWindow::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "scroll_up_visible"), "set_scroll_up_visible", "is_scroll_up_visible");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "scroll_down_visible"), "set_scroll_down_visible", "is_scroll_down_visible");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "pause_visible"), "set_pause_visible", "is_pause_visible");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "frame_visible"), "set_frame_visible", "is_frame_visible");
 
 	ADD_SIGNAL(MethodInfo("opened"));
 	ADD_SIGNAL(MethodInfo("closed"));
@@ -301,11 +324,14 @@ void JRPGWindow::_bind_methods() {
 	BIND_CONSTANT(DEFAULT_PADDING);
 	BIND_CONSTANT(DEFAULT_FRAME_MARGIN);
 	BIND_CONSTANT(ARROW_SIZE);
+	BIND_CONSTANT(DEFAULT_ICON_SIZE);
 
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, JRPGWindow, back);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, JRPGWindow, border);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, JRPGWindow, cursor);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, JRPGWindow, arrows);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, JRPGWindow, icon_set);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, JRPGWindow, icon_size);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, JRPGWindow, padding);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, JRPGWindow, frame_margin);
 }

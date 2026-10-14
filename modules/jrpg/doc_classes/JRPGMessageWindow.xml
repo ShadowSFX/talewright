@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGMessageWindow" inherits="JRPGWindow" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The message window: text letter by letter with its control codes, a face, the speaker's name and the pause mark.
+	</brief_description>
+	<description>
+		Shows a message as Show Text does: the text, already expanded with [method JRPGMessageText.expand], appears one character a frame at 60 frames a second, with the control codes' colors ([member text_colors]), icons from the icon set, size steps and sizes, positions, waits, instant display and the gold window request ([signal gold_window_requested]). When the text has appeared the window waits for the player, with the pause mark, unless the text ends with [code]\^[/code]; [signal message_finished] is emitted when the player has read it.
+		[code]jrpg_ok[/code] or [code]jrpg_cancel[/code] while the text appears shows the rest at once, up to the next wait for the player (timed waits are skipped too); a click anywhere on the screen counts as OK. The window takes input while it has focus, as [JRPGSelectableList] does; [method show_message] gives it the focus.
+		A face is drawn on the left, and the text starts beside it. The speaker's name shows in a small window above the message, or below it when the message is at the top of the screen. The window places itself at the top, middle or bottom of the screen, full width and [constant LINES] lines high, on its frame, on a dimmed band or on nothing.
+		Authority: client. Online, the server sends the text's key and arguments.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="ensure_default_theme" qualifiers="static">
+			<return type="void" />
+			<description>
+				Adds the message window's defaults (font size, line height, dim color) to the default theme under the [code skip-lint]JRPGMessageWindow[/code] theme type, unless they are there already.
+			</description>
+		</method>
+		<method name="get_background" qualifiers="const">
+			<return type="int" enum="JRPGMessageWindow.Background" />
+			<description>
+				Returns the background of the message shown last.
+			</description>
+		</method>
+		<method name="get_default_text_colors" qualifiers="static">
+			<return type="PackedColorArray" />
+			<description>
+				Returns Talewright's default text colors: color 0 is normal text, the others are for emphasis, system labels, warnings and gauges.
+			</description>
+		</method>
+		<method name="get_face" qualifiers="const">
+			<return type="Texture2D" />
+			<description>
+				Returns the face of the message shown last, or [code]null[/code].
+			</description>
+		</method>
+		<method name="get_layout" qualifiers="const">
+			<return type="Array" />
+			<description>
+				Returns the laid-out text, in the order it appears: dictionaries with [code]text[/code], [code skip-lint]font_size[/code] and [code]color[/code] (or [code]icon[/code], the icon index), [code]position[/code] (in the text area, which starts inside the window's padding), [code]first[/code] (the first character, counting from 0) and [code]count[/code] (an icon counts as one).
+			</description>
+		</method>
+		<method name="get_name_box" qualifiers="const">
+			<return type="JRPGWindow" />
+			<description>
+				Returns the internal window that shows the speaker's name.
+			</description>
+		</method>
+		<method name="get_placement" qualifiers="const">
+			<return type="int" enum="JRPGMessageWindow.Placement" />
+			<description>
+				Returns where the message shown last is placed.
+			</description>
+		</method>
+		<method name="get_shown_characters" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns how many characters of the message have appeared (an icon counts as one).
+			</description>
+		</method>
+		<method name="get_speaker" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the speaker's name of the message shown last.
+			</description>
+		</method>
+		<method name="get_total_characters" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns how many characters the message has (an icon counts as one).
+			</description>
+		</method>
+		<method name="is_busy" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] from [method show_message] until the player has read the message.
+			</description>
+		</method>
+		<method name="is_waiting_for_input" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] while the message waits for the player, at a [code]\![/code] code or at its end.
+			</description>
+		</method>
+		<method name="show_message">
+			<return type="void" />
+			<param index="0" name="text" type="String" />
+			<param index="1" name="face" type="Texture2D" default="null" />
+			<param index="2" name="speaker" type="String" default="&quot;&quot;" />
+			<param index="3" name="background" type="int" enum="JRPGMessageWindow.Background" default="0" />
+			<param index="4" name="placement" type="int" enum="JRPGMessageWindow.Placement" default="2" />
+			<description>
+				Shows [param text], with [param face] on the left and [param speaker] in the name box, on [param background], at [param placement]. Opens the window if it is closed and gives it the focus. Control codes are read as [method JRPGMessageText.parse] reads them; expand the codes that stand for game data first.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="focus_mode" type="int" setter="set_focus_mode" getter="get_focus_mode" overrides="Control" enum="Control.FocusMode" default="2" />
+		<member name="text_colors" type="PackedColorArray" setter="set_text_colors" getter="get_text_colors" default="PackedColorArray(1, 1, 1, 1, 0.56078434, 0.76862746, 1, 1, 1, 0.5411765, 0.45882353, 1, 0.56078434, 0.8784314, 0.5411765, 1, 0.7882353, 0.65882355, 1, 1, 1, 0.81960785, 0.4, 1, 0.43529412, 0.8901961, 0.8392157, 1, 0.7058824, 0.7058824, 0.7058824, 1, 0.47843137, 0.47843137, 0.47843137, 1, 0.30980393, 0.4862745, 1, 1, 0.8980392, 0.28235295, 0.37254903, 1, 0.24705882, 0.68235296, 0.35686275, 1, 0.56078434, 0.41960785, 1, 1, 0.9490196, 0.6627451, 0.23137255, 1, 0.18431373, 0.70980394, 0.6784314, 1, 0.14901961, 0.14901961, 0.14901961, 1, 0.61960787, 0.7882353, 1, 1, 1, 0.8784314, 0.4, 1, 1, 0.3529412, 0.3529412, 1, 0.20784314, 0.20784314, 0.20784314, 1, 0.9490196, 0.5803922, 0.36862746, 1, 1, 0.8117647, 0.47843137, 1, 0.36862746, 0.63529414, 0.9490196, 1, 0.50980395, 0.8235294, 1, 1, 0.64705884, 0.9098039, 0.45490196, 1, 0.9098039, 0.47058824, 0.47058824, 1, 0.84313726, 0.6509804, 0.9019608, 1, 0.6509804, 0.84313726, 0.9019608, 1, 0.41960785, 0.83137256, 0.6156863, 1, 0.7372549, 0.9411765, 0.56078434, 1, 0.76862746, 0.76862746, 1, 1, 1, 0.76862746, 0.8862745, 1)">
+			The colors of the [code]\C[n][/code] code; color 0 is normal text. An empty array gives [method get_default_text_colors].
+		</member>
+	</members>
+	<signals>
+		<signal name="gold_window_requested">
+			<description>
+				Emitted when the text reaches a [code]\$[/code] code: the game shows its gold window.
+			</description>
+		</signal>
+		<signal name="message_finished">
+			<description>
+				Emitted when the player has read the message (or at its end, for a message ending with [code]\^[/code]).
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="BACKGROUND_WINDOW" value="0" enum="Background">
+			The window frame.
+		</constant>
+		<constant name="BACKGROUND_DIM" value="1" enum="Background">
+			A dimmed band behind the text instead of the window frame.
+		</constant>
+		<constant name="BACKGROUND_TRANSPARENT" value="2" enum="Background">
+			No background: the text alone.
+		</constant>
+		<constant name="PLACEMENT_TOP" value="0" enum="Placement">
+			At the top of the screen; the name box goes below the message.
+		</constant>
+		<constant name="PLACEMENT_MIDDLE" value="1" enum="Placement">
+			In the middle of the screen.
+		</constant>
+		<constant name="PLACEMENT_BOTTOM" value="2" enum="Placement">
+			At the bottom of the screen.
+		</constant>
+		<constant name="LINES" value="4">
+			How many lines of text the window holds.
+		</constant>
+		<constant name="DEFAULT_LINE_HEIGHT" value="36">
+			The default [theme_item line_height].
+		</constant>
+		<constant name="DEFAULT_FONT_SIZE" value="24">
+			The default [theme_item font_size].
+		</constant>
+		<constant name="FONT_SIZE_STEP" value="6">
+			How much one [code]\{[/code] or [code]\}[/code] changes the font size.
+		</constant>
+		<constant name="MIN_FONT_SIZE" value="8">
+			The smallest font size the codes can set.
+		</constant>
+		<constant name="MAX_FONT_SIZE" value="96">
+			The largest font size the codes can set.
+		</constant>
+		<constant name="FACE_SIZE" value="144">
+			The size a face is drawn at, in pixels.
+		</constant>
+		<constant name="FACE_SPACING" value="20">
+			Space between the face and the text, in pixels.
+		</constant>
+		<constant name="TEXT_COLOR_COUNT" value="32">
+			How many colors the default palette has.
+		</constant>
+	</constants>
+	<theme_items>
+		<theme_item name="dim_color" data_type="color" type="Color" default="Color(0, 0, 0, 0.6)">
+			The color of the dimmed band of [constant BACKGROUND_DIM].
+		</theme_item>
+		<theme_item name="line_height" data_type="constant" type="int" default="36">
+			The height of a line of text, in pixels.
+		</theme_item>
+		<theme_item name="font" data_type="font" type="Font">
+			The text's font.
+		</theme_item>
+		<theme_item name="font_size" data_type="font_size" type="int">
+			The text's font size, before the size codes change it.
+		</theme_item>
+	</theme_items>
+</class>

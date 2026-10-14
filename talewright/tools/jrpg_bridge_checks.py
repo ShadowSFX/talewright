@@ -753,6 +753,7 @@ def run(checks: Checks) -> None:
 
     run_windows(c)
     run_lists(c)
+    run_messages(c)
 
 
 # Windows (task 10.1.1) on a plain backdrop: open with a scroll mark, tinted with the pause mark, and three quarters open (its
@@ -935,6 +936,72 @@ def run_lists(c: Checks) -> None:
     shot = c.call("game_screenshot", {"include_image": False})
     c.call("stop_project")
     compare_golden(c, "jrpg_list.png", shot.get("path", ""), "JRPGSelectableList: the lists match the golden image")
+
+
+# A message (task 10.2.2.1) with a face, the speaker's name, colors, an icon and a bigger line, shown by a script as the
+# scene starts. The GDScript text below holds its control codes with escaped backslashes (raw Python string).
+MESSAGE_SCENE = """[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui_checks/message.gd" id="1_script"]
+
+[node name="MessageCheck" type="Control"]
+offset_right = 640.0
+offset_bottom = 360.0
+script = ExtResource("1_script")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+offset_right = 1152.0
+offset_bottom = 648.0
+color = Color(0.27, 0.43, 0.3, 1)
+
+[node name="Message" type="JRPGMessageWindow" parent="."]
+"""
+MESSAGE_SCRIPT = r"""extends Control
+
+func _ready() -> void:
+	var text := "Welcome to \\C[3]Lantern Road\\C[0], traveler!\nTake this \\I[19] map and follow the road east.\n\\{Hurry!\\}\nThe bridge closes at dusk."
+	$Message.show_message(text, load("res://faces/hero.png"), "Aria")
+"""
+
+
+def run_messages(c: Checks) -> None:
+    (c.project / "ui_checks" / "message.gd").write_text(MESSAGE_SCRIPT, encoding="utf-8")
+    (c.project / "ui_checks" / "message.tscn").write_text(MESSAGE_SCENE, encoding="utf-8")
+    c.call("editor_rescan")
+    c.call("run_project", {"scene": "res://ui_checks/message.tscn"})
+    connected = False
+    for _ in range(120):
+        if c.call("run_status").get("debugger_connected"):
+            connected = True
+            break
+        time.sleep(0.5)
+    c.check("JRPGMessageWindow: the message scene runs", connected)
+    if not connected:
+        c.call("stop_project")
+        return
+    path = "/root/MessageCheck/Message"
+    waiting = False
+    for _ in range(40):  # The text appears at 60 letters a second, whatever the frame rate.
+        c.call("game_wait", {"frames": 10})
+        if c.call("game_call", {"path": path, "method": "is_waiting_for_input"}).get("result"):
+            waiting = True
+            break
+    shown = c.call("game_call", {"path": path, "method": "get_shown_characters"}).get("result")
+    total = c.call("game_call", {"path": path, "method": "get_total_characters"}).get("result")
+    c.check(
+        "JRPGMessageWindow: the whole text appears, then the window waits for the player",
+        waiting and shown == total and isinstance(total, int) and total > 80,
+        f"waiting {waiting}, shown {shown} of {total}",
+    )
+    shot = c.call("game_screenshot", {"include_image": False})
+    c.call("game_input", {"action": "jrpg_ok"})
+    c.call("game_wait", {"frames": 6})
+    busy = c.call("game_call", {"path": path, "method": "is_busy"}).get("result")
+    c.call("stop_project")
+    c.check("JRPGMessageWindow: OK ends the message", busy is False, str(busy))
+    compare_golden(
+        c, "jrpg_message.png", shot.get("path", ""), "JRPGMessageWindow: the message matches the golden image"
+    )
 
 
 def main() -> int:

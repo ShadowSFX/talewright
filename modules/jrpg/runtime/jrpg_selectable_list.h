@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include "jrpg_input_reader.h"
 #include "jrpg_window.h"
 
 #include "modules/jrpg/core/jrpg_system_data.h"
@@ -60,19 +61,7 @@ public:
 	static constexpr int ICON_SIZE = 32;
 
 private:
-	// The actions the list reads; the four moves come first.
-	enum Action {
-		ACTION_UP,
-		ACTION_DOWN,
-		ACTION_LEFT,
-		ACTION_RIGHT,
-		ACTION_OK,
-		ACTION_CANCEL,
-		ACTION_PAGE_PREV,
-		ACTION_PAGE_NEXT,
-		ACTION_MAX,
-	};
-	static constexpr int MOVE_COUNT = ACTION_RIGHT + 1;
+	static constexpr int MOVE_COUNT = JRPGInputReader::ACTION_RIGHT + 1; // The reader's four moves come first.
 
 	Array items; // Dictionaries: text, enabled, icon, right_text.
 	int columns = 1;
@@ -83,14 +72,10 @@ private:
 
 	AudioStreamPlayer *sound_player = nullptr;
 	int last_sound = -1;
-	int held = -1; // The move held for repeats (an Action up to ACTION_RIGHT), or -1.
+	int held = -1; // The move held for repeats (a JRPGInputReader action up to ACTION_RIGHT), or -1.
 	double held_time = 0;
 	double next_repeat = 0;
-	// A press is new when the action was up the frame before (Input's state, so presses made from code count too) or
-	// arrived as an event while the list had focus (a tap shorter than a frame). A key already down when focus comes
-	// in is not new: it belongs to whatever gave the focus.
-	bool was_pressed[ACTION_MAX] = {};
-	bool pressed_event[ACTION_MAX] = {};
+	JRPGInputReader input_reader;
 
 	struct ThemeCache {
 		Ref<Font> font;
@@ -106,12 +91,11 @@ private:
 	int _get_visible_rows() const;
 	void _ensure_visible(int p_index);
 	void _update_marks();
-	void _move_cursor(Action p_move, bool p_wrap);
+	void _move_cursor(JRPGInputReader::Action p_move, bool p_wrap);
 	void _page(int p_direction);
 	void _choose();
 	void _cancel();
 	void _select_by_player(int p_index);
-	static bool _is_pressed(Action p_action);
 	void _process_input(double p_delta);
 
 protected:

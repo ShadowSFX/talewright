@@ -31,9 +31,7 @@
 
 #include "jrpg_selectable_list.h"
 
-#include "core/input/input.h"
 #include "core/input/input_event.h"
-#include "core/input/input_map.h"
 #include "core/io/resource_loader.h"
 #include "core/io/resource_uid.h"
 #include "core/object/class_db.h"
@@ -46,12 +44,6 @@
 
 #include "modules/jrpg/core/jrpg_audio_cue.h"
 #include "modules/jrpg/core/jrpg_database.h"
-
-namespace {
-
-const char *const ACTION_NAMES[] = { "jrpg_up", "jrpg_down", "jrpg_left", "jrpg_right", "jrpg_ok", "jrpg_cancel", "jrpg_page_prev", "jrpg_page_next" };
-
-} // namespace
 
 void JRPGSelectableList::ensure_default_theme() {
 	ThemeDB *themes = ThemeDB::get_singleton();
@@ -248,7 +240,7 @@ void JRPGSelectableList::_select_by_player(int p_index) {
 	emit_signal(SNAME("cursor_moved"), selected);
 }
 
-void JRPGSelectableList::_move_cursor(Action p_move, bool p_wrap) {
+void JRPGSelectableList::_move_cursor(JRPGInputReader::Action p_move, bool p_wrap) {
 	const int count = items.size();
 	if (count == 0) {
 		return;
@@ -259,14 +251,14 @@ void JRPGSelectableList::_move_cursor(Action p_move, bool p_wrap) {
 	}
 	int target = selected;
 	switch (p_move) {
-		case ACTION_DOWN: {
+		case JRPGInputReader::ACTION_DOWN: {
 			if (selected + columns < count) {
 				target = selected + columns;
 			} else if (p_wrap) {
 				target = selected % columns; // The top of the column.
 			}
 		} break;
-		case ACTION_UP: {
+		case JRPGInputReader::ACTION_UP: {
 			if (selected - columns >= 0) {
 				target = selected - columns;
 			} else if (p_wrap) {
@@ -277,13 +269,13 @@ void JRPGSelectableList::_move_cursor(Action p_move, bool p_wrap) {
 				}
 			}
 		} break;
-		case ACTION_RIGHT: {
+		case JRPGInputReader::ACTION_RIGHT: {
 			if (columns < 2) {
 				return;
 			}
 			target = selected + 1 < count ? selected + 1 : (p_wrap ? 0 : selected);
 		} break;
-		case ACTION_LEFT: {
+		case JRPGInputReader::ACTION_LEFT: {
 			if (columns < 2) {
 				return;
 			}
@@ -329,73 +321,54 @@ void JRPGSelectableList::_cancel() {
 	emit_signal(SNAME("cancelled"));
 }
 
-bool JRPGSelectableList::_is_pressed(Action p_action) {
-	// A project without the JRPG actions (not set up) reads none, without an error each frame.
-	const InputMap *map = InputMap::get_singleton();
-	const Input *input = Input::get_singleton();
-	return map && input && map->has_action(ACTION_NAMES[p_action]) && input->is_action_pressed(ACTION_NAMES[p_action]);
-}
-
 void JRPGSelectableList::_process_input(double p_delta) {
-	bool fresh[ACTION_MAX];
-	for (int action = 0; action < ACTION_MAX; action++) {
-		const bool down = _is_pressed(Action(action));
-		fresh[action] = pressed_event[action] || (down && !was_pressed[action]);
-		was_pressed[action] = down;
-		pressed_event[action] = false;
-	}
+	input_reader.update();
 	if (!is_open() || !is_visible_in_tree()) {
 		held = -1;
 		return;
 	}
-	if (fresh[ACTION_OK]) {
+	if (input_reader.is_fresh(JRPGInputReader::ACTION_OK)) {
 		_choose();
 		return;
 	}
-	if (fresh[ACTION_CANCEL]) {
+	if (input_reader.is_fresh(JRPGInputReader::ACTION_CANCEL)) {
 		_cancel();
 		return;
 	}
-	if (fresh[ACTION_PAGE_NEXT] || fresh[ACTION_PAGE_PREV]) {
-		_page(fresh[ACTION_PAGE_NEXT] ? 1 : -1);
+	const bool page_next = input_reader.is_fresh(JRPGInputReader::ACTION_PAGE_NEXT);
+	if (page_next || input_reader.is_fresh(JRPGInputReader::ACTION_PAGE_PREV)) {
+		_page(page_next ? 1 : -1);
 		return;
 	}
 	for (int move = 0; move < MOVE_COUNT; move++) {
-		if (fresh[move]) {
+		if (input_reader.is_fresh(JRPGInputReader::Action(move))) {
 			held = move;
 			held_time = 0;
 			next_repeat = REPEAT_DELAY_FRAMES / 60.0;
-			_move_cursor(Action(move), true); // A fresh press wraps round at the ends.
+			_move_cursor(JRPGInputReader::Action(move), true); // A fresh press wraps round at the ends.
 			return;
 		}
 	}
 	if (held < 0) {
 		return;
 	}
-	if (!was_pressed[held]) {
+	if (!input_reader.is_down(JRPGInputReader::Action(held))) {
 		held = -1;
 		return;
 	}
 	held_time += p_delta;
 	// Frame counts at 60 a second; a hair of tolerance so 24 steps of 1/60 s reach 24 frames.
 	while (held_time + CMP_EPSILON >= next_repeat) {
-		_move_cursor(Action(held), false); // Repeats stop at the ends.
+		_move_cursor(JRPGInputReader::Action(held), false); // Repeats stop at the ends.
 		next_repeat += REPEAT_INTERVAL_FRAMES / 60.0;
 	}
 }
 
 void JRPGSelectableList::gui_input(const Ref<InputEvent> &p_event) {
 	ERR_FAIL_COND(p_event.is_null());
-	// The list's own actions do not move the focus to another control (the viewport's ui_* navigation); a press is
-	// kept for the next frame's input, so a tap shorter than a frame still counts.
-	for (int action = 0; action < ACTION_MAX; action++) {
-		if (InputMap::get_singleton()->has_action(ACTION_NAMES[action]) && p_event->is_action(ACTION_NAMES[action])) {
-			if (p_event->is_action_pressed(ACTION_NAMES[action]) && has_focus()) {
-				pressed_event[action] = true;
-			}
-			accept_event();
-			return;
-		}
+	if (input_reader.handle_event(p_event, has_focus())) {
+		accept_event();
+		return;
 	}
 	if (!has_focus() || !is_open()) {
 		return;
@@ -436,10 +409,7 @@ void JRPGSelectableList::gui_input(const Ref<InputEvent> &p_event) {
 void JRPGSelectableList::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_FOCUS_ENTER: {
-			for (int action = 0; action < ACTION_MAX; action++) {
-				was_pressed[action] = _is_pressed(Action(action)); // Not new for this list.
-				pressed_event[action] = false;
-			}
+			input_reader.reset(); // Keys down now are not new for this list.
 			_update_process();
 			queue_redraw();
 		} break;
