@@ -18,20 +18,20 @@ hints, tests, docs).
 | # | Sev | Finding | Fix |
 |---|---|---|---|
 | 1 | high | Edits inside nested sub-resources (System cues and battle rules, troop pages) were not tracked as unsaved; path-less ones routed their edits to the open scene's undo history | fixed (6.7.1): `JRPGDatabaseEditing::_adopt/_watch_nested` watch sub-resources up to 4 levels with their file as owner and give each a `file::id` path; the emitter is re-scanned on change; troop pages get ids before `changed` |
-| 2 | high | `editor_ui_find`/`editor_ui_act` reached controls inside the edited scene (input-disabled SubViewport), breaking D-031 | pending (6.7.3) |
+| 2 | high | `editor_ui_find`/`editor_ui_act` reached controls inside the edited scene (input-disabled SubViewport), breaking D-031 | fixed (6.7.3): viewports that take no input (the edited scene, editor/editor_node.cpp:8871) are skipped by find and refused by act; doctest + bridge check |
 | 3 | med | `jrpg_db_set` could truncate type lists and set IDs that do not exist without warning | fixed (6.7.1): `jrpg_db_set` refuses shrinking a used type list (uses listed) unless `allow_broken_references`; reports `dangling_references` of the record, and for type lists the data pointing at removed types |
 | 4 | med | `create_entry` could fill a blank slot that other data still points at | fixed (6.7.1): `create_entry` skips blank slots that `collect_references` finds referenced |
 | 5 | med | Change Maximum: a value typed but not yet applied was ignored on confirm (deferred SpinBox apply) | fixed (6.7.2): the maximum field applies typed text as it is typed (warning follows); confirm applies pending text and re-opens to show the warning of an unseen cut |
-| 6 | med | UI tools ignored open modal dialogs | pending (6.7.3) |
-| 7 | med | `press` emitted `pressed` only, not the click path (`pressed()` virtual, button_down/up); MenuButton/OptionButton did not open | pending (6.7.3) |
-| 8 | med | `set_text` without a value typed `<null>`; `submit` replaced a TextEdit's text; numbers typed as "42.0" | pending (6.7.3) |
-| 9 | med | `select` emitted signals a click would not (ItemList multi mode, multi Tree, re-selecting the current option) | pending (6.7.3) |
-| 10 | med | Disabled MenuButtons could be used; menus that fill on opening showed stale items | pending (6.7.3) |
+| 6 | med | UI tools ignored open modal dialogs | fixed (6.7.3): a window with a visible modal child refuses everything outside that child's chain; open dialogs are still found from the root |
+| 7 | med | `press` emitted `pressed` only, not the click path (`pressed()` virtual, button_down/up); MenuButton/OptionButton did not open | fixed (6.7.3): press delivers a ui_accept press and release through gui_input: pressed() runs (menus and option lists open), button_down/up, radio groups |
+| 8 | med | `set_text` without a value typed `<null>`; `submit` replaced a TextEdit's text; numbers typed as "42.0" | fixed (6.7.3): set_text needs text (numbers typed as digits); submit without a value submits what is there; TextEdit refuses submit |
+| 9 | med | `select` emitted signals a click would not (ItemList multi mode, multi Tree, re-selecting the current option) | fixed (6.7.3): select follows each widget's click: OptionButton through its popup (no signal for the current item), ItemList multi/toggle signals, Tree::set_selected |
+| 10 | med | Disabled MenuButtons could be used; menus that fill on opening showed stale items | fixed (6.7.3): disabled MenuButtons refuse; about_to_popup is emitted before items are read (JRPGPicker lists its entries) |
 | 11 | med | Setup changed the live database without the tracker (new tables unwatched, System saved while marked unsaved) | fixed (6.7.1): setup calls `forget_unsaved` for system.tres after saving the game id; the manifest's `changed` re-watches new tables |
 | 12 | med | No tests for undo round trips, the jrpg bridge tools or the dialogs | pending (6.7.4) |
 | 13 | med | Bridge edits of structured fields unchecked (array element shapes, typed `pages`) and nested fields (cues, battle rules, page conditions) not editable | fixed (6.7.1): `check_values/check_element` check list elements (trait/effect codes and keys, record fields and enum ranges, resource classes); `resolve_path` nested keys; bridge reads/writes sub-resources as dictionaries and reports the refusal reason |
-| 14 | low-med | `editor_ui_find` revealed secret LineEdit text | pending (6.7.3) |
-| 15 | low-med | `confirm`/`cancel` could log an engine error after acting; plain-dialog cancel differed from Esc | pending (6.7.3) |
+| 14 | low-med | `editor_ui_find` revealed secret LineEdit text | fixed (6.7.3): secret LineEdits are shown and matched as bullets |
+| 15 | low-med | `confirm`/`cancel` could log an engine error after acting; plain-dialog cancel differed from Esc | fixed (6.7.3): the target is described before acting and by ObjectID after ("closed" when it left); plain-dialog cancel goes through WM_CLOSE_REQUEST; the reply waits for deferred calls |
 | 16 | low-med | Addon hashes: builder normalizes CRLF, runtime hashed raw bytes | pending (6.7.4) |
 | 17 | low | MCP hints contradicted the documented convention (save, install, copy) | pending (6.7.4) |
 | 18 | low | `show_dialog` on `jrpg_db_clear` cleared at once when nothing used the entry, unlike its description | pending (6.7.4) |
@@ -47,6 +47,6 @@ hints, tests, docs).
 | 28 | low | `JRPGEntry.assign_from` shared sub-resources despite its docs | fixed (6.7.1): `JRPGEntry::copy_value` deep-duplicates arrays, dictionaries and internal sub-resources |
 | 29 | low | Setup and addon install errors hidden | pending (6.7.4) |
 | 30 | low | Addon tool robustness (directory, pruning, zero-byte files, addon.cfg rewrites, builder paths) | pending (6.7.4) |
-| 31 | low | UI tool gaps (hidden OK, toggle values, non-integral indexes, hidden tab bars, root path, cross-window search, non-editable ranges, duplicate tool names) | pending (6.7.3) |
+| 31 | low | UI tool gaps (hidden OK, toggle values, non-integral indexes, hidden tab bars, root path, cross-window search, non-editable ranges, duplicate tool names) | fixed (6.7.3): hidden OK refuses confirm; toggle values checked; whole-number indexes and limit; hidden tab bars refuse; root path refused; actions stay in one window; set_value only on number fields and sliders; duplicate tool names refused (ERR_ALREADY_EXISTS) |
 | 32 | low | Missing setup idempotency and UI-tool dialog tests; unused include; static checks pass when tools are skipped | pending (6.7.4) |
 | 33 | low | Stale workspace guide, untranslatable non-literal strings, "before closing" on reload, double refresh on section select | double refresh fixed (6.7.2: `select_section` refreshes once); guide, TTRC and wording pending (6.7.4) |

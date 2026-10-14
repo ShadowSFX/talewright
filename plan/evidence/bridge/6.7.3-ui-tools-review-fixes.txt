@@ -1,0 +1,26 @@
+# 6.7.3 bridge verification: review findings 2, 6, 7, 8, 9, 10, 14, 15, 31 (scratch project)
+## finding 2: controls of the edited scene are not editor UI
+  matches: 0
+  matches: 0
+  scene still has: ['SceneButton', 'SceneField']
+## finding 7: press opens an option button the way a click does (a JRPG picker lists its entries)
+  before: ['0001  Adventurer']
+  opened: ['None', '0001  Adventurer', '0002', '0003'] ... of 5
+## finding 9: selecting the current entry is not an edit
+  unsaved: []
+  after picking another class, unsaved: ['res://jrpg/db/actors.tres']
+## finding 6: an open dialog blocks the controls behind it
+  matches: 0
+  cancel: ConfirmationDialog open dialogs after: 0
+  matches: 2
+## finding 8: numbers are typed as digits
+  typed: 20
+   set_text needs the text to type. Nothing was done.
+## finding 14: secret fields are masked (Project Settings is not needed: the export dialog's key field)
+  covered by the doctest 'UI tools reach only what a user can' (secret LineEdit)
+## finding 31: the editor root is not a control; duplicate tool names are refused at registration
+   No editor control at that path (paths come from editor_ui_find). Nothing was done.
+  tools: 47
+## errors
+    "errors": 0,
+    "warnings": 0,

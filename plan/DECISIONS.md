@@ -457,7 +457,10 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   class or accessibility name; returns paths, classes, texts, states) and `editor_ui_act` (press a button, toggle,
   set a LineEdit/TextEdit/SpinBox value and submit, select an OptionButton/ItemList/Tree/TabBar item by text or
   index, activate a list item as a double-click would, confirm or cancel a dialog). Only visible, enabled controls
-  inside the editor's own windows are reachable, so the tools can do no more than a user at the editor.
+  inside the editor's own windows are reachable, so the tools can do no more than a user at the editor. Since 6.7.3
+  (epic 6 review) "reachable" also excludes viewports that take no input (the edited scene) and everything behind
+  an open modal dialog; presses go through the button's input handling and selections through each widget's click
+  path, so the editor sees exactly what a click would give it.
 - **Why:** robust (no coordinates), general (every future editor UI is testable), and narrow compared with the
   rejected "call any bound method" tool of D-030: it reaches what the user can already click, nothing else.
 - **Reversal:** remove the two tools; UI checks fall back to screenshots and authoring-API calls.

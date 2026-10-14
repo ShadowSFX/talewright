@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 00:27 -0600
+- **Updated:** 2026-10-14 00:42 -0600
 - **Current task:** none
-- **Last completed:** 6.7.2 Review fixes: database UI
-- **Next task:** 6.7.3 Review fixes: bridge UI tools
-- **Done leaf tasks:** 79
+- **Last completed:** 6.7.3 Review fixes: bridge UI tools
+- **Next task:** 6.7.4 Review fixes: addon, setup, hints, tests, docs
+- **Done leaf tasks:** 80
 <!-- status:end -->
 
 ## Log
@@ -219,4 +219,6 @@
 | 2026-10-13 23:29 -0600 | 6.7.1 | started: Review fixes: database data integrity (containers: 6.7 pending->in_progress, 6 pending->in_progress) |  |
 | 2026-10-13 23:57 -0600 | 6.7.1 | done: Review fixes: database data integrity — Epic 6 review findings 1, 3, 4, 11, 13, 19, 20, 21, 22, 23, 28 fixed: nested sub-resources watched and given file::id paths; values checked down to list elements with the reason reported by the bridge; nested paths and sub-resource dictionaries in jrpg_db_get/set; type-list truncation guarded and dangling references reported; create skips referenced blanks; setup changes tracked; whole-number arguments; missing singles fail; Save clears the title's (*); exact EXP undo; no-op applies skipped; unknown trait codes kept; list edits by verified row; assign_from deep-copies internal sub-resources. Doctests + bridge evidence 6.7.1-bridge-review-fixes*.txt. (containers: 6.7 in_progress->pending, 6 in_progress->pending) | b7501e870c |
 | 2026-10-13 23:57 -0600 | 6.7.2 | started: Review fixes: database UI (containers: 6.7 pending->in_progress, 6 pending->in_progress) |  |
-| 2026-10-14 00:27 -0600 | 6.7.2 | done: Review fixes: database UI — Epic 6 review findings 5, 24, 25, 26, 27 and the double refresh of 33 fixed: Change Maximum applies typed text and shows the warning of an unseen cut; JRPGPicker (lists entries when opened, relabels on database changes) for ID, equipment and party pickers, honoring the range minimum; enemy action values shaped by condition (D-033) with one Condition column; record dialog keeps untouched values exactly; entry_changed updates list rows in place; select_section refreshes once. Doctests + bridge evidence 6.7.2-database-ui-review-fixes.txt. (containers: 6.7 in_progress->pending, 6 in_progress->pending) | pending |
+| 2026-10-14 00:27 -0600 | 6.7.2 | done: Review fixes: database UI — Epic 6 review findings 5, 24, 25, 26, 27 and the double refresh of 33 fixed: Change Maximum applies typed text and shows the warning of an unseen cut; JRPGPicker (lists entries when opened, relabels on database changes) for ID, equipment and party pickers, honoring the range minimum; enemy action values shaped by condition (D-033) with one Condition column; record dialog keeps untouched values exactly; entry_changed updates list rows in place; select_section refreshes once. Doctests + bridge evidence 6.7.2-database-ui-review-fixes.txt. (containers: 6.7 in_progress->pending, 6 in_progress->pending) | f8e005287c |
+| 2026-10-14 00:27 -0600 | 6.7.3 | started: Review fixes: bridge UI tools (containers: 6.7 pending->in_progress, 6 pending->in_progress) |  |
+| 2026-10-14 00:42 -0600 | 6.7.3 | done: Review fixes: bridge UI tools — Epic 6 review findings 2, 6, 7, 8, 9, 10, 14, 15, 31 fixed in editor_ui_find/editor_ui_act: edited scene and anything behind a modal dialog unreachable; press as a ui_accept click through gui_input; text typed as text; select via each widget's click path; menus opened first; secrets masked; results safe when the dialog closes; smaller gaps; unique tool names. Doctests + bridge evidence plan/evidence/bridge/6.7.3-ui-tools-review-fixes.txt. (containers: 6.7 in_progress->pending, 6 in_progress->pending) | pending |

@@ -448,6 +448,20 @@ TEST_CASE("[ClaudeBridge][MCP] tools/list and tools/call (sync, error, unknown, 
 	stored_call.unref();
 }
 
+TEST_CASE("[ClaudeBridge][MCP] Tool names are unique") {
+	// Epic 6 review finding 31: a second module registering "sync" would silently replace it.
+	ClaudeBridgeMCP mcp = make_mcp();
+	ClaudeBridgeMCP::Tool other;
+	other.name = "sync";
+	other.func = &tool_fail;
+	ERR_PRINT_OFF;
+	CHECK(mcp.register_tool(other) == ERR_ALREADY_EXISTS);
+	ERR_PRINT_ON;
+	CHECK(mcp.get_tool_count() == 3);
+	const Dictionary res = parse_obj(mcp.handle(R"({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"sync","arguments":{"x":1}}})", 0).body)["result"];
+	CHECK_FALSE(bool(res.get("isError", false))); // Still the first "sync".
+}
+
 TEST_CASE("[ClaudeBridge][Tools] JSON conversion of variants and values") {
 	CHECK(ClaudeBridgeTools::variant_to_json(Variant(3)) == Variant(3));
 	CHECK(String(ClaudeBridgeTools::variant_to_json(Vector2(1, 2))) == "Vector2(1, 2)");

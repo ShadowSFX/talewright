@@ -69,7 +69,7 @@ by the editor. Exit codes: 0 ok, 1 the tool reported an error, 2 transport/proto
 | `editor_undo_redo` | Undo or redo the last editor action |
 | `editor_rescan` | Rescan project files (the editor otherwise rescans only on focus) |
 | `editor_screenshot` | Window, main screen, 2D or 3D viewport capture |
-| `editor_ui_find` / `editor_ui_act` | Find visible editor controls and dialogs (by text, tooltip, placeholder, list item, class) / use one like a user: press, toggle, type (`set_text`, `submit`), `set_value`, `select` or `activate` a list, tree, option, tab or menu item, `confirm` or `cancel` a dialog (D-031) |
+| `editor_ui_find` / `editor_ui_act` | Find visible editor controls and dialogs (by text, tooltip, placeholder, list item, class; secret fields masked) / use one like a user: press (a click: menus and option lists open), toggle, type (`set_text`, `submit`; numbers typed as digits), `set_value` of number fields and sliders, `select` or `activate` a list, tree, option, tab or menu item with the signals a click gives (menus opened first; the current item again is no change), `confirm` or `cancel` a dialog (as its buttons or Esc). Only what a user can reach: not the edited scene, nothing behind an open dialog, no disabled control (D-031) |
 | `project_info` / `project_settings_get` | Project summary / settings by prefix |
 | `project_settings_set` | Change an existing project setting (or `reset` it to its default) and save `project.godot`; not undoable |
 | `project_list_files` / `project_read_file` | Files inside `res://` (traversal outside the project is refused) |

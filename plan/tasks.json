@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "6.7.2 Review fixes: database UI",
+  "last_completed": "6.7.3 Review fixes: bridge UI tools",
   "tasks": [
     {
       "id": "0",
@@ -2297,7 +2297,7 @@
       "test_strategy": "Doctests + editor_ui_* run.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "f8e005287c",
       "notes": ""
     },
     {
@@ -2311,9 +2311,9 @@
         "Each listed finding fixed with a doctest, logged in the review file"
       ],
       "test_strategy": "SceneTree doctests + live run.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

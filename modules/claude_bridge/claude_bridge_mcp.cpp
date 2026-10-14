@@ -148,12 +148,14 @@ void ClaudeBridgeMCP::set_tool_destructive(const String &p_name, bool p_destruct
 	t->destructive = p_destructive;
 }
 
-void ClaudeBridgeMCP::register_tool(const Tool &p_tool) {
-	ERR_FAIL_COND_MSG(p_tool.name.is_empty() || p_tool.func == nullptr, "Claude bridge: invalid tool.");
-	if (!tools.has(p_tool.name)) {
-		tool_order.push_back(p_tool.name);
-	}
+Error ClaudeBridgeMCP::register_tool(const Tool &p_tool) {
+	ERR_FAIL_COND_V_MSG(p_tool.name.is_empty() || p_tool.func == nullptr, ERR_INVALID_PARAMETER, "Claude bridge: invalid tool.");
+	// One tool per name: a module providing a tool another already registered would silently replace it, and the
+	// reviewed tool surface would no longer be what is served (D-030; review finding 31).
+	ERR_FAIL_COND_V_MSG(tools.has(p_tool.name), ERR_ALREADY_EXISTS, vformat("Claude bridge: a tool named \"%s\" is already registered; tool names must be unique.", p_tool.name));
+	tool_order.push_back(p_tool.name);
 	tools[p_tool.name] = p_tool;
+	return OK;
 }
 
 Dictionary ClaudeBridgeMCP::_initialize(const Dictionary &p_params) const {

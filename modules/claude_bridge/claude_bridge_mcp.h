@@ -122,7 +122,8 @@ public:
 	static Dictionary object_schema(const Dictionary &p_properties, const PackedStringArray &p_required = PackedStringArray());
 
 	void set_instructions(const String &p_text) { instructions = p_text; }
-	void register_tool(const Tool &p_tool);
+	// ERR_ALREADY_EXISTS when a tool of that name is registered: names are unique.
+	Error register_tool(const Tool &p_tool);
 	void set_tool_destructive(const String &p_name, bool p_destructive);
 	bool has_tool(const String &p_name) const { return tools.has(p_name); }
 	int get_tool_count() const { return tools.size(); }
