@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 17:51 -0600
-- **Current task:** 1.7 Fork files pass upstream CI static checks, 5.1.2 jrpg/enabled + dynamic workspace
-- **Last completed:** 5.1.1 Module skeleton
+- **Updated:** 2026-10-13 18:03 -0600
+- **Current task:** 5.1.2 jrpg/enabled + dynamic workspace
+- **Last completed:** 1.7 Fork files pass upstream CI static checks
 - **Next task:** none ready (see `tasks.py next`)
-- **Done leaf tasks:** 46
+- **Done leaf tasks:** 47
 <!-- status:end -->
 
 ## Log
@@ -116,3 +116,4 @@
 | 2026-10-13 17:37 -0600 | - | imported 0 new / 1 updated tasks | |
 | 2026-10-13 17:51 -0600 | - | imported 1 new / 0 updated tasks (containers: 1 done->pending) | |
 | 2026-10-13 17:51 -0600 | 1.7 | started: Fork files pass upstream CI static checks (containers: 1 pending->in_progress) |  |
+| 2026-10-13 18:03 -0600 | 1.7 | done: Fork files pass upstream CI static checks — CI static checks green on push c94eddfc3d (run 38486896480: Static checks success). Local static_checks.py --all passes on all fork files; bad codespell fixes reviewed and reverted (anc/edn identifiers, SAV labels, PostgreSQL licence URL, Baloon.png quote, retuned/statics/stings); research gates unchanged (1927 citations ok, labels 0 missing, verbatim 0), gap map same counts; ledger rows 1-2 + D-027 (containers: 1 in_progress->done) | pending |

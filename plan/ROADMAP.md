@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 149, in_progress: 5, done: 52, blocked: 0, deferred: 3 (of 209)
+**Totals:** pending: 149, in_progress: 3, done: 54, blocked: 0, deferred: 3 (of 209)
 
 ## [x] 0 Bootstrap and task system
 
@@ -15,7 +15,7 @@ Fork, local clone, working branch, persistent tracker, resume protocol, persiste
 - [x] **0.3** CLAUDE.md resume protocol, NOTICE and fork README (P1) _(deps: 0.2; commit: 12253dd0a5)_
 - [x] **0.4** Persist planning research reports (P1) _(deps: 0.2; commit: d611bf476c)_
 
-## [~] 1 Toolchain baseline
+## [x] 1 Toolchain baseline
 
 Reproducible builds and a recorded vanilla baseline before any engine change.
 
@@ -25,7 +25,7 @@ Reproducible builds and a recorded vanilla baseline before any engine change.
 - [x] **1.4** Export template builds (template_release, template_debug) (P2) _(deps: 1.2; commit: b96aeaeae0)_
 - [x] **1.5** Plain general-purpose samples (P2) _(deps: 1.2, 1.4; commit: 51255adeae)_
 - [x] **1.6** Epic 0+1 review fixes (P1) _(commit: a6fbf412ba)_
-- [~] **1.7** Fork files pass upstream CI static checks (P1)
+- [x] **1.7** Fork files pass upstream CI static checks (P1) _(commit: pending)_
 
 ## [x] 2 Research (Phase 1)
 
