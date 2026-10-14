@@ -27,7 +27,7 @@
 		<method name="clear">
 			<return type="void" />
 			<description>
-				Drops everything under way: the interpreter is idle.
+				Drops everything under way: the interpreter is idle. A command may clear its own interpreter (a transfer that stops the map's parallel processes does): the step ends there.
 			</description>
 		</method>
 		<method name="exit">

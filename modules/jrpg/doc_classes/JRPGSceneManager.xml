@@ -7,6 +7,7 @@
 		A game scene has one scene manager, usually as its root. While a game runs it holds the game state ([JRPGGameState]), shows the current map as an instance of its scene (found through the map list, under the manager's other children), moves the player between maps with [method transfer], fading through black or white, and plays each map's autoplay BGM and BGS.
 		While a game runs it runs the game's loop at a fixed 60 steps a second on the game state's simulation clock: each step moves the player ([method get_player]) as the direction actions say, keeps the game state's player position, and counts the steps taken. The player's camera, the one the game is seen through, stays inside the map (its area on the canvas, seen through the camera's zoom); a map smaller than the screen stays in the middle of it. On a looping axis the camera is free, but the map is drawn once: the looping display comes with a later version.
 		Each map shown gets a [JRPGEvent] node for each of its events, from the states the game state keeps for that map (a resumed game) or new ones from the events' data. Every step the events' pages are picked again when the game state changed since the last time (a switch, a variable, a self switch, an item or the party). Events Same as characters stop the player stepping onto their cells.
+		Every step also runs the map's event processes ([method get_event_runner]) after a transfer's step and before the player moves. While an autorun or an event started by a trigger runs, the player stands still (a step under way still ends); a transfer's fade pauses the processes; entering another map stops the old map's parallel processes, while an event that moved the player goes on with its remaining commands.
 		When it enters a running game's tree (not in the editor) with [member autostart] on, it starts a new game at the System start position, after every [method Node._ready] call: a script that continues a loaded game there with [method resume] comes first.
 		A transfer that cannot happen (a map the map list lacks, a scene that cannot load or is not a map, a cell outside the map) leaves the player where they are, prints one warning and returns an error.
 		Authority: in a single-player game the manager decides transfers itself; online, the server decides them and the client's manager only applies what it is told.
@@ -49,6 +50,12 @@
 			<return type="JRPGEvent[]" />
 			<description>
 				Returns the current map's event nodes, in the order of the map's events.
+			</description>
+		</method>
+		<method name="get_event_runner" qualifiers="const">
+			<return type="JRPGEventRunner" />
+			<description>
+				Returns the event processes of the current map: its autoruns, the events started by triggers and its parallel processes.
 			</description>
 		</method>
 		<method name="get_fade_amount" qualifiers="const">

@@ -78,11 +78,23 @@ public:
 	}
 };
 
+// Clears the interpreter that runs it (as a transfer that stops the map's processes does).
+class JRPGTestClearSelf : public JRPGEventCommand {
+	GDCLASS(JRPGTestClearSelf, JRPGEventCommand);
+
+public:
+	virtual ExecuteResult execute(Object *p_context) override {
+		Object::cast_to<JRPGInterpreter>(p_context)->clear();
+		return EXECUTE_CONTINUE;
+	}
+};
+
 static Ref<JRPGEventCommand> call_common(int p_id) {
 	static bool registered = false;
 	if (!registered) {
 		GDREGISTER_CLASS(JRPGTestCallCommon);
 		GDREGISTER_CLASS(JRPGTestSetSwitch);
+		GDREGISTER_CLASS(JRPGTestClearSelf);
 		registered = true;
 	}
 	Ref<JRPGTestCallCommon> command;
@@ -172,6 +184,13 @@ TEST_CASE("[JRPG][EventRunner] A common event call runs its commands, then the c
 	ERR_PRINT_ON;
 	CHECK(deep.warnings == 1);
 	CHECK(game.output().length() == JRPGInterpreter::MAX_DEPTH - 1);
+
+	// A command may clear its own interpreter: the run ends there.
+	game.state->set_variable(1, "");
+	call_common(0); // Registers the classes.
+	interpreter->start(list({ log("a"), Ref<JRPGTestClearSelf>(memnew(JRPGTestClearSelf)), log("b") }), game.state, "Test");
+	CHECK(interpreter->step() == JRPGInterpreter::STEP_FINISHED);
+	CHECK((game.output() == "a" && !interpreter->is_running()));
 }
 
 TEST_CASE("[JRPG][EventRunner] Parallel processes interleave in a fixed order and stop when their page goes") {

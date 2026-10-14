@@ -12,6 +12,14 @@
 	<tutorials>
 	</tutorials>
 	<methods>
+		<method name="change_map">
+			<return type="void" />
+			<param index="0" name="map" type="JRPGMapData" />
+			<param index="1" name="map_id" type="int" />
+			<description>
+				Runs the events of [param map] (ID [param map_id]) from now on: the old map's parallel processes stop, while the main interpreter goes on, so an event that moved the player runs its remaining commands on the new map.
+			</description>
+		</method>
 		<method name="clear">
 			<return type="void" />
 			<description>
@@ -42,7 +50,7 @@
 			<param index="1" name="map" type="JRPGMapData" />
 			<param index="2" name="map_id" type="int" />
 			<description>
-				Runs the events of [param map] (ID [param map_id]) under the game state [param state]. Anything running before stops.
+				Runs the events of [param map] (ID [param map_id]) under the game state [param state]. Anything running before stops. [param map] may be [code]null[/code] (a map without data): common events still run.
 			</description>
 		</method>
 		<method name="start_event">

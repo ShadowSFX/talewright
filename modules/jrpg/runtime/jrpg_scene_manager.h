@@ -42,6 +42,7 @@ class ColorRect;
 class JRPGAudioCue;
 class JRPGDatabase;
 class JRPGEvent;
+class JRPGEventRunner;
 class JRPGGameState;
 class JRPGMap;
 class JRPGMapCellCache;
@@ -56,7 +57,9 @@ class PackedScene;
 // fade) and plays each map's autoplay music. It runs the game's fixed-step loop on the game state's simulation clock
 // (task 8.6.2.2): each step moves the player (JRPGPlayer, inside the current map) as the direction actions say, keeping
 // the game state's player position and step count; the player's camera stays inside the map (a map smaller than the
-// screen is centered). A game scene has one, usually as its root; it starts a new game from the
+// screen is centered). Each step also runs the map's event processes (JRPGEventRunner, task 9.3.2.2) after the transfer
+// and before the player moves; while an autorun or a triggered event runs the player stands still, and a transfer's
+// fade pauses them. A game scene has one, usually as its root; it starts a new game from the
 // System start position when it enters a running game's tree (autostart), or continues a loaded game (resume).
 // Authority (D-007): server. In a single-player game the manager decides transfers itself; online, the zone server
 // decides them and the client's manager only applies what it is told (the network port calls transfer()).
@@ -86,6 +89,7 @@ private:
 	JRPGPlayer *player = nullptr; // Inside the current map; outside the tree before the first map.
 	Node2D *events_root = nullptr; // The current map's JRPGEvent nodes ("Events", an internal child of the map).
 	uint64_t refreshed_revision = 0; // The game state's revision the event pages were last picked for.
+	Ref<JRPGEventRunner> event_runner; // The current map's event processes.
 	AudioStreamPlayer *bgm_player = nullptr;
 	AudioStreamPlayer *bgs_player = nullptr;
 	CanvasLayer *fade_layer = nullptr;
@@ -173,6 +177,9 @@ public:
 	JRPGEvent *get_event_node(int p_event_id) const;
 	// The current map's event nodes, in the order of the map's events.
 	TypedArray<JRPGEvent> get_event_nodes() const;
+	// The current map's autorun, triggered and parallel events. A new map stops the old one's parallel processes; the
+	// main interpreter goes on.
+	Ref<JRPGEventRunner> get_event_runner() const { return event_runner; }
 	// The cells characters cannot step onto because an event there blocks them (JRPGEvent::blocks_characters).
 	HashSet<Vector2i> get_blocked_cells() const;
 	// Runs p_steps simulation steps now, as frames would (tests, tools).

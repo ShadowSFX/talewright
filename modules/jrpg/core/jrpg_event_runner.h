@@ -90,8 +90,12 @@ protected:
 	static void _bind_methods();
 
 public:
-	// The map p_map (id p_map_id) under game state p_state; anything running before stops.
+	// The map p_map (id p_map_id) under game state p_state; anything running before stops. p_map may be null (a map
+	// without data): common events still run.
 	void setup(const Ref<JRPGGameState> &p_state, const Ref<JRPGMapData> &p_map, int p_map_id);
+	// The player went to map p_map (id p_map_id): the old map's parallel processes stop, while the main interpreter goes
+	// on, so an event that moved the player runs its remaining commands on the new map.
+	void change_map(const Ref<JRPGMapData> &p_map, int p_map_id);
 	// Stops everything.
 	void clear();
 	// Runs one simulation step of every process.

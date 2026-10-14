@@ -83,6 +83,18 @@ void JRPGEventRunner::setup(const Ref<JRPGGameState> &p_state, const Ref<JRPGMap
 	map_id = p_map_id;
 }
 
+void JRPGEventRunner::change_map(const Ref<JRPGMapData> &p_map, int p_map_id) {
+	for (const Process &process : parallels) {
+		process.interpreter->clear();
+	}
+	parallels.clear();
+	map = p_map;
+	map_id = p_map_id;
+	refreshed = false; // The new map's pages, at the next step.
+	stuck_key = String();
+	stuck_runs = 0;
+}
+
 void JRPGEventRunner::clear() {
 	main->clear();
 	main_is_autorun = false;
@@ -100,7 +112,8 @@ void JRPGEventRunner::_refresh() {
 	refreshed = true;
 	refreshed_revision = game_state->get_revision();
 	Vector<Process> wanted;
-	for (const Variant &entry : map->get_events()) {
+	const Array events = map.is_valid() ? map->get_events() : Array();
+	for (const Variant &entry : events) {
 		const Ref<JRPGEventData> event = entry;
 		if (event.is_null()) {
 			continue;
@@ -134,7 +147,8 @@ void JRPGEventRunner::_refresh() {
 }
 
 bool JRPGEventRunner::_find_autorun(Ref<JRPGCommandList> &r_commands, String &r_owner) const {
-	for (const Variant &entry : map->get_events()) {
+	const Array events = map.is_valid() ? map->get_events() : Array();
+	for (const Variant &entry : events) {
 		const Ref<JRPGEventData> event = entry;
 		if (event.is_null()) {
 			continue;
@@ -196,7 +210,7 @@ void JRPGEventRunner::_step_main() {
 }
 
 void JRPGEventRunner::step() {
-	if (game_state.is_null() || map.is_null()) {
+	if (game_state.is_null()) {
 		return;
 	}
 	_refresh();
@@ -213,7 +227,7 @@ void JRPGEventRunner::step() {
 			Ref<JRPGCommandList> commands;
 			String owner;
 			if (process.event_id > 0) {
-				const Ref<JRPGEventData> event = map->find_event(process.event_id);
+				const Ref<JRPGEventData> event = map.is_valid() ? map->find_event(process.event_id) : Ref<JRPGEventData>();
 				const Ref<JRPGEventPage> page = event.is_valid() && process.page_index < event->get_page_count() ? event->get_page(process.page_index) : Ref<JRPGEventPage>();
 				commands = page.is_valid() ? page->get_commands() : Ref<JRPGCommandList>();
 				owner = vformat("Map %d, event %d, page %d", map_id, process.event_id, process.page_index + 1);
@@ -236,7 +250,7 @@ bool JRPGEventRunner::is_main_running() const {
 	if (main->is_running()) {
 		return true;
 	}
-	if (game_state.is_null() || map.is_null()) {
+	if (game_state.is_null()) {
 		return false;
 	}
 	// An autorun whose run ended within the last step starts again at the next one: the player still waits.
@@ -278,6 +292,7 @@ Array JRPGEventRunner::get_parallel_processes() const {
 
 void JRPGEventRunner::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("setup", "state", "map", "map_id"), &JRPGEventRunner::setup);
+	ClassDB::bind_method(D_METHOD("change_map", "map", "map_id"), &JRPGEventRunner::change_map);
 	ClassDB::bind_method(D_METHOD("clear"), &JRPGEventRunner::clear);
 	ClassDB::bind_method(D_METHOD("step"), &JRPGEventRunner::step);
 	ClassDB::bind_method(D_METHOD("is_main_running"), &JRPGEventRunner::is_main_running);

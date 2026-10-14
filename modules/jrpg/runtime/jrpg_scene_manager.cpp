@@ -49,6 +49,7 @@
 #include "modules/jrpg/core/jrpg_audio_cue.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_event_data.h"
+#include "modules/jrpg/core/jrpg_event_runner.h"
 #include "modules/jrpg/core/jrpg_event_state.h"
 #include "modules/jrpg/core/jrpg_game_state.h"
 #include "modules/jrpg/core/jrpg_map_cell_cache.h"
@@ -149,6 +150,7 @@ void JRPGSceneManager::_begin(const Ref<JRPGGameState> &p_state) {
 	database = p_state->get_database(); // The game runs with it; its maps draw with it.
 	transferring = false; // A new or loaded game ends any transfer under way.
 	pending = Transfer();
+	event_runner->setup(p_state, Ref<JRPGMapData>(), 0); // And every event process: the map entered next starts them.
 	_set_fade(0);
 	set_process_internal(true); // The game loop.
 	refresh_player_character();
@@ -324,6 +326,7 @@ Error JRPGSceneManager::_enter(const Transfer &p_transfer, JRPGMap *p_instance) 
 	game_state->set_events_map(p_transfer.map_id, map_data.is_valid() ? map_data->get_revision() : 0);
 	if (!events_root) {
 		_build_events(); // A new map instance: its events, from the states the game keeps for it.
+		event_runner->change_map(map_data, p_transfer.map_id); // The old map's parallel processes stop.
 	}
 	_play_map_audio(map_data);
 	emit_signal(SNAME("map_entered"), p_transfer.map_id);
@@ -521,6 +524,9 @@ void JRPGSceneManager::_simulation_step() {
 		_transfer_step(); // May change the map: the player is then on the new one.
 	}
 	_refresh_events(); // Switches, variables, items or the party changed: pages are picked again (spec 03).
+	if (!transferring) {
+		event_runner->step(); // The map's events, before the player: an autorun that starts now holds the player now.
+	}
 	const Ref<JRPGMover> mover = player->get_mover();
 	if (mover->advance()) {
 		game_state->increase_steps(); // Arrived on a new cell.
@@ -529,9 +535,9 @@ void JRPGSceneManager::_simulation_step() {
 	// Read every step, so the direction pressed last wins even when it was pressed during a step.
 	const int direction = player->read_direction();
 	// No moving while the screen fades, nor while a control has the focus: a message, a list or a screen reads the
-	// keys then (epic 10 review B4).
+	// keys then (epic 10 review B4), nor while an autorun or a triggered event runs (a step under way still ends).
 	const bool interface_active = is_inside_tree() && get_viewport()->gui_get_focus_owner() != nullptr;
-	if (direction < 0 || transferring || interface_active || mover->is_moving() || cell_cache.is_null()) {
+	if (direction < 0 || transferring || interface_active || mover->is_moving() || cell_cache.is_null() || event_runner->is_main_running()) {
 		return;
 	}
 	const Ref<JRPGMapData> map_data = map->get_map_data();
@@ -603,6 +609,7 @@ void JRPGSceneManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_cell_cache"), &JRPGSceneManager::get_cell_cache);
 	ClassDB::bind_method(D_METHOD("get_event_node", "event_id"), &JRPGSceneManager::get_event_node);
 	ClassDB::bind_method(D_METHOD("get_event_nodes"), &JRPGSceneManager::get_event_nodes);
+	ClassDB::bind_method(D_METHOD("get_event_runner"), &JRPGSceneManager::get_event_runner);
 	ClassDB::bind_method(D_METHOD("run_steps", "steps"), &JRPGSceneManager::run_steps);
 	ClassDB::bind_method(D_METHOD("refresh_player_character"), &JRPGSceneManager::refresh_player_character);
 	ClassDB::bind_method(D_METHOD("get_bgm_player"), &JRPGSceneManager::get_bgm_player);
@@ -647,4 +654,5 @@ JRPGSceneManager::JRPGSceneManager() {
 
 	player = memnew(JRPGPlayer);
 	player->set_name("Player");
+	event_runner.instantiate();
 }

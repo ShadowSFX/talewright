@@ -1048,4 +1048,13 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** core ownership lets the zone server run the same processes without nodes (D-007); stored order is what
   the author sees in the event list and keeps a step deterministic; holding the player while an autorun page holds
   matches the documented behavior even for autoruns that end at once.
-- **Reversal:** `JRPGEventRunner::step`, `_refresh`, `is_main_running`, and `JRPGInterpreter::MAX_DEPTH`.
+- **Amended (task 9.3.2.2):** `JRPGSceneManager` owns one runner and steps it every simulation step after the transfer
+  step and before the player moves (an autorun that starts in a step holds the player in that step); the player does
+  not start a step while `is_main_running` (a step under way ends). A transfer's fade pauses the runner. Entering
+  another map calls `change_map`: the old map's parallel processes stop, but the main interpreter goes on, so commands
+  after a transfer in the same event (a fade in, a message) run on the new map — the usual way events are written;
+  the help does not say otherwise. A new or loaded game starts the runner afresh (resuming a run mid-event is task
+  9.3.3). `JRPGInterpreter::clear` may be called from inside a command (a parallel event that transfers at once stops
+  its own process): the step ends there instead of indexing a cleared frame stack.
+- **Reversal:** `JRPGEventRunner::step`, `_refresh`, `is_main_running`, `change_map`, `JRPGInterpreter::MAX_DEPTH`, and
+  the runner calls in `JRPGSceneManager::_simulation_step` and `_enter`.

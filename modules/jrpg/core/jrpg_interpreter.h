@@ -77,7 +77,7 @@ private:
 	String owner; // Who runs it, for warnings ("Map 3, event 7, page 1").
 	int wait_left = 0;
 	int jumps_left = 0;
-	bool flow_changed = false; // A command jumped, broke a loop or ended the run: the index it was at stays.
+	bool flow_changed = false; // A command jumped, broke a loop, ended or cleared the run: the index it was at stays.
 	int runaway_steps = 0;
 	bool runaway_warned = false;
 
@@ -88,7 +88,8 @@ public:
 	// Starts running p_list from its first command (anything under way is dropped) with p_state as the game state
 	// commands read and change; p_owner names it in warnings.
 	void start(const Ref<JRPGCommandList> &p_list, const Ref<JRPGGameState> &p_state, const String &p_owner = String());
-	// Drops everything under way.
+	// Drops everything under way; a command may clear (or start) its own interpreter: the step ends (or goes on with
+	// the new list) at once.
 	void clear();
 	bool is_running() const { return !frames.is_empty(); }
 	Ref<JRPGGameState> get_game_state() const { return game_state; }

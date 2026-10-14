@@ -54,7 +54,7 @@ void JRPGInterpreter::start(const Ref<JRPGCommandList> &p_list, const Ref<JRPGGa
 void JRPGInterpreter::clear() {
 	frames.clear();
 	wait_left = 0;
-	flow_changed = false;
+	flow_changed = true; // From inside a command (a transfer that stops the map's processes): step() ends there.
 	runaway_steps = 0;
 	runaway_warned = false;
 }

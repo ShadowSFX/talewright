@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.3.2.1 Common event calls and event processes (core)",
+  "last_completed": "9.3.2.2 Event processes on the running map",
   "tasks": [
     {
       "id": "0",
@@ -3919,10 +3919,10 @@
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "priority": 1,
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "9.3.2.1",
@@ -3949,7 +3949,7 @@
         "modules/jrpg/tests/test_jrpg_event_runner.h",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "debb3e23ac",
       "notes": ""
     },
     {
@@ -3966,9 +3966,22 @@
         "Processes of the old map stop on a transfer"
       ],
       "test_strategy": "Doctests [SceneTree].",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_event_runner.h",
+        "modules/jrpg/core/jrpg_event_runner.cpp",
+        "modules/jrpg/core/jrpg_interpreter.h",
+        "modules/jrpg/core/jrpg_interpreter.cpp",
+        "modules/jrpg/runtime/jrpg_scene_manager.h",
+        "modules/jrpg/runtime/jrpg_scene_manager.cpp",
+        "modules/jrpg/doc_classes/JRPGEventRunner.xml",
+        "modules/jrpg/doc_classes/JRPGInterpreter.xml",
+        "modules/jrpg/doc_classes/JRPGSceneManager.xml",
+        "modules/jrpg/tests/test_jrpg_event_runner.h",
+        "modules/jrpg/tests/test_jrpg_event_processes.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -3988,7 +4001,7 @@
       "status": "pending",
       "files": [],
       "commit": "",
-      "notes": ""
+      "notes": "From 9.3.2 (D-061): the map's JRPGEventRunner (main interpreter, its owner/main_is_autorun, parallel processes keyed by event id + page or common event id) must be saved and restored with the interpreters; a resumed game currently starts the runner afresh."
     },
     {
       "id": "9.4",
@@ -4076,7 +4089,7 @@
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
       "commit": "",
-      "notes": "Transfer Player (epic 8 review A15, D-041): JRPGSceneManager.transfer refuses a transfer while another is under way, the fade-in included (ERR_BUSY); the interpreter waits on is_transferring() / the transfer_finished signal before running the next command, as the MZ command waits for the transfer to finish.",
+      "notes": "Transfer Player (epic 8 review A15, D-041): JRPGSceneManager.transfer refuses a transfer while another is under way, the fade-in included (ERR_BUSY); the interpreter waits on is_transferring() / the transfer_finished signal before running the next command, as the MZ command waits for the transfer to finish. From 9.3.2 (D-061): the main interpreter goes on after a transfer, so commands that target 'This Event' must know the map their event belongs to (record the map and event ids on the interpreter) and do nothing once the player is on another map. Erase Event: JRPGEventState.set_erased does not change the game state's revision; the runner checks erasure every step, but event nodes refresh on revision changes only.",
       "status": "pending"
     },
     {
@@ -4132,7 +4145,7 @@
       "status": "pending",
       "files": [],
       "commit": "",
-      "notes": ""
+      "notes": "From 9.3.2 (D-061): use JRPGSceneManager.get_event_runner().start_event(id) for action/touch triggers; it refuses while is_main_running (an autorun page that holds counts). Autorun/parallel stepping is already done by the scene manager (9.3.2.2)."
     },
     {
       "id": "9.7",
