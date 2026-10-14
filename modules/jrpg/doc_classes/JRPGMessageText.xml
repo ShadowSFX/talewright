@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGMessageText" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Control codes in message text: values from the game, colors, icons, sizes, waits and positions.
+	</brief_description>
+	<description>
+		Text shown in messages, choices and database fields can hold control codes. [method expand] replaces those that stand for game data: [code]\V[n][/code] (the value of variable n), [code]\N[n][/code] (the name of actor n), [code]\P[n][/code] (the name of the n-th party member, 1 being the leader) and [code]\G[/code] (the currency unit). [code]\V[/code] comes first, so [code]\N[\V[3]][/code] names the actor whose id variable 3 holds.
+		[method parse] turns the remaining codes into a list of operations for a message window: [code]\C[n][/code] text color, [code]\I[n][/code] icon, [code]\{[/code] and [code]\}[/code] one size step bigger or smaller, [code]\FS[n][/code] font size, [code]\$[/code] gold window, [code]\.[/code] and [code]\|[/code] waits of [constant SHORT_WAIT_FRAMES] and [constant LONG_WAIT_FRAMES] frames, [code]\![/code] wait for the player, [code]\&gt;[/code] and [code]\&lt;[/code] instant display on and off, [code]\^[/code] no wait for the player at the end, [code]\PX[n][/code] and [code]\PY[n][/code] text position. [code]\\[/code] is a backslash. Codes are read without regard to case; a code that is not in this list, or whose [code][n][/code] is malformed, is shown as written.
+		Online, servers send text keys and arguments and clients expand and show the text.
+		Authority: client. Text is expanded and shown where it is read.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="expand" qualifiers="static">
+			<return type="String" />
+			<param index="0" name="text" type="String" />
+			<param index="1" name="state" type="JRPGGameState" />
+			<description>
+				Returns [param text] with [code]\V[n][/code], [code]\N[n][/code], [code]\P[n][/code] and [code]\G[/code] replaced from [param state] and its database. A variable never set gives 0; an actor or a party slot that does not exist gives empty text. Without a game state the text is returned as it is.
+			</description>
+		</method>
+		<method name="parse" qualifiers="static">
+			<return type="Array" />
+			<param index="0" name="text" type="String" />
+			<description>
+				Returns the operations of [param text], in order, as dictionaries: [code]op[/code] (an [enum Op] value) and, depending on it, [code skip-lint]text[/code], [code]index[/code], [code]size[/code], [code]frames[/code], [code]x[/code] or [code]y[/code]. Consecutive text is one operation; each line break is an [constant OP_NEW_LINE].
+			</description>
+		</method>
+		<method name="strip" qualifiers="static">
+			<return type="String" />
+			<param index="0" name="text" type="String" />
+			<description>
+				Returns the text of [param text] without its codes: [code]\\[/code] gives one backslash, icons are dropped and line breaks are kept.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="OP_TEXT" value="0" enum="Op">
+			Text to show ([code]text[/code]).
+		</constant>
+		<constant name="OP_NEW_LINE" value="1" enum="Op">
+			A line break.
+		</constant>
+		<constant name="OP_COLOR" value="2" enum="Op">
+			The following text in the window's text color [code]index[/code].
+		</constant>
+		<constant name="OP_ICON" value="3" enum="Op">
+			Icon [code]index[/code] of the icon set, inline.
+		</constant>
+		<constant name="OP_FONT_BIGGER" value="4" enum="Op">
+			The following text one size step bigger.
+		</constant>
+		<constant name="OP_FONT_SMALLER" value="5" enum="Op">
+			The following text one size step smaller.
+		</constant>
+		<constant name="OP_FONT_SIZE" value="6" enum="Op">
+			The following text at font [code]size[/code].
+		</constant>
+		<constant name="OP_GOLD_WINDOW" value="7" enum="Op">
+			Shows the gold window while the message is shown.
+		</constant>
+		<constant name="OP_WAIT" value="8" enum="Op">
+			Waits [code]frames[/code] frames before showing the rest.
+		</constant>
+		<constant name="OP_WAIT_INPUT" value="9" enum="Op">
+			Waits for the player to press a button before showing the rest.
+		</constant>
+		<constant name="OP_INSTANT_ON" value="10" enum="Op">
+			Shows the following text at once instead of letter by letter.
+		</constant>
+		<constant name="OP_INSTANT_OFF" value="11" enum="Op">
+			Shows the following text letter by letter again.
+		</constant>
+		<constant name="OP_NO_INPUT_WAIT" value="12" enum="Op">
+			The message goes on without waiting for the player once it is shown.
+		</constant>
+		<constant name="OP_POSITION_X" value="13" enum="Op">
+			Moves the text position to [code]x[/code] pixels from the left of the text area.
+		</constant>
+		<constant name="OP_POSITION_Y" value="14" enum="Op">
+			Moves the text position to [code]y[/code] pixels from the top of the text area.
+		</constant>
+		<constant name="SHORT_WAIT_FRAMES" value="15">
+			Frames the [code]\.[/code] code waits: a quarter of a second.
+		</constant>
+		<constant name="LONG_WAIT_FRAMES" value="60">
+			Frames the [code]\|[/code] code waits: one second.
+		</constant>
+		<constant name="MAX_EXPAND_PASSES" value="8">
+			How deep [code]\V[/code] codes can be nested inside one another.
+		</constant>
+	</constants>
+</class>

@@ -54,6 +54,7 @@
 #include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_map_list.h"
 #include "modules/jrpg/core/jrpg_map_shapes.h"
+#include "modules/jrpg/core/jrpg_message_text.h"
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_mover.h"
 #include "modules/jrpg/core/jrpg_random.h"
@@ -169,6 +170,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGMapCellCache);
 		GDREGISTER_CLASS(JRPGMover);
 		GDREGISTER_ABSTRACT_CLASS(JRPGMapShapes); // Static methods only.
+		GDREGISTER_ABSTRACT_CLASS(JRPGMessageText); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGMapFiles); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGCharacterSheet); // Static methods only.
 		GDREGISTER_CLASS(JRPGCharacterSprite);

@@ -767,3 +767,23 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   games, doctests and bridge runs, and never lets one press act on two windows.
 - **Reversal:** `JRPGSelectableList::_process_input` (presses and repeats), `_move_cursor` (wrapping), `gui_input`
   (mouse).
+
+## D-051 — Message control codes: expanded in core, parsed into operations
+- **Context:** task 10.2.1 needs the Show Text codes (RM-MSG-001..019). The help lists them and their effect but not
+  how the text is read: case, nesting, codes it does not know, malformed arguments, how long `\.` and `\|` wait in
+  frames. Online, servers send text keys and arguments and clients expand them (D-026), so the step that reads game
+  data must work without a window.
+- **Options:** one step that renders a window directly; BBCode for Godot's `RichTextLabel`; a core expander plus a
+  parser to operations that a window lays out.
+- **Choice:** `JRPGMessageText` (core, static): `expand(text, game state)` replaces `\V[n]` (repeatedly, so `\V`
+  inside `\V` and `\N[\V[n]]` work, up to `MAX_EXPAND_PASSES`), then `\N[n]` (the actor's current name: an event's
+  rename or its database name), `\P[n]` (1-based party order), `\G` (System data's currency unit); a variable never
+  set is 0, a missing actor or slot is empty. `parse(text)` gives operations (text, new line, color, icon, size steps
+  and size, gold window, waits of 15 and 60 frames, wait for input, instant on/off, no input wait, x and y position).
+  Codes are read in any case. A code not in the list, or whose `[n]` is malformed (no digits, no closing bracket,
+  more than 9 digits), is shown as written, so a typo stays visible instead of vanishing. `\\` is a backslash and is
+  kept apart while `expand` works, so `\\V[1]` stays text. Laying the operations out (fonts, size steps, icons,
+  positions, the letter-by-letter display) is the message window's (task 10.2.2).
+- **Why:** servers and clients share the expansion; windows and tests read the same operations; RichTextLabel cannot
+  place text at an absolute position (`\PX`, `\PY`) and its BBCode would need escaping of every message.
+- **Reversal:** the rules are in `jrpg_message_text.cpp` (`expand`, `parse`); the wait lengths are its constants.

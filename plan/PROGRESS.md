@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 11:10 -0600
+- **Updated:** 2026-10-14 11:22 -0600
 - **Current task:** none
-- **Last completed:** 10.1.2 Selectable list: cursor, navigation, paging, key repeat, mouse, UI sounds
-- **Next task:** 10.2.1 Control-code parser and text layout
-- **Done leaf tasks:** 122
+- **Last completed:** 10.2.1 Control-code parser and text layout
+- **Next task:** 10.2.2 Message window, choices, number input, gold window
+- **Done leaf tasks:** 123
 <!-- status:end -->
 
 ## Log
@@ -324,4 +324,7 @@
 | 2026-10-14 10:45 -0600 | - | imported 0 new / 1 updated tasks | |
 | 2026-10-14 10:51 -0600 | 10.1.1 | done: Window frame, default skin, tone and open/close — JRPGWindow (runtime Container): toned back and nine-slice border from theme items (back, border, cursor, arrows, padding, frame_margin), the generated skin embedded at build time and added to Godot's default theme on first use (D-049); children laid out inside the padding; open/close over 8 frames with opened/closed signals, the frame squashed and children clipped to the opening band; scroll and pause marks. Generator: window_back.png and window_border.png (window.png unchanged). Doctests (5 cases), golden talewright/goldens/jrpg_window.png through the bridge (bridge checks 170/170), 1585 editor tests, 1475 release-template tests, static checks ALL PASS. Static checks: SConstruct/SCsub left out of the shebang check as in CI; fill_class_docs fills theme items. (containers: 10.1 in_progress->pending, 10 in_progress->pending) | d593be100a |
 | 2026-10-14 10:52 -0600 | 10.1.2 | started: Selectable list: cursor, navigation, paging, key repeat, mouse, UI sounds (containers: 10.1 pending->in_progress, 10 pending->in_progress) |  |
-| 2026-10-14 11:10 -0600 | 10.1.2 | done: Selectable list: cursor, navigation, paging, key repeat, mouse, UI sounds — JRPGSelectableList (runtime JRPGWindow): items (text, enabled, icon, right_text) in columns and rows with the skin's cursor (dimmed without focus), input while focused (D-050): moves with wrap on a fresh press only, repeats after 24 then every 6 frames, page actions, OK/buzzer on disabled, cancel; own press detection (edge or GUI event, keys held at focus ignored); mouse hover/click/right-click/wheel; cursor/OK/cancel/buzzer sounds from the System data of its database (project's by default), player made with the first sound. JRPGWindow processing routed through _update_process for subclasses. Doctests (4 cases), bridge: sounds per action (stream and last sound) and golden talewright/goldens/jrpg_list.png (178/178), 1589 editor tests, 1479 release-template tests, static checks ALL PASS. (containers: 10.1 in_progress->done, 10 in_progress->pending) | pending |
+| 2026-10-14 11:10 -0600 | 10.1.2 | done: Selectable list: cursor, navigation, paging, key repeat, mouse, UI sounds — JRPGSelectableList (runtime JRPGWindow): items (text, enabled, icon, right_text) in columns and rows with the skin's cursor (dimmed without focus), input while focused (D-050): moves with wrap on a fresh press only, repeats after 24 then every 6 frames, page actions, OK/buzzer on disabled, cancel; own press detection (edge or GUI event, keys held at focus ignored); mouse hover/click/right-click/wheel; cursor/OK/cancel/buzzer sounds from the System data of its database (project's by default), player made with the first sound. JRPGWindow processing routed through _update_process for subclasses. Doctests (4 cases), bridge: sounds per action (stream and last sound) and golden talewright/goldens/jrpg_list.png (178/178), 1589 editor tests, 1479 release-template tests, static checks ALL PASS. (containers: 10.1 in_progress->done, 10 in_progress->pending) | 1cd9059380 |
+| 2026-10-14 11:12 -0600 | 10.2.1 | started: Control-code parser and text layout (containers: 10.2 pending->in_progress, 10 pending->in_progress) |  |
+| 2026-10-14 11:12 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-14 11:22 -0600 | 10.2.1 | done: Control-code parser and text layout — JRPGMessageText (core, static; D-051): expand() replaces \V[n] (nested, up to 8 passes), \N[n], \P[n] (1-based party order), \G from a game state; parse() turns the remaining codes into operations (text, new line, color, icon, size steps and size, gold window, waits of 15/60 frames, wait for input, instant on/off, no input wait, x/y position), any case, unknown or malformed codes shown as written, \ as a backslash; strip() gives the plain text. Layout and drawing moved to 10.2.2 (note). Doctests for every code (4 cases), 1593 editor tests, 1483 release-template tests, static checks ALL PASS. (containers: 10.2 in_progress->pending, 10 in_progress->pending) | pending |

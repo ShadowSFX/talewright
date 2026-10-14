@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "10.1.2 Selectable list: cursor, navigation, paging, key repeat, mouse, UI sounds",
+  "last_completed": "10.2.1 Control-code parser and text layout",
   "tasks": [
     {
       "id": "0",
@@ -4083,7 +4083,7 @@
       "test_strategy": "Doctests + bridge.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "1cd9059380",
       "notes": ""
     },
     {
@@ -4116,9 +4116,9 @@
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
-      "commit": "",
-      "notes": "",
-      "status": "pending"
+      "commit": "pending",
+      "notes": "Scope: the core parser and expansion (JRPGMessageText: expand, parse, strip). Laying out the parsed text (fonts, sizes, icons, positions, typewriter reveal) needs the window's font and is drawn by the message window, so it is part of 10.2.2.",
+      "status": "done"
     },
     {
       "id": "10.2.2",
