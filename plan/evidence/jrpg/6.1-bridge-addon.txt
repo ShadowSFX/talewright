@@ -1,0 +1,74 @@
+## jrpg_addon_status (before)
+{
+  "directory": "res://addons/talewright",
+  "embedded_version": "1-67c20d5c6fe4",
+  "installed_version": "",
+  "files": [
+    {
+      "path": "LICENSE.txt",
+      "state": "missing"
+    },
+    {
+      "path": "README.md",
+      "state": "missing"
+    }
+  ]
+}
+## jrpg_addon_install
+{
+  "version": "1-67c20d5c6fe4",
+  "added": [
+    "LICENSE.txt",
+    "README.md"
+  ],
+  "replaced": [],
+  "unchanged": [],
+  "kept_modified": []
+}
+## user edits README.md
+## jrpg_addon_install (again)
+{
+  "version": "1-67c20d5c6fe4",
+  "added": [],
+  "replaced": [],
+  "unchanged": [
+    "LICENSE.txt"
+  ],
+  "kept_modified": [
+    "README.md"
+  ]
+}
+## jrpg_addon_status (after)
+{
+  "directory": "res://addons/talewright",
+  "embedded_version": "1-67c20d5c6fe4",
+  "installed_version": "1-67c20d5c6fe4",
+  "files": [
+    {
+      "path": "LICENSE.txt",
+      "state": "current"
+    },
+    {
+      "path": "README.md",
+      "state": "modified"
+    }
+  ]
+}
+## bad directory
+"directory" must be a res:// folder inside the project.
+exit=1
+## files
+total 13
+drwxr-xr-x 1 Relic 197121    0 Oct 13 20:37 .
+drwxr-xr-x 1 Relic 197121    0 Oct 13 20:37 ..
+-rw-r--r-- 1 Relic 197121 1102 Oct 13 20:37 LICENSE.txt
+-rw-r--r-- 1 Relic 197121  668 Oct 13 20:37 README.md
+-rw-r--r-- 1 Relic 197121  200 Oct 13 20:37 addon.cfg
+[files]
+
+LICENSE.txt="03fb25414ffa44953fc8612b390e49533edea33380b160070c99366cd803396a"
+README.md="bfe2a4eb99a88b2f74dad8b5931de0a67dd2dbb0a11062b59437645ea9acba0f"
+
+[addon]
+
+version="1-67c20d5c6fe4"

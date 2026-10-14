@@ -27,6 +27,7 @@ def get_doc_classes():
         "JRPGFormulaBattler",
         "JRPGGameState",
         "JRPGItemData",
+        "JRPGManagedAddon",
         "JRPGRandom",
         "JRPGRandomStreams",
         "JRPGReferenceScanner",

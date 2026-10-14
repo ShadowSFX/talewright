@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGManagedAddon" inherits="RefCounted" api_type="editor" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Installs and upgrades the Talewright managed addon (res://addons/talewright) in the editor.
+	</brief_description>
+	<description>
+		The managed addon holds the GDScript and scene sources Talewright's JRPG tools build games with. Its files are embedded in the editor and copied into the project; [code]addon.cfg[/code] in the addon folder records the installed version and the SHA-256 hash of every installed file.
+		Installing again upgrades the addon: a file is replaced only while it is exactly as it was installed, so files you changed are kept and listed in the report. A file with the same name that the addon did not install is never overwritten.
+		Editor only. The Claude bridge exposes it as the [code]jrpg_addon_status[/code] and [code]jrpg_addon_install[/code] tools.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_embedded_files" qualifiers="static">
+			<return type="PackedStringArray" />
+			<description>
+				Returns the paths, relative to the addon folder, of the files embedded in this editor.
+			</description>
+		</method>
+		<method name="get_embedded_version" qualifiers="static">
+			<return type="String" />
+			<description>
+				Returns the version of the addon embedded in this editor: the addon format number and a hash of its content.
+			</description>
+		</method>
+		<method name="get_status" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="directory" type="String" default="&quot;res://addons/talewright&quot;" />
+			<description>
+				Returns a [Dictionary] with [code skip-lint]directory[/code], [code]embedded_version[/code], [code]installed_version[/code] (empty when the addon is not installed) and [code]files[/code]: one [Dictionary] per embedded file with its [code]path[/code] and [code]state[/code]: [code]missing[/code], [code]current[/code] (same as this editor's), [code]outdated[/code] (as installed by an older version) or [code]modified[/code] (changed since it was installed).
+			</description>
+		</method>
+		<method name="install" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="directory" type="String" default="&quot;res://addons/talewright&quot;" />
+			<description>
+				Installs or upgrades the addon in [param directory]. Returns a [Dictionary] with the [code]version[/code] installed and the lists of paths [code]added[/code], [code]replaced[/code], [code]unchanged[/code] and [code]kept_modified[/code]. The editor's file system is rescanned when [param directory] is inside the project.
+			</description>
+		</method>
+	</methods>
+</class>

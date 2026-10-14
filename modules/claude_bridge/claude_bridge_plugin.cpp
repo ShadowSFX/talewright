@@ -32,6 +32,7 @@
 #include "claude_bridge_plugin.h"
 
 #include "claude_bridge_auth.h"
+#include "claude_bridge_registry.h"
 #include "claude_bridge_tools.h"
 
 #include "core/config/project_settings.h"
@@ -674,6 +675,7 @@ void ClaudeBridgePlugin::_register_tools() {
 	mcp.register_tool(status);
 	ClaudeBridgeTools::register_editor_tools(mcp, this);
 	_register_game_tools();
+	ClaudeBridgeRegistry::register_provided_tools(mcp); // Tools of other modules (JRPG database, maps...; D-030).
 	// Write tools default to destructiveHint=true; these are undoable or only affect transient state.
 	for (const char *name : { "editor_node_set", "editor_open_scene", "editor_select", "editor_rescan", "editor_undo_redo",
 				 "editor_set_main_screen", "run_project", "stop_project", "game_input" }) {

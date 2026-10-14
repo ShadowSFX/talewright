@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "1.8 Fork CI: every Linux job green",
+  "last_completed": "6.1 Managed addon embedding",
   "tasks": [
     {
       "id": "0",
@@ -316,7 +316,7 @@
         "modules/jrpg/core/jrpg_usable_data.cpp"
       ],
       "status": "done",
-      "commit": "pending",
+      "commit": "803d0e2f7c",
       "notes": ""
     },
     {
@@ -1693,7 +1693,7 @@
       "dependencies": [
         "5"
       ],
-      "status": "in_progress",
+      "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
         "Setup idempotent",
@@ -1710,14 +1710,33 @@
       "description": "Embed res://addons/talewright sources in the binary; version+hash stamps; upgrade tool.",
       "parent": "6",
       "dependencies": [],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Upgrade overwrites untouched files only"
       ],
       "test_strategy": "Doctests + scripted upgrade check on a temporary project (modified file kept, untouched file replaced, version stamp updated).",
-      "files": [],
-      "commit": "",
+      "files": [
+        "modules/jrpg/jrpg_builders.py",
+        "modules/jrpg/SCsub",
+        "modules/jrpg/addon_template/README.md",
+        "modules/jrpg/addon_template/LICENSE.txt",
+        "modules/jrpg/editor/jrpg_managed_addon.h",
+        "modules/jrpg/editor/jrpg_managed_addon.cpp",
+        "modules/jrpg/editor/jrpg_bridge_tools.h",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGManagedAddon.xml",
+        "modules/jrpg/tests/test_jrpg_managed_addon.h",
+        "modules/claude_bridge/claude_bridge_registry.h",
+        "modules/claude_bridge/claude_bridge_registry.cpp",
+        "modules/claude_bridge/claude_bridge_plugin.cpp",
+        "plan/specs/01_module_layout.md",
+        "plan/DECISIONS.md",
+        "plan/evidence/jrpg/6.1-bridge-addon.txt"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

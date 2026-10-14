@@ -423,3 +423,17 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** no project files exist yet, so the stamping convention costs nothing now; freezing defaults keeps the
   starter content convenient (inspector-created resources are usable) and makes accidental rebalancing impossible.
 - **Reversal:** to change a default, add the migration step described above; to drop the freeze, delete the test.
+
+## D-030 — Modules add Claude bridge tools through a registry
+- **Context:** D-012 asks every editor feature for an authoring API plus a bridge tool, but the bridge's tools were
+  registered only inside `modules/claude_bridge` (`claude_bridge_plugin.cpp` `_register_tools`). JRPG (and later MMO)
+  tools must not make either module depend on the other: each must build alone (`module_*_enabled=no`).
+- **Options:** a generic "call any bound method" tool (too broad: arbitrary engine calls from a client); the bridge
+  depending on jrpg/mmo; a registry the bridge exposes and other modules feed when the bridge is built.
+- **Choice:** `ClaudeBridgeRegistry::add_tool_provider(fn)` (`modules/claude_bridge/claude_bridge_registry.h`): a
+  module registers a provider at EDITOR initialization inside `#ifdef MODULE_CLAUDE_BRIDGE_ENABLED` (from
+  `modules/modules_enabled.gen.h`, the pattern `modules/openxr/register_types.cpp:47,93` uses for gltf) and removes
+  it at uninitialization; the bridge plugin, created later by the editor, calls every provider after its own tools.
+  Tools stay narrow (one per authoring operation) and validate their arguments like the bridge's own tools.
+- **Why:** explicit, reviewable tool surface; modules stay optional; no new upstream patch.
+- **Reversal:** drop the registry and register tools from the bridge with its own `#ifdef MODULE_JRPG_ENABLED`.

@@ -67,6 +67,8 @@
 #include "editor/plugins/editor_plugin.h"
 
 #include "modules/jrpg/editor/jrpg_bootstrap_plugin.h"
+#include "modules/jrpg/editor/jrpg_bridge_tools.h"
+#include "modules/jrpg/editor/jrpg_managed_addon.h"
 #include "modules/jrpg/editor/jrpg_workspace_plugin.h"
 #include "modules/jrpg/editor/jrpg_workspace_view.h"
 #endif // TOOLS_ENABLED
@@ -119,10 +121,19 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspaceView);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspacePlugin);
 		GDREGISTER_INTERNAL_CLASS(JRPGBootstrapPlugin);
+		GDREGISTER_CLASS(JRPGManagedAddon);
 		EditorPlugins::add_by_type<JRPGBootstrapPlugin>();
+#ifdef MODULE_CLAUDE_BRIDGE_ENABLED
+		JRPGBridgeTools::register_provider();
+#endif
 	}
 #endif // TOOLS_ENABLED
 }
 
 void uninitialize_jrpg_module(ModuleInitializationLevel p_level) {
+#if defined(TOOLS_ENABLED) && defined(MODULE_CLAUDE_BRIDGE_ENABLED)
+	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) {
+		JRPGBridgeTools::unregister_provider();
+	}
+#endif
 }

@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 20:34 -0600
-- **Current task:** 6.1 Managed addon embedding
-- **Last completed:** 1.8 Fork CI: every Linux job green
-- **Next task:** none ready (see `tasks.py next`)
-- **Done leaf tasks:** 63
+- **Updated:** 2026-10-13 20:39 -0600
+- **Current task:** none
+- **Last completed:** 6.1 Managed addon embedding
+- **Next task:** 6.2 Set up JRPG Project tool
+- **Done leaf tasks:** 64
 <!-- status:end -->
 
 ## Log
@@ -164,4 +164,6 @@
 | 2026-10-13 20:28 -0600 | - | imported 0 new / 1 updated tasks | |
 | 2026-10-13 20:29 -0600 | 5.7 | done: Epic review: JRPG core — Fresh-context review of epic 5 (1 high, 8 medium, 18 low + docs/tooling); all 28 fixed: schema_version stamping (-1 unstamped), frozen stored defaults (fingerprints, D-029), KO resist, formula clamp/round/v[N] padding/one warning, integer fixed-point EXP curve, nullable system rules, scanner class dual wield, repair level resync, saturating mul_bp, unsigned RNG span, validate-then-apply streams, equip kind/slot checks, actor id guard, no trade on deserialize, table entry ownership/truncation, party member states, start position required, rule setter clamps, cheap pool updates, stable sub-resource ids, rename fallbacks everywhere, reworded terms, include check inverted; 10 regression doctests; evidence plan/evidence/reviews/epic_5.md; full suite 1475/1475; smoke ALL PASS; core_diff 0 unlisted (containers: 5 in_progress->done) | 7cfb5653ce |
 | 2026-10-13 20:31 -0600 | 6.1 | started: Managed addon embedding (containers: 6 pending->in_progress) |  |
-| 2026-10-13 20:34 -0600 | 1.8 | done: Fork CI: every Linux job green — CI run 38496032936 (commit 913d14eb1a) green on all 20 jobs: godot-cpp builds from RUNNER_TEMP (Linux Mono job incl. glue, doc-test, unit tests), GCC double sanitizer job without fork modules, every clang platform after the enum-cast fixes; clang_check.py gate in static_checks.py (containers: 1 in_progress->done) | pending |
+| 2026-10-13 20:34 -0600 | 1.8 | done: Fork CI: every Linux job green — CI run 38496032936 (commit 913d14eb1a) green on all 20 jobs: godot-cpp builds from RUNNER_TEMP (Linux Mono job incl. glue, doc-test, unit tests), GCC double sanitizer job without fork modules, every clang platform after the enum-cast fixes; clang_check.py gate in static_checks.py (containers: 1 in_progress->done) | 803d0e2f7c |
+| 2026-10-13 20:39 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 20:39 -0600 | 6.1 | done: Managed addon embedding — Managed addon embedded in editor builds (jrpg_builders.py: zlib + SHA-256 per file, LF-normalized, version = format + content hash); JRPGManagedAddon install/upgrade with addon.cfg stamps (untouched files replaced, user-changed and foreign files kept, path traversal refused), editor rescan; ClaudeBridgeRegistry (D-030) + jrpg_addon_status/jrpg_addon_install bridge tools verified live; 2 doctests; full suite 1477/1477 (containers: 6 in_progress->pending) | pending |

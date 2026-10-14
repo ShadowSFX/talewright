@@ -13,4 +13,14 @@ env_jrpg.add_source_files(env.modules_sources, "core/*.cpp")
 env_jrpg.add_source_files(env.modules_sources, "runtime/*.cpp")
 
 if env.editor_build:
+    import glob
+    import os
+
+    import jrpg_builders
+
+    # The managed addon (res://addons/talewright, D-004) is embedded in editor builds; the setup tool copies it into
+    # projects, so exported games get it as ordinary project files.
+    addon_dir = os.path.join(Dir(".").srcnode().abspath, "addon_template")
+    addon_files = sorted(f for f in glob.glob(os.path.join(addon_dir, "**", "*"), recursive=True) if os.path.isfile(f))
+    env_jrpg.CommandNoCache("editor/jrpg_addon_files.gen.h", addon_files, env.Run(jrpg_builders.make_addon_files))
     env_jrpg.add_source_files(env.modules_sources, "editor/*.cpp")

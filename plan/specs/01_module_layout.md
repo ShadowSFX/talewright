@@ -11,7 +11,9 @@ modules/jrpg/
   core/                pure logic, NO include from scene/ or editor/ (enforced by tests/check_core_includes.py)
   runtime/             nodes and UI building blocks used by games (scene/ allowed)
   editor/              workspace, database editor, map canvas, event editor, importers, setup tool
-  addon_template/      GDScript + .tscn managed addon sources, embedded into the binary (template_builders pattern)
+  addon_template/      GDScript + .tscn managed addon sources, embedded into editor builds by jrpg_builders.py
+                       (zlib + SHA-256 per file); JRPGManagedAddon installs/upgrades res://addons/talewright
+                       (addon.cfg stamps; untouched files replaced, user-changed files kept)
   doc_classes/         class reference XML for every exposed class (generated with --doctool, then edited)
   tests/               doctest headers, tag [JRPG]
 ```
