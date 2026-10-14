@@ -73,6 +73,11 @@ public:
 	// p_close_scene: then its tab closes first, discarding unsaved changes to it (EditorNode::close_scene,
 	// editor/editor_node.cpp:5630-5641).
 	static Error delete_map(int p_map_id, String *r_message = nullptr, bool p_close_scene = false);
+	// Rescan Maps (epic 8 review A4, B4): the map scenes in res://jrpg/maps and those the list names elsewhere go
+	// through JRPGMapFiles::scan (unlisted scenes are listed, a copied scene claiming another's id gets a fresh one,
+	// saved with a warning) and the list is saved when it changed. Rebuilds a lost or unreadable list. Not undoable
+	// (it writes files, as creating a map does). Returns JRPGMapFiles::scan's report plus "maps" (how many are listed).
+	static Dictionary rescan_maps();
 	// Opens map p_map_id's scene in the editor.
 	static Error open_map(int p_map_id, String *r_message = nullptr);
 	// Sets properties of p_map's data ({name: value}: the properties its inspector shows, map_id excepted; a new size

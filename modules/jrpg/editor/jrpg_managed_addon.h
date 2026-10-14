@@ -47,13 +47,19 @@ protected:
 public:
 	static constexpr const char *DEFAULT_DIRECTORY = "res://addons/talewright";
 	static constexpr const char *STAMP_FILE = "addon.cfg";
-	// The game scene (a JRPGSceneManager root) that Play From Start runs: a new game at the System start position.
-	static constexpr const char *GAME_SCENE = "res://addons/talewright/scenes/game.tscn";
+	// The game scene (a JRPGSceneManager root) that Play From Start runs, a new game at the System start position: this
+	// file in the addon's folder.
+	static constexpr const char *GAME_SCENE_FILE = "scenes/game.tscn";
+	static constexpr const char *GAME_SCENE = "res://addons/talewright/scenes/game.tscn"; // In the default folder.
 
 	struct SourceFile {
 		String path; // Relative to the addon folder, with "/" separators.
 		PackedByteArray content;
 	};
+
+	// The installed addon's game scene: in the default folder, or in another folder of res://addons that holds the
+	// managed addon (its STAMP_FILE; jrpg_addon_install takes any). Empty when no installed addon has one.
+	static String find_game_scene();
 
 	static String get_embedded_version();
 	static PackedStringArray get_embedded_files();

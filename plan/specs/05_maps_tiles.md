@@ -20,7 +20,7 @@ Each map is a scene `res://jrpg/maps/map_NNNN.tscn` whose root is a `JRPGMap` no
 | Property | Type | Notes |
 |---|---|---|
 | `map_id` | int | stable, assigned by the map list |
-| `revision` | int | +1 on every save that changes layers or events (saves compare it, spec 06) |
+| `revision` | int | +1 on every save that changes layers or events (`JRPGMap` on the editor's pre-save; saves compare it, spec 06) |
 | `display_name`, `note` | String | |
 | `tileset_id` | int | JRPGTilesetData |
 | `size` | Vector2i | cells (1..256 per axis default, 512 max) |

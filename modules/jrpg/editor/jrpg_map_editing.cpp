@@ -49,8 +49,10 @@
 #include "scene/resources/packed_scene.h"
 
 #include "modules/jrpg/core/jrpg_autotile_resolver.h"
+#include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_map_list.h"
+#include "modules/jrpg/core/jrpg_table.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 #include "modules/jrpg/runtime/jrpg_map_files.h"
 
@@ -65,16 +67,78 @@ Error refuse(const String &p_message, String *r_message, Error p_error = ERR_INV
 	return p_error;
 }
 
+// A tileset id maps can use (epic 8 review B10): 0 (none) or one the database's tilesets table holds. Without a
+// database (tools and tests outside the editor) any id is taken.
+Error check_tileset_id(int p_tileset_id, String *r_message) {
+	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
+	const Ref<JRPGDatabase> db = editing ? editing->get_database() : Ref<JRPGDatabase>();
+	const Ref<JRPGTable> tilesets = db.is_valid() ? db->get_table(JRPGDatabase::TABLE_TILESETS) : Ref<JRPGTable>();
+	if (p_tileset_id == 0 || tilesets.is_null() || (p_tileset_id >= 1 && p_tileset_id <= tilesets->get_maximum())) {
+		return OK;
+	}
+	return refuse(vformat("there is no tileset %d (the database has tilesets 1 to %d).", p_tileset_id, tilesets->get_maximum()), r_message, ERR_DOES_NOT_EXIST);
+}
+
 } // namespace
 
 Ref<JRPGMapList> JRPGMapEditing::get_map_list() {
 	const String path = JRPGMapFiles::MAP_LIST_PATH;
 	Ref<JRPGMapList> list = ResourceLoader::exists(path) ? ResourceLoader::load(path) : Ref<Resource>();
 	if (list.is_null()) {
+		if (FileAccess::exists(path)) {
+			static bool warned = false;
+			if (!warned) {
+				WARN_PRINT(vformat("JRPG maps: %s cannot be read; Rescan Maps (the Maps panel's menu) builds it again from the map scenes.", path));
+				warned = true;
+			}
+		}
 		list.instantiate();
 		list->set_path(path); // Saved there with its first map.
 	}
 	return list;
+}
+
+namespace {
+
+void collect_scenes(const String &p_dir, PackedStringArray &r_scenes) {
+	for (const String &file : DirAccess::get_files_at(p_dir)) {
+		if (file.get_extension() == "tscn" || file.get_extension() == "scn") {
+			r_scenes.push_back(p_dir.path_join(file));
+		}
+	}
+	for (const String &dir : DirAccess::get_directories_at(p_dir)) {
+		collect_scenes(p_dir.path_join(dir), r_scenes);
+	}
+}
+
+} // namespace
+
+Dictionary JRPGMapEditing::rescan_maps() {
+	const Ref<JRPGMapList> list = get_map_list();
+	PackedStringArray scenes;
+	if (DirAccess::dir_exists_absolute("res://jrpg/maps")) {
+		collect_scenes("res://jrpg/maps", scenes);
+	}
+	for (const Variant &entry : list->get_maps()) {
+		const String scene = Dictionary(entry).get("scene", "");
+		if (!scene.is_empty() && FileAccess::exists(scene) && !scenes.has(scene)) {
+			scenes.push_back(scene);
+		}
+	}
+	const Array before = list->get_maps().duplicate(true);
+	const int next_before = list->get_next_map_id();
+	Dictionary report = JRPGMapFiles::scan(list, scenes);
+	if (list->get_maps() != before || list->get_next_map_id() != next_before) {
+		DirAccess::make_dir_recursive_absolute(String(JRPGMapFiles::MAP_LIST_PATH).get_base_dir());
+		const Error saved = ResourceSaver::save(list, list->get_path());
+		report["saved"] = saved == OK;
+		ERR_FAIL_COND_V_MSG(saved != OK, report, vformat("JRPG maps: could not save the map list (%s).", error_names[saved]));
+		if (jrpg_editor_file_system()) {
+			jrpg_editor_file_system()->scan_changes();
+		}
+	}
+	report["maps"] = list->get_maps().size();
+	return report;
 }
 
 Error JRPGMapEditing::create_map(const String &p_name, int p_tileset_id, const Vector2i &p_size, int p_parent_id, int &r_map_id, String &r_path, String *r_message) {
@@ -85,10 +149,18 @@ Error JRPGMapEditing::create_map(const String &p_name, int p_tileset_id, const V
 	if (p_parent_id != 0 && !list->has_map(p_parent_id)) {
 		return refuse(vformat("there is no map %d to create the map under.", p_parent_id), r_message, ERR_DOES_NOT_EXIST);
 	}
-	const int id = list->get_next_map_id();
-	const String path = vformat("res://jrpg/maps/map_%04d.tscn", id);
+	if (check_tileset_id(p_tileset_id, r_message) != OK) {
+		return ERR_DOES_NOT_EXIST;
+	}
+	int id = list->get_next_map_id();
+	String path = vformat("res://jrpg/maps/map_%04d.tscn", id);
 	if (FileAccess::exists(path)) {
-		return refuse(vformat("%s already exists but is not in the map list; rescan the maps first.", path), r_message, ERR_ALREADY_EXISTS);
+		rescan_maps(); // A scene the list does not know (a lost list, a copied file): list it, then take the next id.
+		id = list->get_next_map_id();
+		path = vformat("res://jrpg/maps/map_%04d.tscn", id);
+		if (FileAccess::exists(path)) {
+			return refuse(vformat("%s already exists and is no map scene; move it out of res://jrpg/maps.", path), r_message, ERR_ALREADY_EXISTS);
+		}
 	}
 	Ref<JRPGMapData> data;
 	data.instantiate();
@@ -171,26 +243,42 @@ Error JRPGMapEditing::paint(JRPGMap *p_map, int p_layer, const Vector<Vector2i> 
 
 namespace {
 
-// One undo action that replaces the map list's maps (global history); without an editor, applied at once.
-void commit_list(const Ref<JRPGMapList> &p_list, const Array &p_before, const String &p_name) {
+// One undo action (global history) for an edit of one map list entry, already applied: p_method of the database
+// editing object with the list and p_do, or p_undo to take it back. Per entry, never a copy of the whole list, so it
+// neither drops maps created since nor brings back maps deleted since (neither is undoable; epic 8 review B1).
+// Without an editor the edit stays as applied.
+void commit_list_edit(const Ref<JRPGMapList> &p_list, const String &p_name, const StringName &p_method, const Array &p_do, const Array &p_undo) {
 	JRPGDatabaseEditing *database = JRPGDatabaseEditing::get_singleton();
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	const Array after = p_list->get_maps().duplicate(true);
-	if (!undo_redo) {
-		if (database) {
-			database->mark_unsaved(p_list);
-		}
+	if (!database) {
 		return;
 	}
-	p_list->set_maps(p_before.duplicate(true)); // Back to the state before; the action applies the change.
+	if (!undo_redo) {
+		database->mark_unsaved(p_list);
+		return;
+	}
+	Vector<Variant> do_call({ p_list });
+	Vector<Variant> undo_call({ p_list });
+	for (const Variant &v : p_do) {
+		do_call.push_back(v);
+	}
+	for (const Variant &v : p_undo) {
+		undo_call.push_back(v);
+	}
+	Vector<const Variant *> do_args;
+	Vector<const Variant *> undo_args;
+	for (const Variant &v : do_call) {
+		do_args.push_back(&v);
+	}
+	for (const Variant &v : undo_call) {
+		undo_args.push_back(&v);
+	}
+	Callable::CallError error;
+	database->callp(p_method, undo_args.ptrw(), undo_args.size(), error); // Back to the state before; the action applies it.
 	undo_redo->create_action_for_history(p_name, EditorUndoRedoManager::GLOBAL_HISTORY);
 	undo_redo->force_fixed_history();
-	undo_redo->add_do_method(p_list.ptr(), "set_maps", after);
-	undo_redo->add_undo_method(p_list.ptr(), "set_maps", p_before.duplicate(true));
-	if (database) {
-		undo_redo->add_do_method(database, "mark_unsaved", p_list);
-		undo_redo->add_undo_method(database, "mark_unsaved", p_list);
-	}
+	undo_redo->add_do_methodp(database, p_method, do_args.ptrw(), do_args.size());
+	undo_redo->add_undo_methodp(database, p_method, undo_args.ptrw(), undo_args.size());
 	undo_redo->commit_action();
 }
 
@@ -205,12 +293,12 @@ Error JRPGMapEditing::rename_map(int p_map_id, const String &p_name, String *r_m
 	if (name.is_empty()) {
 		return refuse("a map needs a name.", r_message);
 	}
-	if (String(list->get_map(p_map_id).get("name", "")) == name) {
+	const String old_name = list->get_map(p_map_id).get("name", "");
+	if (old_name == name) {
 		return OK;
 	}
-	const Array before = list->get_maps().duplicate(true);
 	list->set_map_name(p_map_id, name);
-	commit_list(list, before, vformat(TTR("Rename Map %d"), p_map_id));
+	commit_list_edit(list, vformat(TTR("Rename Map %d"), p_map_id), "map_list_rename", Array({ p_map_id, name }), Array({ p_map_id, old_name }));
 	return OK;
 }
 
@@ -230,12 +318,16 @@ Error JRPGMapEditing::move_map(int p_map_id, int p_parent_id, int p_index, Strin
 			return refuse(vformat("map %d cannot move under itself or one of its own maps.", p_map_id), r_message);
 		}
 	}
+	// Where it is now among its parent's maps, to come back to (JRPGMapList::move_map counts the others only).
+	const int old_parent = list->get_map(p_map_id).get("parent_id", 0);
+	const int old_index = list->get_children(old_parent).find(p_map_id);
 	const Array before = list->get_maps().duplicate(true);
 	ERR_FAIL_COND_V(list->move_map(p_map_id, p_parent_id, p_index) != OK, FAILED);
 	if (list->get_maps() == before) {
 		return OK; // Where it was already.
 	}
-	commit_list(list, before, vformat(TTR("Move Map %d"), p_map_id));
+	const int new_index = list->get_children(p_parent_id).find(p_map_id);
+	commit_list_edit(list, vformat(TTR("Move Map %d"), p_map_id), "map_list_move", Array({ p_map_id, p_parent_id, new_index }), Array({ p_map_id, old_parent, old_index }));
 	return OK;
 }
 
@@ -310,6 +402,9 @@ Error JRPGMapEditing::set_map_properties(JRPGMap *p_map, const Dictionary &p_val
 	String reason;
 	if (JRPGDatabaseEditing::check_values(data.ptr(), p_values, &reason) != OK) {
 		return refuse(reason, r_message);
+	}
+	if (p_values.has("tileset_id") && check_tileset_id(p_values["tileset_id"], r_message) != OK) {
+		return ERR_DOES_NOT_EXIST;
 	}
 	if (p_values.has("size")) {
 		const Vector2i size = p_values["size"];

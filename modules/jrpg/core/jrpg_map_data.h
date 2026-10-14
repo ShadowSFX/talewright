@@ -113,7 +113,8 @@ public:
 	int get_map_id() const { return map_id; }
 	void set_revision(int p_revision);
 	int get_revision() const { return revision; }
-	// One more than before: saves that change layers or events call it (spec 06 compares revisions).
+	// One more than before: a JRPGMap whose cells changed calls it as the editor saves its scene (spec 06 compares
+	// revisions).
 	void bump_revision();
 	void set_display_name(const String &p_name);
 	String get_display_name() const { return display_name; }

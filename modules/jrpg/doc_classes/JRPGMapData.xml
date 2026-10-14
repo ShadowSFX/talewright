@@ -13,7 +13,7 @@
 		<method name="bump_revision">
 			<return type="void" />
 			<description>
-				Raises [member revision] by one. Saves that change the layers or the events call it.
+				Raises [member revision] by one. A [JRPGMap] whose cells or layout changed calls it when the editor saves its scene, so a game saved before can tell the map was edited.
 			</description>
 		</method>
 		<method name="get_cell" qualifiers="const">

@@ -42,7 +42,6 @@
 #include "jrpg_workspace_view.h"
 
 #include "core/io/image.h"
-#include "core/io/resource_loader.h"
 #include "core/object/callable_mp.h"
 #include "editor/editor_interface.h"
 #include "editor/editor_node.h"
@@ -197,11 +196,21 @@ String JRPGWorkspaceShell::play_blocker(const Ref<JRPGDatabase> &p_database, con
 
 String JRPGWorkspaceShell::get_play_blocker() const {
 	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
-	return play_blocker(editing ? editing->get_database() : Ref<JRPGDatabase>(), JRPGMapEditing::get_map_list(), ResourceLoader::exists(JRPGManagedAddon::GAME_SCENE));
+	return play_blocker(editing ? editing->get_database() : Ref<JRPGDatabase>(), JRPGMapEditing::get_map_list(), !JRPGManagedAddon::find_game_scene().is_empty());
 }
 
 Error JRPGWorkspaceShell::play_from_start(String *r_message) {
-	const String blocker = get_play_blocker();
+	String blocker = get_play_blocker();
+	if (blocker.is_empty()) {
+		// The whole start position now, as the game will check it: the map's scene readable, the cell inside the map
+		// (a map can shrink after the start was set; epic 8 review B3). The button's state keeps to the cheap checks.
+		JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
+		const Ref<JRPGSystemData> system = editing && editing->get_database().is_valid() ? editing->get_database()->get_system() : Ref<JRPGSystemData>();
+		String reason;
+		if (system.is_valid() && JRPGMapEditing::check_start_position(system->get_start_map_id(), system->get_start_cell(), &reason) != OK) {
+			blocker = vformat(TTR("The start position does not work: %s Set it again (in the map's Events mode, Set Start Position Here)."), reason);
+		}
+	}
 	if (!blocker.is_empty()) {
 		if (r_message) {
 			*r_message = blocker;
@@ -209,7 +218,15 @@ Error JRPGWorkspaceShell::play_from_start(String *r_message) {
 		_update_play_button();
 		return ERR_UNCONFIGURED;
 	}
-	EditorInterface::get_singleton()->play_custom_scene(JRPGManagedAddon::GAME_SCENE);
+	EditorInterface::get_singleton()->play_custom_scene(JRPGManagedAddon::find_game_scene());
+	if (!EditorInterface::get_singleton()->is_playing_scene()) {
+		// The editor refused to run (Recovery Mode, Movie Maker without a movie file: editor/run/editor_run_bar.cpp:258-264,
+		// 450-459) and said why itself.
+		if (r_message) {
+			*r_message = TTR("The editor did not start the game; its own message says why.");
+		}
+		return ERR_CANT_CREATE;
+	}
 	return OK;
 }
 
@@ -435,7 +452,7 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 	for (const String &name : layer_names) {
 		layer_picker->add_item(name);
 	}
-	layer_picker->set_tooltip_text(TTR("The tile layer the tools draw on, from the ground up. Auto puts autotiles and walls on the ground and stacks other tiles on the two upper layers, at most two per cell."));
+	layer_picker->set_tooltip_text(TTR("The tile layer the tools draw on, from the ground up. Auto puts an autotile or wall on the ground, or over it on Ground Detail where the ground is another tile, and stacks other tiles on the two upper layers, at most two per cell."));
 	layer_picker->set_accessibility_name(TTR("Layer"));
 	layer_picker->set_disabled(true);
 	layer_picker->connect(SceneStringName(item_selected), callable_mp(this, &JRPGWorkspaceShell::_layer_selected));

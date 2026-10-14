@@ -5,7 +5,7 @@
 	</brief_description>
 	<description>
 		Static helpers for map drawing: the cells a pencil drags over, the filled rectangle or ellipse between two corners, and the area a fill covers. They work on cell coordinates only, so the editor's map canvas, its bridge tools and game code that draws on map data get the same cells.
-		Results are in drawing order and hold each cell once; cells may lie outside the map, so clip them to the map's size before painting.
+		Results are in drawing order and hold each cell once; cells may lie outside the map, so clip them to the map's size before painting. A shape whose rectangle holds more than 1048576 cells is refused with an error.
 	</description>
 	<tutorials>
 	</tutorials>

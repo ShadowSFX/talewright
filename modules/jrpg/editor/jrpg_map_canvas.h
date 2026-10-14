@@ -62,6 +62,7 @@ class JRPGMapCanvas : public Control {
 	Ref<JRPGMapEditSession> session;
 	SubViewportContainer *container = nullptr;
 	SubViewport *viewport = nullptr;
+	Control *marks = nullptr; // Grid, regions, start position, edge: drawn again only when they change.
 	Control *overlay = nullptr;
 	EditorZoomWidget *zoom_widget = nullptr;
 	Button *center_button = nullptr;
@@ -74,6 +75,8 @@ class JRPGMapCanvas : public Control {
 	float zoom = 1.0;
 	Vector2 offset;
 	bool needs_fit = false; // Fit the map once the canvas has a size.
+	bool has_pending_center = false; // A cell to center on once the canvas has a size.
+	Vector2i pending_center;
 	String view_path; // The scene whose view zoom and offset are.
 	ObjectID watched_data; // The JRPGMapData whose layout changes redraw the bounds.
 	Vector2i hovered = Vector2i(-1, -1);
@@ -103,6 +106,7 @@ class JRPGMapCanvas : public Control {
 	void _pan_callback(Vector2 p_scroll_vec, Ref<InputEvent> p_event);
 	void _zoom_callback(float p_zoom_factor, Vector2 p_origin, Ref<InputEvent> p_event);
 	void _zoom_widget_changed();
+	void _draw_marks();
 	void _draw_overlay();
 	void _grid_toggled(bool p_on);
 	Vector2i _half_cell_at(const Vector2 &p_point) const;

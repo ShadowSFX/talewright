@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.8 Map authoring tools",
+  "last_completed": "8.9.1 Epic 8 review: editor and bridge findings",
   "tasks": [
     {
       "id": "0",
@@ -3500,13 +3500,13 @@
         "plan/DECISIONS.md",
         "plan/evidence/jrpg/8.8-*"
       ],
-      "commit": "pending",
+      "commit": "619960600b",
       "notes": "New Game is the title screen's (13.2): it calls the same JRPGSceneManager.start_new_game that Play From Start runs here, and 13.2's own criteria test it at the start position."
     },
     {
       "id": "8.9",
       "title": "Epic review: maps",
-      "description": "Reviewer subagent.",
+      "description": "Reviewer subagents (two, fresh context): part A core and runtime, part B editor and bridge; review log plan/evidence/reviews/epic_8.md. Split into 8.9.1 (part B findings and the editor-side part A ones), 8.9.2 (part A findings), 8.9.3 (close: log, smoke, core diff, push, CI).",
       "parent": "8",
       "dependencies": [
         "8.7",
@@ -3515,9 +3515,86 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Findings fixed"
+        "8.9.1, 8.9.2 and 8.9.3 done"
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8.9.1",
+      "parent": "8.9",
+      "title": "Epic 8 review: editor and bridge findings",
+      "priority": 1,
+      "dependencies": [],
+      "description": "Fix or answer part B's 13 findings (map list undo per entry, bounded shapes and bridge points, Play From Start blockers, map list recovery, the shadow tool, tooltips, palette alternatives, region overlay cost, set_image layouts, tileset and palette range checks, view fit before showing, the addon folder, test gaps) and part A's editor-side ones (map revision raised on save, the map scan wired).",
+      "acceptance_criteria": [
+        "Every finding fixed or answered in the review log",
+        "Rename then create then undo keeps the new map (bridge check)",
+        "Doctests and bridge checks cover the fixes"
+      ],
+      "test_strategy": "Doctests + jrpg_bridge_checks.",
+      "status": "done",
+      "files": [
+        "modules/jrpg/editor/jrpg_map_editing.{h,cpp}",
+        "modules/jrpg/editor/jrpg_database_editing.{h,cpp}",
+        "modules/jrpg/core/jrpg_map_shapes.{h,cpp}",
+        "modules/jrpg/editor/jrpg_map_canvas.{h,cpp}",
+        "modules/jrpg/editor/jrpg_map_tree.{h,cpp}",
+        "modules/jrpg/editor/jrpg_tile_palette.cpp",
+        "modules/jrpg/editor/jrpg_workspace_shell.{h,cpp}",
+        "modules/jrpg/editor/jrpg_managed_addon.{h,cpp}",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/runtime/jrpg_map.{h,cpp}",
+        "modules/jrpg/core/jrpg_map_data.h",
+        "modules/jrpg/doc_classes/JRPGMapData.xml",
+        "modules/jrpg/tests/test_jrpg_map_shapes.h",
+        "modules/jrpg/tests/test_jrpg_tile_palette.h",
+        "modules/jrpg/tests/test_jrpg_map.h",
+        "modules/jrpg/tests/test_jrpg_bridge_tools.h",
+        "talewright/tools/jrpg_bridge_checks.py",
+        "talewright/docs/claude_bridge.md",
+        "plan/specs/05_maps_tiles.md"
+      ],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "8.9.2",
+      "parent": "8.9",
+      "title": "Epic 8 review: core and runtime findings",
+      "priority": 1,
+      "dependencies": [
+        "8.9.1"
+      ],
+      "description": "Fix or answer part A's findings: cell size before the map's TileSet, looping display (task added; interim limits), D-029 stamps for the map list and map data, transfers and walk frames on simulation steps, set_maps sharing, paint signals, scene checks before a game begins, camera transform and current camera, transfer and rebuild costs, authority lines, transfers during a fade-in.",
+      "acceptance_criteria": [
+        "Every finding fixed or answered in the review log",
+        "A scene manager doctest on a 32 px TileSet map"
+      ],
+      "test_strategy": "Doctests + bridge.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "8.9.3",
+      "parent": "8.9",
+      "title": "Close epic 8",
+      "priority": 1,
+      "dependencies": [
+        "8.9.2"
+      ],
+      "description": "Review log plan/evidence/reviews/epic_8.md, PROGRESS entry, plain_2d/plain_3d smoke with a rebuilt release template, core_diff_check, full tests and static checks, push talewright with CI watched.",
+      "acceptance_criteria": [
+        "Smoke ALL PASS",
+        "core_diff_check 0 unlisted",
+        "CI green on the push"
+      ],
+      "test_strategy": "Smoke, checks, CI.",
+      "status": "pending",
       "files": [],
       "commit": "",
       "notes": ""

@@ -66,6 +66,7 @@ public:
 		ACTION_MOVE_UP,
 		ACTION_MOVE_DOWN,
 		ACTION_DELETE,
+		ACTION_RESCAN,
 	};
 
 private:
@@ -92,6 +93,7 @@ private:
 	int delete_map_id = 0;
 
 	Ref<JRPGMapList> list; // The list shown, watched for changes.
+	bool rescanned = false; // Rescan Maps ran when the panel first entered the tree.
 	HashSet<int> collapsed;
 	int renaming_map_id = 0;
 	bool refresh_queued = false;

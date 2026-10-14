@@ -166,6 +166,7 @@ void tool_workspace_state(const Dictionary &p_args, const Ref<ClaudeBridgeToolCa
 bool int_arg(const Dictionary &p_args, const String &p_key, int64_t p_default, const Ref<ClaudeBridgeToolCall> &p_call, int64_t &r_value);
 int map_layer(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call);
 bool stamp_arg(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, Vector2i &r_size, PackedInt32Array &r_values);
+bool check_palette_indexes(const JRPGMap *p_map, const PackedInt32Array &p_indexes, const Ref<ClaudeBridgeToolCall> &p_call);
 bool cell_list(const Dictionary &p_args, const String &p_key, const Ref<ClaudeBridgeToolCall> &p_call, Vector<Vector2i> &r_cells);
 bool whole_number(const Variant &p_value, int64_t &r_value);
 
@@ -220,6 +221,13 @@ void tool_map_view(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_
 	Vector2i stamp_size;
 	PackedInt32Array stamp;
 	if (p_args.has("stamp") && !stamp_arg(p_args, p_call, stamp_size, stamp)) {
+		return;
+	}
+	PackedInt32Array asked = stamp;
+	if (p_args.has("value")) {
+		asked.push_back(int(MIN(brush_value, int64_t(INT32_MAX))));
+	}
+	if (!check_palette_indexes(session->get_map(), asked, p_call)) {
 		return;
 	}
 	// The Palette panel: a tab, then tiles chosen there as a click or a drag over its grid would.
@@ -1442,9 +1450,18 @@ void apply_image(const Ref<ClaudeBridgeToolCall> &p_call, const String &p_table,
 		const Vector2i size = texture.is_valid() ? Vector2i(texture->get_size()) : Vector2i(atlas->get_size());
 		result["image"] = p_path;
 		result["size"] = Array({ size.x, size.y });
-		if (p_field == "character") {
+		if (p_field == "character" && imported.is_valid() && p_frames == 0 && p_directions == 0) {
+			// Imported as a Character Sheet and no layout asked for: its own layout stands (epic 8 review B9).
+			const Rect2 region = atlas_frame->get_region();
+			result["frames"] = imported->get_frame_count(first->get());
+			result["directions"] = imported->get_animation_names().size();
+			result["frame_size"] = Array({ int(region.size.x), int(region.size.y) });
+			result["imported_as"] = "Character Sheet";
+		} else if (p_field == "character") {
 			// Spec 05, "Character sheets": one character per image, a row per facing (up, right, down, left, then the
-			// diagonals of an 8-direction sheet) and a column per walk frame.
+			// diagonals of an 8-direction sheet) and a column per walk frame; 4 x 4 unless asked otherwise.
+			p_frames = p_frames > 0 ? p_frames : 4;
+			p_directions = p_directions > 0 ? p_directions : 4;
 			if (size.x % p_frames != 0 || size.y % p_directions != 0) {
 				p_call->fail(vformat("A character sheet holds one character: %d rows (one per direction) of %d walk frames. %s is %d x %d pixels, which does not divide into them; give frames and directions if the sheet has other counts. Nothing was changed.", p_directions, p_frames, p_path, size.x, size.y));
 				return;
@@ -1474,7 +1491,10 @@ void apply_image(const Ref<ClaudeBridgeToolCall> &p_call, const String &p_table,
 					return;
 				}
 				result["imported_as"] = "Character Sheet";
+				result["import_undoable"] = false; // The entry's change is undoable; the file's import settings are not.
 			}
+			result["frames"] = p_frames;
+			result["directions"] = p_directions;
 		}
 		const ResourceUID::ID uid = ResourceLoader::get_resource_uid(p_path);
 		value = uid != ResourceUID::INVALID_ID ? ResourceUID::get_singleton()->id_to_text(uid) : p_path;
@@ -1537,12 +1557,13 @@ void tool_db_set_image(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall>
 		p_call->fail(vformat("\"field\" must be one of: %s.", String(", ").join(fields)));
 		return;
 	}
-	int64_t frames = 4;
-	int64_t directions = 4;
-	if (!int_arg(p_args, "frames", 4, p_call, frames) || !int_arg(p_args, "directions", 4, p_call, directions)) {
+	// 0: not given (a plain image is 4 x 4; a sheet imported as a Character Sheet keeps its own layout).
+	int64_t frames = 0;
+	int64_t directions = 0;
+	if (!int_arg(p_args, "frames", 0, p_call, frames) || !int_arg(p_args, "directions", 0, p_call, directions)) {
 		return;
 	}
-	if (frames < 1 || frames > 64 || (directions != 4 && directions != 8)) {
+	if ((p_args.has("frames") && (frames < 1 || frames > 64)) || (p_args.has("directions") && directions != 4 && directions != 8)) {
 		p_call->fail("\"frames\" must be 1-64 and \"directions\" 4 or 8.");
 		return;
 	}
@@ -1668,6 +1689,20 @@ bool cell_list(const Dictionary &p_args, const String &p_key, const Ref<ClaudeBr
 	return valid;
 }
 
+// Palette indexes the map's tileset has (epic 8 review B10); 0 erases. Past its palette: false after failing the call.
+// A map whose tileset has no palette yet takes any index.
+bool check_palette_indexes(const JRPGMap *p_map, const PackedInt32Array &p_indexes, const Ref<ClaudeBridgeToolCall> &p_call) {
+	const Ref<JRPGTilesetData> tileset = p_map ? p_map->find_tileset_data() : Ref<JRPGTilesetData>();
+	const int size = tileset.is_valid() ? tileset->get_palette().size() : 0;
+	for (const int index : p_indexes) {
+		if (size > 0 && index > size) {
+			p_call->fail(vformat("Palette index %d is past the map's tileset, which has %d tiles; jrpg_tileset_flags lists them.", index, size));
+			return false;
+		}
+	}
+	return true;
+}
+
 // "stamp": rows of palette indexes ([[1, 2], [3, 4]]), all as long; false after failing the call.
 bool stamp_arg(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, Vector2i &r_size, PackedInt32Array &r_values) {
 	const Variant rows_value = p_args.get("stamp", Variant());
@@ -1699,7 +1734,8 @@ void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 		return;
 	}
 	const JRPGMapEditSession::Tool tool = JRPGMapEditSession::find_tool(p_args.get("tool", ""));
-	if (tool == JRPGMapEditSession::TOOL_MAX || tool == JRPGMapEditSession::TOOL_EYEDROPPER) {
+	if (tool == JRPGMapEditSession::TOOL_MAX || tool == JRPGMapEditSession::TOOL_EYEDROPPER || tool == JRPGMapEditSession::TOOL_SHADOW) {
+		// Shadows are drawn with the pencil on layer "shadows" (epic 8 review B5).
 		p_call->fail("\"tool\" must be pencil, rectangle, ellipse, fill or eraser.");
 		return;
 	}
@@ -1731,6 +1767,13 @@ void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 		}
 		if (value < 1 || value > JRPGMapStroke::get_max_value(layer)) {
 			p_call->fail(vformat("\"value\" is what to draw: a palette index (1 or more) on a tile layer, a region ID (1-255) on regions, the shadowed quarters (1-15: 1 top left, 2 top right, 4 bottom left, 8 bottom right) on shadows; the eraser draws 0. Got %d for %s.", value, target_key(layer)));
+			return;
+		}
+	}
+	if (layer < JRPGMapData::LAYER_COUNT) {
+		PackedInt32Array asked = stamp;
+		asked.push_back(int(CLAMP(value, int64_t(0), int64_t(INT32_MAX))));
+		if (!check_palette_indexes(map, asked, p_call)) {
 			return;
 		}
 	}
@@ -1768,10 +1811,10 @@ void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 	};
 	switch (tool) {
 		case JRPGMapEditSession::TOOL_RECTANGLE: {
-			draw(JRPGMapShapes::rectangle(points[0], points[1]));
+			draw(JRPGMapShapes::rectangle(points[0], points[1], Rect2i(Vector2i(), data->get_size())));
 		} break;
 		case JRPGMapEditSession::TOOL_ELLIPSE: {
-			draw(JRPGMapShapes::ellipse(points[0], points[1]));
+			draw(JRPGMapShapes::ellipse(points[0], points[1], Rect2i(Vector2i(), data->get_size())));
 		} break;
 		case JRPGMapEditSession::TOOL_FILL: {
 			const PackedInt32Array area = automatic ? JRPGMapStroke::read_auto_area(data, ground_kind) : JRPGMapStroke::read_all(data, layer);
@@ -1780,7 +1823,7 @@ void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &
 		default: {
 			draw({ points[0] });
 			for (int i = 1; i < points.size(); i++) {
-				draw(JRPGMapShapes::line(points[i - 1], points[i]));
+				draw(JRPGMapShapes::line(points[i - 1], points[i], Rect2i(Vector2i(), data->get_size())));
 			}
 		} break;
 	}
@@ -1807,7 +1850,7 @@ void tool_play_from_start(const Dictionary &p_args, const Ref<ClaudeBridgeToolCa
 	}
 	const Ref<JRPGSystemData> system = JRPGDatabaseEditing::get_singleton()->get_database()->get_system();
 	Dictionary result;
-	result["scene"] = JRPGManagedAddon::GAME_SCENE;
+	result["scene"] = JRPGManagedAddon::find_game_scene();
 	result["start_map_id"] = system->get_start_map_id();
 	result["start_cell"] = Array({ system->get_start_cell().x, system->get_start_cell().y });
 	p_call->complete_data(result);
@@ -1936,8 +1979,10 @@ void tool_map_paint(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p
 		int64_t y = 0;
 		int64_t w = 0;
 		int64_t h = 0;
-		if (!whole_number(rect.get("x", 0), x) || !whole_number(rect.get("y", 0), y) || !whole_number(rect.get("width", 0), w) || !whole_number(rect.get("height", 0), h) || w < 1 || h < 1 || w * h > JRPGMapData::MAX_SIDE * JRPGMapData::MAX_SIDE) {
-			p_call->fail("\"rect\" is {x, y, width, height} in cells, width and height 1 or more.");
+		// Each number checked on its own before any product (epic 8 review B2): a map is at most MAX_SIDE cells a side.
+		const int64_t side = JRPGMapData::MAX_SIDE;
+		if (!whole_number(rect.get("x", 0), x) || !whole_number(rect.get("y", 0), y) || !whole_number(rect.get("width", 0), w) || !whole_number(rect.get("height", 0), h) || w < 1 || h < 1 || w > side || h > side || x < -side || y < -side || x > side || y > side) {
+			p_call->fail(vformat("\"rect\" is {x, y, width, height} in cells: width and height 1 to %d, x and y within %d of the map.", side, side));
 			return;
 		}
 		for (int64_t cy = y; cy < y + h; cy++) {
@@ -1967,6 +2012,9 @@ void tool_map_paint(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p
 	}
 	int changed = 0;
 	String message;
+	if (!check_palette_indexes(map, PackedInt32Array({ int(CLAMP(value, int64_t(-1), int64_t(INT32_MAX))) }), p_call)) {
+		return;
+	}
 	if (JRPGMapEditing::paint(map, layer, cells, int(CLAMP(value, int64_t(-1), int64_t(INT32_MAX))), changed, &message) != OK) {
 		p_call->fail(message + " Nothing was changed.");
 		return;
@@ -2034,6 +2082,11 @@ void tool_map_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_c
 }
 
 // Map tree tools (task 8.3.1).
+
+void tool_map_rescan(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	const Dictionary report = JRPGMapEditing::rescan_maps();
+	p_call->complete_data(report);
+}
 
 void tool_map_list(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
 	const Ref<JRPGMapList> list = JRPGMapEditing::get_map_list();
@@ -2459,7 +2512,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool set_image;
 	set_image.name = "jrpg_db_set_image";
 	set_image.title = "Set an entry's image";
-	set_image.description = "Gives an actor its face, character or battler image, or an enemy its battler, as the form's file pickers do. image is a res:// image file (copy it into the project first; a new file is imported by the editor, and the call waits up to 20 s for it); an empty image clears the field. A character sheet must divide into its directions (rows: up, right, down, left, then the diagonals of an 8-direction sheet) and walk frames (columns), default 4 and 4. Stores the image's uid://; one undoable action. Returns the image size (and frame size for a character).";
+	set_image.description = "Gives an actor its face, character or battler image, or an enemy its battler, as the form's file pickers do. image is a res:// image file (copy it into the project first; a new file is imported by the editor, and the call waits up to 20 s for it); an empty image clears the field. A character sheet must divide into its directions (rows: up, right, down, left, then the diagonals of an 8-direction sheet) and walk frames (columns), default 4 and 4. Another layout imports the image as a Character Sheet with those counts (that change of its import settings is not undone with the entry); an image already imported as one keeps its own layout when frames and directions are left out. Stores the image's uid://; one undoable action. Returns the image size (and frame size for a character).";
 	Dictionary set_image_properties;
 	set_image_properties["table"] = schema_property("string", "actors or enemies.");
 	set_image_properties["id"] = id_property;
@@ -2515,6 +2568,16 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	map_list.input_schema = ClaudeBridgeMCP::object_schema(Dictionary());
 	map_list.func = &tool_map_list;
 	r_mcp.register_tool(map_list);
+
+	ClaudeBridgeMCP::Tool map_rescan;
+	map_rescan.name = "jrpg_map_rescan";
+	map_rescan.title = "Rescan the maps";
+	map_rescan.description = "Rescan Maps, as in the Maps panel's menu: the map scenes in res://jrpg/maps and those the map list names elsewhere are checked; scenes the list does not know are listed, and a copied scene that claims another map's id gets a fresh id (saved into it, with a warning). Rebuilds a lost or unreadable map list. Writes files; not undoable. Returns added ({scene, map_id}), reassigned ({scene, old_id, new_id}) and how many maps are listed.";
+	map_rescan.input_schema = ClaudeBridgeMCP::object_schema(Dictionary());
+	map_rescan.read_only = false;
+	map_rescan.destructive = true; // Writes the list and reassigned scenes.
+	map_rescan.func = &tool_map_rescan;
+	r_mcp.register_tool(map_rescan);
 
 	ClaudeBridgeMCP::Tool map_rename;
 	map_rename.name = "jrpg_map_rename";

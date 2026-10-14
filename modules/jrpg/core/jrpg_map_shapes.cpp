@@ -46,56 +46,119 @@ TypedArray<Vector2i> to_array(const Vector<Vector2i> &p_cells) {
 	return out;
 }
 
+// The cells of the box p_from..p_to (both included) to visit: within p_bounds when it has an area, else the whole box
+// when it holds at most MAX_CELLS cells. False when there is nothing to visit (or the box is too large).
+bool visit_box(const Vector2i &p_from, const Vector2i &p_to, const Rect2i &p_bounds, int64_t &r_x0, int64_t &r_y0, int64_t &r_x1, int64_t &r_y1) {
+	r_x0 = MIN(p_from.x, p_to.x);
+	r_y0 = MIN(p_from.y, p_to.y);
+	r_x1 = MAX(p_from.x, p_to.x);
+	r_y1 = MAX(p_from.y, p_to.y);
+	if (p_bounds.has_area()) {
+		r_x0 = MAX(r_x0, int64_t(p_bounds.position.x));
+		r_y0 = MAX(r_y0, int64_t(p_bounds.position.y));
+		r_x1 = MIN(r_x1, int64_t(p_bounds.position.x) + p_bounds.size.x - 1);
+		r_y1 = MIN(r_y1, int64_t(p_bounds.position.y) + p_bounds.size.y - 1);
+		return r_x0 <= r_x1 && r_y0 <= r_y1;
+	}
+	ERR_FAIL_COND_V_MSG((r_x1 - r_x0 + 1) * (r_y1 - r_y0 + 1) > JRPGMapShapes::MAX_CELLS, false, vformat("JRPGMapShapes: a shape of more than %d cells needs bounds.", JRPGMapShapes::MAX_CELLS));
+	return true;
+}
+
 } // namespace
 
-Vector<Vector2i> JRPGMapShapes::line(const Vector2i &p_from, const Vector2i &p_to) {
+Vector<Vector2i> JRPGMapShapes::line(const Vector2i &p_from, const Vector2i &p_to, const Rect2i &p_bounds) {
 	Vector<Vector2i> cells;
-	const Vector2i delta = (p_to - p_from).abs();
-	const Vector2i step(p_to.x >= p_from.x ? 1 : -1, p_to.y >= p_from.y ? 1 : -1);
-	Vector2i at = p_from;
-	int error = delta.x - delta.y;
+	Vector2i from = p_from;
+	Vector2i to = p_to;
+	if (p_bounds.has_area()) {
+		// Cut the segment where it meets the bounds (Liang-Barsky on the cells' centers), so the walk below stays inside.
+		const double x0 = from.x, y0 = from.y, dx = double(to.x) - x0, dy = double(to.y) - y0;
+		const double left = p_bounds.position.x, top = p_bounds.position.y;
+		const double right = double(p_bounds.position.x) + p_bounds.size.x - 1, bottom = double(p_bounds.position.y) + p_bounds.size.y - 1;
+		double enter = 0.0, leave = 1.0;
+		const double p[4] = { -dx, dx, -dy, dy };
+		const double q[4] = { x0 - left, right - x0, y0 - top, bottom - y0 };
+		for (int i = 0; i < 4; i++) {
+			if (p[i] == 0.0) {
+				if (q[i] < 0.0) {
+					return cells; // Parallel to that edge and outside it.
+				}
+				continue;
+			}
+			const double t = q[i] / p[i];
+			if (p[i] < 0.0) {
+				enter = MAX(enter, t);
+			} else {
+				leave = MIN(leave, t);
+			}
+		}
+		if (enter > leave) {
+			return cells;
+		}
+		const auto cell_at = [&](double p_t) {
+			return Vector2i(int(CLAMP(Math::round(x0 + dx * p_t), left, right)), int(CLAMP(Math::round(y0 + dy * p_t), top, bottom)));
+		};
+		from = enter > 0.0 ? cell_at(enter) : from;
+		to = leave < 1.0 ? cell_at(leave) : to;
+	} else {
+		int64_t x0, y0, x1, y1;
+		if (!visit_box(p_from, p_to, Rect2i(), x0, y0, x1, y1)) {
+			return cells;
+		}
+	}
+	const int64_t delta_x = Math::abs(int64_t(to.x) - from.x);
+	const int64_t delta_y = Math::abs(int64_t(to.y) - from.y);
+	const Vector2i step(to.x >= from.x ? 1 : -1, to.y >= from.y ? 1 : -1);
+	Vector2i at = from;
+	int64_t error = delta_x - delta_y;
 	while (true) {
 		cells.push_back(at);
-		if (at == p_to) {
+		if (at == to) {
 			break;
 		}
-		const int twice = 2 * error;
-		if (twice > -delta.y) {
-			error -= delta.y;
+		const int64_t twice = 2 * error;
+		if (twice > -delta_y) {
+			error -= delta_y;
 			at.x += step.x;
 		}
-		if (twice < delta.x) {
-			error += delta.x;
+		if (twice < delta_x) {
+			error += delta_x;
 			at.y += step.y;
 		}
 	}
 	return cells;
 }
 
-Vector<Vector2i> JRPGMapShapes::rectangle(const Vector2i &p_from, const Vector2i &p_to) {
+Vector<Vector2i> JRPGMapShapes::rectangle(const Vector2i &p_from, const Vector2i &p_to, const Rect2i &p_bounds) {
 	Vector<Vector2i> cells;
-	const Vector2i from = p_from.min(p_to);
-	const Vector2i to = p_from.max(p_to);
-	for (int y = from.y; y <= to.y; y++) {
-		for (int x = from.x; x <= to.x; x++) {
-			cells.push_back(Vector2i(x, y));
+	int64_t x0, y0, x1, y1;
+	if (!visit_box(p_from, p_to, p_bounds, x0, y0, x1, y1)) {
+		return cells;
+	}
+	for (int64_t y = y0; y <= y1; y++) {
+		for (int64_t x = x0; x <= x1; x++) {
+			cells.push_back(Vector2i(int(x), int(y)));
 		}
 	}
 	return cells;
 }
 
-Vector<Vector2i> JRPGMapShapes::ellipse(const Vector2i &p_from, const Vector2i &p_to) {
+Vector<Vector2i> JRPGMapShapes::ellipse(const Vector2i &p_from, const Vector2i &p_to, const Rect2i &p_bounds) {
 	Vector<Vector2i> cells;
-	const Vector2i from = p_from.min(p_to);
-	const Vector2i to = p_from.max(p_to);
-	// Center and radii in cell units; a cell is in when its center is.
-	const Vector2 radius = Vector2(to - from + Vector2i(1, 1)) / 2;
-	const Vector2 center = Vector2(from) + radius;
-	for (int y = from.y; y <= to.y; y++) {
-		for (int x = from.x; x <= to.x; x++) {
-			const Vector2 d = (Vector2(x, y) + Vector2(0.5, 0.5) - center) / radius;
-			if (d.length_squared() <= 1.0) {
-				cells.push_back(Vector2i(x, y));
+	int64_t x0, y0, x1, y1;
+	if (!visit_box(p_from, p_to, p_bounds, x0, y0, x1, y1)) {
+		return cells;
+	}
+	// Center and radii of the whole ellipse in cell units; a cell is in when its center is.
+	const double from_x = MIN(p_from.x, p_to.x), from_y = MIN(p_from.y, p_to.y);
+	const double radius_x = (double(MAX(p_from.x, p_to.x)) - from_x + 1) / 2, radius_y = (double(MAX(p_from.y, p_to.y)) - from_y + 1) / 2;
+	const double center_x = from_x + radius_x, center_y = from_y + radius_y;
+	for (int64_t y = y0; y <= y1; y++) {
+		for (int64_t x = x0; x <= x1; x++) {
+			const double dx = (double(x) + 0.5 - center_x) / radius_x;
+			const double dy = (double(y) + 0.5 - center_y) / radius_y;
+			if (dx * dx + dy * dy <= 1.0) {
+				cells.push_back(Vector2i(int(x), int(y)));
 			}
 		}
 	}
@@ -104,12 +167,12 @@ Vector<Vector2i> JRPGMapShapes::ellipse(const Vector2i &p_from, const Vector2i &
 
 Vector<Vector2i> JRPGMapShapes::flood_fill(const PackedInt32Array &p_values, const Vector2i &p_size, const Vector2i &p_start) {
 	Vector<Vector2i> cells;
-	ERR_FAIL_COND_V(p_size.x < 0 || p_size.y < 0 || p_values.size() != p_size.x * p_size.y, cells);
+	ERR_FAIL_COND_V(p_size.x < 0 || p_size.y < 0 || int64_t(p_values.size()) != int64_t(p_size.x) * p_size.y, cells);
 	if (p_start.x < 0 || p_start.y < 0 || p_start.x >= p_size.x || p_start.y >= p_size.y) {
 		return cells;
 	}
 	const int target = p_values[p_start.y * p_size.x + p_start.x];
-	HashSet<int> seen;
+	HashSet<int> seen; // Indexes fit an int: the values array holds them all.
 	seen.insert(p_start.y * p_size.x + p_start.x);
 	cells.push_back(p_start);
 	const Vector2i sides[4] = { Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0) };

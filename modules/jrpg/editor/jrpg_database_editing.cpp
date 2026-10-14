@@ -53,6 +53,7 @@
 
 #include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_database.h"
+#include "modules/jrpg/core/jrpg_map_list.h"
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 
@@ -1044,8 +1045,31 @@ void JRPGDatabaseEditing::forget_unsaved(const PackedStringArray &p_paths) {
 	}
 }
 
+void JRPGDatabaseEditing::map_list_rename(const Ref<JRPGMapList> &p_list, int p_map_id, const String &p_name) {
+	if (p_list.is_valid() && p_list->has_map(p_map_id)) {
+		p_list->set_map_name(p_map_id, p_name);
+		mark_unsaved(p_list);
+	}
+}
+
+void JRPGDatabaseEditing::map_list_move(const Ref<JRPGMapList> &p_list, int p_map_id, int p_parent_id, int p_index) {
+	if (p_list.is_null() || !p_list->has_map(p_map_id) || (p_parent_id != 0 && !p_list->has_map(p_parent_id))) {
+		return;
+	}
+	int steps = p_list->get_maps().size();
+	for (int ancestor = p_parent_id; ancestor != 0 && steps-- >= 0; ancestor = p_list->get_map(ancestor).get("parent_id", 0)) {
+		if (ancestor == p_map_id) {
+			return; // Never under itself or one of its own maps.
+		}
+	}
+	p_list->move_map(p_map_id, p_parent_id, p_index);
+	mark_unsaved(p_list);
+}
+
 void JRPGDatabaseEditing::_bind_methods() {
 	// For undo and redo (EditorUndoRedoManager calls methods by name).
+	ClassDB::bind_method(D_METHOD("map_list_rename", "list", "map_id", "name"), &JRPGDatabaseEditing::map_list_rename);
+	ClassDB::bind_method(D_METHOD("map_list_move", "list", "map_id", "parent_id", "index"), &JRPGDatabaseEditing::map_list_move);
 	ClassDB::bind_method(D_METHOD("_write_tile_words", "tileset", "entries", "words"), &JRPGDatabaseEditing::_write_tile_words);
 	ClassDB::bind_method(D_METHOD("mark_unsaved", "resource"), &JRPGDatabaseEditing::mark_unsaved);
 

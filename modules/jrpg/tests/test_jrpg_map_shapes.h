@@ -86,4 +86,30 @@ TEST_CASE("[JRPG][MapShapes] Fill covers the matching cells connected to the sta
 	CHECK(JRPGMapShapes::get_rectangle(Vector2i(), Vector2i(1, 1)).size() == 4);
 }
 
+TEST_CASE("[JRPG][MapShapes] Bounds keep the work inside the map however far the corners lie") {
+	using S = JRPGMapShapes;
+	const Rect2i map(0, 0, 10, 8);
+	// Far corners: only the map's cells, at once (the box would hold 4 x 10^18 cells).
+	const Vector<Vector2i> rect = S::rectangle(Vector2i(INT32_MIN, INT32_MIN), Vector2i(INT32_MAX, INT32_MAX), map);
+	CHECK(rect.size() == 80);
+	CHECK((rect[0] == Vector2i(0, 0) && rect[79] == Vector2i(9, 7)));
+	CHECK(S::rectangle(Vector2i(2, 2), Vector2i(3, 4), map) == S::rectangle(Vector2i(2, 2), Vector2i(3, 4))); // Inside: the same.
+	CHECK(S::rectangle(Vector2i(20, 20), Vector2i(30, 30), map).is_empty());
+	const Vector<Vector2i> oval = S::ellipse(Vector2i(-1000000, 3), Vector2i(1000000, 5), map);
+	CHECK(oval.size() == 30); // A flat band across the map: rows 3-5 of all 10 columns.
+	CHECK(S::ellipse(Vector2i(1, 1), Vector2i(6, 5), map) == S::ellipse(Vector2i(1, 1), Vector2i(6, 5)));
+	// A line from far away: the part inside the map, without walking the rest.
+	const Vector<Vector2i> ray = S::line(Vector2i(-2000000000, 4), Vector2i(2000000000, 4), map);
+	CHECK(ray.size() == 10);
+	CHECK((ray[0] == Vector2i(0, 4) && ray[9] == Vector2i(9, 4)));
+	CHECK(S::line(Vector2i(1, 1), Vector2i(8, 6), map) == S::line(Vector2i(1, 1), Vector2i(8, 6)));
+	CHECK(S::line(Vector2i(-5, -5), Vector2i(-1, -9), map).is_empty()); // It never meets the map.
+	CHECK(S::line(Vector2i(INT32_MIN, INT32_MIN), Vector2i(INT32_MAX, INT32_MAX), map).size() > 0); // No overflow.
+	// Without bounds, a shape larger than MAX_CELLS is refused.
+	ERR_PRINT_OFF;
+	CHECK(S::rectangle(Vector2i(), Vector2i(2000, 2000)).is_empty());
+	CHECK(S::line(Vector2i(), Vector2i(3000000, 0)).is_empty());
+	ERR_PRINT_ON;
+}
+
 } // namespace TestJRPGMapShapes

@@ -40,6 +40,7 @@
 
 class JRPGDatabase;
 class JRPGEntry;
+class JRPGMapList;
 class JRPGTable;
 class JRPGTilesetData;
 class Resource;
@@ -176,6 +177,11 @@ public:
 	// A file the database tools changed outside the database files, such as a TileSet whose tile flags the tileset
 	// form edited: it is listed as unsaved and saved with the database.
 	void mark_unsaved(const Ref<Resource> &p_resource);
+	// The map list's undoable edits, filed by JRPGMapEditing as per-entry undo steps: applied only while the maps they
+	// name are listed (and never under one of its own maps), so undoing or redoing them after maps were created or
+	// deleted changes their entry alone (epic 8 review B1).
+	void map_list_rename(const Ref<JRPGMapList> &p_list, int p_map_id, const String &p_name);
+	void map_list_move(const Ref<JRPGMapList> &p_list, int p_map_id, int p_parent_id, int p_index);
 
 	JRPGDatabaseEditing();
 	~JRPGDatabaseEditing();

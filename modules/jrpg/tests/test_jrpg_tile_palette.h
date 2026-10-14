@@ -33,6 +33,7 @@
 
 #ifdef TOOLS_ENABLED // The palette panel is editor UI.
 
+#include "core/templates/hash_set.h"
 #include "scene/main/scene_tree.h"
 #include "scene/main/window.h"
 #include "tests/test_macros.h"
@@ -87,6 +88,28 @@ TEST_CASE("[JRPG][TilePalette] Sheets: one per TileSet source, plain tiles where
 	CHECK(water[0].size == Vector2i(JRPGTilePalette::KIND_COLUMNS, 2));
 	CHECK(water[0].slots[8].at == Vector2i(0, 1));
 	CHECK(JRPGTilePalette::make_sheets(Array(), Ref<TileSet>()).is_empty());
+}
+
+TEST_CASE("[JRPG][TilePalette] A flipped tile sharing its cell with the tile it turns gets a cell under the sheet") {
+	Array palette;
+	palette.push_back(entry("Props", 0, "plain", Vector2i(0, 0)));
+	palette.push_back(entry("Props", 0, "plain", Vector2i(1, 0)));
+	palette.push_back(entry("Props", 0, "plain", Vector2i(0, 0))); // The first one flipped (another alternative).
+	palette.push_back(entry("Props", 0, "plain", Vector2i(1, 0))); // The second one rotated.
+	palette.push_back(entry("Props", 0, "plain", Vector2i(0, 0))); // The first one turned again.
+	const Vector<JRPGTilePalette::Sheet> sheets = JRPGTilePalette::make_sheets(palette, Ref<TileSet>());
+	REQUIRE(sheets.size() == 1);
+	const Vector<JRPGTilePalette::Slot> &slots = sheets[0].slots;
+	REQUIRE(slots.size() == 5);
+	HashSet<Vector2i> cells;
+	for (const JRPGTilePalette::Slot &slot : slots) {
+		cells.insert(slot.at); // Every tile can be clicked: no two share a cell.
+	}
+	CHECK(cells.size() == 5);
+	CHECK((slots[2].index == 3 && slots[2].at == Vector2i(0, 1)));
+	CHECK((slots[3].index == 4 && slots[3].at == Vector2i(1, 1)));
+	CHECK((slots[4].index == 5 && slots[4].at == Vector2i(0, 2)));
+	CHECK(sheets[0].size == Vector2i(2, 3));
 }
 
 TEST_CASE("[SceneTree][JRPG][TilePalette] Without a map the palette says what to do") {

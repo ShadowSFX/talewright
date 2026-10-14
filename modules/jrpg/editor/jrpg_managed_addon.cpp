@@ -39,6 +39,7 @@
 #include "core/io/config_file.h"
 #include "core/io/dir_access.h"
 #include "core/io/file_access.h"
+#include "core/io/resource_loader.h"
 #include "core/object/class_db.h"
 #include "core/templates/hash_set.h"
 #include "editor/file_system/editor_file_system.h"
@@ -87,6 +88,20 @@ String file_hash(const String &p_path) {
 }
 
 } // namespace
+
+String JRPGManagedAddon::find_game_scene() {
+	if (ResourceLoader::exists(GAME_SCENE)) {
+		return GAME_SCENE;
+	}
+	for (const String &folder : DirAccess::get_directories_at("res://addons")) {
+		const String directory = String("res://addons").path_join(folder);
+		const String scene = directory.path_join(GAME_SCENE_FILE);
+		if (FileAccess::exists(directory.path_join(STAMP_FILE)) && ResourceLoader::exists(scene)) {
+			return scene;
+		}
+	}
+	return String();
+}
 
 String JRPGManagedAddon::get_embedded_version() {
 	return JRPG_ADDON_VERSION;

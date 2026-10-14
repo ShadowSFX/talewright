@@ -73,12 +73,18 @@ void JRPGMap::_connect_data(bool p_connect) {
 	}
 	const Callable layout = callable_mp(this, &JRPGMap::_queue_rebuild);
 	const Callable cells = callable_mp(this, &JRPGMap::_on_cells_changed);
+	const Callable edited_layout = callable_mp(this, &JRPGMap::_mark_edited);
+	const Callable edited_cells = callable_mp(this, &JRPGMap::_mark_edited).unbind(2);
 	if (p_connect) {
 		map_data->connect(SNAME("layout_changed"), layout);
 		map_data->connect(SNAME("cells_changed"), cells);
+		map_data->connect(SNAME("layout_changed"), edited_layout);
+		map_data->connect(SNAME("cells_changed"), edited_cells);
 	} else {
 		map_data->disconnect(SNAME("layout_changed"), layout);
 		map_data->disconnect(SNAME("cells_changed"), cells);
+		map_data->disconnect(SNAME("layout_changed"), edited_layout);
+		map_data->disconnect(SNAME("cells_changed"), edited_cells);
 	}
 }
 
@@ -234,9 +240,18 @@ Vector2i JRPGMap::get_cell_size() const {
 	return tiles.is_valid() ? tiles->get_tile_size() : Vector2i(DEFAULT_CELL_SIZE, DEFAULT_CELL_SIZE);
 }
 
+void JRPGMap::_mark_edited() {
+	edited = true;
+}
+
 void JRPGMap::_notification(int p_what) {
 	if (p_what == NOTIFICATION_ENTER_TREE) {
 		_queue_rebuild();
+	} else if (p_what == NOTIFICATION_EDITOR_PRE_SAVE && edited && map_data.is_valid()) {
+		// A save that changes the map's cells raises its revision, so a game saved before notices (spec 06; epic 8
+		// review A3). Sent by the editor before it saves the scene (editor/editor_node.cpp:2481).
+		map_data->bump_revision();
+		edited = false;
 	}
 }
 

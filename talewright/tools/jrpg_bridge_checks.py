@@ -382,6 +382,27 @@ def run(checks: Checks) -> None:
         maps,
         lambda: c.call("jrpg_map_move", {"map_id": second["map_id"], "parent_id": created_map["map_id"]}),
     )
+    # Epic 8 review B1: undoing a rename after a map was created takes back the rename only (creating has no undo step).
+    c.call("jrpg_map_rename", {"map_id": second["map_id"], "name": "Lakeside"})
+    later = c.call("jrpg_map_create", {"name": "Later", "open": False})
+    c.undo()
+    names = {m["map_id"]: m["name"] for m in maps()}
+    c.check(
+        "jrpg_map_rename: undo after a new map keeps the new map",
+        names.get(second["map_id"]) == "Riverside" and later["map_id"] in names,
+        json.dumps(names),
+    )
+    c.redo()
+    names = {m["map_id"]: m["name"] for m in maps()}
+    c.check(
+        "jrpg_map_rename: redo after a new map keeps it too",
+        names.get(second["map_id"]) == "Lakeside" and later["map_id"] in names,
+        json.dumps(names),
+    )
+    c.check(
+        "jrpg_map_create: refuses a tileset the database does not have",
+        c.refused("jrpg_map_create", {"name": "Nowhere", "tileset_id": 42, "open": False}),
+    )
     c.round_trip(
         "jrpg_map_set (name, size cut, scroll type)",
         lambda: c.call("jrpg_map_get", {"layer": "ground"}),
@@ -436,24 +457,24 @@ def run(checks: Checks) -> None:
         "jrpg_map_delete: the entry and the scene file are gone",
         deleted.get("deleted") == third["map_id"]
         and all(m["map_id"] != third["map_id"] for m in maps())
-        and not (c.project / "jrpg" / "maps" / "map_0003.tscn").exists(),
+        and not (c.project / "jrpg" / "maps" / f"map_{third['map_id']:04d}.tscn").exists(),
         json.dumps(deleted)[:200],
     )
     c.check(
         "jrpg_map_delete: reports the start map it broke",
-        deleted.get("broken_references") == ["System, start_map_id: map 3"],
+        deleted.get("broken_references") == [f"System, start_map_id: map {third['map_id']}"],
         json.dumps(deleted)[:200],
     )
     reported = c.call("jrpg_db_set", {"table": "system", "values": {"start_direction": 2}})
     c.check(
         "jrpg_db_set: reports the deleted start map",
-        reported.get("dangling_references") == ["System, start_map_id: map 3 (missing)"],
+        reported.get("dangling_references") == [f"System, start_map_id: map {third['map_id']} (missing)"],
         json.dumps(reported)[:300],
     )
     c.call("jrpg_db_set", {"table": "system", "values": {"start_map_id": 0}})
     c.check(
         "jrpg_map_create: ids are not reused after a delete",
-        c.call("jrpg_map_create", {"name": "Fourth", "open": False}).get("map_id") == 4,
+        c.call("jrpg_map_create", {"name": "Fourth", "open": False}).get("map_id") == third["map_id"] + 1,
     )
     c.call("jrpg_map_delete", {"map_id": second["map_id"], "close_scene": True})
     c.check(
@@ -548,6 +569,33 @@ def run(checks: Checks) -> None:
     )
     stroke("eraser", "auto", [[9, 7]])
     c.check("jrpg_map_stroke: the automatic eraser clears the top-most tile", stack() == [1, 5, 0], json.dumps(stack()))
+    # Epic 8 review B2: corners far outside the map cost no more than the map; B5, B10: refusals.
+    started = time.monotonic()
+    far = stroke("rectangle", "regions", [[-2000000000, -2000000000], [2000000000, 2000000000]], 9)
+    c.check(
+        "jrpg_map_stroke: far corners draw the map's cells only, at once",
+        0 < far.get("changed", 0) <= 80 and time.monotonic() - started < 10,
+        json.dumps(far)[:200],
+    )
+    c.undo()
+    c.check(
+        "jrpg_map_paint: refuses a rect larger than a map",
+        c.refused(
+            "jrpg_map_paint",
+            {"layer": "ground", "value": 1, "rect": {"x": 0, "y": 0, "width": 4000000000, "height": 2}},
+        ),
+    )
+    c.check(
+        "jrpg_map_stroke: refuses the shadow tool (shadows are the pencil on layer shadows)",
+        c.refused("jrpg_map_stroke", {"tool": "shadow", "layer": "objects", "value": 1, "points": [[0, 0]]}),
+    )
+    c.check(
+        "jrpg_map_stroke: refuses a palette index past the tileset",
+        c.refused("jrpg_map_stroke", {"tool": "pencil", "layer": "objects", "value": 9999, "points": [[0, 0]]})
+        and c.refused(
+            "jrpg_map_stroke", {"tool": "pencil", "layer": "objects", "points": [[0, 0]], "stamp": [[1, 9999]]}
+        ),
+    )
     stroke(
         "pencil", "ground", [[9, 7]], 2
     )  # Another tile on the ground first, so the autotile has something to replace.
@@ -631,6 +679,11 @@ def run(checks: Checks) -> None:
     )
     c.check("jrpg_map_set_start: refuses a cell outside the map", c.refused("jrpg_map_set_start", {"cell": [10, 0]}))
 
+    # Epic 8 review B3: a start cell the map no longer has (the map shrank) is caught before the game runs.
+    c.call("jrpg_map_set", {"values": {"size": "Vector2i(2, 2)"}})
+    c.check("jrpg_play_from_start: refuses a start cell outside the map", c.refused("jrpg_play_from_start", {}))
+    c.undo()
+
     # Play From Start (task 8.6.1.2): the managed addon's game scene runs a new game at the start position.
     played = c.call("jrpg_play_from_start")
     c.check(
@@ -647,6 +700,26 @@ def run(checks: Checks) -> None:
     shown = c.call("game_call", {"path": "/root/Game", "method": "get_map_id"}).get("result") if connected else None
     c.check("jrpg_play_from_start: the running game shows the start map", shown == strokes_map, str(shown))
     c.call("stop_project")
+
+    # Epic 8 review A4: a map scene copied outside the editor is listed with an id of its own by Rescan Maps.
+    copied = {m["map_id"]: m["scene"] for m in maps()}[created_map["map_id"]]
+    shutil.copyfile(c.project / copied.removeprefix("res://"), c.project / "jrpg" / "maps" / "copy_of_checks.tscn")
+    rescanned = c.call("jrpg_map_rescan")
+    reassigned = rescanned.get("reassigned", [])
+    c.check(
+        "jrpg_map_rescan: lists a copied map scene with a fresh id",
+        len(reassigned) == 1
+        and reassigned[0].get("scene") == "res://jrpg/maps/copy_of_checks.tscn"
+        and reassigned[0].get("old_id") == created_map["map_id"]
+        and any(m["scene"] == "res://jrpg/maps/copy_of_checks.tscn" for m in maps()),
+        json.dumps(rescanned)[:300],
+    )
+    again = c.call("jrpg_map_rescan")
+    c.check(
+        "jrpg_map_rescan: a second rescan finds nothing new",
+        again.get("added") == [] and again.get("reassigned") == [],
+        json.dumps(again)[:200],
+    )
 
     # Saving leaves nothing unsaved, bakes the tile flags and writes the TileSet.
     c.call("jrpg_db_save")

@@ -74,10 +74,12 @@ private:
 	PackedByteArray shapes[JRPGMapData::LAYER_COUNT];
 	bool rebuild_queued = false;
 	int rebuild_count = 0;
+	bool edited = false; // Cells or layout changed since the last save (the editor's pre-save raises the revision).
 
 	void _connect_data(bool p_connect);
 	void _queue_rebuild();
 	void _on_cells_changed(int p_layer, const PackedInt32Array &p_cells);
+	void _mark_edited();
 	void _update_cell(int p_layer, const Vector2i &p_cell);
 	void _draw_shadows();
 

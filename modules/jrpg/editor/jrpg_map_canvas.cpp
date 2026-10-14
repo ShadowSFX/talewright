@@ -102,7 +102,7 @@ void JRPGMapCanvas::_watch_data(JRPGMap *p_map) {
 
 void JRPGMapCanvas::_cells_changed(int p_layer, const PackedInt32Array &p_cells) {
 	if (p_layer < 0 && session->get_mode() == JRPGMapEditSession::MODE_REGIONS) {
-		overlay->queue_redraw(); // Regions (or shadows, which the map draws itself).
+		marks->queue_redraw(); // Regions (or shadows, which the map draws itself).
 	}
 }
 
@@ -125,6 +125,7 @@ void JRPGMapCanvas::_map_changed() {
 		viewport->set_world_2d(scene_root->get_world_2d());
 		viewport->set_default_canvas_item_texture_filter(scene_root->get_default_canvas_item_texture_filter());
 		viewport->set_default_canvas_item_texture_repeat(scene_root->get_default_canvas_item_texture_repeat());
+		has_pending_center = false; // Asked for the map shown before.
 		needs_fit = !session->get_view(view_path, zoom, offset);
 		if (needs_fit && get_size().x > 0 && get_size().y > 0) {
 			center_view();
@@ -141,6 +142,7 @@ void JRPGMapCanvas::_apply_view() {
 	const Transform2D view(0, Vector2(zoom, zoom), 0, offset);
 	// Map-local coordinates at point * zoom + offset, wherever the map's root sits in its scene.
 	viewport->set_canvas_transform(map && map->is_inside_tree() ? view * map->get_global_transform().affine_inverse() : view);
+	marks->queue_redraw();
 	overlay->queue_redraw();
 	_store_view();
 }
@@ -158,15 +160,28 @@ void JRPGMapCanvas::center_view() {
 	if (!map || map->get_map_data().is_null()) {
 		return;
 	}
+	if (get_size().x <= 0 || get_size().y <= 0) {
+		needs_fit = true; // Not shown yet: fit once it has a size (NOTIFICATION_RESIZED; epic 8 review B11).
+		return;
+	}
 	const Vector2 map_size = Vector2(map->get_map_data()->get_size() * map->get_cell_size());
 	fit(map_size, get_size(), MIN_ZOOM, zoom, offset);
 	needs_fit = false;
 	_apply_view();
+	if (has_pending_center) {
+		has_pending_center = false;
+		center_on_cell(pending_center);
+	}
 }
 
 void JRPGMapCanvas::center_on_cell(const Vector2i &p_cell) {
 	const JRPGMap *map = _get_map();
 	if (!map) {
+		return;
+	}
+	if (get_size().x <= 0 || get_size().y <= 0) {
+		pending_center = p_cell; // Not shown yet: centered once it has a size.
+		has_pending_center = true;
 		return;
 	}
 	offset = (get_size() / 2 - (Vector2(p_cell) + Vector2(0.5, 0.5)) * Vector2(map->get_cell_size()) * zoom).round();
@@ -186,7 +201,7 @@ void JRPGMapCanvas::_grid_toggled(bool p_on) {
 	if (EditorSettings::get_singleton()) {
 		EditorSettings::get_singleton()->set_project_metadata(METADATA_SECTION, "show_grid", p_on);
 	}
-	overlay->queue_redraw();
+	marks->queue_redraw();
 }
 
 void JRPGMapCanvas::_set_hovered(const Vector2i &p_cell) {
@@ -214,7 +229,10 @@ void JRPGMapCanvas::_zoom_widget_changed() {
 }
 
 Vector<Vector2i> JRPGMapCanvas::_shape_cells() const {
-	return stroke_tool == JRPGMapEditSession::TOOL_ELLIPSE ? JRPGMapShapes::ellipse(stroke_anchor, stroke_last) : JRPGMapShapes::rectangle(stroke_anchor, stroke_last);
+	// Only the cells on the map: a corner dragged far outside it (zoomed out) costs no more than the map.
+	const JRPGMap *map = _get_map();
+	const Rect2i bounds = map && map->get_map_data().is_valid() ? Rect2i(Vector2i(), map->get_map_data()->get_size()) : Rect2i(stroke_anchor, Vector2i(1, 1));
+	return stroke_tool == JRPGMapEditSession::TOOL_ELLIPSE ? JRPGMapShapes::ellipse(stroke_anchor, stroke_last, bounds) : JRPGMapShapes::rectangle(stroke_anchor, stroke_last, bounds);
 }
 
 bool JRPGMapCanvas::pick_region(const Vector2i &p_cell) {
@@ -289,6 +307,7 @@ bool JRPGMapCanvas::set_start_position_here(const Vector2i &p_cell) {
 		}
 		return false;
 	}
+	marks->queue_redraw();
 	overlay->queue_redraw();
 	return true;
 }
@@ -298,7 +317,7 @@ void JRPGMapCanvas::_cell_menu_pressed(int p_id) {
 }
 
 void JRPGMapCanvas::_database_changed() {
-	overlay->queue_redraw(); // The start position may have moved.
+	marks->queue_redraw(); // The start position may have moved.
 }
 
 bool JRPGMapCanvas::pick_stamp(const Vector2i &p_from, const Vector2i &p_to) {
@@ -424,10 +443,11 @@ void JRPGMapCanvas::_continue_stroke(const Vector2 &p_point) {
 	if (stroke.is_null()) {
 		return;
 	}
+	const Ref<JRPGMapData> map_data = _get_map()->get_map_data();
 	if (stroke_tool == JRPGMapEditSession::TOOL_SHADOW) {
 		const Vector2i half = _half_cell_at(p_point);
 		if (half != stroke_last_half) {
-			_shadow_quarters(JRPGMapShapes::line(stroke_last_half, half));
+			_shadow_quarters(JRPGMapShapes::line(stroke_last_half, half, Rect2i(Vector2i(), map_data->get_size() * 2))); // Half cells.
 			stroke_last_half = half;
 		}
 		return;
@@ -437,7 +457,7 @@ void JRPGMapCanvas::_continue_stroke(const Vector2 &p_point) {
 		return;
 	}
 	if (stroke_tool == JRPGMapEditSession::TOOL_PENCIL || stroke_tool == JRPGMapEditSession::TOOL_ERASER) {
-		_stroke_cells(JRPGMapShapes::line(stroke_last, cell)); // No gaps when the mouse moves fast.
+		_stroke_cells(JRPGMapShapes::line(stroke_last, cell, Rect2i(Vector2i(), map_data->get_size()))); // No gaps when the mouse moves fast.
 	}
 	stroke_last = cell;
 	overlay->queue_redraw();
@@ -532,7 +552,9 @@ void JRPGMapCanvas::handle_input(const Ref<InputEvent> &p_event) {
 	}
 }
 
-void JRPGMapCanvas::_draw_overlay() {
+void JRPGMapCanvas::_draw_marks() {
+	// What changes with the view or the map's data only, so moving the mouse never draws it again (epic 8 review B8):
+	// the grid, the regions, the start position, the map's edge.
 	const JRPGMap *map = _get_map();
 	if (!map || map->get_map_data().is_null()) {
 		return;
@@ -540,7 +562,7 @@ void JRPGMapCanvas::_draw_overlay() {
 	const Vector2 cell = Vector2(map->get_cell_size()) * zoom;
 	const Vector2i size = map->get_map_data()->get_size();
 	const Rect2 bounds(offset, Vector2(size) * cell);
-	const Size2 area = overlay->get_size();
+	const Size2 area = marks->get_size();
 	if (is_grid_visible() && cell.x >= GRID_MIN_PIXELS && cell.y >= GRID_MIN_PIXELS) {
 		// Only the lines in view; the color is the 2D editor's grid color (editors/2d/grid_color).
 		const int first_x = CLAMP(int(Math::floor(-offset.x / cell.x)), 0, size.x);
@@ -558,7 +580,7 @@ void JRPGMapCanvas::_draw_overlay() {
 		}
 		if (!lines.is_empty()) {
 			const Color grid_color = EditorSettings::get_singleton() ? Color(EDITOR_GET("editors/2d/grid_color")) : Color(1, 1, 1, 0.07);
-			overlay->draw_multiline(lines, grid_color);
+			marks->draw_multiline(lines, grid_color);
 		}
 	}
 	if (session->get_mode() == JRPGMapEditSession::MODE_REGIONS) {
@@ -575,9 +597,9 @@ void JRPGMapCanvas::_draw_overlay() {
 					continue;
 				}
 				const Rect2 rect(offset + Vector2(x, y) * cell, cell);
-				overlay->draw_rect(rect, Color::from_hsv(Math::fmod(region * 0.618034f, 1.0f), 0.65, 0.9, 0.45));
+				marks->draw_rect(rect, Color::from_hsv(Math::fmod(region * 0.618034f, 1.0f), 0.65, 0.9, 0.45));
 				if (font.is_valid() && cell.x >= 16 && font_size >= 6) {
-					overlay->draw_string(font, rect.position + Vector2(0, (rect.size.y + font->get_ascent(font_size) - font->get_descent(font_size)) / 2), itos(region), HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, font_size, Color(1, 1, 1));
+					marks->draw_string(font, rect.position + Vector2(0, (rect.size.y + font->get_ascent(font_size) - font->get_descent(font_size)) / 2), itos(region), HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, font_size, Color(1, 1, 1));
 				}
 			}
 		}
@@ -588,16 +610,25 @@ void JRPGMapCanvas::_draw_overlay() {
 	const Ref<JRPGSystemData> system = database.is_valid() ? database->get_system() : Ref<JRPGSystemData>();
 	if (system.is_valid() && system->get_start_map_id() > 0 && system->get_start_map_id() == map->get_map_data()->get_map_id()) {
 		const Rect2 start_rect(offset + Vector2(system->get_start_cell()) * cell, cell);
-		overlay->draw_rect(start_rect, get_theme_color(SNAME("accent_color"), EditorStringName(Editor)), false, Math::round(2 * EDSCALE));
+		marks->draw_rect(start_rect, get_theme_color(SNAME("accent_color"), EditorStringName(Editor)), false, Math::round(2 * EDSCALE));
 		const Ref<Texture2D> icon = get_editor_theme_icon(SNAME("PlayStart"));
 		if (icon.is_valid()) {
 			const Vector2 icon_size = icon->get_size() * MIN(1.0f, MIN(cell.x, cell.y) / MAX(icon->get_size().x, 1.0f));
-			overlay->draw_texture_rect(icon, Rect2(start_rect.get_center() - icon_size / 2, icon_size), false);
+			marks->draw_texture_rect(icon, Rect2(start_rect.get_center() - icon_size / 2, icon_size), false);
 		}
 	}
 	// The map's edge in the color the 2D editor frames the game's view with (editors/2d/viewport_border_color).
 	const Color border = EditorSettings::get_singleton() ? Color(EDITOR_GET("editors/2d/viewport_border_color")) : Color(0.4, 0.4, 1.0, 0.4);
-	overlay->draw_rect(bounds, border, false, Math::round(2 * EDSCALE));
+	marks->draw_rect(bounds, border, false, Math::round(2 * EDSCALE));
+}
+
+void JRPGMapCanvas::_draw_overlay() {
+	const JRPGMap *map = _get_map();
+	if (!map || map->get_map_data().is_null()) {
+		return;
+	}
+	const Vector2 cell = Vector2(map->get_cell_size()) * zoom;
+	const Vector2i size = map->get_map_data()->get_size();
 	if (stroke.is_valid() && (stroke_tool == JRPGMapEditSession::TOOL_RECTANGLE || stroke_tool == JRPGMapEditSession::TOOL_ELLIPSE)) {
 		// The shape to be drawn, one span per row.
 		Color preview = get_theme_color(SNAME("accent_color"), EditorStringName(Editor));
@@ -693,7 +724,7 @@ void JRPGMapCanvas::_notification(int p_what) {
 		} break;
 		case EditorSettings::NOTIFICATION_EDITOR_SETTINGS_CHANGED: {
 			if (!EditorSettings::get_singleton()->check_changed_settings_in_group("editors/panning")) {
-				overlay->queue_redraw(); // Grid or border colors.
+				marks->queue_redraw(); // Grid or border colors.
 				break;
 			}
 			[[fallthrough]];
@@ -714,6 +745,9 @@ void JRPGMapCanvas::_notification(int p_what) {
 		case NOTIFICATION_RESIZED: {
 			if (needs_fit && _get_map() && get_size().x > 0 && get_size().y > 0) {
 				center_view();
+			} else if (has_pending_center && _get_map() && get_size().x > 0 && get_size().y > 0) {
+				has_pending_center = false;
+				center_on_cell(pending_center);
 			}
 		} break;
 	}
@@ -737,6 +771,12 @@ JRPGMapCanvas::JRPGMapCanvas() {
 	viewport->set_update_mode(SubViewport::UPDATE_WHEN_PARENT_VISIBLE);
 	viewport->set_disable_input(true);
 	container->add_child(viewport);
+
+	marks = memnew(Control);
+	marks->set_anchors_and_offsets_preset(PRESET_FULL_RECT);
+	marks->set_mouse_filter(MOUSE_FILTER_IGNORE);
+	marks->connect(SceneStringName(draw), callable_mp(this, &JRPGMapCanvas::_draw_marks));
+	add_child(marks);
 
 	overlay = memnew(Control);
 	overlay->set_anchors_and_offsets_preset(PRESET_FULL_RECT);
@@ -796,4 +836,5 @@ JRPGMapCanvas::JRPGMapCanvas() {
 	session.instantiate();
 	session->connect(SNAME("map_changed"), callable_mp(this, &JRPGMapCanvas::_map_changed));
 	session->connect(SNAME("brush_changed"), callable_mp((CanvasItem *)overlay, &CanvasItem::queue_redraw)); // The mode's overlay.
+	session->connect(SNAME("brush_changed"), callable_mp((CanvasItem *)marks, &CanvasItem::queue_redraw)); // Regions show in their mode.
 }

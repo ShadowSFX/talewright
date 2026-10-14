@@ -36,6 +36,7 @@
 #include "core/input/input_event.h"
 #include "core/io/resource_loader.h"
 #include "core/object/callable_mp.h"
+#include "core/templates/hash_set.h"
 #include "editor/editor_string_names.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/label.h"
@@ -58,6 +59,8 @@ Vector<JRPGTilePalette::Sheet> JRPGTilePalette::make_sheets(const Array &p_palet
 	Vector<Sheet> result;
 	HashMap<int, int> by_source; // TileSet source: its sheet.
 	HashMap<int, int> kinds_placed; // Sheet: how many autotile or wall kinds it shows so far.
+	HashMap<int, HashSet<Vector2i>> taken; // Sheet: the grid cells its plain tiles hold.
+	HashMap<int, Vector<Slot>> extras; // Sheet: plain tiles whose cell another holds (flipped or rotated ones).
 	const PackedByteArray kinds = JRPGAutotileResolver::get_palette_kinds(p_palette); // By palette index.
 	for (int i = 0; i < p_palette.size(); i++) {
 		const Dictionary entry = p_palette[i];
@@ -77,6 +80,11 @@ Vector<JRPGTilePalette::Sheet> JRPGTilePalette::make_sheets(const Array &p_palet
 		slot.icon = JRPGEditorPropertyTiles::make_thumbnail(p_tileset, entry);
 		if (slot.kind == JRPGAutotileResolver::KIND_PLAIN) {
 			slot.at = Vector2i(entry.get("atlas_coords", Vector2i())).maxi(0); // Where it is in the sheet's image.
+			if (taken[sheet_index].has(slot.at)) {
+				extras[sheet_index].push_back(slot); // Below the sheet's own grid (epic 8 review B7).
+				continue;
+			}
+			taken[sheet_index].insert(slot.at);
 		} else {
 			const int placed = kinds_placed.has(sheet_index) ? kinds_placed[sheet_index] : 0;
 			slot.at = Vector2i(placed % KIND_COLUMNS, placed / KIND_COLUMNS);
@@ -84,6 +92,18 @@ Vector<JRPGTilePalette::Sheet> JRPGTilePalette::make_sheets(const Array &p_palet
 		}
 		sheet.size = sheet.size.max(slot.at + Vector2i(1, 1));
 		sheet.slots.push_back(slot);
+	}
+	// Tiles sharing a cell with another go in rows under the sheet, in palette order.
+	for (KeyValue<int, Vector<Slot>> &kv : extras) {
+		Sheet &sheet = result.write[kv.key];
+		const int columns = MAX(sheet.size.x, 1);
+		const int first_row = sheet.size.y;
+		for (int i = 0; i < kv.value.size(); i++) {
+			Slot slot = kv.value[i];
+			slot.at = Vector2i(i % columns, first_row + i / columns);
+			sheet.size = sheet.size.max(slot.at + Vector2i(1, 1));
+			sheet.slots.push_back(slot);
+		}
 	}
 	// Every tab named, and no two alike.
 	HashMap<String, int> seen;

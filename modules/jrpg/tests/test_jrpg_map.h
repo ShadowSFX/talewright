@@ -218,6 +218,27 @@ TEST_CASE("[SceneTree][JRPG][Map] Painting a map: refusals, unchanged cells left
 	memdelete(node);
 }
 
+TEST_CASE("[SceneTree][JRPG][Map] Saving a map whose cells changed raises its revision once") {
+	Ref<JRPGMapData> data;
+	data.instantiate();
+	data->set_size(Vector2i(4, 3));
+	data->set_revision(7);
+	JRPGMap *map = memnew(JRPGMap);
+	map->set_map_data(data);
+	SceneTree::get_singleton()->get_root()->add_child(map);
+	map->propagate_notification(Node::NOTIFICATION_EDITOR_PRE_SAVE);
+	CHECK(data->get_revision() == 7); // Nothing changed since it was loaded.
+	data->paint(JRPGMapData::LAYER_GROUND, PackedInt32Array({ 0 }), PackedInt32Array({ 1 }));
+	map->propagate_notification(Node::NOTIFICATION_EDITOR_PRE_SAVE);
+	CHECK(data->get_revision() == 8);
+	map->propagate_notification(Node::NOTIFICATION_EDITOR_PRE_SAVE);
+	CHECK(data->get_revision() == 8); // Saved again without a change.
+	data->paint_regions(PackedInt32Array({ 1 }), PackedInt32Array({ 3 }));
+	map->propagate_notification(Node::NOTIFICATION_EDITOR_PRE_SAVE);
+	CHECK(data->get_revision() == 9);
+	memdelete(map);
+}
+
 } // namespace TestJRPGMap
 
 #endif // TOOLS_ENABLED

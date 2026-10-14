@@ -225,6 +225,8 @@ void JRPGMapTree::refresh() {
 void JRPGMapTree::_fill_menu(PopupMenu *p_menu, int p_map_id) {
 	p_menu->clear();
 	p_menu->add_icon_item(get_editor_theme_icon(SNAME("Add")), TTR("New Map..."), ACTION_NEW_MAP);
+	p_menu->add_icon_item(get_editor_theme_icon(SNAME("Reload")), TTR("Rescan Maps"), ACTION_RESCAN);
+	p_menu->set_item_tooltip(-1, TTR("Lists map scenes the map list does not know and gives a copied map scene its own id."));
 	if (p_map_id == 0) {
 		return;
 	}
@@ -331,7 +333,7 @@ void JRPGMapTree::_tree_gui_input(const Ref<InputEvent> &p_event) {
 void JRPGMapTree::run_action(Action p_action) {
 	_end_stale_rename();
 	const int id = get_selected_map();
-	if (p_action != ACTION_NEW_MAP && id == 0) {
+	if (p_action != ACTION_NEW_MAP && p_action != ACTION_RESCAN && id == 0) {
 		return;
 	}
 	String message;
@@ -370,6 +372,15 @@ void JRPGMapTree::run_action(Action p_action) {
 		} break;
 		case ACTION_DELETE: {
 			_popup_delete(id);
+		} break;
+		case ACTION_RESCAN: {
+			const Dictionary report = JRPGMapEditing::rescan_maps();
+			refresh(); // A list built again replaces the one shown.
+			const int added = Array(report.get("added", Array())).size();
+			const int reassigned = Array(report.get("reassigned", Array())).size();
+			if ((added > 0 || reassigned > 0) && EditorToaster::get_singleton()) {
+				EditorToaster::get_singleton()->popup_str(vformat(TTR("Rescan Maps listed %d map scenes and gave %d copied ones their own id."), added, reassigned), EditorToaster::SEVERITY_INFO);
+			}
 		} break;
 	}
 }
@@ -518,6 +529,11 @@ void JRPGMapTree::drop_data_fw(const Point2 &p_point, const Variant &p_data, Con
 void JRPGMapTree::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
+			if (EditorNode::get_singleton() && !rescanned) {
+				// Once per editor session: map scenes copied or added outside the editor get listed (epic 8 review A4).
+				rescanned = true;
+				callable_mp_static(&JRPGMapEditing::rescan_maps).call_deferred();
+			}
 			if (EditorNode::get_singleton()) {
 				EditorNode::get_singleton()->connect(SNAME("scene_changed"), callable_mp(this, &JRPGMapTree::_queue_refresh));
 			}

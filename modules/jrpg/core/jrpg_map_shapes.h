@@ -44,13 +44,19 @@ protected:
 	static void _bind_methods();
 
 public:
+	// A shape without bounds holds at most this many cells (its box); a larger one is refused.
+	static constexpr int64_t MAX_CELLS = 1 << 20;
+
+	// Shapes take p_bounds (the map): only cells inside it are made, and the work stays within it however far the
+	// corners lie (epic 8 review B2). Without bounds (an empty rectangle) the shape is whole, up to MAX_CELLS cells.
+
 	// Every cell on the straight line from p_from to p_to, both included (Bresenham), as a pencil dragged between two
-	// mouse positions.
-	static Vector<Vector2i> line(const Vector2i &p_from, const Vector2i &p_to);
+	// mouse positions. With bounds, the part of the line inside them (cut where the line meets their edges).
+	static Vector<Vector2i> line(const Vector2i &p_from, const Vector2i &p_to, const Rect2i &p_bounds = Rect2i());
 	// Every cell of the rectangle with corners p_from and p_to, both included, row by row.
-	static Vector<Vector2i> rectangle(const Vector2i &p_from, const Vector2i &p_to);
+	static Vector<Vector2i> rectangle(const Vector2i &p_from, const Vector2i &p_to, const Rect2i &p_bounds = Rect2i());
 	// The cells of the filled ellipse inscribed in that rectangle: those whose centers lie inside it.
-	static Vector<Vector2i> ellipse(const Vector2i &p_from, const Vector2i &p_to);
+	static Vector<Vector2i> ellipse(const Vector2i &p_from, const Vector2i &p_to, const Rect2i &p_bounds = Rect2i());
 	// The cells connected to p_start (up, down, left and right) holding the same value as it, in p_values, a p_size
 	// grid stored row by row (JRPGMapData's layer layout). Empty when p_start is outside the grid.
 	static Vector<Vector2i> flood_fill(const PackedInt32Array &p_values, const Vector2i &p_size, const Vector2i &p_start);
