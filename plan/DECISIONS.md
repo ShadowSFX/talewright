@@ -810,6 +810,10 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   positions, the letter-by-letter display) is the message window's (task 10.2.2).
 - **Why:** servers and clients share the expansion; windows and tests read the same operations; RichTextLabel cannot
   place text at an absolute position (`\PX`, `\PY`) and its BBCode would need escaping of every message.
+- **Amended (epic 10 review B6; task 10.4.1.2.3):** the values `expand` puts in (variables, names, the currency unit)
+  are text, never codes: their backslashes come out escaped, so a name holding `\C[2]` shows it and a variable holding
+  `\V[n]` is not expanded again (only a `\V` written in the text, as an argument, nests). The reference keeps
+  inserted values out of its code pass in the same way. `escape()` does the same for any text.
 - **Reversal:** the rules are in `jrpg_message_text.cpp` (`expand`, `parse`); the wait lengths are its constants.
 
 ## D-052 — The message window: letter by letter, skipping, layout
@@ -833,6 +837,14 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   (`scene/main/node.h:536-537`).
 - **Why:** `RichTextLabel` cannot place text at an absolute position and its BBCode would need escaping; drawing runs
   ourselves keeps the reveal, waits and positions exact and testable.
+- **Amended (epic 10 review B7, B8, B11, B15, B18, B19; task 10.4.1.2.3):** a letter of the reveal is a grapheme
+  cluster (`TextServer::string_get_character_breaks`), never part of one. Text below the fourth line (by new lines or
+  `\PY`) is left out, with a warning when the message is shown; the text is drawn on its own canvas item clipped to
+  the window, so sizes larger than the line stay inside. The window's height uses the theme's padding; the layout is
+  made again on theme changes and text color changes, and the placement on screen size changes, without restarting
+  the reveal. The speaker's name uses the message font. `\PX`/`\PY` count from the top left inside the padding,
+  while the help (RM-MSG-017/018) says the window's corner: Talewright's choice, so position 0 is the first place
+  text can show. `\^` acts wherever it stands; a `\!` at the very end is the end's own wait (one press).
 - **Amended (epic 10 review B5, B10, B12; task 10.4.1.1):** the message window can take the focus only while a
   message is under way (`FOCUS_ALL` from `show_message` to the end, `FOCUS_NONE` otherwise), so a finished message
   never steals clicks or the focus from choices beside it. While under way, a left or right click anywhere a control

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "10.4.1.2.2 Epic 10 review: lists, choices, number and gold windows",
+  "last_completed": "10.4.1.2.3 Epic 10 review: message text and message window",
   "tasks": [
     {
       "id": "0",
@@ -4275,10 +4275,10 @@
         "10.4.1.2.1, 10.4.1.2.2 and 10.4.1.2.3 done"
       ],
       "test_strategy": "Doctests + bridge goldens.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "10.4.1.2.1",
@@ -4351,7 +4351,7 @@
         "plan/evidence/reviews/epic_10.md",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "df06a99e4b",
       "notes": ""
     },
     {
@@ -4368,9 +4368,20 @@
         "Goldens regenerated on purpose where the drawing changes"
       ],
       "test_strategy": "Doctests (test_jrpg_message_text.h, message window cases) + bridge goldens.",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_message_text.h",
+        "modules/jrpg/core/jrpg_message_text.cpp",
+        "modules/jrpg/runtime/jrpg_message_window.h",
+        "modules/jrpg/runtime/jrpg_message_window.cpp",
+        "modules/jrpg/doc_classes/JRPGMessageText.xml",
+        "modules/jrpg/doc_classes/JRPGMessageWindow.xml",
+        "modules/jrpg/tests/test_jrpg_message_text.h",
+        "modules/jrpg/tests/test_jrpg_message_window.h",
+        "plan/evidence/reviews/epic_10.md",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

@@ -114,6 +114,25 @@ TEST_CASE("[JRPG][MessageText] Variables, names, party members and the currency 
 	CHECK(JRPGMessageText::expand("To \\V[5].", state) == "To Lantern Road.");
 }
 
+TEST_CASE("[JRPG][MessageText] Inserted values are text, never codes") {
+	const Ref<JRPGGameState> state = game();
+	// Epic 10 review B6: a name holding codes shows them as written (its backslash comes out escaped)...
+	state->get_actor(1)->set_name_override("\\C[2]Ari");
+	CHECK(JRPGMessageText::expand("\\N[1]", state) == "\\\\C[2]Ari");
+	CHECK(JRPGMessageText::strip(JRPGMessageText::expand("\\N[1]!", state)) == "\\C[2]Ari!");
+	// ...and a variable holding a code of itself is inserted once, not expanded again and again.
+	state->set_variable(6, "\\V[6]x");
+	CHECK(JRPGMessageText::expand("\\V[6]", state) == "\\\\V[6]x");
+	CHECK(JRPGMessageText::expand("\\N[\\V[4]]", state) == "Cora"); // A number still picks an actor.
+	// Actor 0 and party slot 0 are nobody; a decimal shows as it is.
+	CHECK(JRPGMessageText::expand("[\\N[0]][\\P[0]]", state) == "[][]");
+	state->set_variable(7, 2.5);
+	CHECK(JRPGMessageText::expand("\\V[7]", state) == "2.5");
+	// escape() makes any text show as written.
+	CHECK(JRPGMessageText::escape("a\\b") == "a\\\\b");
+	CHECK(JRPGMessageText::strip(JRPGMessageText::escape("\\C[1]x\\\\")) == "\\C[1]x\\\\");
+}
+
 TEST_CASE("[JRPG][MessageText] Every control code becomes its operation") {
 	using M = JRPGMessageText;
 	CHECK(ops("Hello\\C[2]world\\I[64]!") == PackedStringArray({ op(M::OP_TEXT, "Hello"), op(M::OP_COLOR, "2"), op(M::OP_TEXT, "world"), op(M::OP_ICON, "64"), op(M::OP_TEXT, "!") })); // RM-MSG-005, 006.

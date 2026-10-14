@@ -5,19 +5,26 @@
 	</brief_description>
 	<description>
 		Text shown in messages, choices and database fields can hold control codes. [method expand] replaces those that stand for game data: [code]\V[n][/code] (the value of variable n), [code]\N[n][/code] (the name of actor n), [code]\P[n][/code] (the name of the n-th party member, 1 being the leader) and [code]\G[/code] (the currency unit). [code]\V[/code] comes first, so [code]\N[\V[3]][/code] names the actor whose id variable 3 holds.
-		[method parse] turns the remaining codes into a list of operations for a message window: [code]\C[n][/code] text color, [code]\I[n][/code] icon, [code]\{[/code] and [code]\}[/code] one size step bigger or smaller, [code]\FS[n][/code] font size, [code]\$[/code] gold window, [code]\.[/code] and [code]\|[/code] waits of [constant SHORT_WAIT_FRAMES] and [constant LONG_WAIT_FRAMES] frames, [code]\![/code] wait for the player, [code]\&gt;[/code] and [code]\&lt;[/code] instant display on and off, [code]\^[/code] no wait for the player at the end, [code]\PX[n][/code] and [code]\PY[n][/code] text position. [code]\\[/code] is a backslash. Codes are read without regard to case; a code that is not in this list, or whose [code][n][/code] is malformed, is shown as written.
+		[method parse] turns the remaining codes into a list of operations for a message window: [code]\C[n][/code] text color, [code]\I[n][/code] icon, [code]\{[/code] and [code]\}[/code] one size step bigger or smaller, [code]\FS[n][/code] font size, [code]\$[/code] gold window, [code]\.[/code] and [code]\|[/code] waits of [constant SHORT_WAIT_FRAMES] and [constant LONG_WAIT_FRAMES] frames, [code]\![/code] wait for the player, [code]\&gt;[/code] and [code]\&lt;[/code] instant display on and off, [code]\^[/code] no wait for the player at the end (wherever it stands in the text), [code]\PX[n][/code] and [code]\PY[n][/code] text position, in pixels from the top left of the area inside the window's padding (the reference's help counts from the window's corner). [code]\\[/code] is a backslash. Codes are read without regard to case; a code that is not in this list, or whose [code][n][/code] is malformed, is shown as written.
 		Online, servers send text keys and arguments and clients expand and show the text.
 		Authority: client. Text is expanded and shown where it is read.
 	</description>
 	<tutorials>
 	</tutorials>
 	<methods>
+		<method name="escape" qualifiers="static">
+			<return type="String" />
+			<param index="0" name="text" type="String" />
+			<description>
+				Returns [param text] with every backslash doubled, so it shows as written in a message: a player's name, or text from outside the game.
+			</description>
+		</method>
 		<method name="expand" qualifiers="static">
 			<return type="String" />
 			<param index="0" name="text" type="String" />
 			<param index="1" name="state" type="JRPGGameState" />
 			<description>
-				Returns [param text] with [code]\V[n][/code], [code]\N[n][/code], [code]\P[n][/code] and [code]\G[/code] replaced from [param state] and its database. A variable never set gives 0; an actor or a party slot that does not exist gives empty text. Without a game state the text is returned as it is.
+				Returns [param text] with [code]\V[n][/code], [code]\N[n][/code], [code]\P[n][/code] and [code]\G[/code] replaced from [param state] and its database. A variable never set gives 0; an actor or a party slot that does not exist gives empty text. The values put in are text, never codes: their backslashes come out escaped (see [method escape]), so a name holding [code]\C[2][/code] shows it as written and a variable holding [code]\V[n][/code] is not expanded again. Without a game state the text is returned as it is.
 			</description>
 		</method>
 		<method name="parse" qualifiers="static">

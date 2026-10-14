@@ -41,11 +41,11 @@ class JRPGGameState;
 // send keys and arguments, clients expand and show):
 // - expand() replaces the codes that stand for game data: \V[n] (variable n's value), \N[n] (actor n's name),
 //   \P[n] (the name of the n-th party member, 1 the leader), \G (the currency unit). \V comes first, so \N[\V[3]]
-//   names the actor whose id variable 3 holds;
+//   names the actor whose id variable 3 holds. The values put in are text, never codes (epic 10 review B6);
 // - parse() turns the remaining codes into operations, in order: text, new lines, \C[n] color, \I[n] icon, \{ and \}
 //   one size step bigger or smaller, \FS[n] font size, \$ gold window, \. and \| waits of 15 and 60 frames, \! wait
-//   for the player, \> and \< instant display on and off, \^ no wait for the player at the end, \PX[n] and \PY[n]
-//   text position; \\ is a backslash. Codes are read without regard to case. A code this list does not know, or one
+//   for the player, \> and \< instant display on and off, \^ (anywhere) no wait for the player at the end, \PX[n]
+//   and \PY[n] text position (pixels inside the window's padding); \\ is a backslash. Codes are read without regard to case. A code this list does not know, or one
 //   whose [n] is malformed, is shown as written.
 // Pure logic, no fonts or nodes: laying the text out is the message window's (task 10.2.2).
 // Authority (D-007): client. Text is expanded and shown where it is read.
@@ -76,16 +76,19 @@ public:
 
 	static constexpr int SHORT_WAIT_FRAMES = 15; // \. : a quarter of a second at 60 frames a second.
 	static constexpr int LONG_WAIT_FRAMES = 60; // \| : one second.
-	static constexpr int MAX_EXPAND_PASSES = 8; // \V inside \V, as deep as this.
+	static constexpr int MAX_EXPAND_PASSES = 8; // \V in a \V argument (\V[\V[1]]), as deep as this.
 
 	// The text with \V, \N, \P and \G replaced from p_state (a variable never set is 0; an actor or party slot that
-	// does not exist gives empty text). Without a game state the codes are left as written.
+	// does not exist gives empty text). The values come out escaped, so they show as written and never act as codes.
+	// Without a game state the codes are left as written.
 	static String expand(const String &p_text, const Ref<JRPGGameState> &p_state);
 	// The operations of p_text, as dictionaries {op: Op, and its value: text, index, size, frames, x or y}. Text runs
 	// are merged; each new line is its own operation.
 	static Array parse(const String &p_text);
 	// The text alone: codes removed, \\ as one backslash, icons dropped, new lines kept.
 	static String strip(const String &p_text);
+	// p_text with every backslash doubled, so it shows as written (a player's name, text from outside the game).
+	static String escape(const String &p_text);
 };
 
 VARIANT_ENUM_CAST(JRPGMessageText::Op);

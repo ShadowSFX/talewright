@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 95, in_progress: 0, done: 168, blocked: 0, deferred: 3 (of 266)
+**Totals:** pending: 93, in_progress: 0, done: 170, blocked: 0, deferred: 3 (of 266)
 
 ## [x] 0 Bootstrap and task system
 
@@ -241,10 +241,10 @@ Window frame, selectable list, message system, screen stack. Built before epic 9
 - [ ] **10.4** Epic review: messages/UI (P1) _(deps: 10.3)_
   - [ ] **10.4.1** Epic 10 review: findings fixed (P1)
     - [x] **10.4.1.1** Epic 10 review: input and focus (P1) _(commit: e03f8a993a)_
-    - [ ] **10.4.1.2** Epic 10 review: drawing, theme and data (P1) _(deps: 10.4.1.1)_
+    - [x] **10.4.1.2** Epic 10 review: drawing, theme and data (P1) _(deps: 10.4.1.1)_
       - [x] **10.4.1.2.1** Epic 10 review: window, skin and data (P1) _(deps: 10.4.1.1; commit: 629d4c5407)_
-      - [x] **10.4.1.2.2** Epic 10 review: lists, choices, number and gold windows (P1) _(deps: 10.4.1.2.1; commit: pending)_
-      - [ ] **10.4.1.2.3** Epic 10 review: message text and message window (P1) _(deps: 10.4.1.2.2)_
+      - [x] **10.4.1.2.2** Epic 10 review: lists, choices, number and gold windows (P1) _(deps: 10.4.1.2.1; commit: df06a99e4b)_
+      - [x] **10.4.1.2.3** Epic 10 review: message text and message window (P1) _(deps: 10.4.1.2.2; commit: pending)_
     - [ ] **10.4.1.3** Epic 10 review: screen stack and checks (P1) _(deps: 10.4.1.2)_
   - [ ] **10.4.2** Close epic 10 (P1) _(deps: 10.4.1)_
 

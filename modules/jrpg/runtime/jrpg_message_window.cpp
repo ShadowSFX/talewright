@@ -32,11 +32,14 @@
 #include "jrpg_message_window.h"
 
 #include "core/input/input_event.h"
+#include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
 #include "scene/gui/label.h"
 #include "scene/main/viewport.h"
 #include "scene/resources/font.h"
 #include "scene/theme/theme_db.h"
+#include "servers/rendering/rendering_server.h"
+#include "servers/text/text_server.h"
 
 #include "modules/jrpg/core/jrpg_message_text.h"
 
@@ -104,6 +107,7 @@ void JRPGMessageWindow::_update_theme_item_cache() {
 
 void JRPGMessageWindow::set_text_colors(const PackedColorArray &p_colors) {
 	text_colors = p_colors.is_empty() ? get_default_text_colors() : p_colors;
+	_relayout(); // The colors are part of the laid-out pieces.
 	queue_redraw();
 }
 
@@ -111,7 +115,7 @@ real_t JRPGMessageWindow::_text_left() const {
 	return face.is_valid() ? FACE_SIZE + FACE_SPACING : 0;
 }
 
-void JRPGMessageWindow::_layout(const Array &p_ops) {
+bool JRPGMessageWindow::_layout(const Array &p_ops) {
 	pieces.clear();
 	events.clear();
 	total = 0;
@@ -119,9 +123,18 @@ void JRPGMessageWindow::_layout(const Array &p_ops) {
 	Point2 at(_text_left(), 0);
 	int size = CLAMP(theme_cache.font_size, MIN_FONT_SIZE, MAX_FONT_SIZE);
 	Color color = text_colors.is_empty() ? Color(1, 1, 1) : text_colors[0];
+	// Lines that start below the fourth line's place are left out (epic 10 review B11): the window is LINES high.
+	const real_t text_bottom = LINES * theme_cache.line_height;
+	bool cut = false;
+	TextServer *text_server = TextServerManager::get_singleton() ? TextServerManager::get_singleton()->get_primary_interface().ptr() : nullptr;
 	for (const Variant &entry : p_ops) {
 		const Dictionary op = entry;
 		const int kind = op.get("op", -1);
+		const bool below = at.y + CMP_EPSILON >= text_bottom;
+		if (below && (kind == JRPGMessageText::OP_TEXT || kind == JRPGMessageText::OP_ICON)) {
+			cut = true;
+			continue;
+		}
 		switch (kind) {
 			case JRPGMessageText::OP_TEXT: {
 				Piece piece;
@@ -131,7 +144,15 @@ void JRPGMessageWindow::_layout(const Array &p_ops) {
 				piece.position = at;
 				piece.width = font.is_valid() ? font->get_string_size(piece.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x : 0;
 				piece.first = total;
-				piece.count = piece.text.length();
+				// Revealed by grapheme cluster, never inside one (epic 10 review B19).
+				if (text_server) {
+					piece.breaks = text_server->string_get_character_breaks(piece.text);
+				} else {
+					for (int i = 1; i <= piece.text.length(); i++) {
+						piece.breaks.push_back(i);
+					}
+				}
+				piece.count = piece.breaks.size();
 				total += piece.count;
 				at.x += piece.width;
 				pieces.push_back(piece);
@@ -180,6 +201,23 @@ void JRPGMessageWindow::_layout(const Array &p_ops) {
 			} break;
 		}
 	}
+	return !cut;
+}
+
+void JRPGMessageWindow::_relayout() {
+	if (parsed_ops.is_empty()) {
+		return;
+	}
+	// The same operations give the same characters and events: the reveal goes on where it was.
+	_layout(parsed_ops);
+	_apply_placement();
+	queue_redraw();
+}
+
+void JRPGMessageWindow::_on_viewport_size_changed() {
+	if (!parsed_ops.is_empty()) {
+		_apply_placement();
+	}
 }
 
 Array JRPGMessageWindow::get_layout() const {
@@ -206,7 +244,7 @@ void JRPGMessageWindow::_apply_placement() {
 		return;
 	}
 	const Size2 screen = get_viewport_rect().size;
-	const real_t height = LINES * theme_cache.line_height + JRPGWindow::DEFAULT_PADDING * 2;
+	const real_t height = LINES * theme_cache.line_height + JRPGWindow::theme_cache.padding * 2; // The theme's padding (B7).
 	real_t y = screen.y - height;
 	if (placement == PLACEMENT_TOP) {
 		y = 0;
@@ -226,6 +264,10 @@ void JRPGMessageWindow::_update_name_box() {
 		return;
 	}
 	name_label->set_text(speaker);
+	// The message's font and size (epic 10 review B18).
+	if (theme_cache.font.is_valid()) {
+		name_label->add_theme_font_override(SceneStringName(font), theme_cache.font);
+	}
 	name_label->add_theme_font_size_override(SceneStringName(font_size), theme_cache.font_size);
 	name_box->set_frame_visible(background == BACKGROUND_WINDOW);
 	name_box->set_dim_visible(background == BACKGROUND_DIM);
@@ -240,7 +282,10 @@ void JRPGMessageWindow::show_message(const String &p_text, const Ref<Texture2D> 
 	speaker = p_speaker;
 	background = p_background;
 	placement = p_placement;
-	_layout(JRPGMessageText::parse(p_text));
+	parsed_ops = JRPGMessageText::parse(p_text);
+	if (!_layout(parsed_ops)) {
+		WARN_PRINT(vformat("JRPGMessageWindow: the message has text below its %d lines; that text is not shown.", LINES));
+	}
 	shown = 0;
 	next_event = 0;
 	budget = 0;
@@ -393,9 +438,17 @@ void JRPGMessageWindow::unhandled_input(const Ref<InputEvent> &p_event) {
 void JRPGMessageWindow::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
+			// The screen's size can change (a resized window without stretching): the window follows (B8).
+			get_viewport()->connect(SNAME("size_changed"), callable_mp(this, &JRPGMessageWindow::_on_viewport_size_changed));
 			if (active) {
 				_apply_placement();
 			}
+		} break;
+		case NOTIFICATION_EXIT_TREE: {
+			get_viewport()->disconnect(SNAME("size_changed"), callable_mp(this, &JRPGMessageWindow::_on_viewport_size_changed));
+		} break;
+		case NOTIFICATION_THEME_CHANGED: {
+			_relayout(); // A new font, size or line height (B8).
 		} break;
 		case NOTIFICATION_FOCUS_ENTER: {
 			input_reader.reset(); // Keys down now are not new for this window.
@@ -414,6 +467,10 @@ void JRPGMessageWindow::_notification(int p_what) {
 			_advance();
 		} break;
 		case NOTIFICATION_DRAW: {
+			// The text goes on its own canvas item, clipped to the window, so big sizes stay inside (B11).
+			RenderingServer *rs = RenderingServer::get_singleton();
+			rs->canvas_item_clear(text_canvas_item);
+			rs->canvas_item_set_custom_rect(text_canvas_item, true, Rect2(Point2(), get_size()));
 			const Rect2 content = get_content_rect();
 			if (!is_open()) {
 				break; // The text shows once the window is open.
@@ -433,18 +490,18 @@ void JRPGMessageWindow::_notification(int p_what) {
 					const Rect2 region = get_icon_region(piece.icon);
 					if (icons.is_valid() && region.has_area()) {
 						const real_t side = region.size.y;
-						draw_texture_rect_region(icons, Rect2(origin + Point2(0, (theme_cache.line_height - side) / 2), region.size), region);
+						icons->draw_rect_region(text_canvas_item, Rect2(origin + Point2(0, (theme_cache.line_height - side) / 2), region.size), region);
 					}
 					continue;
 				}
-				if (font.is_null()) {
+				if (font.is_null() || piece.count == 0) {
 					continue;
 				}
 				const int letters = MIN(piece.count, shown - piece.first);
 				const real_t ascent = font->get_ascent(piece.font_size);
 				const real_t height = font->get_height(piece.font_size);
 				const Point2 baseline = origin + Point2(0, (theme_cache.line_height - height) / 2 + ascent);
-				draw_string(font, baseline, piece.text.substr(0, letters), HORIZONTAL_ALIGNMENT_LEFT, -1, piece.font_size, piece.color);
+				font->draw_string(text_canvas_item, baseline, piece.text.substr(0, piece.breaks[letters - 1]), HORIZONTAL_ALIGNMENT_LEFT, -1, piece.font_size, piece.color);
 			}
 		} break;
 	}
@@ -497,6 +554,9 @@ void JRPGMessageWindow::_bind_methods() {
 JRPGMessageWindow::JRPGMessageWindow() {
 	set_focus_mode(FOCUS_NONE); // Focusable while a message is under way.
 	text_colors = get_default_text_colors();
+	text_canvas_item = RenderingServer::get_singleton()->canvas_item_create();
+	RenderingServer::get_singleton()->canvas_item_set_parent(text_canvas_item, get_canvas_item());
+	RenderingServer::get_singleton()->canvas_item_set_clip(text_canvas_item, true);
 	name_box = memnew(JRPGWindow);
 	name_box->set_name("NameBox");
 	name_box->set_visible(false);
@@ -505,4 +565,10 @@ JRPGMessageWindow::JRPGMessageWindow() {
 	name_label = memnew(Label);
 	name_label->set_name("Name");
 	name_box->add_child(name_label);
+}
+
+JRPGMessageWindow::~JRPGMessageWindow() {
+	if (RenderingServer::get_singleton()) {
+		RenderingServer::get_singleton()->free_rid(text_canvas_item);
+	}
 }

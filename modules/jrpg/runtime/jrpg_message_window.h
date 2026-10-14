@@ -39,10 +39,13 @@ class JRPGWindow;
 class Label;
 
 // The message window (task 10.2.2.1; RM-CMD-001, RM-MSG-001..019, D-052): shows a message's text, already expanded
-// (JRPGMessageText::expand), letter by letter, one character a frame at 60 frames a second, with the control codes'
-// colors, icons, sizes, positions, waits, instant display and the gold window request; then waits for the player
-// (pause mark) unless the text ends with \^. OK or cancel while the text appears shows the rest at once, up to the
-// next wait for the player (timed waits are skipped too); a click anywhere on the screen counts as OK. A face is drawn
+// (JRPGMessageText::expand), letter by letter (a letter is a grapheme cluster: an accented letter or an emoji shows
+// whole), one a frame at 60 frames a second, with the control codes' colors, icons, sizes, positions, waits, instant
+// display and the gold window request; then waits for the player (pause mark) unless the text holds \^ (anywhere).
+// A \! at the very end is that last wait: one press ends the message. OK or cancel while the text appears shows the
+// rest at once, up to the next wait for the player (timed waits are skipped too); a click anywhere on the screen
+// counts as OK. Text stays inside the window: lines past the fourth are left out (with a warning) and big sizes are
+// clipped at the window's edge. Layout and placement follow theme and screen size changes. A face is drawn
 // on the left and the text starts beside it; a speaker name shows in a small window above (below when the message is
 // at the top). The window places itself at the top, middle or bottom of the screen, full width, four lines high, on
 // its window frame, a dimmed band or nothing. It takes input while it has focus, as lists do (D-050).
@@ -83,7 +86,8 @@ private:
 		Point2 position;
 		real_t width = 0;
 		int first = 0; // Its first character in the reveal order.
-		int count = 0;
+		int count = 0; // Characters (grapheme clusters; an icon is one).
+		PackedInt32Array breaks; // Where each character of text ends, in code points.
 	};
 	// A control code that acts when the reveal reaches a character.
 	struct Event {
@@ -113,6 +117,8 @@ private:
 	JRPGInputReader input_reader;
 	JRPGWindow *name_box = nullptr;
 	Label *name_label = nullptr;
+	Array parsed_ops; // The message's operations, laid out again when the theme changes.
+	RID text_canvas_item; // The text, clipped to the window (big sizes stay inside).
 
 	struct ThemeCache {
 		Ref<Font> font;
@@ -121,7 +127,10 @@ private:
 	} theme_cache;
 
 	real_t _text_left() const;
-	void _layout(const Array &p_ops);
+	// Lays p_ops out; false when text below the window's lines was left out.
+	bool _layout(const Array &p_ops);
+	void _relayout();
+	void _on_viewport_size_changed();
 	void _apply_placement();
 	void _update_name_box();
 	void _advance();
@@ -163,6 +172,7 @@ public:
 	PackedColorArray get_text_colors() const { return text_colors; }
 
 	JRPGMessageWindow();
+	~JRPGMessageWindow();
 };
 
 VARIANT_ENUM_CAST(JRPGMessageWindow::Background);

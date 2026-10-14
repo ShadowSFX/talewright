@@ -34,9 +34,12 @@
 #include "core/input/input.h"
 #include "core/input/input_map.h"
 #include "core/io/image.h"
+#include "scene/gui/label.h"
 #include "scene/main/scene_tree.h"
 #include "scene/main/window.h"
+#include "scene/resources/font.h"
 #include "scene/resources/image_texture.h"
+#include "servers/text/text_server.h"
 #include "tests/display_server_mock.h"
 #include "tests/signal_watcher.h"
 #include "tests/test_macros.h"
@@ -187,6 +190,58 @@ TEST_CASE("[SceneTree][JRPG][MessageWindow] Skipping, no wait at the end, the go
 	SIGNAL_CHECK("gold_window_requested", one_emission());
 	SIGNAL_UNWATCH(window, "message_finished");
 	SIGNAL_UNWATCH(window, "gold_window_requested");
+	memdelete(window);
+}
+
+TEST_CASE("[SceneTree][JRPG][MessageWindow] Text stays inside the window and follows theme and screen changes") {
+	JRPGMessageWindow *window = add_window();
+	// Epic 10 review B11: text below the fourth line, by a fifth line or by \\PY, is left out (with a warning).
+	ERR_PRINT_OFF;
+	window->show_message("one\ntwo\nthree\nfour\nfive");
+	ERR_PRINT_ON;
+	CHECK(window->get_layout().size() == 4);
+	CHECK(window->get_total_characters() == 15);
+	ERR_PRINT_OFF;
+	window->show_message("a\\PY[200]b");
+	ERR_PRINT_ON;
+	CHECK(window->get_total_characters() == 1);
+
+	// Epic 10 review B7: the height takes the theme's padding.
+	window->add_theme_constant_override("padding", 20);
+	window->show_message("Hi\nthere", Ref<Texture2D>(), "Aria");
+	CHECK(window->get_size().y == JRPGMessageWindow::LINES * JRPGMessageWindow::DEFAULT_LINE_HEIGHT + 40);
+	run_frames(3);
+	const int shown = window->get_shown_characters();
+	CHECK(shown > 0);
+	// Epic 10 review B8: a theme change lays the text out again and resizes the window; the reveal goes on.
+	window->add_theme_constant_override("line_height", 50);
+	CHECK(Point2(Dictionary(window->get_layout()[1])["position"]).y == 50);
+	CHECK(window->get_size().y == JRPGMessageWindow::LINES * 50 + 40);
+	CHECK(window->get_shown_characters() == shown);
+	// The screen's size too.
+	Window *root = SceneTree::get_singleton()->get_root();
+	const Size2i screen = root->get_size();
+	root->set_size(screen + Size2i(100, 0));
+	CHECK(window->get_size().x == window->get_viewport_rect().size.x);
+	CHECK(window->get_size().x == screen.x + 100);
+	root->set_size(screen);
+	CHECK(window->get_size().x == screen.x);
+
+	// Epic 10 review B18: the speaker's name uses the message's font.
+	Ref<FontVariation> font;
+	font.instantiate();
+	window->add_theme_font_override(SceneStringName(font), font);
+	Label *name = Object::cast_to<Label>(window->get_name_box()->get_child(0));
+	REQUIRE(name);
+	CHECK(name->get_theme_font(SceneStringName(font)) == font);
+	window->remove_theme_font_override(SceneStringName(font));
+
+	// Epic 10 review B19: letters are grapheme clusters (an e and its accent appear together).
+	// The text server's own breaks: 2 letters with its break data (editor builds), 3 code points without it (a
+	// template without the data falls back, modules/text_server_adv/text_server_adv.cpp:8186-8195).
+	const String accented(U"e\u0301a");
+	window->show_message(accented);
+	CHECK(window->get_total_characters() == TextServerManager::get_singleton()->get_primary_interface()->string_get_character_breaks(accented).size());
 	memdelete(window);
 }
 

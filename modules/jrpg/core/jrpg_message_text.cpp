@@ -117,24 +117,33 @@ String JRPGMessageText::expand(const String &p_text, const Ref<JRPGGameState> &p
 	if (p_state.is_null()) {
 		return p_text;
 	}
-	String text = p_text.replace("\\\\", String::chr(BACKSLASH_MARK));
+	// Inserted values are text, never codes (epic 10 review B6): their backslashes are kept apart like "\\", so a name
+	// or a variable holding codes shows them as written, and a variable cannot expand itself again and again (only
+	// digits, which have no backslash, can form a nested \V[n] or \N[\V[n]] argument).
+	const String mark = String::chr(BACKSLASH_MARK);
+	const auto as_text = [&](const String &p_value) { return p_value.replace("\\", mark); };
+	String text = p_text.replace("\\\\", mark);
 	for (int pass = 0; pass < MAX_EXPAND_PASSES; pass++) {
-		const String next = replace_code(text, "V", [&](int p_id) { return String(p_state->get_variable(p_id)); });
+		const String next = replace_code(text, "V", [&](int p_id) { return as_text(String(p_state->get_variable(p_id))); });
 		if (next == text) {
 			break;
 		}
 		text = next;
 	}
-	text = replace_code(text, "N", [&](int p_id) { return actor_name(p_state, p_id); });
+	text = replace_code(text, "N", [&](int p_id) { return as_text(actor_name(p_state, p_id)); });
 	text = replace_code(text, "P", [&](int p_slot) {
 		const PackedInt32Array party = p_state->get_party_members();
-		return p_slot >= 1 && p_slot <= party.size() ? actor_name(p_state, party[p_slot - 1]) : String();
+		return p_slot >= 1 && p_slot <= party.size() ? as_text(actor_name(p_state, party[p_slot - 1])) : String();
 	});
 	const Ref<JRPGDatabase> db = p_state->get_database();
 	const Ref<JRPGSystemData> system = db.is_valid() ? db->get_system() : Ref<JRPGSystemData>();
-	const String unit = system.is_valid() ? system->get_currency_unit() : String();
+	const String unit = system.is_valid() ? as_text(system->get_currency_unit()) : String();
 	text = text.replace("\\G", unit).replace("\\g", unit);
-	return text.replace(String::chr(BACKSLASH_MARK), "\\\\");
+	return text.replace(mark, "\\\\");
+}
+
+String JRPGMessageText::escape(const String &p_text) {
+	return p_text.replace("\\", "\\\\");
 }
 
 Array JRPGMessageText::parse(const String &p_text) {
@@ -268,6 +277,7 @@ void JRPGMessageText::_bind_methods() {
 	ClassDB::bind_static_method("JRPGMessageText", D_METHOD("expand", "text", "state"), &JRPGMessageText::expand);
 	ClassDB::bind_static_method("JRPGMessageText", D_METHOD("parse", "text"), &JRPGMessageText::parse);
 	ClassDB::bind_static_method("JRPGMessageText", D_METHOD("strip", "text"), &JRPGMessageText::strip);
+	ClassDB::bind_static_method("JRPGMessageText", D_METHOD("escape", "text"), &JRPGMessageText::escape);
 
 	BIND_ENUM_CONSTANT(OP_TEXT);
 	BIND_ENUM_CONSTANT(OP_NEW_LINE);

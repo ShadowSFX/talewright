@@ -45,17 +45,17 @@ finding below is marked with the task and fix as it lands.
 | 3 | med | A covered screen's controls could still take the focus by click | pending (10.4.1.3) |
 | 4 | med (latent) | Nothing stopped the player walking while a screen or message was active | 10.4.1.1: `JRPGSceneManager::_simulation_step` takes no new step while a control has the focus (D-044 amended). Doctest in `test_jrpg_scene_manager.h` |
 | 5 | med | Message window always focusable (a click on a finished message took the focus from choices); Tab moved its focus away; click-anywhere needed the focus | 10.4.1.1: focusable only while a message is under way; focus keys accepted; clicks count while under way without the focus. Doctest "The message window: focus only while under way…" |
-| 6 | med | Values inserted by `expand` were read again as codes (names with codes, self-expanding variables growing without bound) | pending (10.4.1.2) |
-| 7 | low | Message height used the default padding, not the theme's | pending (10.4.1.2) |
-| 8 | low | Layout and placement computed once: theme, font or screen size changes not followed | pending (10.4.1.2) |
+| 6 | med | Values inserted by `expand` were read again as codes (names with codes, self-expanding variables growing without bound) | 10.4.1.2.3: values put in by `expand` come out escaped (text, never codes): a name with codes shows them, a self-referencing variable is inserted once; new `escape()`. Doctest "Inserted values are text, never codes" (also `\N[0]`, `\P[0]`, decimals) |
+| 7 | low | Message height used the default padding, not the theme's | 10.4.1.2.3: the height uses the theme's padding. Doctest "Text stays inside the window and follows theme and screen changes" |
+| 8 | low | Layout and placement computed once: theme, font or screen size changes not followed | 10.4.1.2.3: the parsed operations are kept and laid out again on THEME_CHANGED and on `set_text_colors`; placement follows the viewport's `size_changed`; the reveal goes on where it was. Same doctest |
 | 9 | low | `show_message` on a closing window reverses the close without `closed` | 10.4.1.2.1: documented on `open()`/`close()` (a closing window turns round, `closed` not emitted). Doctest "Opening and closing…" |
 | 10 | low | Click-anywhere only where no stopping control is under the pointer; right click not handled | 10.4.1.1: left and right clicks both read the message while it is under way, on the window (`gui_input`) or anywhere unhandled; a control that takes the click keeps it (documented). Same doctest |
-| 11 | low | Lines past the fourth and big fonts drawn outside the window | pending (10.4.1.2) |
+| 11 | low | Lines past the fourth and big fonts drawn outside the window | 10.4.1.2.3: text below the fourth line (by new lines or `\PY`) is left out with a warning when shown; text is drawn on its own canvas item clipped to the window, so big sizes stay inside. Same doctest |
 | 12 | low | Reveal by raw elapsed time: jitter gives 0 then 2 letters; a hitch shows many letters at once | 10.4.1.1: a frame within 0.05 of whole 60ths counts that many letters; at most `MAX_LETTERS_PER_FRAME` = 4 a frame. Same doctest |
 | 13 | low | `_activate` forced `PROCESS_MODE_INHERIT` and moved a focus the screen had chosen | pending (10.4.1.3) |
 | 14 | low | Screens freed from outside stayed stacked | pending (10.4.1.3) |
-| 15 | low | Docs: `\^` anywhere, PX/PY wording, D-052 vs RM-MSG-017/018, trailing `\!` merging with the end wait | pending (10.4.1.2) |
+| 15 | low | Docs: `\^` anywhere, PX/PY wording, D-052 vs RM-MSG-017/018, trailing `\!` merging with the end wait | 10.4.1.2.3: docs and header comments: `\^` anywhere; `\PX`/`\PY` in pixels inside the padding (the help's "window corner" noted as a deviation in D-052); a trailing `\!` is the end's wait (one press) |
 | 16 | low | Bridge checks: choice scene not mouse-proof, evidence rewritten each run, golden copy on an empty path | pending (10.4.1.3) |
 | 17 | low | Screen stack signals not checked (SIGNAL_WATCH cannot watch script signals; error lines in the log) | pending (10.4.1.3) |
-| 18 | low | Name box label ignored the message font | pending (10.4.1.2) |
-| 19 | low | Reveal cut inside grapheme clusters | pending (10.4.1.2) |
+| 18 | low | Name box label ignored the message font | 10.4.1.2.3: the name label takes the message font as well as its size. Same doctest |
+| 19 | low | Reveal cut inside grapheme clusters | 10.4.1.2.3: pieces count grapheme clusters (`TextServer::string_get_character_breaks`), and the reveal cuts at cluster ends. Same doctest (an e with a combining accent is one letter with a break-iterator text server) |

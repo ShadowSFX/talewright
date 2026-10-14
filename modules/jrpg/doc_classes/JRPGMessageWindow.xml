@@ -4,7 +4,7 @@
 		The message window: text letter by letter with its control codes, a face, the speaker's name and the pause mark.
 	</brief_description>
 	<description>
-		Shows a message as Show Text does: the text, already expanded with [method JRPGMessageText.expand], appears one character a frame at 60 frames a second, with the control codes' colors ([member text_colors]), icons from the icon set, size steps and sizes, positions, waits, instant display and the gold window request ([signal gold_window_requested]). When the text has appeared the window waits for the player, with the pause mark, unless the text ends with [code]\^[/code]; [signal message_finished] is emitted when the player has read it.
+		Shows a message as Show Text does: the text, already expanded with [method JRPGMessageText.expand], appears one character a frame at 60 frames a second (a character is a grapheme cluster, so an accented letter or an emoji appears whole), with the control codes' colors ([member text_colors]), icons from the icon set, size steps and sizes, positions, waits, instant display and the gold window request ([signal gold_window_requested]). When the text has appeared the window waits for the player, with the pause mark, unless the text holds [code]\^[/code] (anywhere); a [code]\![/code] at the very end is that same wait, so one press ends the message. [signal message_finished] is emitted when the player has read it. Text stays inside the window: text below its [constant LINES] lines is left out (with a warning) and big sizes are clipped at its edge. The layout follows theme changes (font, size, line height, padding) and the window follows the screen's size.
 		[code]jrpg_ok[/code] or [code]jrpg_cancel[/code] while the text appears shows the rest at once, up to the next wait for the player (timed waits are skipped too); a click anywhere on the screen counts too (left or right button), unless a control under it takes the click. The window takes input while it has focus, as [JRPGSelectableList] does; it can take the focus only while a message is under way ([method show_message] gives it the focus, and it lets go when the player has read the message). After a long frame the text catches up at most [constant MAX_LETTERS_PER_FRAME] characters a frame.
 		A face is drawn on the left, and the text starts beside it. The speaker's name shows in a small window above the message, or below it when the message is at the top of the screen. The window places itself at the top, middle or bottom of the screen, full width and [constant LINES] lines high, on its frame, on a dimmed band or on nothing.
 		Authority: client. Online, the server sends the text's key and arguments.
@@ -57,7 +57,7 @@
 		<method name="get_shown_characters" qualifiers="const">
 			<return type="int" />
 			<description>
-				Returns how many characters of the message have appeared (an icon counts as one).
+				Returns how many characters (grapheme clusters) of the message have appeared; an icon counts as one.
 			</description>
 		</method>
 		<method name="get_speaker" qualifiers="const">
@@ -69,7 +69,7 @@
 		<method name="get_total_characters" qualifiers="const">
 			<return type="int" />
 			<description>
-				Returns how many characters the message has (an icon counts as one).
+				Returns how many characters (grapheme clusters) the message has; an icon counts as one, and text left out below the window's lines does not count.
 			</description>
 		</method>
 		<method name="is_busy" qualifiers="const">
@@ -109,7 +109,7 @@
 		</signal>
 		<signal name="message_finished">
 			<description>
-				Emitted when the player has read the message (or at its end, for a message ending with [code]\^[/code]).
+				Emitted when the player has read the message (or at its end, for a message holding [code]\^[/code]).
 			</description>
 		</signal>
 	</signals>
