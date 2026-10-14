@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "7.4 Autotile resolver",
+  "last_completed": "7.5 Import authoring tools",
   "tasks": [
     {
       "id": "0",
@@ -2656,7 +2656,7 @@
       ],
       "test_strategy": "Doctests.",
       "files": [],
-      "commit": "pending",
+      "commit": "7b1706be56",
       "notes": ""
     },
     {
@@ -2667,14 +2667,14 @@
       "dependencies": [
         "7.3"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 2,
       "acceptance_criteria": [
         "Claude imports a character sheet, a face set and an enemy image via the bridge"
       ],
       "test_strategy": "Bridge.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

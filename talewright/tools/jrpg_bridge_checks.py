@@ -7,7 +7,8 @@ starts the editor on it with the Claude bridge, and checks:
   - setup: a first run creates the JRPG data, a second run changes nothing (task 6.2 criterion);
   - undo/redo round trips: every database tool's change is undone exactly (the data matches the state before) and
     redone exactly (it matches the state after), through the editor's own Undo and Redo, the tileset tools included
-    (task 7.3.3: a new TileSet, two generated sheets, tile flags);
+    (task 7.3.3: a new TileSet, two generated sheets, tile flags) and the image tool (task 7.5: a character sheet, a
+    face, an enemy, and a file copied in while the editor runs);
   - saving: jrpg_db_save leaves nothing unsaved and bakes the tile flags.
 
 Usage (from the repository root, after building the editor):
@@ -32,9 +33,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bridge  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
+GENERATED = ROOT / "talewright" / "assets" / "generated"
 SHEETS = {  # Generated CC0 sheets (talewright/assets/LICENSES.md) the tileset checks import.
-    "grass.png": ROOT / "talewright" / "assets" / "generated" / "autotiles" / "grass.png",
-    "outdoor.png": ROOT / "talewright" / "assets" / "generated" / "tiles" / "outdoor.png",
+    "grass.png": GENERATED / "autotiles" / "grass.png",
+    "outdoor.png": GENERATED / "tiles" / "outdoor.png",
+}
+IMAGES = {  # Project path: generated CC0 source, for the image checks (task 7.5).
+    "characters/hero.png": GENERATED / "characters" / "hero.png",
+    "faces/hero.png": GENERATED / "faces" / "hero.png",
+    "enemies/moss_blob.png": GENERATED / "enemies" / "moss_blob.png",
 }
 PROJECT_GODOT = """config_version=5
 
@@ -242,6 +249,60 @@ def run(checks: Checks) -> None:
         ),
     )
 
+    # Images (task 7.5): an actor's character sheet and face, an enemy's battler; undone and redone.
+    c.check("the images are imported", all(c.wait_for_file(f"{name}.import") for name in IMAGES), "no .import files")
+    c.round_trip(
+        "jrpg_db_set_image (a character sheet)",
+        lambda: c.record("actors", 1),
+        lambda: c.call(
+            "jrpg_db_set_image",
+            {"table": "actors", "id": 1, "field": "character", "image": "res://characters/hero.png"},
+        ),
+    )
+    c.round_trip(
+        "jrpg_db_set_image (a face)",
+        lambda: c.record("actors", 1),
+        lambda: c.call(
+            "jrpg_db_set_image", {"table": "actors", "id": 1, "field": "face", "image": "res://faces/hero.png"}
+        ),
+    )
+    c.round_trip(
+        "jrpg_db_set_image (an enemy)",
+        lambda: c.record("enemies", 1),
+        lambda: c.call(
+            "jrpg_db_set_image",
+            {"table": "enemies", "id": 1, "field": "battler", "image": "res://enemies/moss_blob.png"},
+        ),
+    )
+    hero = c.record("actors", 1)
+    c.check(
+        "jrpg_db_set_image: stores UIDs",
+        str(hero["character"]).startswith("uid://") and str(hero["face"]).startswith("uid://"),
+        json.dumps({k: hero[k] for k in ("character", "face")}),
+    )
+    # A file copied in while the editor runs, into a folder it has not seen: the call waits for the import.
+    (c.project / "new_faces").mkdir()
+    shutil.copyfile(GENERATED / "faces" / "mage.png", c.project / "new_faces" / "mage.png")
+    fresh = c.call(
+        "jrpg_db_set_image", {"table": "actors", "id": 2, "field": "face", "image": "res://new_faces/mage.png"}
+    )
+    c.check(
+        "jrpg_db_set_image: waits for a new file's import",
+        fresh.get("size") == [144, 144] and str(fresh.get("value", "")).startswith("uid://"),
+        json.dumps(fresh)[:300],
+    )
+    sheet = c.call(
+        "jrpg_db_set_image", {"table": "actors", "id": 2, "field": "character", "image": "res://characters/hero.png"}
+    )
+    c.check("jrpg_db_set_image: reports the frame size", sheet.get("frame_size") == [48, 48], json.dumps(sheet)[:300])
+    c.check(
+        "jrpg_db_set_image: refuses a sheet that does not divide",
+        c.refused(
+            "jrpg_db_set_image",
+            {"table": "actors", "id": 2, "field": "character", "image": "res://enemies/moss_blob.png", "frames": 5},
+        ),
+    )
+
     # Saving leaves nothing unsaved, bakes the tile flags and writes the TileSet.
     c.call("jrpg_db_save")
     unsaved = c.call("jrpg_db_list")["unsaved_paths"]
@@ -273,6 +334,9 @@ def main() -> int:
     (project / "tiles").mkdir()
     for name, source in SHEETS.items():
         shutil.copyfile(source, project / "tiles" / name)
+    for name, source in IMAGES.items():
+        (project / name).parent.mkdir(exist_ok=True)
+        shutil.copyfile(source, project / name)
     log = (ROOT / "talewright" / "build_logs" / "jrpg_bridge_checks_editor.log").open("w", encoding="utf-8")
     editor = subprocess.Popen(
         [str(bridge.EDITOR), "--editor", "--single-window", "--path", str(project)],

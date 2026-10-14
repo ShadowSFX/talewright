@@ -44,10 +44,16 @@
 #include "jrpg_trait_editor.h"
 #include "jrpg_workspace_shell.h"
 
+#include "core/io/file_access.h"
 #include "core/io/json.h"
 #include "core/io/resource_loader.h"
+#include "core/io/resource_uid.h"
+#include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
+#include "core/os/os.h"
 #include "editor/editor_interface.h"
+#include "editor/file_system/editor_file_system.h"
+#include "scene/main/scene_tree.h"
 #include "scene/resources/2d/tile_set.h"
 #include "scene/resources/texture.h"
 
@@ -1180,6 +1186,133 @@ void tool_tileset_add_sheet(const Dictionary &p_args, const Ref<ClaudeBridgeTool
 	p_call->complete_data(result);
 }
 
+// Image tool (task 7.5): an entry's images (an actor's face, character and battler, an enemy's battler), as the form's
+// file pickers set them, after checking the image loads and, for a character sheet, divides into its frames.
+
+constexpr uint64_t IMPORT_WAIT_MSEC = 20000;
+
+// The image properties of a record: strings picked as *.png files (JRPGActorData, JRPGEnemyData).
+PackedStringArray image_fields(const Object *p_record) {
+	PackedStringArray fields;
+	List<PropertyInfo> properties;
+	p_record->get_property_list(&properties);
+	for (const PropertyInfo &pi : properties) {
+		if (pi.type == Variant::STRING && pi.hint == PROPERTY_HINT_FILE && pi.hint_string.contains("*.png")) {
+			fields.push_back(pi.name);
+		}
+	}
+	return fields;
+}
+
+void apply_image(const Ref<ClaudeBridgeToolCall> &p_call, const String &p_table, int p_id, const String &p_field, const String &p_path, int p_frames, int p_directions) {
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	if (!editing) {
+		return;
+	}
+	Dictionary result;
+	result["table"] = p_table;
+	result["id"] = p_id;
+	result["field"] = p_field;
+	String value;
+	if (!p_path.is_empty()) {
+		const Ref<Texture2D> texture = ResourceLoader::load(p_path);
+		if (texture.is_null()) {
+			p_call->fail(vformat("%s does not load as an image; the Output panel shows why the import failed. Nothing was changed.", p_path));
+			return;
+		}
+		const Vector2i size = texture->get_size();
+		result["image"] = p_path;
+		result["size"] = Array({ size.x, size.y });
+		if (p_field == "character") {
+			// Spec 05, "Character sheets": one character per image, a row per facing (up, right, down, left, then the
+			// diagonals of an 8-direction sheet) and a column per walk frame.
+			if (size.x % p_frames != 0 || size.y % p_directions != 0) {
+				p_call->fail(vformat("A character sheet holds one character: %d rows (one per direction) of %d walk frames. %s is %d x %d pixels, which does not divide into them; give frames and directions if the sheet has other counts. Nothing was changed.", p_directions, p_frames, p_path, size.x, size.y));
+				return;
+			}
+			result["frame_size"] = Array({ size.x / p_frames, size.y / p_directions });
+		}
+		const ResourceUID::ID uid = ResourceLoader::get_resource_uid(p_path);
+		value = uid != ResourceUID::INVALID_ID ? ResourceUID::get_singleton()->id_to_text(uid) : p_path;
+	}
+	Dictionary values;
+	values[p_field] = value;
+	if (editing->set_record_properties(p_table, p_id, values) != OK) {
+		p_call->fail("The entry did not take the image. Nothing was changed.");
+		return;
+	}
+	result["value"] = value;
+	result["undoable"] = true;
+	p_call->complete_data(result);
+}
+
+// A new image is imported by the editor's scan; the call waits for it (polled, as the editor imports on the main
+// thread) up to IMPORT_WAIT_MSEC.
+void wait_for_import(const Ref<ClaudeBridgeToolCall> &p_call, const String &p_table, int p_id, const String &p_field, const String &p_path, int p_frames, int p_directions, int64_t p_deadline) {
+	if (p_call->is_cancelled() || p_call->is_done()) {
+		return;
+	}
+	if (ResourceLoader::exists(p_path)) {
+		apply_image(p_call, p_table, p_id, p_field, p_path, p_frames, p_directions);
+		return;
+	}
+	if (int64_t(OS::get_singleton()->get_ticks_msec()) > p_deadline || !SceneTree::get_singleton()) {
+		p_call->fail(vformat("%s was not imported within %d seconds; the Output panel shows import errors. Nothing was changed.", p_path, int(IMPORT_WAIT_MSEC / 1000)));
+		return;
+	}
+	SceneTree::get_singleton()->create_timer(0.2)->connect("timeout", callable_mp_static(&wait_for_import).bind(p_call, p_table, p_id, p_field, p_path, p_frames, p_directions, p_deadline), Object::CONNECT_ONE_SHOT);
+}
+
+void tool_db_set_image(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	if (!editing) {
+		return;
+	}
+	const Ref<JRPGTable> table = database_table(editing, p_args, p_call);
+	if (table.is_null()) {
+		return;
+	}
+	const int id = database_id(table, p_args, p_call);
+	if (!id) {
+		return;
+	}
+	const String table_name = p_args.get("table", "");
+	const Ref<Resource> record = editing->get_record(table_name, id);
+	const PackedStringArray fields = image_fields(record.ptr());
+	if (fields.is_empty()) {
+		p_call->fail(vformat("%s have no images; actors (face, character, battler) and enemies (battler) do.", table_name.capitalize()));
+		return;
+	}
+	const String field = p_args.get("field", "");
+	if (!fields.has(field)) {
+		p_call->fail(vformat("\"field\" must be one of: %s.", String(", ").join(fields)));
+		return;
+	}
+	int64_t frames = 4;
+	int64_t directions = 4;
+	if (!int_arg(p_args, "frames", 4, p_call, frames) || !int_arg(p_args, "directions", 4, p_call, directions)) {
+		return;
+	}
+	if (frames < 1 || frames > 64 || (directions != 4 && directions != 8)) {
+		p_call->fail("\"frames\" must be 1-64 and \"directions\" 4 or 8.");
+		return;
+	}
+	const String requested = p_args.get("image", "");
+	if (requested.is_empty()) {
+		apply_image(p_call, table_name, id, field, String(), int(frames), int(directions)); // Clears it.
+		return;
+	}
+	const String path = ClaudeBridgeTools::validate_res_path(requested);
+	if (path.is_empty() || !FileAccess::exists(path)) {
+		p_call->fail(vformat("\"image\" must be an image file inside the project (res://); %s was not found. Copy the file into the project folder first.", requested));
+		return;
+	}
+	if (!ResourceLoader::exists(path) && EditorFileSystem::get_singleton() && !EditorFileSystem::get_singleton()->is_scanning()) {
+		EditorFileSystem::get_singleton()->scan_changes(); // A file copied in since the last scan.
+	}
+	wait_for_import(p_call, table_name, id, field, path, int(frames), int(directions), int64_t(OS::get_singleton()->get_ticks_msec() + IMPORT_WAIT_MSEC));
+}
+
 Dictionary schema_property(const String &p_type, const String &p_description) {
 	Dictionary property;
 	property["type"] = p_type;
@@ -1389,6 +1522,23 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	save.destructive = true; // Writes files: as saving scenes, not undoable (talewright/docs/claude_bridge.md, annotations).
 	save.func = &tool_db_save;
 	r_mcp.register_tool(save);
+
+	ClaudeBridgeMCP::Tool set_image;
+	set_image.name = "jrpg_db_set_image";
+	set_image.title = "Set an entry's image";
+	set_image.description = "Gives an actor its face, character or battler image, or an enemy its battler, as the form's file pickers do. image is a res:// image file (copy it into the project first; a new file is imported by the editor, and the call waits up to 20 s for it); an empty image clears the field. A character sheet must divide into its directions (rows: up, right, down, left, then the diagonals of an 8-direction sheet) and walk frames (columns), default 4 and 4. Stores the image's uid://; one undoable action. Returns the image size (and frame size for a character).";
+	Dictionary set_image_properties;
+	set_image_properties["table"] = schema_property("string", "actors or enemies.");
+	set_image_properties["id"] = id_property;
+	set_image_properties["field"] = schema_property("string", "face, character or battler (enemies: battler).");
+	set_image_properties["image"] = schema_property("string", "res:// path of the image, or an empty string to clear.");
+	set_image_properties["frames"] = schema_property("integer", "Walk frames per row of a character sheet (default 4).");
+	set_image_properties["directions"] = schema_property("integer", "Rows of a character sheet: 4 or 8 (default 4).");
+	set_image.input_schema = ClaudeBridgeMCP::object_schema(set_image_properties, PackedStringArray({ "table", "id", "field", "image" }));
+	set_image.read_only = false;
+	set_image.destructive = false; // Undoable.
+	set_image.func = &tool_db_set_image;
+	r_mcp.register_tool(set_image);
 
 	const Dictionary tileset_id = schema_property("integer", "Tileset ID in the database (1 = first tileset).");
 

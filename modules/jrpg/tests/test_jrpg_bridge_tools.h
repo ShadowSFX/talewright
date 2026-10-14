@@ -96,7 +96,7 @@ struct Bridge {
 
 TEST_CASE("[JRPG][BridgeTools] The database tools are registered") {
 	Bridge bridge;
-	for (const char *name : { "jrpg_db_list", "jrpg_db_get", "jrpg_db_set", "jrpg_db_create", "jrpg_db_set_maximum", "jrpg_db_clear", "jrpg_db_copy", "jrpg_db_paste", "jrpg_db_generate_curve", "jrpg_db_save", "jrpg_addon_install", "jrpg_tileset_flags", "jrpg_tileset_set_flag", "jrpg_tileset_create", "jrpg_tileset_add_sheet" }) {
+	for (const char *name : { "jrpg_db_list", "jrpg_db_get", "jrpg_db_set", "jrpg_db_create", "jrpg_db_set_maximum", "jrpg_db_clear", "jrpg_db_copy", "jrpg_db_paste", "jrpg_db_generate_curve", "jrpg_db_save", "jrpg_addon_install", "jrpg_tileset_flags", "jrpg_tileset_set_flag", "jrpg_tileset_create", "jrpg_tileset_add_sheet", "jrpg_db_set_image" }) {
 		CHECK_MESSAGE(bridge.mcp.has_tool(name), name);
 	}
 }
@@ -293,6 +293,33 @@ TEST_CASE("[SceneTree][JRPG][BridgeTools] Reading and setting tile flags") {
 	bridge.call("jrpg_tileset_add_sheet", R"({"id":2,"image":"res://missing.png"})");
 	CHECK(bridge.text.contains("has no TileSet"));
 	CHECK(data->get_palette().size() == 3);
+}
+
+TEST_CASE("[JRPG][BridgeTools] Setting images: which fields, which files") {
+	Bridge bridge;
+	// Importing a real image needs the editor's file system: talewright/tools/jrpg_bridge_checks.py covers it.
+	bridge.call("jrpg_db_set_image", R"({"table":"items","id":1,"field":"icon","image":"res://a.png"})");
+	CHECK(bridge.failed);
+	CHECK(bridge.text.contains("Items have no images"));
+	bridge.call("jrpg_db_set_image", R"({"table":"actors","id":1,"field":"portrait","image":"res://a.png"})");
+	CHECK(bridge.failed);
+	CHECK(bridge.text.contains("one of: face, character, battler"));
+	bridge.call("jrpg_db_set_image", R"({"table":"enemies","id":1,"field":"face","image":"res://a.png"})");
+	CHECK(bridge.text.contains("one of: battler"));
+	bridge.call("jrpg_db_set_image", R"({"table":"actors","id":1,"field":"face","image":"C:/Users/someone/face.png"})");
+	CHECK(bridge.failed);
+	CHECK(bridge.text.contains("inside the project"));
+	bridge.call("jrpg_db_set_image", R"({"table":"actors","id":1,"field":"face","image":"res://no/such/face.png"})");
+	CHECK(bridge.text.contains("was not found"));
+	bridge.call("jrpg_db_set_image", R"({"table":"actors","id":1,"field":"character","image":"res://x.png","directions":6})");
+	CHECK(bridge.text.contains("\"directions\" 4 or 8"));
+	// An empty image clears the field.
+	const Ref<JRPGEntry> hero = bridge.entry(JRPGDatabase::TABLE_ACTORS, 1);
+	hero->set("face", "res://faces/old.png");
+	const Dictionary cleared = bridge.call("jrpg_db_set_image", R"({"table":"actors","id":1,"field":"face","image":""})");
+	REQUIRE_FALSE(bridge.failed);
+	CHECK(String(hero->get("face")).is_empty());
+	CHECK(bool(cleared["undoable"]));
 }
 
 } // namespace TestJRPGBridgeTools

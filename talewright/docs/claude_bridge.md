@@ -92,6 +92,7 @@ by the editor. Exit codes: 0 ok, 1 the tool reported an error, 2 transport/proto
 | `jrpg_db_generate_curve` | Generate one class parameter curve from level 1 and level 99 values and a growth shape (undoable) |
 | `jrpg_db_save` | Save the database files with unsaved changes |
 | `jrpg_db_select` | Show the Database section on a table (or `system`, `types`, `terms`) and select an entry |
+| `jrpg_db_set_image` | Give an actor its face, character or battler image, or an enemy its battler, from a `res://` image (a newly copied file is imported first: the call waits up to 20 s); a character sheet must divide into its directions and walk frames; stores the `uid://`, undoable; an empty image clears the field |
 | `jrpg_tileset_flags` | A tileset's palette with each tile's flags decoded (`pass`, `no_entry`/`no_exit` sides, overhead, ladder, bush, counter, damage, `terrain_tag`), kinds whose shapes differ marked `mixed`, missing tiles marked, and whether the baked flags are up to date |
 | `jrpg_tileset_set_flag` | Set one flag on palette tiles (`index` or `indexes`), as a click on the tileset form's overlay: every shape of a kind, other flags kept; one undoable action |
 | `jrpg_tileset_create` / `jrpg_tileset_add_sheet` | Create a tileset's TileSet file (48 px tiles by default, never replacing a file; choosing it is undoable) / bring an image's tiles in as plain tiles, an autotile or a wall (layout guessed from the size unless `kind`), undoable |
