@@ -20,6 +20,7 @@ def get_doc_classes():
         "JRPGAutotileResolver",
         "JRPGBattleRules",
         "JRPGCharacterSheet",
+        "JRPGCharacterSprite",
         "JRPGClassData",
         "JRPGCommonEventData",
         "JRPGDatabase",

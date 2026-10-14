@@ -6,7 +6,7 @@
 	<description>
 		The [JRPGSceneManager] places one player on the current map and moves it once per simulation step: the [JRPGMover] returned by [method get_mover] decides each step from the map's cell cache, and the node is drawn where the mover says, between the map's lower tiles and its overhead tiles.
 		The player moves with the [code]jrpg_up[/code], [code]jrpg_down[/code], [code]jrpg_left[/code] and [code]jrpg_right[/code] actions; when several are held, the one pressed last wins. Holding [code]jrpg_dash[/code] makes it one speed level faster, unless the map turns dashing off. The [Camera2D] returned by [method get_camera] follows it within the map's bounds.
-		Until the character has a sprite it draws a marker that shows the way it faces.
+		It shows the party leader's character as a [JRPGCharacterSprite] ([method set_character]); without one it draws a marker that shows the way it faces.
 	</description>
 	<tutorials>
 	</tutorials>
@@ -29,6 +29,12 @@
 				Returns the size of the map's cells, in pixels.
 			</description>
 		</method>
+		<method name="get_character" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the character sheet reference the player is drawn with, or an empty string.
+			</description>
+		</method>
 		<method name="get_direction" qualifiers="const">
 			<return type="int" enum="JRPGSystemData.Direction" />
 			<description>
@@ -39,6 +45,12 @@
 			<return type="JRPGMover" />
 			<description>
 				Returns the mover that holds the player's cell, facing, speed and the step under way.
+			</description>
+		</method>
+		<method name="get_sprite" qualifiers="const">
+			<return type="JRPGCharacterSprite" />
+			<description>
+				Returns the sprite that draws the player's character.
 			</description>
 		</method>
 		<method name="is_moving" qualifiers="const">
@@ -60,6 +72,13 @@
 			<param index="0" name="size" type="Vector2i" />
 			<description>
 				Sets the size of the map's cells, in pixels, and moves the player to match.
+			</description>
+		</method>
+		<method name="set_character">
+			<return type="void" />
+			<param index="0" name="reference" type="String" />
+			<description>
+				Draws the player with the character sheet [param reference] (a [code]uid://[/code] or [code]res://[/code] path, as an actor's character). An empty reference, or one that cannot be shown, draws the marker.
 			</description>
 		</method>
 	</methods>

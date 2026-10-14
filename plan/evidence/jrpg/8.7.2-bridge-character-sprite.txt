@@ -1,0 +1,27 @@
+# 8.7.2 bridge verification: the player's character sprite
+  starting party: PackedInt32Array(1)
+## actor 1 (the party leader) gets the generated hero sheet: 4 frames by 4 directions, drawn as it is
+  set: {'size': [192, 192], 'frame_size': [48, 48], 'imported_as': None}
+## Play From Start: the hero stands at (3, 10) facing down, frame 0
+  sprite: {'visible': True, 'animation': 'down', 'frame': 0, 'offset': 'Vector2(-24, -24)'}
+  game screenshot: plan/evidence/jrpg/8.7.2-standing.png
+## hold right: the right-facing animation, its frames going round; released, it stands on frame 0
+  sprite: {'visible': True, 'animation': 'right', 'frame': 2, 'offset': 'Vector2(-24, -24)'}
+  sprite: {'visible': True, 'animation': 'right', 'frame': 0, 'offset': 'Vector2(-24, -24)'}
+  sprite: {'visible': True, 'animation': 'right', 'frame': 2, 'offset': 'Vector2(-24, -24)'}
+  sprite: {'visible': True, 'animation': 'right', 'frame': 3, 'offset': 'Vector2(-24, -24)'}
+  game screenshot: plan/evidence/jrpg/8.7.2-walking.png
+  sprite: {'visible': True, 'animation': 'right', 'frame': 0, 'offset': 'Vector2(-24, -24)'}
+## another layout: the first three columns of the hero sheet, set with frames = 3, imports as a Character Sheet
+  set: {'size': [144, 192], 'frame_size': [48, 48], 'imported_as': 'Character Sheet'}
+  .import: ['importer="talewright.character_sheet"', 'type="SpriteFrames"', 'frames=3', 'directions=4']
+## three frames now: 1, 2, 0 while walking
+  sprite: {'visible': True, 'animation': 'right', 'frame': 2, 'offset': 'Vector2(-24, -24)'}
+  sprite: {'visible': True, 'animation': 'right', 'frame': 1, 'offset': 'Vector2(-24, -24)'}
+  sprite: {'visible': True, 'animation': 'right', 'frame': 0, 'offset': 'Vector2(-24, -24)'}
+  sprite: {'visible': True, 'animation': 'right', 'frame': 2, 'offset': 'Vector2(-24, -24)'}
+  game screenshot: plan/evidence/jrpg/8.7.2-three-frames.png
+  sprite: {'visible': True, 'animation': 'right', 'frame': 0, 'offset': 'Vector2(-24, -24)'}
+## errors
+    "errors": 0,
+    "warnings": 0,

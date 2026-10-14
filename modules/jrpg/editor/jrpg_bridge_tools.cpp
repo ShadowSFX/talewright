@@ -35,6 +35,7 @@
 
 #ifdef MODULE_CLAUDE_BRIDGE_ENABLED
 
+#include "jrpg_character_sheet_importer.h"
 #include "jrpg_curve_editor.h"
 #include "jrpg_database_editing.h"
 #include "jrpg_database_view.h"
@@ -52,6 +53,7 @@
 
 #include "core/crypto/crypto_core.h"
 #include "core/io/file_access.h"
+#include "core/io/image.h"
 #include "core/io/json.h"
 #include "core/io/resource_loader.h"
 #include "core/io/resource_uid.h"
@@ -66,6 +68,8 @@
 #include "scene/main/scene_tree.h"
 #include "scene/main/viewport.h"
 #include "scene/resources/2d/tile_set.h"
+#include "scene/resources/atlas_texture.h"
+#include "scene/resources/sprite_frames.h"
 #include "scene/resources/texture.h"
 #include "scene/resources/world_2d.h"
 #include "servers/rendering/rendering_server.h"
@@ -1415,12 +1419,23 @@ void apply_image(const Ref<ClaudeBridgeToolCall> &p_call, const String &p_table,
 	result["field"] = p_field;
 	String value;
 	if (!p_path.is_empty()) {
-		const Ref<Texture2D> texture = ResourceLoader::load(p_path);
-		if (texture.is_null()) {
+		Ref<Resource> loaded = ResourceLoader::load(p_path);
+		Ref<Texture2D> texture = loaded;
+		Ref<SpriteFrames> imported = p_field == "character" ? Ref<SpriteFrames>(loaded) : Ref<SpriteFrames>(); // A Character Sheet (D-045).
+		// The image's own size: a sheet imported as SpriteFrames shows it in its frames' atlas.
+		const List<StringName>::Element *first = nullptr;
+		List<StringName> animations;
+		if (imported.is_valid()) {
+			imported->get_animation_list(&animations);
+			first = animations.front();
+		}
+		const Ref<AtlasTexture> atlas_frame = first && imported->get_frame_count(first->get()) > 0 ? imported->get_frame_texture(first->get(), 0) : Ref<Texture2D>();
+		const Ref<Texture2D> atlas = atlas_frame.is_valid() ? atlas_frame->get_atlas() : Ref<Texture2D>();
+		if (texture.is_null() && atlas.is_null()) {
 			p_call->fail(vformat("%s does not load as an image; the Output panel shows why the import failed. Nothing was changed.", p_path));
 			return;
 		}
-		const Vector2i size = texture->get_size();
+		const Vector2i size = texture.is_valid() ? Vector2i(texture->get_size()) : Vector2i(atlas->get_size());
 		result["image"] = p_path;
 		result["size"] = Array({ size.x, size.y });
 		if (p_field == "character") {
@@ -1431,6 +1446,31 @@ void apply_image(const Ref<ClaudeBridgeToolCall> &p_call, const String &p_table,
 				return;
 			}
 			result["frame_size"] = Array({ size.x / p_frames, size.y / p_directions });
+			// D-045: an image of the default layout is drawn as it is; another layout imports it as a Character Sheet
+			// with those counts (unless it already is), as Import As in the Import dock would.
+			const bool default_layout = p_frames == 4 && p_directions == 4;
+			const bool imported_alike = imported.is_valid() && imported->get_animation_names().size() == p_directions && imported->has_animation("down") && imported->get_frame_count("down") == p_frames;
+			if (!default_layout && !imported_alike) {
+				EditorFileSystem *file_system = jrpg_editor_file_system();
+				if (!file_system) {
+					p_call->fail("Another layout imports the sheet, which needs the editor's file system. Nothing was changed.");
+					return;
+				}
+				HashMap<StringName, Variant> options;
+				options["frames"] = p_frames;
+				options["directions"] = p_directions;
+				// Let go of the file's old resource first: held, the cache would keep it in place of the new type.
+				loaded.unref();
+				texture.unref();
+				imported.unref();
+				file_system->reimport_file_with_custom_parameters(p_path, JRPGCharacterSheetImporter::IMPORTER_NAME, options);
+				const Ref<SpriteFrames> sheet = ResourceLoader::load(p_path, "", ResourceFormatLoader::CACHE_MODE_IGNORE);
+				if (sheet.is_null()) {
+					p_call->fail(vformat("%s did not import as a character sheet; the Output panel shows why.", p_path));
+					return;
+				}
+				result["imported_as"] = "Character Sheet";
+			}
 		}
 		const ResourceUID::ID uid = ResourceLoader::get_resource_uid(p_path);
 		value = uid != ResourceUID::INVALID_ID ? ResourceUID::get_singleton()->id_to_text(uid) : p_path;

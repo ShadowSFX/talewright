@@ -31,28 +31,46 @@
 
 #include "jrpg_player.h"
 
+#include "jrpg_character_sheet.h"
+#include "jrpg_character_sprite.h"
 #include "jrpg_map.h"
 
 #include "core/input/input.h"
 #include "core/input/input_map.h"
 #include "core/object/class_db.h"
 #include "scene/2d/camera_2d.h"
+#include "scene/resources/sprite_frames.h"
 
 void JRPGPlayer::place(const Vector2i &p_cell, JRPGSystemData::Direction p_direction) {
 	mover->set_cell(p_cell);
 	mover->set_direction(p_direction);
+	sprite->reset_walk();
+	update_position();
+}
+
+void JRPGPlayer::set_character(const String &p_reference) {
+	character = p_reference;
+	String error;
+	const Ref<SpriteFrames> frames = p_reference.is_empty() ? Ref<SpriteFrames>() : JRPGCharacterSheet::load_frames(p_reference, &error);
+	if (!p_reference.is_empty() && frames.is_null()) {
+		WARN_PRINT(vformat("JRPG: the player's character %s cannot be shown: %s", p_reference, error));
+	}
+	sprite->set_character_frames(frames);
+	sprite->set_visible(frames.is_valid());
 	update_position();
 }
 
 void JRPGPlayer::set_cell_size(const Vector2i &p_size) {
 	cell_size = p_size.maxi(1);
+	sprite->set_cell_size(cell_size);
 	update_position();
 }
 
 void JRPGPlayer::update_position() {
 	// The middle of the cell the mover is on, or between two on the way.
 	set_position((mover->get_position() + Vector2(0.5, 0.5)) * Vector2(cell_size));
-	queue_redraw(); // The facing may have changed.
+	sprite->show_state(mover->get_position(), mover->get_direction(), mover->is_moving());
+	queue_redraw(); // The marker's facing may have changed.
 }
 
 int JRPGPlayer::read_direction() {
@@ -77,7 +95,7 @@ bool JRPGPlayer::is_dash_held() const {
 }
 
 void JRPGPlayer::_notification(int p_what) {
-	if (p_what != NOTIFICATION_DRAW) {
+	if (p_what != NOTIFICATION_DRAW || sprite->is_visible()) {
 		return;
 	}
 	// A marker until character sprites (task 8.7): a disc, and a notch on the side it faces.
@@ -94,6 +112,9 @@ void JRPGPlayer::_notification(int p_what) {
 void JRPGPlayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_mover"), &JRPGPlayer::get_mover);
 	ClassDB::bind_method(D_METHOD("get_camera"), &JRPGPlayer::get_camera);
+	ClassDB::bind_method(D_METHOD("get_sprite"), &JRPGPlayer::get_sprite);
+	ClassDB::bind_method(D_METHOD("set_character", "reference"), &JRPGPlayer::set_character);
+	ClassDB::bind_method(D_METHOD("get_character"), &JRPGPlayer::get_character);
 	ClassDB::bind_method(D_METHOD("place", "cell", "direction"), &JRPGPlayer::place);
 	ClassDB::bind_method(D_METHOD("set_cell_size", "size"), &JRPGPlayer::set_cell_size);
 	ClassDB::bind_method(D_METHOD("get_cell_size"), &JRPGPlayer::get_cell_size);
@@ -108,4 +129,8 @@ JRPGPlayer::JRPGPlayer() {
 	camera = memnew(Camera2D);
 	camera->set_name("Camera");
 	add_child(camera, false, INTERNAL_MODE_FRONT);
+	sprite = memnew(JRPGCharacterSprite);
+	sprite->set_name("Sprite");
+	sprite->set_visible(false); // Until a character is set.
+	add_child(sprite, false, INTERNAL_MODE_FRONT);
 }

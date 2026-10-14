@@ -37,11 +37,13 @@
 #include "modules/jrpg/core/jrpg_mover.h"
 
 class Camera2D;
+class JRPGCharacterSprite;
 
 // The player's character on the current map (task 8.6.2.2): a JRPGMover the scene manager steps on the simulation
 // clock, drawn at the characters' z (JRPGMap::Z_CHARACTERS) where the mover says, with the camera that follows it.
 // It reads the direction actions (jrpg_up, jrpg_down, jrpg_left, jrpg_right): of those held, the one pressed last.
-// Until character sprites exist (task 8.7) it draws a marker showing its facing.
+// It shows its character (set_character: the party leader's) as a JRPGCharacterSprite; without one it draws a marker
+// showing its facing.
 // Authority (D-007): server. Online, the client sends the steps its player asks for and predicts them with the same
 // mover; the zone server's mover decides.
 class JRPGPlayer : public Node2D {
@@ -54,6 +56,8 @@ public:
 private:
 	Ref<JRPGMover> mover;
 	Camera2D *camera = nullptr;
+	JRPGCharacterSprite *sprite = nullptr;
+	String character;
 	Vector2i cell_size = Vector2i(48, 48);
 	LocalVector<int> held; // Direction actions held, in the order they were pressed.
 
@@ -64,6 +68,11 @@ protected:
 public:
 	Ref<JRPGMover> get_mover() const { return mover; }
 	Camera2D *get_camera() const { return camera; }
+	JRPGCharacterSprite *get_sprite() const { return sprite; }
+	// Draws the player with the character sheet p_reference (a uid:// or res:// path, as an actor's character); an
+	// empty or unusable reference shows the marker.
+	void set_character(const String &p_reference);
+	String get_character() const { return character; }
 	// Places the character on p_cell facing p_direction at once (a transfer).
 	void place(const Vector2i &p_cell, JRPGSystemData::Direction p_direction);
 	// The size of the map's cells, in pixels.

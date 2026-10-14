@@ -155,6 +155,8 @@ public:
 	Ref<JRPGMapCellCache> get_cell_cache() const { return cell_cache; }
 	// Runs p_steps simulation steps now, as frames would (tests, tools).
 	void run_steps(int p_steps);
+	// Draws the player as the party leader's character again (after the party or the actor's character changed).
+	void refresh_player_character();
 	AudioStreamPlayer *get_bgm_player() const { return bgm_player; }
 	AudioStreamPlayer *get_bgs_player() const { return bgs_player; }
 	// How opaque the fade is now, 0-1.

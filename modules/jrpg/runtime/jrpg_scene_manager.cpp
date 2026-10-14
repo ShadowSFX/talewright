@@ -45,6 +45,7 @@
 #include "scene/resources/packed_scene.h"
 #include "servers/audio/audio_stream.h"
 
+#include "modules/jrpg/core/jrpg_actor_data.h"
 #include "modules/jrpg/core/jrpg_audio_cue.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_game_state.h"
@@ -54,6 +55,7 @@
 #include "modules/jrpg/core/jrpg_mover.h"
 #include "modules/jrpg/core/jrpg_sim_clock.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
+#include "modules/jrpg/core/jrpg_table.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 #include "modules/jrpg/runtime/jrpg_map_files.h"
 #include "modules/jrpg/runtime/jrpg_player.h"
@@ -128,6 +130,17 @@ void JRPGSceneManager::_begin(const Ref<JRPGGameState> &p_state) {
 	pending = Transfer();
 	_set_fade(0);
 	set_process_internal(true); // The game loop.
+	refresh_player_character();
+}
+
+void JRPGSceneManager::refresh_player_character() {
+	ERR_FAIL_COND_MSG(game_state.is_null(), "JRPGSceneManager: no game is running.");
+	// The party leader's character (spec 03: the player shows the first party member).
+	const PackedInt32Array party = game_state->get_party_members();
+	const Ref<JRPGDatabase> db = game_state->get_database();
+	const Ref<JRPGTable> actors = db.is_valid() ? db->get_table(JRPGDatabase::TABLE_ACTORS) : Ref<JRPGTable>();
+	const Ref<JRPGActorData> leader = !party.is_empty() && actors.is_valid() ? Ref<JRPGActorData>(actors->get_entry(party[0])) : Ref<JRPGActorData>();
+	player->set_character(leader.is_valid() ? leader->get_character() : String());
 }
 
 Error JRPGSceneManager::resume(const Ref<JRPGGameState> &p_state) {
@@ -479,6 +492,7 @@ void JRPGSceneManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_player"), &JRPGSceneManager::get_player);
 	ClassDB::bind_method(D_METHOD("get_cell_cache"), &JRPGSceneManager::get_cell_cache);
 	ClassDB::bind_method(D_METHOD("run_steps", "steps"), &JRPGSceneManager::run_steps);
+	ClassDB::bind_method(D_METHOD("refresh_player_character"), &JRPGSceneManager::refresh_player_character);
 	ClassDB::bind_method(D_METHOD("get_bgm_player"), &JRPGSceneManager::get_bgm_player);
 	ClassDB::bind_method(D_METHOD("get_bgs_player"), &JRPGSceneManager::get_bgs_player);
 	ClassDB::bind_method(D_METHOD("get_fade_amount"), &JRPGSceneManager::get_fade_amount);

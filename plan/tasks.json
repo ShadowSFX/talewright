@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.7.1 Character sheet frames and importer",
+  "last_completed": "8.7.2 Character sprite on the map",
   "tasks": [
     {
       "id": "0",
@@ -3404,15 +3404,15 @@
       "dependencies": [
         "8.6"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "8.7.1 and 8.7.2 done"
       ],
       "test_strategy": "Bridge screenshots.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "8.7.1",
@@ -3436,7 +3436,7 @@
         "modules/jrpg/config.py",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "a1fcdccc61",
       "notes": ""
     },
     {
@@ -3453,9 +3453,24 @@
         "Walk frames follow the step progress at every speed (doctest)"
       ],
       "test_strategy": "Doctests + bridge verification with screenshots.",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/runtime/jrpg_character_sprite.{h,cpp}",
+        "modules/jrpg/runtime/jrpg_player.{h,cpp}",
+        "modules/jrpg/runtime/jrpg_scene_manager.{h,cpp}",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/tests/test_jrpg_character_sheet.h",
+        "modules/jrpg/tests/test_jrpg_scene_manager.h",
+        "modules/jrpg/doc_classes/JRPGCharacterSprite.xml",
+        "modules/jrpg/doc_classes/JRPGPlayer.xml",
+        "modules/jrpg/doc_classes/JRPGSceneManager.xml",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "talewright/tools/jrpg_bridge_checks.py",
+        "plan/DECISIONS.md",
+        "plan/evidence/jrpg/8.7.2-*"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

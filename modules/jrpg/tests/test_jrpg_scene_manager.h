@@ -33,6 +33,7 @@
 
 #include "core/input/input.h"
 #include "core/input/input_map.h"
+#include "core/io/image.h"
 #include "core/io/resource_saver.h"
 #include "scene/2d/camera_2d.h"
 #include "scene/2d/node_2d.h"
@@ -40,6 +41,7 @@
 #include "scene/main/scene_tree.h"
 #include "scene/main/window.h"
 #include "scene/resources/audio_stream_wav.h"
+#include "scene/resources/image_texture.h"
 #include "scene/resources/packed_scene.h"
 #include "servers/audio/audio_driver_dummy.h"
 #include "servers/audio/audio_server.h"
@@ -47,6 +49,7 @@
 #include "tests/test_macros.h"
 #include "tests/test_utils.h"
 
+#include "modules/jrpg/core/jrpg_actor_data.h"
 #include "modules/jrpg/core/jrpg_audio_cue.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_game_state.h"
@@ -55,6 +58,7 @@
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
+#include "modules/jrpg/runtime/jrpg_character_sprite.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 #include "modules/jrpg/runtime/jrpg_player.h"
 #include "modules/jrpg/runtime/jrpg_scene_manager.h"
@@ -533,6 +537,40 @@ TEST_CASE("[SceneTree][JRPG][SceneManager] A map can turn dashing off; the camer
 	CHECK(player->get_parent() == m->get_map()); // The player went along.
 	CHECK((camera->get_limit(SIDE_LEFT) == 0 && camera->get_limit(SIDE_RIGHT) == 4800));
 	CHECK((camera->get_limit(SIDE_TOP) == 0 && camera->get_limit(SIDE_BOTTOM) == 3840));
+}
+
+TEST_CASE("[SceneTree][JRPG][SceneManager] The player shows the party leader's character, or the marker without one") {
+	Fixture f;
+	add_meadow(f);
+	Ref<Image> image = Image::create_empty(192, 192, false, Image::FORMAT_RGBA8);
+	image->fill(Color(0.3, 0.5, 0.9));
+	const String sheet_path = TestUtils::get_temp_path("jrpg_leader_sheet.tres");
+	REQUIRE(ResourceSaver::save(ImageTexture::create_from_image(image), sheet_path) == OK);
+	Ref<JRPGTable> actors;
+	actors.instantiate();
+	actors->set_entry_class("JRPGActorData");
+	actors->set_maximum(2);
+	Ref<JRPGActorData>(actors->get_entry(1))->set_character(sheet_path);
+	f.db->set_table(JRPGDatabase::TABLE_ACTORS, actors);
+	f.db->get_system()->set_starting_party(PackedInt32Array({ 1, 2 }));
+
+	JRPGSceneManager *m = f.manager;
+	REQUIRE(m->start_new_game(5) == OK);
+	JRPGPlayer *player = m->get_player();
+	JRPGCharacterSprite *sprite = player->get_sprite();
+	CHECK((sprite->is_visible() && sprite->get_sprite_frames().is_valid()));
+	CHECK((sprite->get_animation() == StringName("down") && sprite->get_frame() == 0));
+	hold("jrpg_right", true);
+	m->run_steps(12);
+	CHECK((sprite->get_animation() == StringName("right") && sprite->get_frame() == 2)); // Past half a cell.
+	hold("jrpg_right", false);
+	m->run_steps(30);
+	CHECK(sprite->get_frame() == 0); // Standing at the wall.
+
+	// Actor 2 leads: no character, the marker.
+	f.state()->set_party_members(PackedInt32Array({ 2, 1 }));
+	m->refresh_player_character();
+	CHECK_FALSE(sprite->is_visible());
 }
 
 } // namespace TestJRPGSceneManager

@@ -41,6 +41,7 @@ SHEETS = {  # Generated CC0 sheets (talewright/assets/LICENSES.md) the tileset c
 }
 IMAGES = {  # Project path: generated CC0 source, for the image checks (task 7.5).
     "characters/hero.png": GENERATED / "characters" / "hero.png",
+    "characters/knight.png": GENERATED / "characters" / "knight.png",
     "faces/hero.png": GENERATED / "faces" / "hero.png",
     "enemies/moss_blob.png": GENERATED / "enemies" / "moss_blob.png",
 }
@@ -325,6 +326,20 @@ def run(checks: Checks) -> None:
             "jrpg_db_set_image",
             {"table": "actors", "id": 2, "field": "character", "image": "res://enemies/moss_blob.png", "frames": 5},
         ),
+    )
+    # Another layout (task 8.7.2, D-045): the image is imported as a Character Sheet with those counts.
+    knight = c.call(
+        "jrpg_db_set_image",
+        {"table": "actors", "id": 2, "field": "character", "image": "res://characters/knight.png", "frames": 2},
+    )
+    settings = (c.project / "characters" / "knight.png.import").read_text(encoding="utf-8")
+    c.check(
+        "jrpg_db_set_image: another layout imports the image as a Character Sheet",
+        knight.get("imported_as") == "Character Sheet"
+        and knight.get("frame_size") == [96, 48]
+        and 'importer="talewright.character_sheet"' in settings
+        and "frames=2" in settings,
+        json.dumps(knight)[:300],
     )
 
     # Maps (task 8.1.3): a map scene painted through the bridge; the paint is undone and redone in the map scene's

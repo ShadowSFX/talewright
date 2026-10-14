@@ -79,6 +79,12 @@
 				Returns [code]true[/code] while a transfer is fading out or in.
 			</description>
 		</method>
+		<method name="refresh_player_character">
+			<return type="void" />
+			<description>
+				Draws the player as the party leader's character again, after the party or that actor's character changed.
+			</description>
+		</method>
 		<method name="resume">
 			<return type="int" enum="Error" />
 			<param index="0" name="game_state" type="JRPGGameState" />

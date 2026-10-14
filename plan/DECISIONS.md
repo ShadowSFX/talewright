@@ -664,3 +664,14 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** the common case needs no import step and nothing that reads the images as textures changes; other
   layouts use Godot's own import settings, as the spec asks.
 - **Reversal:** make the importer the default for a folder by tooling, or drop the texture path in `load_frames`.
+
+## D-046 — How a character's walk is animated
+- **Context:** spec 05 says column 0 is the standing pose and walking loops through all columns in order; it does
+  not say how fast the frames change or where the feet go (task 8.7.2).
+- **Options:** frames by time (a fixed rate while moving), or by distance walked.
+- **Choice:** `JRPGCharacterSprite` advances one frame every half cell walked (`FRAMES_PER_CELL` = 2), starting on
+  frame 1 when a walk begins, so a 4-frame sheet shows 1, 2, 3, 0 over two cells at any speed; standing shows
+  frame 0. The frame's bottom edge sits on the cell's bottom edge, centered, raised by the sheet's y offset. The
+  frames are set from the simulation, never played, so they match the steps exactly (and online, the server's).
+- **Why:** stepping looks the same at every speed and frame rate; deterministic from the mover's position.
+- **Reversal:** `FRAMES_PER_CELL` and `JRPGCharacterSprite::show_state`.

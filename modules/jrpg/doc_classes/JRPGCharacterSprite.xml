@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGCharacterSprite" inherits="AnimatedSprite2D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A character on the map, drawn from its character sheet.
+	</brief_description>
+	<description>
+		Shows the [SpriteFrames] [JRPGCharacterSheet] cuts from a character sheet, with the character's feet on the bottom edge of its cell (a sheet's y offset draws it higher) and the animation of the way it faces. The frames are set, never played: while the character walks they go round in order, one every half cell walked ([constant FRAMES_PER_CELL] a cell), so a step looks the same at every speed; standing, it shows frame 0.
+		The node sits at the middle of the character's cell; [method show_state] updates it from the character's position and facing.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_cell_size" qualifiers="const">
+			<return type="Vector2i" />
+			<description>
+				Returns the size of the map's cells, in pixels.
+			</description>
+		</method>
+		<method name="get_walked" qualifiers="const">
+			<return type="float" />
+			<description>
+				Returns how many cells the character has walked since it last stood still.
+			</description>
+		</method>
+		<method name="reset_walk">
+			<return type="void" />
+			<description>
+				Forgets the walk, as when the character is placed somewhere else.
+			</description>
+		</method>
+		<method name="set_cell_size">
+			<return type="void" />
+			<param index="0" name="size" type="Vector2i" />
+			<description>
+				Sets the size of the map's cells, in pixels, which places the feet on the cell's bottom edge.
+			</description>
+		</method>
+		<method name="set_character_frames">
+			<return type="void" />
+			<param index="0" name="frames" type="SpriteFrames" />
+			<description>
+				Draws the character with [param frames], as [method JRPGCharacterSheet.make_frames] or [method JRPGCharacterSheet.load_frames] give them.
+			</description>
+		</method>
+		<method name="show_state">
+			<return type="void" />
+			<param index="0" name="position" type="Vector2" />
+			<param index="1" name="direction" type="int" enum="JRPGSystemData.Direction" />
+			<param index="2" name="moving" type="bool" />
+			<description>
+				Shows the character at [param position] (in cells, as [method JRPGMover.get_position] gives it), facing [param direction], walking when [param moving] is [code]true[/code] or standing.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="centered" type="bool" setter="set_centered" getter="is_centered" overrides="AnimatedSprite2D" default="false" />
+	</members>
+	<constants>
+		<constant name="FRAMES_PER_CELL" value="2">
+			How many walk frames go by for each cell walked.
+		</constant>
+	</constants>
+</class>
