@@ -42,6 +42,9 @@ def includes(path: Path):
 
 def core_violation(path: Path, kind: str, target: str, core_dir: Path) -> str | None:
     if kind == "<":
+        # Godot writes thirdparty includes in angle brackets (misc/scripts/validate_includes.py).
+        if target.startswith("thirdparty/"):
+            return None if target in CORE_ALLOWED_FILES else f"third-party header not allowed in core: <{target}>"
         return f"engine header in angle brackets: <{target}>" if target.startswith(FORBIDDEN_IN_ANGLES) else None
     if target in CORE_ALLOWED_FILES or target.startswith(CORE_ALLOWED_PREFIXES):
         return None

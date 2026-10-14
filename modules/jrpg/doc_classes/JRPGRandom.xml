@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGRandom" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Deterministic random numbers for JRPG game logic.
+	</brief_description>
+	<description>
+		A PCG32 random number generator that only produces integers, so the same seed gives the same results on every platform and on game clients and servers. Its state can be saved with [method get_state] and restored exactly with [method set_state].
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="chance_bp">
+			<return type="bool" />
+			<param index="0" name="bp" type="int" />
+			<description>
+				Returns [code]true[/code] with probability [param bp] / 10000 (basis points). 10000 or more is always [code]true[/code]; 0 or less is always [code]false[/code].
+			</description>
+		</method>
+		<method name="get_state" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns the generator state as a [Dictionary] with [code]state[/code] and [code]inc[/code].
+			</description>
+		</method>
+		<method name="next_u32">
+			<return type="int" />
+			<description>
+				Returns the next 32-bit unsigned random number.
+			</description>
+		</method>
+		<method name="pick_weighted">
+			<return type="int" />
+			<param index="0" name="weights" type="PackedInt32Array" />
+			<description>
+				Returns an index into [param weights], chosen with probability proportional to its weight. Negative weights count as 0. Returns -1 when every weight is 0.
+			</description>
+		</method>
+		<method name="range">
+			<return type="int" />
+			<param index="0" name="low" type="int" />
+			<param index="1" name="high" type="int" />
+			<description>
+				Returns a uniform random integer from [param low] to [param high], both included. The range may be at most 2^32 values wide.
+			</description>
+		</method>
+		<method name="seed">
+			<return type="void" />
+			<param index="0" name="seed" type="int" />
+			<param index="1" name="sequence" type="int" default="0" />
+			<description>
+				Seeds the generator. Different [param sequence] values give independent streams for the same [param seed].
+			</description>
+		</method>
+		<method name="set_state">
+			<return type="void" />
+			<param index="0" name="state" type="Dictionary" />
+			<description>
+				Restores a state returned by [method get_state].
+			</description>
+		</method>
+		<method name="shuffle">
+			<return type="void" />
+			<param index="0" name="array" type="Array" />
+			<description>
+				Shuffles [param array] in place.
+			</description>
+		</method>
+	</methods>
+</class>

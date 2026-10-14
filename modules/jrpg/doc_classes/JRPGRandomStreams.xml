@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGRandomStreams" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The game's independent random number streams.
+	</brief_description>
+	<description>
+		Holds one [JRPGRandom] per purpose: battle, map AI, encounters, loot and miscellaneous. Each stream is independent, so drawing numbers for one purpose never changes the results of another; for example, a battle gives the same results however many steps the NPCs took before it.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="deserialize">
+			<return type="bool" />
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Restores the streams found in [param data] (as written by [method serialize]). Streams missing from [param data] keep their state. Returns [code]false[/code] if an entry is malformed.
+			</description>
+		</method>
+		<method name="get_stream" qualifiers="const">
+			<return type="JRPGRandom" />
+			<param index="0" name="stream" type="int" enum="JRPGRandomStreams.Stream" />
+			<description>
+				Returns the generator of [param stream].
+			</description>
+		</method>
+		<method name="get_stream_name" qualifiers="static">
+			<return type="String" />
+			<param index="0" name="stream" type="int" enum="JRPGRandomStreams.Stream" />
+			<description>
+				Returns the name of [param stream] as used by [method serialize].
+			</description>
+		</method>
+		<method name="seed_all">
+			<return type="void" />
+			<param index="0" name="seed" type="int" />
+			<description>
+				Seeds every stream from [param seed], each with its own sequence.
+			</description>
+		</method>
+		<method name="serialize" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns the state of every stream as a [Dictionary] of stream name to state.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="STREAM_BATTLE" value="0" enum="Stream">
+			Battle results.
+		</constant>
+		<constant name="STREAM_MAP_AI" value="1" enum="Stream">
+			Random movement of map characters.
+		</constant>
+		<constant name="STREAM_ENCOUNTER" value="2" enum="Stream">
+			Random encounters.
+		</constant>
+		<constant name="STREAM_LOOT" value="3" enum="Stream">
+			Drops and other rewards.
+		</constant>
+		<constant name="STREAM_MISC" value="4" enum="Stream">
+			Everything else, such as random values set by events.
+		</constant>
+		<constant name="STREAM_MAX" value="5" enum="Stream">
+			Number of streams.
+		</constant>
+	</constants>
+</class>
