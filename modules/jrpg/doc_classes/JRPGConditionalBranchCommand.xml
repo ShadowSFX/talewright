@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGConditionalBranchCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: runs commands only when a condition holds, with an optional else branch.
+	</brief_description>
+	<description>
+		Runs [member then_list] when its condition holds; otherwise runs [member else_list] when [member else_enabled] is on. The condition is chosen by [member condition], and each kind reads some of the other members:
+		- [constant CONDITION_SWITCH]: switch [member target_id] is ON ([member expected] [code]true[/code]) or OFF.
+		- [constant CONDITION_VARIABLE]: variable [member target_id] compared ([member comparison]) with [member operand], or with variable [member operand] when [member operand_is_variable]. Numbers compare as numbers and texts as texts; a number never matches a text.
+		- [constant CONDITION_SELF_SWITCH]: self switch [member self_switch] of this event is ON or OFF ([member expected]).
+		- [constant CONDITION_TIMER]: the timer works and its remaining seconds compare with [member operand].
+		- [constant CONDITION_ACTOR]: actor [member target_id] is in the party, or has the name [member text], the class, skill, weapon, armor or state [member operand], as [member actor_check] says. An actor not yet in the game is set up as it would be on joining.
+		- [constant CONDITION_CHARACTER]: the player ([constant CHARACTER_PLAYER]), this event ([constant CHARACTER_THIS_EVENT]) or event [member target_id] of the map faces [member direction].
+		- [constant CONDITION_GOLD]: the party's gold compares with [member operand].
+		- [constant CONDITION_ITEM], [constant CONDITION_WEAPON], [constant CONDITION_ARMOR]: the party holds item, weapon or armor [member target_id]; weapons and armors equipped by party members count when [member include_equipped].
+		- [constant CONDITION_BUTTON]: action [member button] is pressed (held), triggered (pressed this frame) or repeated, as [member button_check] says.
+		- [constant CONDITION_SCRIPT]: the formula [member script_text] ([JRPGFormula]: variables as [code]v[lb]n[rb][/code] and the deterministic helpers) is not 0.
+		- [constant CONDITION_ENEMY], [constant CONDITION_VEHICLE]: false, with one warning, until battles and vehicles exist.
+		A target that does not exist (an actor the database lacks, an event that is not on the map, "this event" in a run that has none) makes the condition false, with one warning per command.
+		Authority: server, except the button condition, which reads the local player's input.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="compare" qualifiers="static">
+			<return type="bool" />
+			<param index="0" name="a" type="Variant" />
+			<param index="1" name="comparison" type="int" enum="JRPGConditionalBranchCommand.Comparison" />
+			<param index="2" name="b" type="Variant" />
+			<description>
+				Returns how [param a] compares with [param b]. Numbers compare as numbers, texts as texts; a number and a text give [code]false[/code].
+			</description>
+		</method>
+		<method name="holds">
+			<return type="bool" />
+			<param index="0" name="context" type="Object" />
+			<description>
+				Returns whether the condition holds for the run [param context] (a [JRPGInterpreter]).
+			</description>
+		</method>
+		<method name="is_repeat_step" qualifiers="static">
+			<return type="bool" />
+			<param index="0" name="held_steps" type="int" />
+			<description>
+				Returns whether a button held [param held_steps] simulation steps (0: just pressed) repeats now: on the press, [constant REPEAT_DELAY_STEPS] steps later, then every [constant REPEAT_INTERVAL_STEPS].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="actor_check" type="int" setter="set_actor_check" getter="get_actor_check" enum="JRPGConditionalBranchCommand.ActorCheck" default="0">
+			What an actor condition checks.
+		</member>
+		<member name="button" type="StringName" setter="set_button" getter="get_button" default="&amp;&quot;jrpg_ok&quot;">
+			The input action a button condition reads.
+		</member>
+		<member name="button_check" type="int" setter="set_button_check" getter="get_button_check" enum="JRPGConditionalBranchCommand.ButtonCheck" default="0">
+			Whether a button condition wants the action held, triggered or repeated.
+		</member>
+		<member name="comparison" type="int" setter="set_comparison" getter="get_comparison" enum="JRPGConditionalBranchCommand.Comparison" default="0">
+			How a variable, the timer or gold compares with [member operand].
+		</member>
+		<member name="condition" type="int" setter="set_condition" getter="get_condition" enum="JRPGConditionalBranchCommand.Condition" default="0">
+			What the branch checks.
+		</member>
+		<member name="direction" type="int" setter="set_direction" getter="get_direction" default="2">
+			The direction a character condition wants ([enum JRPGSystemData.Direction]).
+		</member>
+		<member name="else_enabled" type="bool" setter="set_else_enabled" getter="is_else_enabled" default="false">
+			Runs [member else_list] when the condition does not hold (Create Else Branch).
+		</member>
+		<member name="else_list" type="JRPGCommandList" setter="set_else_list" getter="get_else_list">
+			The commands that run when the condition does not hold and [member else_enabled] is on.
+		</member>
+		<member name="expected" type="bool" setter="set_expected" getter="is_expected" default="true">
+			For switches and self switches: [code]true[/code] for ON, [code]false[/code] for OFF.
+		</member>
+		<member name="include_equipped" type="bool" setter="set_include_equipped" getter="is_including_equipped" default="false">
+			Weapons and armors equipped by party members count as held.
+		</member>
+		<member name="operand" type="int" setter="set_operand" getter="get_operand" default="0">
+			The value compared with, the ID an actor condition checks, or the variable compared with when [member operand_is_variable].
+		</member>
+		<member name="operand_is_variable" type="bool" setter="set_operand_is_variable" getter="is_operand_variable" default="false">
+			A variable condition compares with variable [member operand] rather than with the number.
+		</member>
+		<member name="script_text" type="String" setter="set_script_text" getter="get_script_text" default="&quot;&quot;">
+			The formula a script condition evaluates.
+		</member>
+		<member name="self_switch" type="String" setter="set_self_switch" getter="get_self_switch" default="&quot;A&quot;">
+			The self switch a self switch condition reads: A, B, C or D.
+		</member>
+		<member name="target_id" type="int" setter="set_target_id" getter="get_target_id" default="1">
+			The switch, variable, actor, character, item, weapon or armor the condition is about.
+		</member>
+		<member name="text" type="String" setter="set_text" getter="get_text" default="&quot;&quot;">
+			The name an actor condition looks for.
+		</member>
+		<member name="then_list" type="JRPGCommandList" setter="set_then_list" getter="get_then_list">
+			The commands that run when the condition holds.
+		</member>
+	</members>
+	<constants>
+		<constant name="CONDITION_SWITCH" value="0" enum="Condition">
+			A switch is ON or OFF.
+		</constant>
+		<constant name="CONDITION_VARIABLE" value="1" enum="Condition">
+			A variable compares with a number or another variable.
+		</constant>
+		<constant name="CONDITION_SELF_SWITCH" value="2" enum="Condition">
+			A self switch of this event is ON or OFF.
+		</constant>
+		<constant name="CONDITION_TIMER" value="3" enum="Condition">
+			The timer's remaining time compares with a number of seconds.
+		</constant>
+		<constant name="CONDITION_ACTOR" value="4" enum="Condition">
+			Something about an actor.
+		</constant>
+		<constant name="CONDITION_ENEMY" value="5" enum="Condition">
+			Something about an enemy in battle (battle events).
+		</constant>
+		<constant name="CONDITION_CHARACTER" value="6" enum="Condition">
+			The player or an event faces a direction.
+		</constant>
+		<constant name="CONDITION_VEHICLE" value="7" enum="Condition">
+			The player rides a vehicle.
+		</constant>
+		<constant name="CONDITION_GOLD" value="8" enum="Condition">
+			The party's gold compares with an amount.
+		</constant>
+		<constant name="CONDITION_ITEM" value="9" enum="Condition">
+			The party holds an item.
+		</constant>
+		<constant name="CONDITION_WEAPON" value="10" enum="Condition">
+			The party holds a weapon.
+		</constant>
+		<constant name="CONDITION_ARMOR" value="11" enum="Condition">
+			The party holds an armor.
+		</constant>
+		<constant name="CONDITION_BUTTON" value="12" enum="Condition">
+			An input action's state.
+		</constant>
+		<constant name="CONDITION_SCRIPT" value="13" enum="Condition">
+			A formula is not 0.
+		</constant>
+		<constant name="CONDITION_MAX" value="14" enum="Condition">
+			The number of condition kinds.
+		</constant>
+		<constant name="COMPARE_EQUAL" value="0" enum="Comparison">
+			Equal to.
+		</constant>
+		<constant name="COMPARE_GREATER_OR_EQUAL" value="1" enum="Comparison">
+			Greater than or equal to.
+		</constant>
+		<constant name="COMPARE_LESS_OR_EQUAL" value="2" enum="Comparison">
+			Less than or equal to.
+		</constant>
+		<constant name="COMPARE_GREATER" value="3" enum="Comparison">
+			Greater than.
+		</constant>
+		<constant name="COMPARE_LESS" value="4" enum="Comparison">
+			Less than.
+		</constant>
+		<constant name="COMPARE_NOT_EQUAL" value="5" enum="Comparison">
+			Not equal to.
+		</constant>
+		<constant name="COMPARE_MAX" value="6" enum="Comparison">
+			The number of comparisons.
+		</constant>
+		<constant name="ACTOR_IN_PARTY" value="0" enum="ActorCheck">
+			The actor is in the party.
+		</constant>
+		<constant name="ACTOR_NAME" value="1" enum="ActorCheck">
+			The actor has the name [member text].
+		</constant>
+		<constant name="ACTOR_CLASS" value="2" enum="ActorCheck">
+			The actor's class is [member operand].
+		</constant>
+		<constant name="ACTOR_SKILL" value="3" enum="ActorCheck">
+			The actor knows skill [member operand].
+		</constant>
+		<constant name="ACTOR_WEAPON" value="4" enum="ActorCheck">
+			The actor has weapon [member operand] equipped.
+		</constant>
+		<constant name="ACTOR_ARMOR" value="5" enum="ActorCheck">
+			The actor has armor [member operand] equipped.
+		</constant>
+		<constant name="ACTOR_STATE" value="6" enum="ActorCheck">
+			The actor has state [member operand].
+		</constant>
+		<constant name="ACTOR_CHECK_MAX" value="7" enum="ActorCheck">
+			The number of actor checks.
+		</constant>
+		<constant name="BUTTON_PRESSED" value="0" enum="ButtonCheck">
+			The action is held.
+		</constant>
+		<constant name="BUTTON_TRIGGERED" value="1" enum="ButtonCheck">
+			The action was pressed this frame.
+		</constant>
+		<constant name="BUTTON_REPEATED" value="2" enum="ButtonCheck">
+			The action repeats while held: on the press, then after a delay, then at an interval.
+		</constant>
+		<constant name="BUTTON_CHECK_MAX" value="3" enum="ButtonCheck">
+			The number of button checks.
+		</constant>
+		<constant name="CHARACTER_PLAYER" value="-1">
+			The [member target_id] of the player.
+		</constant>
+		<constant name="CHARACTER_THIS_EVENT" value="0">
+			The [member target_id] of the event that runs the command.
+		</constant>
+		<constant name="REPEAT_DELAY_STEPS" value="24">
+			Simulation steps a button is held before it repeats.
+		</constant>
+		<constant name="REPEAT_INTERVAL_STEPS" value="6">
+			Simulation steps between repeats after the delay.
+		</constant>
+	</constants>
+</class>

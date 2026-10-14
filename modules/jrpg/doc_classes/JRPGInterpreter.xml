@@ -48,6 +48,18 @@
 				Returns how many frames are running ([code]1[/code]: only the list it started with).
 			</description>
 		</method>
+		<method name="get_event_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the event the run belongs to ("this event"), or [code]0[/code].
+			</description>
+		</method>
+		<method name="get_event_map_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the map of the event the run belongs to, or [code]0[/code].
+			</description>
+		</method>
 		<method name="get_game_state" qualifiers="const">
 			<return type="JRPGGameState" />
 			<description>
@@ -134,6 +146,14 @@
 			<return type="Dictionary" />
 			<description>
 				Returns where the run is, for a save: [code]frames[/code], outermost first, each with the [code]index[/code] of its next command, [code]loop[/code], where its list comes from ([code]child[/code]: which child list of the command that pushed it, or [code]common_event[/code]: the common event called) and the [code]hash[/code] of its commands ([method JRPGCommandList.get_content_hash]); and [code]wait[/code], the steps left to wait. An idle interpreter has no frames. Lists are named by where they come from, never by object, so a save survives loading the map again.
+			</description>
+		</method>
+		<method name="set_event">
+			<return type="void" />
+			<param index="0" name="map_id" type="int" />
+			<param index="1" name="event_id" type="int" />
+			<description>
+				Sets the map event the run belongs to, which commands mean by "this event": event [param event_id] of map [param map_id]. [method start] forgets it; the event runner sets it for each run, and a common event the run calls keeps it.
 			</description>
 		</method>
 		<method name="set_port">

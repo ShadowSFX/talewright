@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.5.1.1 Message commands: Show Text, Show Choices, Input Number",
+  "last_completed": "9.5.1.2 Conditional Branch",
   "tasks": [
     {
       "id": "0",
@@ -4164,7 +4164,7 @@
         "modules/jrpg/tests/test_jrpg_message_commands.h",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "97d4a24fb0",
       "notes": ""
     },
     {
@@ -4181,9 +4181,21 @@
         "Missing targets (a dangling actor, an event not on the map) are false with a warning"
       ],
       "test_strategy": "Doctests [JRPG].",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_flow_commands.h",
+        "modules/jrpg/core/jrpg_flow_commands.cpp",
+        "modules/jrpg/core/jrpg_interpreter.h",
+        "modules/jrpg/core/jrpg_interpreter.cpp",
+        "modules/jrpg/core/jrpg_event_runner.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGConditionalBranchCommand.xml",
+        "modules/jrpg/doc_classes/JRPGInterpreter.xml",
+        "modules/jrpg/tests/test_jrpg_conditional_branch.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -4238,7 +4250,7 @@
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
       "commit": "",
-      "notes": "Transfer Player (epic 8 review A15, D-041): JRPGSceneManager.transfer refuses a transfer while another is under way, the fade-in included (ERR_BUSY); the interpreter waits on is_transferring() / the transfer_finished signal before running the next command, as the MZ command waits for the transfer to finish. From 9.3.2 (D-061): the main interpreter goes on after a transfer, so commands that target 'This Event' must know the map their event belongs to (record the map and event ids on the interpreter) and do nothing once the player is on another map. Erase Event: JRPGEventState.set_erased does not change the game state's revision; the runner checks erasure every step, but event nodes refresh on revision changes only.",
+      "notes": "Transfer Player (epic 8 review A15, D-041): JRPGSceneManager.transfer refuses a transfer while another is under way, the fade-in included (ERR_BUSY); the interpreter waits on is_transferring() / the transfer_finished signal before running the next command, as the MZ command waits for the transfer to finish. From 9.3.2 (D-061): the main interpreter goes on after a transfer, so commands that target 'This Event' must know the map their event belongs to (record the map and event ids on the interpreter) and do nothing once the player is on another map. Erase Event: JRPGEventState.set_erased does not change the game state's revision; the runner checks erasure every step, but event nodes refresh on revision changes only. Since 9.5.1.2 (D-066): JRPGInterpreter.set_event/get_event_id/get_event_map_id hold 'this event' (set by the runner, kept through common event calls); compare get_event_map_id with the game state's events map before acting on this event.",
       "status": "pending"
     },
     {

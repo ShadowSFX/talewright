@@ -26,6 +26,7 @@ def get_doc_classes():
         "JRPGCommandList",
         "JRPGCommandRegistry",
         "JRPGCommonEventData",
+        "JRPGConditionalBranchCommand",
         "JRPGDatabase",
         "JRPGEnemyData",
         "JRPGEntry",

@@ -51,6 +51,7 @@
 #include "modules/jrpg/core/jrpg_event_data.h"
 #include "modules/jrpg/core/jrpg_event_runner.h"
 #include "modules/jrpg/core/jrpg_event_state.h"
+#include "modules/jrpg/core/jrpg_flow_commands.h"
 #include "modules/jrpg/core/jrpg_formula.h"
 #include "modules/jrpg/core/jrpg_game_state.h"
 #include "modules/jrpg/core/jrpg_interpreter.h"
@@ -189,9 +190,11 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGShowTextCommand);
 		GDREGISTER_CLASS(JRPGShowChoicesCommand);
 		GDREGISTER_CLASS(JRPGInputNumberCommand);
+		GDREGISTER_CLASS(JRPGConditionalBranchCommand);
 		JRPGCommandRegistry::register_command(JRPGShowTextCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGShowChoicesCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGInputNumberCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGConditionalBranchCommand::get_class_static());
 		GDREGISTER_CLASS(JRPGReferenceScanner);
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotile); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotileResolver);

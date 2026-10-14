@@ -221,6 +221,7 @@ bool JRPGEventRunner::_start_next_autorun() {
 	}
 	// A page without commands starts and ends at once: it holds the player all the same, and is reported as stuck.
 	main->start(_owner_commands(owner), game_state, _owner_name(owner));
+	main->set_event(owner.map_id, owner.event_id);
 	main_owner = owner;
 	main_is_autorun = true;
 	return true;
@@ -275,6 +276,7 @@ void JRPGEventRunner::step() {
 				continue;
 			}
 			process.interpreter->start(commands, game_state, _owner_name(process.owner));
+			process.interpreter->set_event(process.owner.map_id, process.owner.event_id);
 		}
 		process.interpreter->step();
 	}
@@ -309,6 +311,7 @@ bool JRPGEventRunner::start_event(int p_event_id) {
 		return false;
 	}
 	main->start(commands, game_state, _owner_name(owner));
+	main->set_event(owner.map_id, owner.event_id);
 	main_owner = owner;
 	main_is_autorun = false;
 	return true;
@@ -361,6 +364,7 @@ bool JRPGEventRunner::_restore_run(const Dictionary &p_run, const Owner &p_owner
 	}
 	const Variant state = p_run.get("interpreter", Variant());
 	if (state.get_type() == Variant::DICTIONARY && p_interpreter->restore(state, commands, game_state, name)) {
+		p_interpreter->set_event(p_owner.map_id, p_owner.event_id);
 		return true;
 	}
 	if (p_restarts) {

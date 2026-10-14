@@ -45,6 +45,8 @@ void JRPGInterpreter::start(const Ref<JRPGCommandList> &p_list, const Ref<JRPGGa
 	clear();
 	game_state = p_state;
 	owner = p_owner;
+	event_map_id = 0;
+	event_id = 0;
 	if (p_list.is_valid()) {
 		Frame frame;
 		frame.list = p_list;
@@ -127,6 +129,11 @@ void JRPGInterpreter::push_list(const Ref<JRPGCommandList> &p_list, bool p_loop)
 	frame.list = p_list;
 	frame.loop = p_loop;
 	frames.push_back(frame);
+}
+
+void JRPGInterpreter::set_event(int p_map_id, int p_event_id) {
+	event_map_id = p_map_id;
+	event_id = p_event_id;
 }
 
 void JRPGInterpreter::_withdraw_request() {
@@ -308,6 +315,8 @@ bool JRPGInterpreter::restore(const Dictionary &p_state, const Ref<JRPGCommandLi
 	clear();
 	game_state = p_game_state;
 	owner = p_owner;
+	event_map_id = 0;
+	event_id = 0;
 	const Variant saved = p_state.get("frames", Variant());
 	const Variant wait = p_state.get("wait", Variant());
 	if (p_root.is_null() || saved.get_type() != Variant::ARRAY || wait.get_type() != Variant::INT || int64_t(wait) < 0 || int64_t(wait) > INT32_MAX) {
@@ -364,6 +373,9 @@ void JRPGInterpreter::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_running"), &JRPGInterpreter::is_running);
 	ClassDB::bind_method(D_METHOD("get_game_state"), &JRPGInterpreter::get_game_state);
 	ClassDB::bind_method(D_METHOD("get_owner"), &JRPGInterpreter::get_owner);
+	ClassDB::bind_method(D_METHOD("set_event", "map_id", "event_id"), &JRPGInterpreter::set_event);
+	ClassDB::bind_method(D_METHOD("get_event_map_id"), &JRPGInterpreter::get_event_map_id);
+	ClassDB::bind_method(D_METHOD("get_event_id"), &JRPGInterpreter::get_event_id);
 	ClassDB::bind_method(D_METHOD("step"), &JRPGInterpreter::step);
 	ClassDB::bind_method(D_METHOD("push_list", "list", "loop"), &JRPGInterpreter::push_list, DEFVAL(false));
 	ClassDB::bind_method(D_METHOD("break_loop"), &JRPGInterpreter::break_loop);

@@ -80,6 +80,8 @@ private:
 	Vector<Frame> frames;
 	Ref<JRPGGameState> game_state;
 	String owner; // Who runs it, for warnings ("Map 3, event 7, page 1").
+	int event_map_id = 0; // The map event the run belongs to ("this event"), 0 for none; kept through common events.
+	int event_id = 0;
 	int wait_left = 0;
 	int jumps_left = 0;
 	bool flow_changed = false; // A command jumped, broke a loop, ended or cleared the run: the index it was at stays.
@@ -113,6 +115,11 @@ public:
 	bool is_running() const { return !frames.is_empty(); }
 	Ref<JRPGGameState> get_game_state() const { return game_state; }
 	String get_owner() const { return owner; }
+	// The map event the run belongs to, which commands mean by "this event" (start() forgets it; the runner sets it).
+	// A common event it calls keeps it. 0 and 0: no event (a common event started by itself).
+	void set_event(int p_map_id, int p_event_id);
+	int get_event_map_id() const { return event_map_id; }
+	int get_event_id() const { return event_id; }
 
 	// Runs one simulation step.
 	StepResult step();

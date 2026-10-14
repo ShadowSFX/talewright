@@ -1146,3 +1146,24 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** the authoring tools know the owner the key is scoped by; a message ending into its choices is how players
   expect a question to look; refusing cancel by default never runs a branch the author did not write.
 - **Reversal:** the command classes and `JRPGLocalPort::show_request`.
+
+## D-066 — Conditional Branch: one command, flat parameters, false on missing targets
+- **Context:** task 9.5.1.2 builds Conditional Branch (RM-CMD-010) over the game state. The help lists the condition
+  kinds and some of their settings (comparison operators unlisted; timer and gold given as greater/less), and says
+  enemy conditions work in battle events and character conditions in map events. Battles and vehicles come later.
+- **Options:** one command class per condition kind, or one class with a condition enum; a nested parameter dictionary
+  or flat stored properties; missing targets as errors, false, or skipped branches.
+- **Choice:** one `JRPGConditionalBranchCommand` (code `conditional_branch`) with a `condition` enum and flat stored
+  properties reused across kinds (`target_id`, `expected`, `comparison` with six operators for variables, timer and
+  gold, `operand`/`operand_is_variable`, `self_switch`, `actor_check` + `operand`/`text`, `direction`,
+  `include_equipped`, `button` + `button_check`, `script_text` evaluated as a `JRPGFormula`), `else_enabled`, and child
+  lists `then_list`/`else_list`. Variables compare with `Variant` operators, numbers with numbers and texts with texts
+  (mixed: false). "This event" comes from the interpreter, which now records its map event (`set_event`, set by the
+  runner, kept through common event calls). Actor conditions set up an actor the database has but the game has not
+  used yet, as joining would. A missing target (actor not in the database, event not on the map, no "this event"),
+  and enemy/vehicle conditions until their epics, are false with one warning per command. Buttons read `Input`
+  (pressed; triggered = pressed this frame; repeated = on the press, 24 steps later, then every 6).
+- **Why:** one class keeps the event editor's single dialog and packing simple; flat properties pack like any other
+  command and the reference scanner reads the ID parameters of the active kind; false-with-warning never crashes or
+  silently runs a branch.
+- **Reversal:** `JRPGConditionalBranchCommand`, `JRPGInterpreter::set_event`.
