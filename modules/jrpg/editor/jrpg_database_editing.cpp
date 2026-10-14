@@ -552,7 +552,10 @@ void JRPGDatabaseEditing::_write_tile_words(const Ref<TileSet> &p_tileset, const
 	mark_unsaved(p_tileset);
 }
 
-Error JRPGDatabaseEditing::set_tile_flags(int p_tileset_id, const PackedInt32Array &p_indexes, int p_mask, int p_value, String *r_message) {
+Error JRPGDatabaseEditing::set_tile_flags(int p_tileset_id, const PackedInt32Array &p_indexes, int p_mask, int p_value, String *r_message, bool *r_changed) {
+	if (r_changed) {
+		*r_changed = false;
+	}
 	const Ref<JRPGTilesetData> data = _get_tileset_data(p_tileset_id, r_message);
 	if (data.is_null()) {
 		return ERR_DOES_NOT_EXIST;
@@ -607,6 +610,9 @@ Error JRPGDatabaseEditing::set_tile_flags(int p_tileset_id, const PackedInt32Arr
 	if (entries.is_empty()) {
 		return OK; // Already so: no action.
 	}
+	if (r_changed) {
+		*r_changed = true;
+	}
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
 	if (!undo_redo) {
 		_write_tile_words(tileset, entries, after);
@@ -616,6 +622,7 @@ Error JRPGDatabaseEditing::set_tile_flags(int p_tileset_id, const PackedInt32Arr
 	const String what = field == JRPGTileFlags::FIELD_MAX ? TTR("Tile Flags") : TTRGET(JRPGTileFlags::get_field(field).label);
 	const String name = seen.size() == 1 ? vformat(TTR("Set %s of Tile %d"), what, p_indexes[0]) : vformat(TTR("Set %s of %d Tiles"), what, seen.size());
 	undo_redo->create_action_for_history(name, EditorUndoRedoManager::GLOBAL_HISTORY);
+	undo_redo->force_fixed_history(); // A TileSet saved inside a scene would otherwise route to that scene's history.
 	undo_redo->add_do_method(this, "_write_tile_words", tileset, entries, after);
 	undo_redo->add_undo_method(this, "_write_tile_words", tileset, entries, before);
 	undo_redo->commit_action();
@@ -673,6 +680,7 @@ Error JRPGDatabaseEditing::add_tile_sheet(int p_tileset_id, const String &p_text
 		return OK;
 	}
 	undo_redo->create_action_for_history(vformat(TTR("Add Tile Sheet \"%s\""), p_name.strip_edges()), EditorUndoRedoManager::GLOBAL_HISTORY);
+	undo_redo->force_fixed_history(); // The database entry and the TileSet in one action, whatever their files.
 	// Redo: the terrain before the source, so its tiles keep their terrain peering bits
 	// (scene/resources/2d/tile_set.cpp:5972-5976).
 	if (terrain_set >= 0) {
@@ -700,10 +708,13 @@ Error JRPGDatabaseEditing::add_tile_sheet(int p_tileset_id, const String &p_text
 	return OK;
 }
 
-Error JRPGDatabaseEditing::create_tileset(int p_tileset_id, const String &p_path, int p_tile_size, String *r_message) {
+Error JRPGDatabaseEditing::create_tileset(int p_tileset_id, const String &p_path, int p_tile_size, String *r_message, bool p_replace) {
 	const Ref<JRPGTilesetData> data = _get_tileset_data(p_tileset_id, r_message);
 	if (data.is_null()) {
 		return ERR_DOES_NOT_EXIST;
+	}
+	if (!p_replace && !data->get_palette().is_empty() && JRPGTileFlags::load_tileset(data).is_valid()) {
+		return refuse(vformat("JRPG database: tileset %d already has a TileSet with %d tiles in its palette; a new TileSet would leave them pointing at nothing (replace it explicitly to do so).", p_tileset_id, data->get_palette().size()), r_message, ERR_ALREADY_IN_USE);
 	}
 	const String extension = p_path.get_extension().to_lower();
 	if (extension != "tres" && extension != "res") {
@@ -887,11 +898,62 @@ void JRPGDatabaseEditing::_rebake_tilesets() {
 	}
 	for (int id = 1; id <= tilesets->get_maximum(); id++) {
 		const Ref<JRPGTilesetData> data = tilesets->get_entry(id);
+		if (data.is_null()) {
+			continue;
+		}
 		const Ref<TileSet> tileset = JRPGTileFlags::load_tileset(data);
+		// A change marks the tilesets table unsaved, so it is saved below.
 		if (tileset.is_valid()) {
-			JRPGTileFlags::rebake(tileset, data); // A change marks the tilesets table unsaved, so it is saved below.
+			JRPGTileFlags::rebake(tileset, data);
+		} else if (data->get_tileset_uid().is_empty() && (!data->get_flags().is_empty() || !data->get_flags_hash().is_empty())) {
+			data->set_flags(PackedInt32Array()); // No TileSet any more: no flags (one that does not load keeps its table).
+			data->set_flags_hash(String());
 		}
 	}
+}
+
+PackedInt32Array JRPGDatabaseEditing::get_stale_tilesets() {
+	PackedInt32Array stale;
+	const Ref<JRPGTable> tilesets = database.is_valid() ? database->get_table(JRPGDatabase::TABLE_TILESETS) : Ref<JRPGTable>();
+	if (tilesets.is_null()) {
+		return stale;
+	}
+	for (int id = 1; id <= tilesets->get_maximum(); id++) {
+		const Ref<JRPGTilesetData> data = tilesets->get_entry(id);
+		if (data.is_null()) {
+			continue;
+		}
+		const Ref<TileSet> tileset = JRPGTileFlags::load_tileset(data);
+		if (tileset.is_valid()) {
+			if (!watched_tilesets.has(tileset->get_instance_id())) {
+				watched_tilesets.insert(tileset->get_instance_id());
+				tileset->connect(CoreStringName(changed), callable_mp(this, &JRPGDatabaseEditing::_on_watched_tileset_changed));
+			}
+			if (JRPGTileFlags::is_stale(tileset, data)) {
+				stale.push_back(id);
+			}
+		} else if (data->get_tileset_uid().is_empty() && (!data->get_flags().is_empty() || !data->get_flags_hash().is_empty())) {
+			stale.push_back(id);
+		}
+	}
+	return stale;
+}
+
+bool JRPGDatabaseEditing::has_changes_to_save() {
+	return !unsaved.is_empty() || !get_stale_tilesets().is_empty();
+}
+
+void JRPGDatabaseEditing::_on_watched_tileset_changed() {
+	// Painting flags emits this once per layer and tile: tell the Database section once, afterwards.
+	if (!tilesets_change_queued) {
+		tilesets_change_queued = true;
+		callable_mp(this, &JRPGDatabaseEditing::_emit_tilesets_changed).call_deferred();
+	}
+}
+
+void JRPGDatabaseEditing::_emit_tilesets_changed() {
+	tilesets_change_queued = false;
+	emit_signal(SNAME("database_changed"));
 }
 
 void JRPGDatabaseEditing::mark_unsaved(const Ref<Resource> &p_resource) {
@@ -902,7 +964,7 @@ void JRPGDatabaseEditing::mark_unsaved(const Ref<Resource> &p_resource) {
 	}
 }
 
-Error JRPGDatabaseEditing::save_all() {
+Error JRPGDatabaseEditing::save_all(PackedStringArray *r_saved) {
 	_rebake_tilesets();
 	Error result = OK;
 	LocalVector<Ref<Resource>> failed;
@@ -919,6 +981,11 @@ Error JRPGDatabaseEditing::save_all() {
 		}
 	}
 	unsaved = failed;
+	if (r_saved) {
+		for (const String &file : saved_files) {
+			r_saved->push_back(file);
+		}
+	}
 	_mark_saved(saved_files);
 	emit_signal(SNAME("database_changed"));
 	return result;

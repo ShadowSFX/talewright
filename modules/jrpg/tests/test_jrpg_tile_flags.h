@@ -34,6 +34,7 @@
 #ifdef TOOLS_ENABLED
 
 #include "core/io/dir_access.h"
+#include "core/io/file_access.h"
 #include "core/io/image.h"
 #include "core/io/resource_loader.h"
 #include "core/io/resource_saver.h"
@@ -188,6 +189,32 @@ TEST_CASE("[SceneTree][JRPG][TileFlags] Saving the database bakes stale tilesets
 	CHECK(saved_data->get_tile_flags(1) == JRPGTilesetData::PASS_BLOCKED);
 	CHECK(saved_data->get_tile_flags(2) == JRPGTilesetData::FLAG_COUNTER);
 	CHECK(saved_data->get_flags_hash() == data->get_flags_hash());
+
+	// Flags painted outside the form (Godot's TileSet editor writes the custom data directly): nothing is listed as
+	// unsaved, yet the database has changes to save, and saving bakes them.
+	CHECK(editing->get_stale_tilesets().is_empty());
+	CHECK_FALSE(editing->has_changes_to_save());
+	JRPGTileFlags::set_entry_flags(f.tileset, f.entry(3), JRPGTilesetData::FLAG_LADDER);
+	CHECK(editing->get_unsaved_paths().is_empty());
+	CHECK(editing->get_stale_tilesets() == PackedInt32Array({ 1 }));
+	CHECK(editing->has_changes_to_save());
+	PackedStringArray written;
+	ERR_PRINT_OFF;
+	editing->save_all(&written);
+	ERR_PRINT_ON;
+	CHECK(written.has(table_path));
+	CHECK(data->get_tile_flags(3) == JRPGTilesetData::FLAG_LADDER);
+	CHECK(editing->get_stale_tilesets().is_empty());
+
+	// A tileset that no longer names a TileSet loses its old flags when the database is saved.
+	data->set_tileset_uid(String());
+	CHECK(editing->get_stale_tilesets() == PackedInt32Array({ 1 }));
+	ERR_PRINT_OFF;
+	editing->save_all();
+	ERR_PRINT_ON;
+	CHECK(data->get_flags().is_empty());
+	CHECK(data->get_flags_hash().is_empty());
+	CHECK(editing->get_stale_tilesets().is_empty());
 	memdelete(editing);
 }
 
@@ -276,7 +303,12 @@ TEST_CASE("[SceneTree][JRPG][TileFlags] The tileset authoring API creates a Tile
 	}
 	CHECK(JRPGTileFlags::get_entry_flags(tileset, data->get_palette()[2]) == bush); // Index 3, a plain tile.
 	CHECK(JRPGTileFlags::get_entry_flags(tileset, data->get_palette()[1]) == 0); // Index 2 untouched.
-	// Already so: nothing to do, no error.
+	// Already so: nothing to do, no error, no undo step.
+	bool changed = true;
+	CHECK(editing->set_tile_flags(1, PackedInt32Array({ 1 }), pass, JRPGTilesetData::PASS_BLOCKED, &message, &changed) == OK);
+	CHECK_FALSE(changed);
+	CHECK(editing->set_tile_flags(1, PackedInt32Array({ 1 }), pass, JRPGTilesetData::PASS_OPEN, &message, &changed) == OK);
+	CHECK(changed);
 	CHECK(editing->set_tile_flags(1, PackedInt32Array({ 1 }), pass, JRPGTilesetData::PASS_BLOCKED, &message) == OK);
 	// Refusals.
 	CHECK(editing->set_tile_flags(1, PackedInt32Array({ 0 }), bush, bush, &message) == ERR_PARAMETER_RANGE_ERROR);
@@ -296,6 +328,12 @@ TEST_CASE("[SceneTree][JRPG][TileFlags] The tileset authoring API creates a Tile
 	data->set_palette(palette);
 	CHECK(editing->set_tile_flags(1, PackedInt32Array({ 5 }), bush, bush, &message) == ERR_DOES_NOT_EXIST);
 	CHECK(message.contains("does not have"));
+	// A tileset whose TileSet holds its palette's tiles keeps it unless the new one replaces it explicitly.
+	CHECK(editing->create_tileset(1, folder.path_join("other.tres"), 48, &message) == ERR_ALREADY_IN_USE);
+	CHECK(message.contains("already has a TileSet"));
+	CHECK_FALSE(FileAccess::exists(folder.path_join("other.tres")));
+	CHECK(data->get_tileset_uid() == path);
+
 	// The field table names what the form and the bridge show.
 	CHECK(JRPGTileFlags::find_field(pass) == JRPGTileFlags::FIELD_PASS);
 	CHECK(JRPGTileFlags::find_field(0xF << JRPGTilesetData::FLAG_NO_EXIT_SHIFT) == JRPGTileFlags::FIELD_NO_EXIT);

@@ -48,7 +48,12 @@ A tileset's form shows its **TileSet** (a Godot TileSet file; **Create TileSet**
   Enter does the same for the selected tile and the side check boxes set single sides from the keyboard.
 - An autotile or wall kind changes on all its shapes at once. Each click is one Undo step.
 - The flags live in the TileSet's `jrpg_*` custom data layers, so Godot's TileSet editor shows and paints them too;
-  saving the database bakes them into the tileset entry for maps and servers.
+  saving the database bakes them into the tileset entry for maps and servers. Flags painted in the TileSet editor
+  show up in the Database section's unsaved list and are baked by any save (the section's Save, saving a scene,
+  running the project).
+- A yellow dot on an autotile or wall marks shapes painted with different flags; the first shape's flags are shown
+  and used, and a click sets the new value on every shape. A flipped or rotated tile shares its flags with the tile
+  it turns.
 
 ## For tools and Claude Code
 The workspace can be switched from outside the editor through the Claude bridge

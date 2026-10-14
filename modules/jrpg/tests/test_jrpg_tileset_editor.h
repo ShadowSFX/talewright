@@ -49,6 +49,7 @@
 #include "tests/test_macros.h"
 #include "tests/test_utils.h"
 
+#include "modules/jrpg/core/jrpg_autotile.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
@@ -80,6 +81,12 @@ TEST_CASE("[JRPG][TilesetEditor] A click cycles, toggles or steps the flag of it
 	CHECK(JRPGEditorPropertyTiles::next_value(JRPGTileFlags::FIELD_NO_EXIT, north_west, 3, false) == 1);
 	CHECK(JRPGEditorPropertyTiles::next_value(JRPGTileFlags::FIELD_NO_EXIT, north_west, -1, false) == 15);
 	CHECK(JRPGEditorPropertyTiles::next_value(JRPGTileFlags::FIELD_NO_ENTRY, 15 << JRPGTilesetData::FLAG_NO_ENTRY_SHIFT, -1, false) == 0);
+
+	// Overlays sit where ItemList draws the icon: centered in the item's own width, mirrored right to left.
+	const Rect2 item(4, 6, 60, 70);
+	CHECK(JRPGEditorPropertyTiles::icon_rect(item, Size2(48, 48), 4, 0, 300, false) == Rect2(10, 8, 48, 48));
+	CHECK(JRPGEditorPropertyTiles::icon_rect(item, Size2(48, 48), 4, 20, 300, false) == Rect2(10, -12, 48, 48)); // Scrolled.
+	CHECK(JRPGEditorPropertyTiles::icon_rect(item, Size2(48, 48), 4, 0, 300, true) == Rect2(242, 8, 48, 48));
 
 	const Rect2 tile(10, 10, 48, 48);
 	CHECK(JRPGEditorPropertyTiles::side_at(tile, Vector2(34, 12)) == 0); // North.
@@ -195,6 +202,41 @@ TEST_CASE("[SceneTree][JRPG][TilesetEditor] The tiles form shows the palette and
 		CHECK(JRPGTilesetData::get_terrain_tag(word(3)) == 1);
 	}
 
+	SUBCASE("A kind painted shape by shape is mixed; the Menu key edits nothing") {
+		CHECK_FALSE(JRPGEditorPropertyTiles::is_mixed(tileset, data->get_palette()[0]));
+		const Dictionary grass = data->get_palette()[0];
+		TileData *shape = Object::cast_to<TileSetAtlasSource>(tileset->get_source(grass["source_id"]).ptr())->get_tile_data(JRPGAutotile::get_blob_cell(9), 0);
+		JRPGTileFlags::write_tile(tileset, shape, JRPGTilesetData::FLAG_BUSH);
+		CHECK(JRPGEditorPropertyTiles::is_mixed(tileset, grass));
+		editor->update_property();
+		CHECK(list->get_item_tooltip(0).contains("different flags"));
+		find_button(editor, "Passage")->set_pressed(true);
+		list->select(1);
+		Ref<InputEventKey> menu;
+		menu.instantiate();
+		menu->set_keycode(Key::MENU);
+		menu->set_physical_keycode(Key::MENU);
+		menu->set_pressed(true);
+		list->emit_signal(SceneStringName(gui_input), menu);
+		CHECK(word(2) == 0);
+	}
+
+	SUBCASE("Each form keeps its own mode") {
+		ERR_PRINT_OFF;
+		JRPGEditorPropertyTiles *other = memnew(JRPGEditorPropertyTiles);
+		SceneTree::get_singleton()->get_root()->add_child(other);
+		ERR_PRINT_ON;
+		other->set_object_and_property(data.ptr(), "palette");
+		other->update_property();
+		find_button(editor, "Counter")->set_pressed(true);
+		find_button(other, "Ladder")->set_pressed(true);
+		CHECK(find_button(editor, "Counter")->is_pressed());
+		CHECK_FALSE(find_button(editor, "Ladder")->is_pressed());
+		list->emit_signal(SNAME("item_clicked"), 2, Vector2(), MouseButton::LEFT);
+		CHECK(word(3) == int(JRPGTilesetData::FLAG_COUNTER)); // This form's mode, not the other's.
+		memdelete(other);
+	}
+
 	SUBCASE("Sides: a click on an edge blocks that side; the side buttons follow the selected tile") {
 		find_button(editor, "Entry Sides")->set_pressed(true);
 		Button *north = find_button(editor, "North");
@@ -204,7 +246,7 @@ TEST_CASE("[SceneTree][JRPG][TilesetEditor] The tiles form shows the palette and
 		list->select(1);
 		list->emit_signal(SceneStringName(item_selected), 1);
 		CHECK_FALSE(north->is_disabled());
-		const Rect2 rect = list->get_item_rect(1);
+		const Rect2 rect = list->get_item_rect(1, false);
 		list->emit_signal(SNAME("item_clicked"), 1, rect.position + Vector2(rect.size.x / 2, 2), MouseButton::LEFT);
 		CHECK(JRPGTilesetData::get_no_entry(word(2)) == 1);
 		west->set_pressed(true); // Pressing it, as the keyboard does.

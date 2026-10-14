@@ -403,15 +403,15 @@ void tool_db_save(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_c
 	if (!editing) {
 		return;
 	}
-	const PackedStringArray pending = editing->get_unsaved_paths();
-	const Error err = editing->save_all();
+	PackedStringArray saved;
+	const Error err = editing->save_all(&saved);
 	const PackedStringArray failed = editing->get_unsaved_paths();
 	if (err != OK) {
 		p_call->fail(vformat("Some database files could not be saved: %s.", String(", ").join(failed)));
 		return;
 	}
 	Dictionary result;
-	result["saved"] = pending;
+	result["saved"] = saved; // Tile flags baked by this save are in the tilesets file listed here.
 	p_call->complete_data(result);
 }
 
@@ -934,6 +934,9 @@ Dictionary describe_tile(const Ref<TileSet> &p_tileset, const Dictionary &p_entr
 		tile[field.key] = (word & field.mask) != 0;
 	}
 	tile["terrain_tag"] = JRPGTilesetData::get_terrain_tag(word);
+	if (int(p_entry.get("alternative", 0)) & (TileSetAtlasSource::TRANSFORM_FLIP_H | TileSetAtlasSource::TRANSFORM_FLIP_V | TileSetAtlasSource::TRANSFORM_TRANSPOSE)) {
+		tile["transformed"] = true; // Flipped or rotated: shares its flags with the tile it turns (per-tile data).
+	}
 	for (const int other : words) {
 		if (other != word) {
 			tile["mixed"] = true; // The kind's shapes differ (painted one by one in Godot's TileSet editor).
@@ -967,6 +970,30 @@ Dictionary tileset_summary(JRPGDatabaseEditing *p_editing, int p_id, const Ref<T
 	result["tileset_path"] = p_tileset->get_path();
 	result["tile_size"] = Array({ p_tileset->get_tile_size().x, p_tileset->get_tile_size().y });
 	result["palette_size"] = data->get_palette().size();
+	// The TileSet's own layout, which the sheet tools add to and their undo takes away.
+	Array sources;
+	for (int i = 0; i < p_tileset->get_source_count(); i++) {
+		const int source_id = p_tileset->get_source_id(i);
+		const Ref<TileSetAtlasSource> atlas = p_tileset->get_source(source_id);
+		Dictionary source;
+		source["id"] = source_id;
+		source["name"] = p_tileset->get_source(source_id)->get_name();
+		source["tiles"] = atlas.is_valid() ? atlas->get_tiles_count() : 0;
+		sources.push_back(source);
+	}
+	result["sources"] = sources;
+	Array terrain_sets;
+	for (int set = 0; set < p_tileset->get_terrain_sets_count(); set++) {
+		Dictionary terrain_set;
+		terrain_set["mode"] = int(p_tileset->get_terrain_set_mode(set));
+		PackedStringArray names;
+		for (int terrain = 0; terrain < p_tileset->get_terrains_count(set); terrain++) {
+			names.push_back(p_tileset->get_terrain_name(set, terrain));
+		}
+		terrain_set["terrains"] = names;
+		terrain_sets.push_back(terrain_set);
+	}
+	result["terrain_sets"] = terrain_sets;
 	// The flags maps and servers read are baked when the database is saved (jrpg_db_save, or the editor's saves).
 	result["bake_up_to_date"] = !JRPGTileFlags::is_stale(p_tileset, data);
 	return result;
@@ -1093,7 +1120,8 @@ void tool_tileset_set_flag(const Dictionary &p_args, const Ref<ClaudeBridgeToolC
 	}
 	const JRPGTileFlags::FieldInfo &info = JRPGTileFlags::get_field(field);
 	String message;
-	if (editing->set_tile_flags(id, indexes, info.mask, value << info.shift, &message) != OK) {
+	bool changed = false;
+	if (editing->set_tile_flags(id, indexes, info.mask, value << info.shift, &message, &changed) != OK) {
 		p_call->fail(message + " Nothing was changed.");
 		return;
 	}
@@ -1108,7 +1136,8 @@ void tool_tileset_set_flag(const Dictionary &p_args, const Ref<ClaudeBridgeToolC
 	}
 	Dictionary result = tileset_summary(editing, id, tileset);
 	result["tiles"] = tiles;
-	result["undoable"] = true;
+	result["changed"] = changed;
+	result["undoable"] = changed; // No undo step when the tiles already had that value.
 	p_call->complete_data(result);
 }
 
@@ -1131,7 +1160,7 @@ void tool_tileset_create(const Dictionary &p_args, const Ref<ClaudeBridgeToolCal
 		}
 	}
 	String message;
-	if (editing->create_tileset(id, path, int(CLAMP(tile_size, int64_t(0), int64_t(INT32_MAX))), &message) != OK) {
+	if (editing->create_tileset(id, path, int(CLAMP(tile_size, int64_t(0), int64_t(INT32_MAX))), &message, bool(p_args.get("replace", false))) != OK) {
 		p_call->fail(message);
 		return;
 	}
@@ -1168,10 +1197,14 @@ void tool_tileset_add_sheet(const Dictionary &p_args, const Ref<ClaudeBridgeTool
 	if (!int_arg(p_args, "frames", kind == guessed ? guessed_frames : 1, p_call, frames)) {
 		return;
 	}
+	if (frames < 1 || frames > 64) {
+		p_call->fail("\"frames\" must be 1-64.");
+		return;
+	}
 	const String name = p_args.get("name", image.get_file().get_basename().capitalize());
 	PackedInt32Array indexes;
 	String message;
-	if (editing->add_tile_sheet(id, image, kind, int(CLAMP(frames, int64_t(0), int64_t(64))), name, indexes, &message) != OK) {
+	if (editing->add_tile_sheet(id, image, kind, int(frames), name, indexes, &message) != OK) {
 		p_call->fail(message + " Nothing was changed.");
 		return;
 	}
@@ -1248,7 +1281,7 @@ void apply_image(const Ref<ClaudeBridgeToolCall> &p_call, const String &p_table,
 
 // A new image is imported by the editor's scan; the call waits for it (polled, as the editor imports on the main
 // thread) up to IMPORT_WAIT_MSEC.
-void wait_for_import(const Ref<ClaudeBridgeToolCall> &p_call, const String &p_table, int p_id, const String &p_field, const String &p_path, int p_frames, int p_directions, int64_t p_deadline) {
+void wait_for_import(const Ref<ClaudeBridgeToolCall> &p_call, const String &p_table, int p_id, const String &p_field, const String &p_path, int p_frames, int p_directions, int64_t p_deadline, int p_rescans) {
 	if (p_call->is_cancelled() || p_call->is_done()) {
 		return;
 	}
@@ -1256,11 +1289,16 @@ void wait_for_import(const Ref<ClaudeBridgeToolCall> &p_call, const String &p_ta
 		apply_image(p_call, p_table, p_id, p_field, p_path, p_frames, p_directions);
 		return;
 	}
+	EditorFileSystem *file_system = EditorFileSystem::get_singleton();
+	if (p_rescans > 0 && file_system && !file_system->is_scanning() && !file_system->is_importing()) {
+		file_system->scan_changes(); // The last scan ended without the file (it began before the copy).
+		p_rescans--;
+	}
 	if (int64_t(OS::get_singleton()->get_ticks_msec()) > p_deadline || !SceneTree::get_singleton()) {
 		p_call->fail(vformat("%s was not imported within %d seconds; the Output panel shows import errors. Nothing was changed.", p_path, int(IMPORT_WAIT_MSEC / 1000)));
 		return;
 	}
-	SceneTree::get_singleton()->create_timer(0.2)->connect("timeout", callable_mp_static(&wait_for_import).bind(p_call, p_table, p_id, p_field, p_path, p_frames, p_directions, p_deadline), Object::CONNECT_ONE_SHOT);
+	SceneTree::get_singleton()->create_timer(0.2)->connect("timeout", callable_mp_static(&wait_for_import).bind(p_call, p_table, p_id, p_field, p_path, p_frames, p_directions, p_deadline, p_rescans), Object::CONNECT_ONE_SHOT);
 }
 
 void tool_db_set_image(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
@@ -1307,10 +1345,11 @@ void tool_db_set_image(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall>
 		p_call->fail(vformat("\"image\" must be an image file inside the project (res://); %s was not found. Copy the file into the project folder first.", requested));
 		return;
 	}
-	if (!ResourceLoader::exists(path) && EditorFileSystem::get_singleton() && !EditorFileSystem::get_singleton()->is_scanning()) {
-		EditorFileSystem::get_singleton()->scan_changes(); // A file copied in since the last scan.
+	if (!ResourceLoader::exists(path) && EditorFileSystem::get_singleton()) {
+		// A file copied in since the last scan; during a scan this queues another (editor_file_system.cpp:1710-1716).
+		EditorFileSystem::get_singleton()->scan_changes();
 	}
-	wait_for_import(p_call, table_name, id, field, path, int(frames), int(directions), int64_t(OS::get_singleton()->get_ticks_msec() + IMPORT_WAIT_MSEC));
+	wait_for_import(p_call, table_name, id, field, path, int(frames), int(directions), int64_t(OS::get_singleton()->get_ticks_msec() + IMPORT_WAIT_MSEC), 1);
 }
 
 Dictionary schema_property(const String &p_type, const String &p_description) {
@@ -1537,6 +1576,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	set_image.input_schema = ClaudeBridgeMCP::object_schema(set_image_properties, PackedStringArray({ "table", "id", "field", "image" }));
 	set_image.read_only = false;
 	set_image.destructive = false; // Undoable.
+	set_image.timeout_msec = IMPORT_WAIT_MSEC + 5000; // Longer than the import wait, so the tool's own message reports it.
 	set_image.func = &tool_db_set_image;
 	r_mcp.register_tool(set_image);
 
@@ -1545,7 +1585,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool tile_flags;
 	tile_flags.name = "jrpg_tileset_flags";
 	tile_flags.title = "Read a tileset's tile flags";
-	tile_flags.description = "Lists a tileset's palette (the tiles maps use; an autotile or wall kind is one entry) with each tile's flags as the tileset form shows them: pass (open, blocked, transparent), no_entry and no_exit sides (north, east, south, west), overhead, ladder, bush, counter, damage and terrain_tag (0-15). A kind whose shapes carry different flags is marked mixed (the first shape's are shown); a tile its TileSet lacks is marked missing. bake_up_to_date tells whether the flags baked for maps match (the database save bakes them).";
+	tile_flags.description = "Lists a tileset's palette (the tiles maps use; an autotile or wall kind is one entry) with each tile's flags as the tileset form shows them: pass (open, blocked, transparent), no_entry and no_exit sides (north, east, south, west), overhead, ladder, bush, counter, damage and terrain_tag (0-15). A kind whose shapes carry different flags is marked mixed (the first shape's are shown); a tile its TileSet lacks is marked missing. bake_up_to_date tells whether the flags baked for maps match (the database save bakes them); sources and terrain_sets show the TileSet's layout. A flipped or rotated entry (transformed) shares its flags with the tile it turns.";
 	Dictionary tile_flags_properties;
 	tile_flags_properties["id"] = tileset_id;
 	tile_flags_properties["from"] = schema_property("integer", "First palette index (default 1).");
@@ -1557,7 +1597,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool set_flag;
 	set_flag.name = "jrpg_tileset_set_flag";
 	set_flag.title = "Set a tile flag";
-	set_flag.description = "Sets one flag of palette tiles, as a click on the tileset form's overlay does: an autotile or wall kind changes on all its shapes; the tiles' other flags stay. flag is one of pass, no_entry, no_exit, overhead, ladder, bush, counter, damage, terrain_tag; value is open/blocked/transparent for pass, a list of sides (or a 0-15 mask) for no_entry and no_exit, true/false for the switches, 0-15 for terrain_tag. One undoable action; the TileSet is saved with the database (jrpg_db_save). Returns the changed tiles.";
+	set_flag.description = "Sets one flag of palette tiles, as a click on the tileset form's overlay does: an autotile or wall kind changes on all its shapes; the tiles' other flags stay. flag is one of pass, no_entry, no_exit, overhead, ladder, bush, counter, damage, terrain_tag; value is open/blocked/transparent for pass, a list of sides (or a 0-15 mask) for no_entry and no_exit, true/false for the switches, 0-15 for terrain_tag. One undoable action; the TileSet is saved with the database (jrpg_db_save). Returns the tiles; changed is false (and no undo step was made) when they already had that value.";
 	Dictionary set_flag_properties;
 	set_flag_properties["id"] = tileset_id;
 	set_flag_properties["index"] = schema_property("integer", "Palette index (1 = first tile).");
@@ -1577,11 +1617,12 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool tileset_create;
 	tileset_create.name = "jrpg_tileset_create";
 	tileset_create.title = "Create a tileset's TileSet";
-	tileset_create.description = "Creates a TileSet file for a tileset and points the tileset at it, as Create TileSet in the tileset form: square tiles of tile_size pixels (default 48) with the jrpg_* tile flag layers, at path (default res://jrpg/tilesets/<tileset name>.tres). An existing file is never replaced. Choosing the TileSet is undoable; the file stays.";
+	tileset_create.description = "Creates a TileSet file for a tileset and points the tileset at it, as Create TileSet in the tileset form: square tiles of tile_size pixels (default 48) with the jrpg_* tile flag layers, at path (default res://jrpg/tilesets/<tileset name>.tres). An existing file is never replaced, and a tileset whose TileSet already holds its palette's tiles is refused unless replace is true. Choosing the TileSet is undoable; the file stays.";
 	Dictionary tileset_create_properties;
 	tileset_create_properties["id"] = tileset_id;
 	tileset_create_properties["path"] = schema_property("string", "res:// path of the new .tres or .res file.");
 	tileset_create_properties["tile_size"] = schema_property("integer", "Tile width and height in pixels, 8-512 (default 48).");
+	tileset_create_properties["replace"] = schema_property("boolean", "Replace a TileSet the tileset already uses for its tiles (they would point at nothing). Default false.");
 	tileset_create.input_schema = ClaudeBridgeMCP::object_schema(tileset_create_properties, PackedStringArray({ "id" }));
 	tileset_create.read_only = false;
 	tileset_create.destructive = true; // Writes a file (talewright/docs/claude_bridge.md, annotations).

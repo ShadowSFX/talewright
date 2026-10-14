@@ -304,15 +304,32 @@ Ref<Texture2D> JRPGEditorPropertyTiles::_thumbnail(const Dictionary &p_entry) co
 	return thumbnail;
 }
 
+Rect2 JRPGEditorPropertyTiles::icon_rect(const Rect2 &p_item_rect, const Size2 &p_icon_size, int p_v_separation, float p_scroll, float p_width, bool p_rtl) {
+	// As ItemList draws the icon of an item in top-icon mode (scene/gui/item_list.cpp:1463-1468,1578-1592), centered
+	// in the item's own width, and mirrored in a right-to-left layout (scene/gui/item_list.cpp:1616-1618).
+	Point2 pos = p_item_rect.position - Vector2(0, int(p_scroll));
+	pos.y += MAX(p_v_separation, 0) / 2;
+	pos.x += Math::floor((p_item_rect.size.width - p_icon_size.width) / 2);
+	if (p_rtl) {
+		pos.x = p_width - pos.x - p_icon_size.width;
+	}
+	return Rect2(pos, p_icon_size);
+}
+
+bool JRPGEditorPropertyTiles::is_mixed(const Ref<TileSet> &p_tileset, const Dictionary &p_entry) {
+	const PackedInt32Array words = JRPGTileFlags::get_tile_words(p_tileset, p_entry);
+	for (int i = 1; i < words.size(); i++) {
+		if (words[i] != words[0]) {
+			return true;
+		}
+	}
+	return false;
+}
+
 Rect2 JRPGEditorPropertyTiles::_tile_rect(int p_item) {
-	// Where ItemList draws the icon of an item in top-icon mode (scene/gui/item_list.cpp:1463-1468,1578-1592).
-	Rect2 rect = list->get_item_rect(p_item);
-	rect.position.y -= int(list->get_v_scroll_bar()->get_value());
-	const Size2 icon = list->get_fixed_icon_size() * list->get_icon_scale();
-	Point2 pos = rect.position;
-	pos.y += MAX(list->get_theme_constant(SNAME("v_separation")), 0) / 2;
-	pos.x += Math::floor((rect.size.width - icon.width) / 2);
-	return Rect2(pos, icon);
+	// Not expanded: ItemList widens the last column's rectangle to the list's edge (scene/gui/item_list.cpp:346-351)
+	// but centers the icon in the item's own width.
+	return icon_rect(list->get_item_rect(p_item, false), list->get_fixed_icon_size() * list->get_icon_scale(), list->get_theme_constant(SNAME("v_separation")), list->get_v_scroll_bar()->get_value(), list->get_size().width, list->is_layout_rtl());
 }
 
 int JRPGEditorPropertyTiles::_selected() const {
@@ -324,8 +341,8 @@ void JRPGEditorPropertyTiles::_draw_overlays() {
 	if (tileset.is_null()) {
 		return;
 	}
-	const JRPGTileFlags::Field mode = _mode();
-	const JRPGTileFlags::FieldInfo &field = JRPGTileFlags::get_field(mode);
+	const JRPGTileFlags::Field shown = _mode();
+	const JRPGTileFlags::FieldInfo &field = JRPGTileFlags::get_field(shown);
 	// A dark halo under every mark keeps it readable on any tile art, as the TileSet editor outlines its numbers.
 	const Color halo(0, 0, 0, 0.7);
 	const Color open = get_theme_color(SNAME("success_color"), EditorStringName(Editor));
@@ -348,7 +365,13 @@ void JRPGEditorPropertyTiles::_draw_overlays() {
 		}
 		const int value = (JRPGTileFlags::get_entry_flags(tileset, entry) & field.mask) >> field.shift;
 		const float line = MAX(2.0f, Math::round(size * 0.07f));
-		switch (mode) {
+		if (is_mixed(tileset, entry)) {
+			// Its shapes differ: the mark shows (and the bake uses) the first shape's; the tooltip says so.
+			const Vector2 corner = rect.position + Vector2(rect.size.x - size * 0.16f, size * 0.16f);
+			list->draw_circle(corner, size * 0.1f + EDSCALE, halo);
+			list->draw_circle(corner, size * 0.1f, get_theme_color(SNAME("warning_color"), EditorStringName(Editor)));
+		}
+		switch (shown) {
 			case JRPGTileFlags::FIELD_PASS: {
 				const float radius = size * 0.24f;
 				if (value == JRPGTilesetData::PASS_BLOCKED) {
@@ -402,16 +425,17 @@ void JRPGEditorPropertyTiles::_draw_overlays() {
 
 void JRPGEditorPropertyTiles::_mode_toggled(bool p_on, int p_mode) {
 	if (p_on) {
+		mode = p_mode;
 		last_mode = p_mode;
 		_update_mode();
 	}
 }
 
 void JRPGEditorPropertyTiles::_update_mode() {
-	if (mode_buttons[last_mode] && !mode_buttons[last_mode]->is_pressed()) {
-		mode_buttons[last_mode]->set_pressed_no_signal(true);
+	if (mode_buttons[mode] && !mode_buttons[mode]->is_pressed()) {
+		mode_buttons[mode]->set_pressed_no_signal(true);
 	}
-	hint->set_text(TTRGET(MODE_HINTS[last_mode]));
+	hint->set_text(TTRGET(MODE_HINTS[mode]));
 	sides_label->set_text(_mode() == JRPGTileFlags::FIELD_NO_EXIT ? TTR("Block Leaving Toward:") : TTR("Block Entering From:"));
 	sides_row->set_visible(_is_side_mode());
 	_update_sides();
@@ -446,6 +470,9 @@ void JRPGEditorPropertyTiles::_list_input(const Ref<InputEvent> &p_event) {
 	if (p_event->is_action_pressed(SNAME("ui_accept"), false, false) && _selected() >= 0) {
 		const Ref<InputEventWithModifiers> modifiers = p_event;
 		_act(_selected(), -1, modifiers.is_valid() && modifiers->is_shift_pressed());
+		list->accept_event();
+	} else if (p_event->is_action_pressed(SNAME("ui_menu"), false, true)) {
+		// ItemList reports the Menu key as a right click on the item (scene/gui/item_list.cpp:924): not an edit here.
 		list->accept_event();
 	}
 }
@@ -557,6 +584,11 @@ void JRPGEditorPropertyTiles::update_property() {
 		String tooltip = vformat(TTR("Tile %d: %s (%s)"), i + 1, String(entry.get("name", "")), kind_label(entry.get("kind", "plain")));
 		if (thumbnail.is_null()) {
 			tooltip += "\n" + TTR("Its tile is missing from the TileSet.");
+		} else if (is_mixed(tileset, entry)) {
+			tooltip += "\n" + TTR("Its shapes have different flags (painted one by one in the TileSet editor). The first shape's flags are shown and used; a click sets them on every shape.");
+		}
+		if (int(entry.get("alternative", 0)) & (TileSetAtlasSource::TRANSFORM_FLIP_H | TileSetAtlasSource::TRANSFORM_FLIP_V | TileSetAtlasSource::TRANSFORM_TRANSPOSE)) {
+			tooltip += "\n" + TTR("Flipped or rotated: it shares its flags with the tile it turns (Godot keeps tile data per tile, not per transform).");
 		}
 		list->set_item_tooltip(item, tooltip);
 	}

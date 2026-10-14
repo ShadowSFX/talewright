@@ -217,6 +217,11 @@ def run(checks: Checks) -> None:
         json.dumps(created)[:300],
     )
     c.check("jrpg_tileset_create: never replaces a file", c.refused("jrpg_tileset_create", {"id": 2, "path": path}))
+    c.round_trip(
+        "jrpg_tileset_create (choosing the new TileSet)",
+        lambda: c.record("tilesets", 3)["tileset_uid"],
+        lambda: c.call("jrpg_tileset_create", {"id": 3, "path": "res://jrpg/tilesets/round_trip.tres"}),
+    )
     c.check(
         "the sheets are imported",
         all(c.wait_for_file(f"tiles/{name}.import") for name in SHEETS),
@@ -224,7 +229,9 @@ def run(checks: Checks) -> None:
     )
 
     def tileset() -> tuple[Any, Any]:
-        return c.record("tilesets", 1)["palette"], c.call("jrpg_tileset_flags", {"id": 1})["tiles"]
+        # The palette, every tile's flags and the TileSet's layout (sources, terrain sets and their terrains), so the
+        # undo of a sheet must take its source and terrain away and the redo put them back.
+        return c.record("tilesets", 1)["palette"], c.call("jrpg_tileset_flags", {"id": 1})
 
     c.round_trip(
         "jrpg_tileset_add_sheet (an autotile)",
@@ -240,6 +247,12 @@ def run(checks: Checks) -> None:
         "jrpg_tileset_set_flag (the passage of an autotile kind)",
         tileset,
         lambda: c.call("jrpg_tileset_set_flag", {"id": 1, "index": 1, "flag": "pass", "value": "blocked"}),
+    )
+    again = c.call("jrpg_tileset_set_flag", {"id": 1, "index": 1, "flag": "pass", "value": "blocked"})
+    c.check(
+        "jrpg_tileset_set_flag: a value already set makes no undo step",
+        again.get("changed") is False and again.get("undoable") is False,
+        json.dumps(again)[:200],
     )
     c.round_trip(
         "jrpg_tileset_set_flag (entry sides of two tiles)",

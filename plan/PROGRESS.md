@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 03:07 -0600
+- **Updated:** 2026-10-14 03:16 -0600
 - **Current task:** none
-- **Last completed:** 7.6.1 Review fixes: assets, autotile core, importer, resolver
-- **Next task:** 7.6.2 Review fixes: tile flags, tileset form, bridge tools
-- **Done leaf tasks:** 95
+- **Last completed:** 7.6.2 Review fixes: tile flags, tileset form, bridge tools
+- **Next task:** 7.6.3 Epic 7 close-out
+- **Done leaf tasks:** 96
 <!-- status:end -->
 
 ## Log
@@ -258,4 +258,6 @@
 | 2026-10-14 02:46 -0600 | 7.6 | started: Epic review: assets (containers: 7 pending->in_progress) |  |
 | 2026-10-14 03:00 -0600 | - | imported 3 new / 1 updated tasks (containers: 7.6 in_progress->pending, 7 in_progress->pending) | |
 | 2026-10-14 03:00 -0600 | 7.6.1 | started: Review fixes: assets, autotile core, importer, resolver (containers: 7.6 pending->in_progress, 7 pending->in_progress) |  |
-| 2026-10-14 03:07 -0600 | 7.6.1 | done: Review fixes: assets, autotile core, importer, resolver — Part A review fixes (plan/evidence/reviews/epic_7.md): generate_assets --check verifies committed files (pixels, Ogg length/channels, .import text, stray files), records all import settings, rewrites only what differs, recreates sidecars, runs in static_checks.py; pinned requirements.txt; JRPGAutotileResolver.get_flags + scroll-type mapping in spec 05; importer refuses unknown kinds and frames < 1; range-checked cell lookups; bitfield masks/flags and abstract static-only classes; tests for every shape's peering bits, animated walls, script wrappers, exact changed list; D-034 reversal and doc fixes (separation, frame rate, citation, US spellings). (containers: 7.6 in_progress->pending, 7 in_progress->pending) | pending |
+| 2026-10-14 03:07 -0600 | 7.6.1 | done: Review fixes: assets, autotile core, importer, resolver — Part A review fixes (plan/evidence/reviews/epic_7.md): generate_assets --check verifies committed files (pixels, Ogg length/channels, .import text, stray files), records all import settings, rewrites only what differs, recreates sidecars, runs in static_checks.py; pinned requirements.txt; JRPGAutotileResolver.get_flags + scroll-type mapping in spec 05; importer refuses unknown kinds and frames < 1; range-checked cell lookups; bitfield masks/flags and abstract static-only classes; tests for every shape's peering bits, animated walls, script wrappers, exact changed list; D-034 reversal and doc fixes (separation, frame rate, citation, US spellings). (containers: 7.6 in_progress->pending, 7 in_progress->pending) | a47cb524f1 |
+| 2026-10-14 03:07 -0600 | 7.6.2 | started: Review fixes: tile flags, tileset form, bridge tools (containers: 7.6 pending->in_progress, 7 pending->in_progress) |  |
+| 2026-10-14 03:16 -0600 | 7.6.2 | done: Review fixes: tile flags, tileset form, bridge tools — Part B review fixes (plan/evidence/reviews/epic_7.md): stale bakes from Godot's TileSet editor count as changes to save (get_stale_tilesets/has_changes_to_save in the unsaved status, save_external_data, Database section Save + status; watched TileSets), cleared bake without a TileSet; overlay/click rects unexpanded and RTL-mirrored (icon_rect); set_image timeout 25 s and rescans; set_tile_flags reports changes (tool changed/undoable); jrpg_tileset_flags reports sources/terrain sets, round trips compare them, create round-tripped (74/74); per-form mode; Menu key ignored; force_fixed_history; mixed marker + transformed note; create_tileset refuses to orphan a palette unless replace; save_all reports what it wrote; frames 1-64. Doctests for each; bridge evidence 7.6.2-*. (containers: 7.6 in_progress->pending, 7 in_progress->pending) | pending |

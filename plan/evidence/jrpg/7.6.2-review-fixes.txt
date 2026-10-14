@@ -1,0 +1,13 @@
+# 7.6.2 bridge verification: epic 7 review fixes in the running editor
+  palette: 33 tiles; sources: [('Grass', 47), ('Props', 32)] terrain sets: [{'mode': 0, 'terrains': ['Grass']}]
+## finding 2: overlays sit on their tiles in every column (terrain tags 1..3 on the last tiles of the first row)
+  screenshot: plan/evidence/jrpg/7.6.2-terrain-tags-last-column.png
+## finding 5: setting a value the tiles already have makes no undo step
+  changed: False undoable: False
+## finding 1: the database saves and bakes the flags; the Save button follows bakes left stale
+  saved: ['res://jrpg/db/tilesets.tres', 'res://jrpg/tilesets/overworld.tres']
+  bake up to date after saving: True
+  Save button disabled: True
+## errors
+    "errors": 0,
+    "warnings": 0,

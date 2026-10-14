@@ -163,8 +163,11 @@ void JRPGDatabaseView::_refresh_tables() {
 	if (tables->get_selected_items().is_empty() && tables->get_item_count() > 0) {
 		tables->select(0);
 	}
-	const PackedStringArray unsaved_paths = editing->get_unsaved_paths();
-	status->set_text(unsaved_paths.is_empty() ? TTR("All changes are saved.") : vformat(TTR("Unsaved: %s"), String(", ").join(unsaved_paths)));
+	PackedStringArray unsaved = editing->get_unsaved_paths();
+	for (const int id : editing->get_stale_tilesets()) {
+		unsaved.push_back(vformat(TTR("tile flags of tileset %d"), id)); // Painted in a TileSet: baked when saving.
+	}
+	status->set_text(unsaved.is_empty() ? TTR("All changes are saved.") : vformat(TTR("Unsaved: %s"), String(", ").join(unsaved)));
 }
 
 void JRPGDatabaseView::_set_row(int p_index, int p_id, const String &p_name) {
@@ -223,7 +226,7 @@ void JRPGDatabaseView::_update_buttons() {
 	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
 	const String key = _selected_table();
 	const bool has_entry = _selected_entry() > 0;
-	save_button->set_disabled(!editing || !editing->has_unsaved_changes());
+	save_button->set_disabled(!editing || !editing->has_changes_to_save());
 	clear_button->set_disabled(!has_entry);
 	copy_button->set_disabled(!has_entry);
 	paste_button->set_disabled(!has_entry || !editing || !editing->can_paste(key));

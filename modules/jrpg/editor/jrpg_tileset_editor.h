@@ -92,7 +92,8 @@ class JRPGEditorPropertyTiles : public EditorProperty {
 	GDCLASS(JRPGEditorPropertyTiles, EditorProperty);
 
 	static constexpr int SIDES = 4; // North, east, south, west: bits 1, 2, 4, 8 of a side mask.
-	static inline int last_mode = JRPGTileFlags::FIELD_PASS; // Kept when another tileset is opened.
+	static inline int last_mode = JRPGTileFlags::FIELD_PASS; // A new form starts in the mode last chosen in any.
+	int mode = last_mode; // Each form has its own (the workspace and the Inspector dock may show one each).
 
 	VBoxContainer *container = nullptr;
 	VBoxContainer *no_tileset = nullptr;
@@ -119,7 +120,7 @@ class JRPGEditorPropertyTiles : public EditorProperty {
 	bool refresh_queued = false;
 
 	int _tileset_id();
-	JRPGTileFlags::Field _mode() const { return JRPGTileFlags::Field(last_mode); }
+	JRPGTileFlags::Field _mode() const { return JRPGTileFlags::Field(mode); }
 	bool _is_side_mode() const;
 	void _set_tileset(const Ref<TileSet> &p_tileset);
 	void _tileset_changed();
@@ -155,6 +156,11 @@ public:
 	static int next_value(JRPGTileFlags::Field p_mode, int p_word, int p_side, bool p_back);
 	// Which part of a tile a click at p_at falls on: 0..3 for the north, east, south and west edges, -1 for the middle.
 	static int side_at(const Rect2 &p_tile, const Vector2 &p_at);
+	// Where ItemList draws an icon of p_icon_size in an item of top-icon mode whose rectangle (get_item_rect without
+	// expansion) is p_item_rect, scrolled by p_scroll, in a list p_width wide laid out left to right or right to left.
+	static Rect2 icon_rect(const Rect2 &p_item_rect, const Size2 &p_icon_size, int p_v_separation, float p_scroll, float p_width, bool p_rtl);
+	// Whether a palette entry's shapes carry different flags (painted one by one in Godot's TileSet editor).
+	static bool is_mixed(const Ref<TileSet> &p_tileset, const Dictionary &p_entry);
 
 	JRPGEditorPropertyTiles();
 };

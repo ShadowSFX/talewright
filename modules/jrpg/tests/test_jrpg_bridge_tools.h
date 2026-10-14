@@ -36,6 +36,7 @@
 #if defined(TOOLS_ENABLED) && defined(MODULE_CLAUDE_BRIDGE_ENABLED)
 
 #include "core/io/dir_access.h"
+#include "core/io/file_access.h"
 #include "core/io/image.h"
 #include "core/io/json.h"
 #include "core/io/resource_saver.h"
@@ -220,6 +221,10 @@ TEST_CASE("[SceneTree][JRPG][BridgeTools] Reading and setting tile flags") {
 	Dictionary flags = bridge.call("jrpg_tileset_flags", R"({"id":1})");
 	REQUIRE_FALSE(bridge.failed);
 	CHECK(int(flags["palette_size"]) == 3);
+	CHECK(Array(flags["sources"]).size() == 2); // The TileSet's layout: two sheets, one blob terrain set.
+	CHECK(int(Dictionary(Array(flags["sources"])[0])["tiles"]) == 47);
+	CHECK(Array(flags["terrain_sets"]).size() == 1);
+	CHECK(PackedStringArray(Dictionary(Array(flags["terrain_sets"])[0])["terrains"]) == PackedStringArray({ "Grass" }));
 	CHECK(Array(flags["tile_size"]) == Array({ 48.0, 48.0 })); // Numbers come back through JSON.
 	const Dictionary grass = Array(flags["tiles"])[0];
 	CHECK(String(grass["kind"]) == "autotile");
@@ -234,6 +239,11 @@ TEST_CASE("[SceneTree][JRPG][BridgeTools] Reading and setting tile flags") {
 	Dictionary set = bridge.call("jrpg_tileset_set_flag", R"({"id":1,"index":1,"flag":"pass","value":"blocked"})");
 	REQUIRE_FALSE(bridge.failed);
 	CHECK(bool(set["undoable"]));
+	CHECK(bool(set["changed"]));
+	set = bridge.call("jrpg_tileset_set_flag", R"({"id":1,"index":1,"flag":"pass","value":1})"); // Already so.
+	REQUIRE_FALSE(bridge.failed);
+	CHECK_FALSE(bool(set["changed"]));
+	CHECK_FALSE(bool(set["undoable"])); // No undo step to take back.
 	CHECK(String(Dictionary(Array(set["tiles"])[0])["pass"]) == "blocked");
 	for (int word : JRPGTileFlags::get_tile_words(tileset, data->get_palette()[0])) {
 		CHECK(JRPGTilesetData::get_pass_mode(word) == JRPGTilesetData::PASS_BLOCKED); // Every shape.
@@ -292,6 +302,11 @@ TEST_CASE("[SceneTree][JRPG][BridgeTools] Reading and setting tile flags") {
 	CHECK(bridge.text.contains("image the project has imported"));
 	bridge.call("jrpg_tileset_add_sheet", R"({"id":2,"image":"res://missing.png"})");
 	CHECK(bridge.text.contains("has no TileSet"));
+	// A tileset whose TileSet holds its tiles is not re-pointed without replace (refused before any file is written).
+	bridge.call("jrpg_tileset_create", R"({"id":1,"path":"res://jrpg_bridge_never_written.tres"})");
+	CHECK(bridge.failed);
+	CHECK(bridge.text.contains("already has a TileSet"));
+	CHECK_FALSE(FileAccess::exists("res://jrpg_bridge_never_written.tres"));
 	CHECK(data->get_palette().size() == 3);
 }
 

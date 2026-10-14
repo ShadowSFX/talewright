@@ -65,15 +65,20 @@ void JRPGBootstrapPlugin::_on_project_settings_changed() {
 
 String JRPGBootstrapPlugin::get_unsaved_status(const String &p_for_scene) const {
 	// Database files belong to no scene: report them only for the editor-wide check (quit, reload).
-	if (!p_for_scene.is_empty() || !database_editing->has_unsaved_changes()) {
+	if (!p_for_scene.is_empty() || !database_editing->has_changes_to_save()) {
 		return String();
 	}
-	// Asked before quitting and before reloading the project alike.
-	return vformat(TTR("Save the changes to the JRPG database first?\n%s"), String("\n").join(database_editing->get_unsaved_paths()));
+	// Asked before quitting and before reloading the project alike; Save All saves external data only when this is
+	// not empty (editor/editor_node.cpp:2414-2421), so tile flags painted in the TileSet editor count too.
+	PackedStringArray lines = database_editing->get_unsaved_paths();
+	for (const int id : database_editing->get_stale_tilesets()) {
+		lines.push_back(vformat(TTR("Tile flags of tileset %d, to bake into the database"), id));
+	}
+	return vformat(TTR("Save the changes to the JRPG database first?\n%s"), String("\n").join(lines));
 }
 
 void JRPGBootstrapPlugin::save_external_data() {
-	if (database_editing->has_unsaved_changes()) {
+	if (database_editing->has_changes_to_save()) {
 		database_editing->save_all();
 	}
 }

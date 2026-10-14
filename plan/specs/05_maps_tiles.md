@@ -81,7 +81,13 @@ Implementation (7.3.1, `JRPGTileFlags`, editor): word 0 is the empty cell (0); a
 written to all its shapes together and read from its first shape; the hash (`flags_hash`, SHA-256) covers each palette
 index with its source id, atlas coordinates, alternative and word, so a changed flag or a changed palette both make
 the bake stale. `JRPGDatabaseEditing::save_all` bakes every stale tileset again before saving, and TileSets the
-tileset tab edited are listed as unsaved (`mark_unsaved`) and saved with the database.
+tileset tab edited are listed as unsaved (`mark_unsaved`) and saved with the database. Flags painted elsewhere (Godot's
+TileSet editor) make the bake stale without an unsaved file: `get_stale_tilesets` finds them (and watches the TileSets
+it reads), so the Database section, the quit prompt and every editor save (scene save, Save All, running the project)
+treat them as changes to save. A tileset whose `tileset_uid` is cleared loses its old table on the next save. A
+flipped or rotated palette entry (transform bits in `alternative`) shares its flags with the tile it turns: Godot
+keeps tile data per alternative tile without the transform bits (`scene/resources/2d/tile_set.cpp:5474`). A kind
+whose shapes carry different flags (painted one by one) is baked from its first shape; the form marks it.
 Authoring (7.3.2): `JRPGDatabaseEditing.set_tile_flags / add_tile_sheet / create_tileset`, one undoable action each,
 shared by the tileset form (`JRPGEditorPropertyTiles`: the palette as a grid with the chosen flag drawn over each
 tile) and the bridge tools `jrpg_tileset_flags`, `jrpg_tileset_set_flag`, `jrpg_tileset_create` and

@@ -59,6 +59,8 @@ class JRPGDatabaseEditing : public Object {
 	Ref<JRPGEntry> clipboard;
 	String clipboard_table;
 	LocalVector<Ref<Resource>> unsaved;
+	HashSet<ObjectID> watched_tilesets; // TileSets whose edits (in any editor) may make a bake stale.
+	bool tilesets_change_queued = false;
 
 	static constexpr int NESTED_DEPTH = 4; // Entry, troop page, and room for the event commands of later epics.
 
@@ -70,6 +72,8 @@ class JRPGDatabaseEditing : public Object {
 	void _on_manifest_changed();
 	void _mark_saved(const HashSet<String> &p_files);
 	void _rebake_tilesets();
+	void _on_watched_tileset_changed();
+	void _emit_tilesets_changed();
 	bool _is_database_file(const Ref<Resource> &p_resource) const;
 	void _on_resource_changed(ObjectID p_owner, ObjectID p_emitter);
 	Ref<JRPGTilesetData> _get_tileset_data(int p_tileset_id, String *r_message);
@@ -124,7 +128,8 @@ public:
 	// p_indexes (1-based) of tileset p_tileset_id, on every tile each entry stands for; the other bits keep each tile's
 	// own value. One undoable action (none when nothing changes); the TileSet is saved with the database, which bakes
 	// the flags then. The jrpg_* layers it adds to the TileSet stay on undo: they read as no flags.
-	Error set_tile_flags(int p_tileset_id, const PackedInt32Array &p_indexes, int p_mask, int p_value, String *r_message = nullptr);
+	// r_changed: whether anything changed (an edit that changes nothing adds no undo step).
+	Error set_tile_flags(int p_tileset_id, const PackedInt32Array &p_indexes, int p_mask, int p_value, String *r_message = nullptr, bool *r_changed = nullptr);
 	// Imports the image at p_texture_path into the TileSet of tileset p_tileset_id and appends its palette entries
 	// (JRPGAutotileImporter.import_sheet), as one undoable action: undo removes the atlas source, the terrain it added
 	// and the entries; redo puts the same source back, as Godot's TileSet editor does when it undoes a deletion
@@ -132,8 +137,9 @@ public:
 	Error add_tile_sheet(int p_tileset_id, const String &p_texture_path, JRPGAutotileImporter::SheetKind p_kind, int p_frames, const String &p_name, PackedInt32Array &r_indexes, String *r_message = nullptr);
 	// Creates a TileSet file at p_path (.tres or .res; square tiles of p_tile_size pixels and the jrpg_* flag layers; an
 	// existing file is never replaced) and points tileset p_tileset_id at it by UID. Setting tileset_uid is undoable;
-	// the file stays. The form and the bridge only offer res:// paths.
-	Error create_tileset(int p_tileset_id, const String &p_path, int p_tile_size, String *r_message = nullptr);
+	// the file stays. The form and the bridge only offer res:// paths. A tileset whose current TileSet loads and whose
+	// palette has tiles is refused unless p_replace: its palette would point at tiles the new TileSet lacks.
+	Error create_tileset(int p_tileset_id, const String &p_path, int p_tile_size, String *r_message = nullptr, bool p_replace = false);
 	// Stored data properties (what the bridge reports; the form shows those that apply), and those of them that are not
 	// read-only (derived values such as a class's baked EXP table are read-only). Engine properties are never data.
 	static bool is_data_property(const PropertyInfo &p_property);
@@ -156,8 +162,15 @@ public:
 	PackedStringArray get_unsaved_paths() const;
 	bool is_unsaved(const Ref<Resource> &p_resource) const;
 	// Saves every unsaved file. Tilesets whose flag table no longer matches their TileSet are baked again first
-	// (JRPGTileFlags, spec 05), so the saved database never disagrees with the tiles.
-	Error save_all();
+	// (JRPGTileFlags, spec 05), so the saved database never disagrees with the tiles; a tileset without a TileSet
+	// loses its old table. r_saved: the files written.
+	Error save_all(PackedStringArray *r_saved = nullptr);
+	// Tilesets whose baked flags no longer match their TileSet, by ID: flags edited in the tileset form or in Godot's
+	// own TileSet editor, or a TileSet removed. The TileSets read are watched, so later edits anywhere emit
+	// database_changed.
+	PackedInt32Array get_stale_tilesets();
+	// What the editor's saves must write: unsaved files or flag tables to bake again.
+	bool has_changes_to_save();
 	// Files reloaded from disk by the editor (EditorFileSystem "resources_reload") hold no unsaved changes any more.
 	void forget_unsaved(const PackedStringArray &p_paths);
 	// A file the database tools changed outside the database files, such as a TileSet whose tile flags the tileset

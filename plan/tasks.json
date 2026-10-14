@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "7.6.1 Review fixes: assets, autotile core, importer, resolver",
+  "last_completed": "7.6.2 Review fixes: tile flags, tileset form, bridge tools",
   "tasks": [
     {
       "id": "0",
@@ -2710,7 +2710,7 @@
       "test_strategy": "Doctests + static checks.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "a47cb524f1",
       "notes": ""
     },
     {
@@ -2727,9 +2727,9 @@
         "jrpg_bridge_checks.py and tests pass; bridge screenshot of the corrected overlay"
       ],
       "test_strategy": "Doctests + jrpg_bridge_checks.py + bridge.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
