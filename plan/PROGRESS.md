@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 00:42 -0600
+- **Updated:** 2026-10-14 00:54 -0600
 - **Current task:** none
-- **Last completed:** 6.7.3 Review fixes: bridge UI tools
-- **Next task:** 6.7.4 Review fixes: addon, setup, hints, tests, docs
-- **Done leaf tasks:** 80
+- **Last completed:** 6.7.4 Review fixes: addon, setup, hints, tests, docs
+- **Next task:** 6.7.5 Epic 6 review close-out
+- **Done leaf tasks:** 81
 <!-- status:end -->
 
 ## Log
@@ -221,4 +221,6 @@
 | 2026-10-13 23:57 -0600 | 6.7.2 | started: Review fixes: database UI (containers: 6.7 pending->in_progress, 6 pending->in_progress) |  |
 | 2026-10-14 00:27 -0600 | 6.7.2 | done: Review fixes: database UI — Epic 6 review findings 5, 24, 25, 26, 27 and the double refresh of 33 fixed: Change Maximum applies typed text and shows the warning of an unseen cut; JRPGPicker (lists entries when opened, relabels on database changes) for ID, equipment and party pickers, honoring the range minimum; enemy action values shaped by condition (D-033) with one Condition column; record dialog keeps untouched values exactly; entry_changed updates list rows in place; select_section refreshes once. Doctests + bridge evidence 6.7.2-database-ui-review-fixes.txt. (containers: 6.7 in_progress->pending, 6 in_progress->pending) | f8e005287c |
 | 2026-10-14 00:27 -0600 | 6.7.3 | started: Review fixes: bridge UI tools (containers: 6.7 pending->in_progress, 6 pending->in_progress) |  |
-| 2026-10-14 00:42 -0600 | 6.7.3 | done: Review fixes: bridge UI tools — Epic 6 review findings 2, 6, 7, 8, 9, 10, 14, 15, 31 fixed in editor_ui_find/editor_ui_act: edited scene and anything behind a modal dialog unreachable; press as a ui_accept click through gui_input; text typed as text; select via each widget's click path; menus opened first; secrets masked; results safe when the dialog closes; smaller gaps; unique tool names. Doctests + bridge evidence plan/evidence/bridge/6.7.3-ui-tools-review-fixes.txt. (containers: 6.7 in_progress->pending, 6 in_progress->pending) | pending |
+| 2026-10-14 00:42 -0600 | 6.7.3 | done: Review fixes: bridge UI tools — Epic 6 review findings 2, 6, 7, 8, 9, 10, 14, 15, 31 fixed in editor_ui_find/editor_ui_act: edited scene and anything behind a modal dialog unreachable; press as a ui_accept click through gui_input; text typed as text; select via each widget's click path; menus opened first; secrets masked; results safe when the dialog closes; smaller gaps; unique tool names. Doctests + bridge evidence plan/evidence/bridge/6.7.3-ui-tools-review-fixes.txt. (containers: 6.7 in_progress->pending, 6 in_progress->pending) | b40024f3dc |
+| 2026-10-14 00:42 -0600 | 6.7.4 | started: Review fixes: addon, setup, hints, tests, docs (containers: 6.7 pending->in_progress, 6 pending->in_progress) |  |
+| 2026-10-14 00:54 -0600 | 6.7.4 | done: Review fixes: addon, setup, hints, tests, docs — Epic 6 review findings 12, 16, 17, 18, 29, 30, 32, 33 fixed: jrpg_bridge_checks.py (setup idempotency + undo/redo round trips of every database tool in a real editor, 39 checks); tool-level and dialog doctests; CRLF-normalized addon hashes; addon prune/zero-byte/cfg-on-change/failed reports and res://addons-only directory; setup refuses wrong-type files; honest MCP hints; show_dialog wording; static checks fail on skips; guide, TTRC and prompt wording. (containers: 6.7 in_progress->pending, 6 in_progress->pending) | pending |

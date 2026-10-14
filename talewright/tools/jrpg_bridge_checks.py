@@ -1,0 +1,238 @@
+#!/usr/bin/env python3
+"""End-to-end checks of the JRPG database tools in a running editor (epic 6 review findings 12 and 32).
+
+Doctests run without the editor, so they cannot cover what needs it: the editor's undo history (database edits are
+actions of the global history, D-005) and setup on a real project folder. This script creates a fresh project,
+starts the editor on it with the Claude bridge, and checks:
+  - setup: a first run creates the JRPG data, a second run changes nothing (task 6.2 criterion);
+  - undo/redo round trips: every database tool's change is undone exactly (the data matches the state before) and
+    redone exactly (it matches the state after), through the editor's own Undo and Redo;
+  - saving: jrpg_db_save leaves nothing unsaved.
+
+Usage (from the repository root, after building the editor):
+    python talewright/tools/jrpg_bridge_checks.py [--keep] [--project DIR]
+--project uses (and empties) DIR instead of a temporary folder; --keep leaves the editor running and the folder in
+place. Exit code 0 when every check passes.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+from pathlib import Path
+from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import bridge  # noqa: E402
+
+ROOT = Path(__file__).resolve().parents[2]
+PROJECT_GODOT = """config_version=5
+
+[application]
+
+config/name="JRPG Bridge Checks"
+config/features=PackedStringArray("4.7")
+"""
+
+
+class Checks:
+    def __init__(self, project: Path) -> None:
+        self.project = project
+        self.passed = 0
+        self.failed: list[str] = []
+        self.endpoint: tuple[str, str] | None = None
+
+    def call(self, tool: str, args: dict[str, Any] | None = None) -> dict[str, Any]:
+        if self.endpoint is None:
+            ns = argparse.Namespace(project=str(self.project), url=None, token_file=None)
+            self.endpoint = bridge.load_endpoint(ns)
+        url, token = self.endpoint
+        result = bridge.rpc(url, token, "tools/call", {"name": tool, "arguments": args or {}}, timeout=60)
+        if result.get("isError"):
+            text = "".join(b.get("text", "") for b in result.get("content", []))
+            raise bridge.BridgeError(f"{tool} failed: {text}")
+        data: dict[str, Any] = result.get("structuredContent", {})
+        return data
+
+    def check(self, name: str, ok: bool, detail: str = "") -> None:
+        if ok:
+            self.passed += 1
+            print(f"[PASS] {name}")
+        else:
+            self.failed.append(name)
+            print(f"[FAIL] {name}{': ' + detail if detail else ''}")
+
+    def record(self, table: str, record_id: int = 0) -> dict[str, Any]:
+        args: dict[str, Any] = {"table": table}
+        if record_id:
+            args["id"] = record_id
+        properties: dict[str, Any] = self.call("jrpg_db_get", args)["properties"]
+        return properties
+
+    def entries(self, table: str) -> list[Any]:
+        entries: list[Any] = self.call("jrpg_db_list", {"table": table, "count": 1000})["entries"]
+        return entries
+
+    def undo(self) -> None:
+        self.call("editor_undo_redo", {"action": "undo"})
+
+    def redo(self) -> None:
+        self.call("editor_undo_redo", {"action": "redo"})
+
+    def round_trip(self, name: str, snapshot, change) -> None:
+        """change() edits the database; snapshot() reads what it touches. Undo must restore the before state exactly,
+        redo the after state."""
+        before = snapshot()
+        change()
+        after = snapshot()
+        self.check(f"{name}: changes the data", after != before)
+        self.undo()
+        undone = snapshot()
+        self.check(f"{name}: undo restores it exactly", undone == before, json.dumps(diff(before, undone))[:400])
+        self.redo()
+        redone = snapshot()
+        self.check(f"{name}: redo applies it again", redone == after, json.dumps(diff(after, redone))[:400])
+
+
+def diff(a: Any, b: Any) -> Any:
+    if isinstance(a, dict) and isinstance(b, dict):
+        return {k: [a.get(k), b.get(k)] for k in sorted(set(a) | set(b)) if a.get(k) != b.get(k)}
+    return [a, b]
+
+
+def run(checks: Checks) -> None:
+    c = checks
+    # Setup creates the data once; a second run changes nothing.
+    first = c.call("jrpg_setup_project")
+    c.check("setup: a first run creates the database", "res://jrpg/database.tres" in first.get("created", []))
+    second = c.call("jrpg_setup_project")
+    c.check("setup: a second run changes nothing", second.get("changed") is False, json.dumps(second)[:400])
+
+    # Every database tool, undone and redone through the editor's history.
+    c.round_trip(
+        "jrpg_db_set (fields)",
+        lambda: c.record("items", 1),
+        lambda: c.call("jrpg_db_set", {"table": "items", "id": 1, "values": {"name": "Elixir", "price": 75}}),
+    )
+    c.round_trip(
+        "jrpg_db_set (trait list)",
+        lambda: c.record("classes", 1),
+        lambda: c.call(
+            "jrpg_db_set",
+            {"table": "classes", "id": 1, "values": {"traits": [{"code": 11, "data_id": 0, "value": 9500}]}},
+        ),
+    )
+    c.round_trip(
+        "jrpg_db_set (a sub-resource from a dictionary)",
+        lambda: c.record("system"),
+        lambda: c.call("jrpg_db_set", {"table": "system", "values": {"battle_rules": {"tp_max": 150}}}),
+    )
+    c.round_trip(
+        "jrpg_db_set (a nested path)",
+        lambda: c.record("system"),
+        lambda: c.call("jrpg_db_set", {"table": "system", "values": {"battle_rules/tp_max": 120}}),
+    )
+    c.round_trip(
+        "jrpg_db_set (troop pages)",
+        lambda: c.record("troops", 1),
+        lambda: c.call(
+            "jrpg_db_set", {"table": "troops", "id": 1, "values": {"pages": [{"turn_end": True}, {"span": 1}]}}
+        ),
+    )
+    c.round_trip(
+        "jrpg_db_set (a field of a troop page)",
+        lambda: c.record("troops", 1),
+        lambda: c.call("jrpg_db_set", {"table": "troops", "id": 1, "values": {"pages/1/turn_a": 3}}),
+    )
+    c.round_trip(
+        "jrpg_db_create",
+        lambda: c.entries("items"),
+        lambda: c.call("jrpg_db_create", {"table": "items", "values": {"name": "Tonic+"}}),
+    )
+    c.round_trip(
+        "jrpg_db_set_maximum (grow)",
+        lambda: c.entries("skills"),
+        lambda: c.call("jrpg_db_set_maximum", {"table": "skills", "maximum": 30}),
+    )
+    c.round_trip(
+        "jrpg_db_set_maximum (cut, references allowed to break)",
+        lambda: (c.entries("weapons"), c.record("actors", 1)),
+        lambda: c.call("jrpg_db_set_maximum", {"table": "weapons", "maximum": 0, "allow_broken_references": True}),
+    )
+    c.call("jrpg_db_copy", {"table": "items", "id": 1})  # Before the clear below: the copy is taken now.
+    c.round_trip(
+        "jrpg_db_clear",
+        lambda: c.record("items", 1),
+        lambda: c.call("jrpg_db_clear", {"table": "items", "id": 1, "allow_broken_references": True}),
+    )
+    c.round_trip(
+        "jrpg_db_paste",
+        lambda: c.record("items", 3),
+        lambda: c.call("jrpg_db_paste", {"table": "items", "id": 3}),
+    )
+    c.round_trip(
+        "jrpg_db_generate_curve",
+        lambda: c.record("classes", 1),
+        lambda: c.call("jrpg_db_generate_curve", {"id": 1, "param": "Attack", "level_1": 10, "level_99": 400}),
+    )
+
+    # Saving leaves nothing unsaved.
+    c.call("jrpg_db_save")
+    unsaved = c.call("jrpg_db_list")["unsaved_paths"]
+    c.check("jrpg_db_save: nothing is left unsaved", unsaved == [], json.dumps(unsaved))
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--project", help="use (and empty) this folder instead of a temporary one")
+    ap.add_argument("--keep", action="store_true", help="leave the editor running and the project folder in place")
+    args = ap.parse_args()
+    if not bridge.EDITOR.is_file():
+        print(f"error: {bridge.EDITOR} not found; build the editor first", file=sys.stderr)
+        return 2
+    project = Path(args.project) if args.project else Path(tempfile.mkdtemp(prefix="jrpg_bridge_checks_"))
+    if project.exists():
+        shutil.rmtree(project)
+    project.mkdir(parents=True)
+    (project / "project.godot").write_text(PROJECT_GODOT, encoding="utf-8")
+    log = (ROOT / "talewright" / "build_logs" / "jrpg_bridge_checks_editor.log").open("w", encoding="utf-8")
+    editor = subprocess.Popen(
+        [str(bridge.EDITOR), "--editor", "--single-window", "--path", str(project)],
+        stdout=log,
+        stderr=subprocess.STDOUT,
+    )
+    checks = Checks(project)
+    try:
+        bridge.cmd_wait(
+            argparse.Namespace(
+                project=str(project),
+                url=None,
+                token_file=None,
+                timeout=180.0,
+                out_dir=str(ROOT / "talewright" / "build_logs" / "bridge"),
+            )
+        )
+        run(checks)
+    except bridge.BridgeError as e:
+        checks.failed.append(f"bridge: {e}")
+        print(f"[FAIL] {e}")
+    finally:
+        if not args.keep:
+            editor.kill()
+            editor.wait(timeout=30)
+            time.sleep(1.0)
+            shutil.rmtree(project, ignore_errors=True)
+        log.close()
+    print(f"{checks.passed} passed, {len(checks.failed)} failed")
+    for name in checks.failed:
+        print(f"  failed: {name}")
+    return 0 if not checks.failed else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

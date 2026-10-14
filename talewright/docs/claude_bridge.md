@@ -87,7 +87,7 @@ by the editor. Exit codes: 0 ok, 1 the tool reported an error, 2 transport/proto
 | `jrpg_db_list` | Database tables (maximum, file, unsaved) or one table's entries as `{id, name}` (`from`, `count`) |
 | `jrpg_db_get` / `jrpg_db_set` | Read an entry's (or System/Types/Terms) data, with the table each ID property points into, readable trait/effect rows, sub-resources (troop pages, System cues and battle rules) as dictionaries with their `class`, and the read-only (derived) properties / set several properties as one undoable action: all-or-nothing, every value checked down to list elements (trait/effect codes and keys, record fields) with the reason in the error; JSON values, Godot literal strings for engine types, dictionaries for sub-resources, keys as paths into sub-resources (`battle_rules/tp_max`, `pages/0/turn_end`); a type list shrinks only while nothing uses the removed IDs unless `allow_broken_references`; reports `dangling_references` |
 | `jrpg_db_create` | Create an entry from values: fills the first blank entry that nothing points at, or adds one at the end (`at_end`); one undoable action |
-| `jrpg_db_set_maximum` / `jrpg_db_clear` | Change a table's maximum / clear an entry, undoable; refused with the list of references that would break unless `allow_broken_references`; `show_dialog` opens the editor's confirmation dialog instead |
+| `jrpg_db_set_maximum` / `jrpg_db_clear` | Change a table's maximum / clear an entry, undoable; refused with the list of references that would break unless `allow_broken_references`; `show_dialog` does what the Database section's button does instead (Change Maximum opens its dialog; Clear asks only when other data uses the entry, and clears at once otherwise) |
 | `jrpg_db_copy` / `jrpg_db_paste` | Copy an entry to the database clipboard (shared with the Database section) / paste it over an entry of the same table, undoable |
 | `jrpg_db_generate_curve` | Generate one class parameter curve from level 1 and level 99 values and a growth shape (undoable) |
 | `jrpg_db_save` | Save the database files with unsaved changes |
@@ -107,8 +107,9 @@ Notes on arguments and results:
 - **Game tools** accept `instance` (0 = the first connected game, default) when several game instances run. A
   request whose game stops before replying fails with "The game stopped before replying.".
 - **Annotations**: every tool declares `readOnlyHint`; tools that modify something also declare `destructiveHint`
-  (false for undoable or transient actions such as `editor_node_set`, `run_project`, `game_input`; true for
-  saving scenes, clearing logs, `game_node_set` and `game_call`).
+  (false for undoable or transient actions such as `editor_node_set`, `run_project`, `game_input`, `jrpg_db_set`,
+  `jrpg_db_copy`; true for saving scenes and `jrpg_db_save`, installing the addon, clearing logs, `game_node_set` and
+  `game_call`).
 - **Large values** are summarized: strings over 64K characters are truncated and packed arrays over 1024
   elements are reported by type and size.
 

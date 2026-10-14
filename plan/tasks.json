@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "6.7.3 Review fixes: bridge UI tools",
+  "last_completed": "6.7.4 Review fixes: addon, setup, hints, tests, docs",
   "tasks": [
     {
       "id": "0",
@@ -2313,7 +2313,7 @@
       "test_strategy": "SceneTree doctests + live run.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "b40024f3dc",
       "notes": ""
     },
     {
@@ -2330,9 +2330,9 @@
         "Each listed finding fixed, logged in the review file"
       ],
       "test_strategy": "Doctests + automated bridge checks.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

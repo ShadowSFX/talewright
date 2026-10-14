@@ -10,9 +10,12 @@ TEXT_SUFFIXES = {".gd", ".tscn", ".tres", ".cfg", ".md", ".txt", ".json", ".gdsh
 ADDON_FORMAT = 1
 
 
+ADDON_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "addon_template")
+
+
 def addon_relative_path(path):
-    parts = os.path.normpath(path).replace("\\", "/").split("/")
-    return "/".join(parts[parts.index("addon_template") + 1 :])
+    # Relative to this module's addon_template, whatever folder names the checkout path holds.
+    return os.path.relpath(os.path.abspath(path), ADDON_DIR).replace("\\", "/")
 
 
 def make_addon_files(target, source, env):

@@ -15,9 +15,25 @@ The tab appears only in projects that use it, so ordinary Godot projects look ex
 battle rules, …) lives in the project's System data inside the JRPG database.
 
 ## Setting up a project
-**Set up JRPG project** creates the JRPG database, a first map and the JRPG input actions, and leaves your existing
-scenes, scripts and settings as they are. This tool arrives with task 6.2 of the Talewright plan; until then the
-button is shown but disabled.
+**Set up JRPG project** (the button in the empty tab, or Project ▸ Tools ▸ Set Up JRPG Project...) creates what is
+missing and keeps everything that exists: the `res://jrpg` folders, the JRPG database with a few starter entries
+(`res://jrpg/database.tres` and one file per table under `res://jrpg/db`), the `jrpg_*` input actions, the
+`jrpg/enabled` setting, a game id for save folders and the Talewright addon (`res://addons/talewright`). Your scenes,
+scripts and other settings stay as they are. Running it again only adds what is missing; a file that holds the wrong
+kind of data is reported instead of being replaced. Maps arrive with the map tools.
+
+## The Database section
+The **Database** tab lists the tables on the left, the selected table's entries in the middle (`0001  Hero`: an
+entry's ID is its slot and never moves) and the selected entry's form on the right.
+
+- **Change Maximum...** adds empty entries at the end or removes the last ones; when removed entries are still used
+  elsewhere, the dialog lists those references first.
+- **Clear** empties an entry (its ID stays), listing what still points at it first; **Copy** and **Paste** copy a
+  whole entry within the same table.
+- ID fields are searchable pickers that list the entries when opened; traits, effects and other lists are edited
+  through their own dialogs; an enemy action's values follow its condition (turns, an HP or MP band, a state...).
+- Every edit can be undone with the editor's Undo. Changed tables show `(*)`; **Save** writes them, and so do the
+  editor's own saves (saving a scene, running the project) and the prompt before quitting or reloading.
 
 ## For tools and Claude Code
 The workspace can be switched from outside the editor through the Claude bridge

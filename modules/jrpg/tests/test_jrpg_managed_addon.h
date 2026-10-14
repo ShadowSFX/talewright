@@ -161,6 +161,56 @@ TEST_CASE("[JRPG][Addon] Upgrades replace untouched files only") {
 	CHECK_FALSE(FileAccess::exists(dir.get_base_dir().path_join("escape.gd")));
 }
 
+TEST_CASE("[JRPG][Addon] Line endings, empty files, dropped files and failures") {
+	// Epic 6 review findings 16, 29 and 30.
+	const String dir = empty_folder("jrpg_addon_details");
+	const String stamp_path = dir.path_join(JRPGManagedAddon::STAMP_FILE);
+	Vector<JRPGManagedAddon::SourceFile> v1;
+	v1.push_back(source("screens/title.gd", "# title\nline two\n"));
+	v1.push_back(source("empty.gd", ""));
+	v1.push_back(source("old.gd", "# old\n"));
+	Dictionary report = JRPGManagedAddon::install_files(dir, v1, "1-a");
+	CHECK(PackedStringArray(report["added"]).size() == 3);
+	CHECK(PackedStringArray(report["failed"]).is_empty());
+	CHECK_FALSE(report.has("error"));
+	CHECK(FileAccess::exists(dir.path_join("empty.gd")));
+
+	// A checkout that turned the line endings into CRLF has not changed the file.
+	write_text(dir.path_join("screens/title.gd"), "# title\r\nline two\r\n");
+	// Nothing to change: addon.cfg is not written again (a comment the next save would drop stays).
+	Ref<FileAccess> append = FileAccess::open(stamp_path, FileAccess::READ_WRITE);
+	REQUIRE(append.is_valid());
+	append->seek_end();
+	append->store_string("; untouched\n");
+	append.unref();
+	report = JRPGManagedAddon::install_files(dir, v1, "1-a");
+	CHECK(PackedStringArray(report["unchanged"]).has("screens/title.gd"));
+	CHECK(PackedStringArray(report["kept_modified"]).is_empty());
+	CHECK(read_text(stamp_path).contains("; untouched"));
+
+	// A file the next version no longer ships is removed when untouched, kept when the user changed it.
+	write_text(dir.path_join("empty.gd"), "# the user wrote here\n");
+	Vector<JRPGManagedAddon::SourceFile> v2;
+	v2.push_back(source("screens/title.gd", "# title\nline two\n"));
+	report = JRPGManagedAddon::install_files(dir, v2, "1-b");
+	CHECK(PackedStringArray(report["removed"]) == PackedStringArray({ "old.gd" }));
+	CHECK(PackedStringArray(report["kept_modified"]) == PackedStringArray({ "empty.gd" }));
+	CHECK_FALSE(FileAccess::exists(dir.path_join("old.gd")));
+	CHECK(FileAccess::exists(dir.path_join("empty.gd")));
+	CHECK_FALSE(read_text(stamp_path).contains("; untouched")); // Changed: written.
+
+	// What cannot be written is reported, with an error.
+	REQUIRE(DirAccess::make_dir_recursive_absolute(dir.path_join("blocked.gd")) == OK); // A folder in the way.
+	Vector<JRPGManagedAddon::SourceFile> v3 = v2;
+	v3.push_back(source("blocked.gd", "# blocked\n"));
+	v3.push_back(source("../escape.gd", "# no\n"));
+	ERR_PRINT_OFF;
+	report = JRPGManagedAddon::install_files(dir, v3, "1-c");
+	ERR_PRINT_ON;
+	CHECK(PackedStringArray(report["failed"]) == PackedStringArray({ "blocked.gd", "../escape.gd" }));
+	CHECK(String(report.get("error", "")).contains("blocked.gd"));
+}
+
 } // namespace TestJRPGManagedAddon
 
 #endif // TOOLS_ENABLED

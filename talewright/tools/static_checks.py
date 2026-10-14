@@ -14,9 +14,12 @@ Usage (any directory inside the repository):
     python talewright/tools/static_checks.py            # files changed since origin/talewright
     python talewright/tools/static_checks.py --all      # every file the fork adds or changes vs 4.7.2-stable
     python talewright/tools/static_checks.py --base REF # files changed since REF
+    python talewright/tools/static_checks.py --allow-skips  # accept skipped clang checks (tools missing)
 Requires prek (`python -m pip install --user prek`). Hooks such as codespell and ruff rewrite files: the script lists
 the files a hook changed so they can be reviewed (codespell can "correct" identifiers and labels) before committing.
-Exit code 0 only when every check passes without modifying anything.
+Exit code 0 only when every check passes without modifying anything. A check that cannot run (clang-tidy, the
+compile database or clangd-tidy missing) counts as a failure unless --allow-skips is given: a skipped check would
+let a push through that CI then rejects.
 """
 
 from __future__ import annotations
@@ -105,6 +108,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--all", action="store_true", help="check every file that differs from 4.7.2-stable")
     ap.add_argument("--base", default="origin/talewright")
+    ap.add_argument("--allow-skips", action="store_true", help="pass even when a check could not run")
     args = ap.parse_args()
     root = repo_root()
     files = changed_files(root, "4.7.2-stable" if args.all else args.base)
@@ -113,6 +117,7 @@ def main() -> int:
         return 0
     print(f"checking {len(files)} files")
     ok = True
+    skipped = []
 
     before = {f: content_hash(root / f) for f in files}
     prek = subprocess.run([sys.executable, "-m", "prek", "run", "--color", "never", "--files", *files], cwd=root)
@@ -171,6 +176,7 @@ def main() -> int:
     last = (clang.stdout.strip().splitlines() or [""])[-1]
     if clang.returncode == 2:
         print("[SKIP] clang diagnostics: " + last)
+        skipped.append("clang diagnostics")
     else:
         print(("[PASS] " if clang.returncode == 0 else "[FAIL] ") + "clang diagnostics: " + last)
         if clang.returncode != 0:
@@ -181,11 +187,18 @@ def main() -> int:
     code, last = run_clangd_tidy(root, files)
     if code == 2:
         print("[SKIP] clangd-tidy: " + last)
+        skipped.append("clangd-tidy")
     else:
         print(("[PASS] " if code == 0 else "[FAIL] ") + "clangd-tidy: " + last)
         ok &= code == 0
 
-    print("ALL PASS" if ok else "FAILURES")
+    if skipped and not args.allow_skips:
+        ok = False
+        print("[FAIL] checks that could not run: " + ", ".join(skipped) + " (install them, or pass --allow-skips)")
+    if ok and skipped:
+        print("PASS, skipped: " + ", ".join(skipped))
+    else:
+        print("ALL PASS" if ok else "FAILURES")
     return 0 if ok else 1
 
 

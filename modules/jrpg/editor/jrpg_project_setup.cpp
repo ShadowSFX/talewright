@@ -93,11 +93,21 @@ Ref<T> entry(const Ref<JRPGTable> &p_table, int p_id, const String &p_name) {
 }
 
 // Saves p_resource at p_path when the file is missing, otherwise loads the existing file instead (never overwrites).
+// An existing file must hold the same kind of data: a table of the same entries (review finding 29).
 Ref<Resource> save_or_load(const Ref<Resource> &p_resource, const String &p_path, PackedStringArray &r_created, String &r_error) {
 	if (FileAccess::exists(p_path)) {
 		Ref<Resource> existing = ResourceLoader::load(p_path);
 		if (existing.is_null()) {
 			r_error = vformat("%s exists but could not be loaded. Fix or remove the file, then run setup again.", p_path);
+			return existing;
+		}
+		const Ref<JRPGTable> table = existing;
+		const Ref<JRPGTable> expected = p_resource;
+		if (!existing->is_class(p_resource->get_class()) || (expected.is_valid() && table->get_entry_class() != expected->get_entry_class())) {
+			const String holds = expected.is_valid() && table.is_valid() ? String(table->get_entry_class()) : existing->get_class();
+			const String wanted = expected.is_valid() ? String(expected->get_entry_class()) : p_resource->get_class();
+			r_error = vformat("%s holds %s data where %s data belongs. Move or rename the file, then run setup again.", p_path, holds, wanted);
+			return Ref<Resource>();
 		}
 		return existing;
 	}
@@ -387,7 +397,12 @@ Dictionary JRPGProjectSetup::run() {
 	if (error.is_empty()) {
 		const Dictionary addon = JRPGManagedAddon::install(JRPGManagedAddon::DEFAULT_DIRECTORY);
 		report["addon"] = addon;
-		changed = changed || !PackedStringArray(addon.get("added", PackedStringArray())).is_empty() || !PackedStringArray(addon.get("replaced", PackedStringArray())).is_empty();
+		for (const char *list : { "added", "replaced", "removed" }) {
+			changed = changed || !PackedStringArray(addon.get(list, PackedStringArray())).is_empty();
+		}
+		if (addon.has("error")) {
+			error = addon["error"]; // Review finding 29.
+		}
 	}
 
 	report["changed"] = changed;

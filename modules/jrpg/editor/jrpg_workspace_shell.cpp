@@ -55,7 +55,7 @@ JRPGWorkspaceShell *JRPGWorkspaceShell::singleton = nullptr;
 
 namespace {
 
-const char *const SECTION_NAMES[JRPGWorkspaceShell::SECTION_MAX] = { "Map", "Database" };
+const char *const SECTION_NAMES[JRPGWorkspaceShell::SECTION_MAX] = { TTRC("Map"), TTRC("Database") }; // Translated when shown.
 const char *const SECTION_ICONS[JRPGWorkspaceShell::SECTION_MAX] = { "TileMapLayer", "FileList" };
 const char *const MODE_ICONS[JRPGWorkspaceShell::MODE_MAX] = { "TileMapLayer", "Object", "Grid" };
 const char *const TOOL_ICONS[JRPGWorkspaceShell::TOOL_MAX] = { "Edit", "Rectangle", "Bucket", "Eraser" };

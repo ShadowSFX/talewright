@@ -58,10 +58,12 @@ public:
 	static Vector<SourceFile> get_embedded_sources();
 
 	// {directory, embedded_version, installed_version ("" when not installed), files: [{path, state}]} where state is
-	// "missing", "current" (same as embedded), "outdated" (as installed by an older version) or "modified".
+	// "missing", "current" (same as embedded), "outdated" (as installed by an older version) or "modified". Text files
+	// are compared with LF line endings, as they are embedded.
 	static Dictionary get_status(const String &p_directory);
-	// Installs or upgrades the embedded addon in p_directory. Returns {version, added, replaced, unchanged,
-	// kept_modified} (lists of relative paths).
+	// Installs or upgrades the embedded addon in p_directory. Returns {version, added, replaced, removed, unchanged,
+	// kept_modified, failed} (lists of relative paths) and "error" when something could not be written. Files the user
+	// changed are kept; untouched files the version no longer ships are removed; addon.cfg is written only on change.
 	static Dictionary install(const String &p_directory);
 	// install() for any set of files and version (tests use it to simulate upgrades).
 	static Dictionary install_files(const String &p_directory, const Vector<SourceFile> &p_files, const String &p_version);

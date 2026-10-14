@@ -33,6 +33,8 @@
 
 #ifdef TOOLS_ENABLED
 
+#include "scene/main/scene_tree.h"
+#include "scene/main/window.h"
 #include "tests/test_macros.h"
 
 #include "modules/jrpg/core/jrpg_database.h"
@@ -149,6 +151,26 @@ TEST_CASE("[JRPG][TraitEditor] Values, defaults and choices") {
 	REQUIRE(states.size() == db->get_table(JRPGDatabase::TABLE_STATES)->get_maximum());
 	CHECK(int(Dictionary(states[0])["id"]) == 1);
 	CHECK(String(Dictionary(states[0])["text"]) == "0001  Knocked Out");
+}
+
+TEST_CASE("[SceneTree][JRPG][TraitEditor] The dialog keeps values the user leaves alone exactly") {
+	// Epic 6 review finding 12: 95.5% is shown as 96% (whole percents) and must not become 96% on Apply.
+	JRPGTraitDialog *dialog = memnew(JRPGTraitDialog);
+	ERR_PRINT_OFF;
+	SceneTree::get_singleton()->get_root()->add_child(dialog);
+	dialog->setup(false);
+	const Dictionary hit = trait(TRAIT_XPARAM, 0, 9550);
+	dialog->popup_for(hit);
+	CHECK(dialog->get_entry() == hit);
+	const Dictionary fire = trait(TRAIT_ELEMENT_RATE, 2, 15050);
+	dialog->popup_for(fire);
+	CHECK(dialog->get_entry() == fire);
+	// Choosing another kind starts from that kind's values.
+	dialog->choose(TRAIT_XPARAM);
+	CHECK(int(dialog->get_entry()["code"]) == TRAIT_XPARAM);
+	dialog->hide();
+	ERR_PRINT_ON;
+	memdelete(dialog);
 }
 
 } // namespace TestJRPGTraitEditor

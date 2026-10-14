@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 124, in_progress: 0, done: 97, blocked: 0, deferred: 3 (of 224)
+**Totals:** pending: 123, in_progress: 0, done: 98, blocked: 0, deferred: 3 (of 224)
 
 ## [x] 0 Bootstrap and task system
 
@@ -131,8 +131,8 @@ Setup tool, managed addon, main-screen workspace, database editor, authoring API
 - [ ] **6.7** Epic review: workspace (P1) _(deps: 6.6)_
   - [x] **6.7.1** Review fixes: database data integrity (P1) _(commit: b7501e870c)_
   - [x] **6.7.2** Review fixes: database UI (P1) _(deps: 6.7.1; commit: f8e005287c)_
-  - [x] **6.7.3** Review fixes: bridge UI tools (P1) _(commit: pending)_
-  - [ ] **6.7.4** Review fixes: addon, setup, hints, tests, docs (P1) _(deps: 6.7.1, 6.7.3)_
+  - [x] **6.7.3** Review fixes: bridge UI tools (P1) _(commit: b40024f3dc)_
+  - [x] **6.7.4** Review fixes: addon, setup, hints, tests, docs (P1) _(deps: 6.7.1, 6.7.3; commit: pending)_
   - [ ] **6.7.5** Epic 6 review close-out (P1) _(deps: 6.7.1, 6.7.2, 6.7.3, 6.7.4)_
 
 ## [ ] 7 Assets and tilesets

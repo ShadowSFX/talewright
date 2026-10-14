@@ -34,7 +34,10 @@
 #ifdef TOOLS_ENABLED
 
 #include "core/object/callable_mp.h"
+#include "scene/gui/button.h"
 #include "scene/gui/option_button.h"
+#include "scene/gui/spin_box.h"
+#include "scene/gui/tree.h"
 #include "scene/main/scene_tree.h"
 #include "scene/main/window.h"
 #include "tests/test_macros.h"
@@ -197,6 +200,76 @@ static int property_changes = 0;
 // EditorProperty's property_changed has 4 arguments, more than SignalWatcher connects to.
 static void count_property_change(const StringName &p_property, const Variant &p_value, const StringName &p_field, bool p_changing) {
 	property_changes++;
+}
+
+static Variant last_value;
+
+static void keep_property_change(const StringName &p_property, const Variant &p_value, const StringName &p_field, bool p_changing) {
+	property_changes++;
+	last_value = p_value;
+}
+
+TEST_CASE("[SceneTree][JRPG][ListEditors] A record list edits its rows through the dialog and removes the selected one") {
+	// Epic 6 review finding 12.
+	Ref<JRPGClassData> cls;
+	cls.instantiate();
+	Dictionary early;
+	early["level"] = 2;
+	early["skill_id"] = 1;
+	early["note"] = "";
+	Dictionary late = early.duplicate();
+	late["level"] = 5;
+	cls->set_learnings(Array({ early, late }));
+	JRPGEditorPropertyRecords *editor = memnew(JRPGEditorPropertyRecords);
+	editor->setup(JRPGRecordSpecs::find_spec(cls.ptr(), "learnings"));
+	ERR_PRINT_OFF;
+	SceneTree::get_singleton()->get_root()->add_child(editor);
+	editor->set_object_and_property(cls.ptr(), "learnings");
+	editor->update_property();
+	ERR_PRINT_ON;
+	property_changes = 0;
+	editor->connect("property_changed", callable_mp_static(&keep_property_change));
+	Tree *list = Object::cast_to<Tree>(editor->find_children("*", "Tree", true, false)[0]);
+	REQUIRE(list != nullptr);
+	const auto press = [&](const String &p_text) {
+		for (const Variant &v : editor->find_children("*", "Button", true, false)) {
+			Button *button = Object::cast_to<Button>(v);
+			if (button->get_text() == p_text) {
+				button->emit_signal(SceneStringName(pressed));
+				return;
+			}
+		}
+		FAIL("No button ", p_text);
+	};
+
+	// Edit the first row: the dialog opens on it, and Apply changes that row only.
+	list->set_selected(list->get_root()->get_first_child(), 0);
+	press("Edit");
+	JRPGRecordDialog *dialog = Object::cast_to<JRPGRecordDialog>(editor->find_children("*", "JRPGRecordDialog", true, false)[0]);
+	REQUIRE(dialog != nullptr);
+	SpinBox *level = Object::cast_to<SpinBox>(dialog->find_children("*", "SpinBox", true, false)[0]);
+	level->set_value(3); // As typing does: marks the field changed.
+	dialog->emit_signal(SceneStringName(confirmed));
+	REQUIRE(property_changes == 1);
+	CHECK(int(Dictionary(Array(last_value)[0])["level"]) == 3);
+	CHECK(Dictionary(Array(last_value)[1]) == late);
+
+	// Apply without a change adds no undo step.
+	cls->set_learnings(last_value);
+	editor->update_property();
+	list->set_selected(list->get_root()->get_first_child(), 0);
+	press("Edit");
+	dialog->emit_signal(SceneStringName(confirmed));
+	CHECK(property_changes == 1);
+
+	// Remove the selected (second) row.
+	list->set_selected(list->get_root()->get_first_child()->get_next(), 0);
+	press("Remove");
+	REQUIRE(property_changes == 2);
+	CHECK(Array(last_value).size() == 1);
+	CHECK(int(Dictionary(Array(last_value)[0])["level"]) == 3);
+	dialog->hide();
+	memdelete(editor);
 }
 
 TEST_CASE("[SceneTree][JRPG][ListEditors] Showing an enemy's parameters does not edit them") {

@@ -1,0 +1,51 @@
+{
+  "server": "talewright-claude-bridge",
+  "server_version": "0.1.0",
+  "engine": "4.7.2.stable",
+  "project_name": "JRPG Bridge Checks",
+  "project_path": "C:/Users/Relic/AppData/Local/Temp/jrpg_bridge_checks_xi8fabp8/",
+  "port": 47700,
+  "tools": 47,
+  "uptime_msec": 1046,
+  "pid": 71016
+}
+[PASS] setup: a first run creates the database
+[PASS] setup: a second run changes nothing
+[PASS] jrpg_db_set (fields): changes the data
+[PASS] jrpg_db_set (fields): undo restores it exactly
+[PASS] jrpg_db_set (fields): redo applies it again
+[PASS] jrpg_db_set (trait list): changes the data
+[PASS] jrpg_db_set (trait list): undo restores it exactly
+[PASS] jrpg_db_set (trait list): redo applies it again
+[PASS] jrpg_db_set (a sub-resource from a dictionary): changes the data
+[PASS] jrpg_db_set (a sub-resource from a dictionary): undo restores it exactly
+[PASS] jrpg_db_set (a sub-resource from a dictionary): redo applies it again
+[PASS] jrpg_db_set (a nested path): changes the data
+[PASS] jrpg_db_set (a nested path): undo restores it exactly
+[PASS] jrpg_db_set (a nested path): redo applies it again
+[PASS] jrpg_db_set (troop pages): changes the data
+[PASS] jrpg_db_set (troop pages): undo restores it exactly
+[PASS] jrpg_db_set (troop pages): redo applies it again
+[PASS] jrpg_db_set (a field of a troop page): changes the data
+[PASS] jrpg_db_set (a field of a troop page): undo restores it exactly
+[PASS] jrpg_db_set (a field of a troop page): redo applies it again
+[PASS] jrpg_db_create: changes the data
+[PASS] jrpg_db_create: undo restores it exactly
+[PASS] jrpg_db_create: redo applies it again
+[PASS] jrpg_db_set_maximum (grow): changes the data
+[PASS] jrpg_db_set_maximum (grow): undo restores it exactly
+[PASS] jrpg_db_set_maximum (grow): redo applies it again
+[PASS] jrpg_db_set_maximum (cut, references allowed to break): changes the data
+[PASS] jrpg_db_set_maximum (cut, references allowed to break): undo restores it exactly
+[PASS] jrpg_db_set_maximum (cut, references allowed to break): redo applies it again
+[PASS] jrpg_db_clear: changes the data
+[PASS] jrpg_db_clear: undo restores it exactly
+[PASS] jrpg_db_clear: redo applies it again
+[PASS] jrpg_db_paste: changes the data
+[PASS] jrpg_db_paste: undo restores it exactly
+[PASS] jrpg_db_paste: redo applies it again
+[PASS] jrpg_db_generate_curve: changes the data
+[PASS] jrpg_db_generate_curve: undo restores it exactly
+[PASS] jrpg_db_generate_curve: redo applies it again
+[PASS] jrpg_db_save: nothing is left unsaved
+39 passed, 0 failed

@@ -40,8 +40,8 @@ and move on to the next ready task.
    fixes have renamed identifiers before (D-027). It also compiles every fork translation unit with clang's
    diagnostics (`talewright/tools/clang_check.py`): MSVC accepts code that CI's clang builds reject (D-028), and runs
    CI's clangd-tidy on the changed C/C++ files (`python -m pip install --user clangd clangd-tidy`): every file,
-   headers included, must include what it uses and nothing unused.
-   CI fails on any push that skips this.
+   headers included, must include what it uses and nothing unused. A check that cannot run (tool missing) fails the
+   script unless `--allow-skips` is given. CI fails on any push that skips this.
 7. `python plan/tools/tasks.py done <id> -m "<what was done>"`, then ONE commit for the task containing code
    and tracker files: message `"<id>: <summary>"`. Then `python plan/tools/tasks.py stamp` (fills the hash;
    the stamp is committed with the next task).
@@ -91,6 +91,8 @@ and move on to the next ready task.
   (tasks per status, blocked/deferred reasons, whether the Phase 5 sweep table `plan/evidence/phase5_sweep.md`
   is committed).
 - Bridge (after epic 4): `python talewright/tools/bridge.py status|list|call <tool> --args '{...}'`.
+- JRPG database end to end (setup idempotency, undo/redo round trips of every database tool, save) in a real
+  editor: `python talewright/tools/jrpg_bridge_checks.py` (fresh temporary project; part of each JRPG epic's review).
 - Do not run `npm run build` anywhere (owner's global rule).
 
 ## Layout of fork additions

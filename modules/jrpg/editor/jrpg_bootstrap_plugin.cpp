@@ -68,7 +68,8 @@ String JRPGBootstrapPlugin::get_unsaved_status(const String &p_for_scene) const 
 	if (!p_for_scene.is_empty() || !database_editing->has_unsaved_changes()) {
 		return String();
 	}
-	return vformat(TTR("Save changes to the JRPG database before closing?\n%s"), String("\n").join(database_editing->get_unsaved_paths()));
+	// Asked before quitting and before reloading the project alike.
+	return vformat(TTR("Save the changes to the JRPG database first?\n%s"), String("\n").join(database_editing->get_unsaved_paths()));
 }
 
 void JRPGBootstrapPlugin::save_external_data() {
@@ -83,7 +84,7 @@ void JRPGBootstrapPlugin::_notification(int p_what) {
 			ProjectSettings::get_singleton()->connect("settings_changed", callable_mp(this, &JRPGBootstrapPlugin::_on_project_settings_changed));
 			setup_dialog = memnew(JRPGSetupDialog);
 			EditorInterface::get_singleton()->get_base_control()->add_child(setup_dialog);
-			add_tool_menu_item(TTR(SETUP_MENU_ITEM), callable_mp_static(&JRPGSetupDialog::run_setup));
+			add_tool_menu_item(TTRGET(SETUP_MENU_ITEM), callable_mp_static(&JRPGSetupDialog::run_setup));
 			inspector_plugin.instantiate();
 			add_inspector_plugin(inspector_plugin);
 			// Deferred: EditorNode reloads the files in its own handler of the same signal
@@ -97,7 +98,7 @@ void JRPGBootstrapPlugin::_notification(int p_what) {
 			// with it.
 			ProjectSettings::get_singleton()->disconnect("settings_changed", callable_mp(this, &JRPGBootstrapPlugin::_on_project_settings_changed));
 			EditorFileSystem::get_singleton()->disconnect("resources_reload", callable_mp(database_editing, &JRPGDatabaseEditing::forget_unsaved));
-			remove_tool_menu_item(TTR(SETUP_MENU_ITEM));
+			remove_tool_menu_item(TTRGET(SETUP_MENU_ITEM));
 			remove_inspector_plugin(inspector_plugin);
 			inspector_plugin.unref();
 			setup_dialog = nullptr; // Freed with the editor's base control.

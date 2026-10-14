@@ -43,6 +43,7 @@
 #include "jrpg_trait_editor.h"
 #include "jrpg_workspace_shell.h"
 
+#include "core/io/json.h"
 #include "core/object/class_db.h"
 #include "editor/editor_interface.h"
 
@@ -56,12 +57,15 @@
 
 namespace {
 
-// The addon folder from the "directory" argument: a res:// path inside the project (default res://addons/talewright).
+// The addon folder from the "directory" argument: a folder of res://addons (default res://addons/talewright). Never
+// res:// itself or another project folder: an install writes there and an upgrade removes files (review finding 30).
 String addon_directory(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call) {
 	const String requested = p_args.get("directory", JRPGManagedAddon::DEFAULT_DIRECTORY);
-	const String directory = ClaudeBridgeTools::validate_res_path(requested);
-	if (directory.is_empty()) {
-		p_call->fail("\"directory\" must be a res:// folder inside the project.");
+	const String directory = ClaudeBridgeTools::validate_res_path(requested).trim_suffix("/");
+	const String name = directory.trim_prefix("res://addons/");
+	if (directory.is_empty() || !directory.begins_with("res://addons/") || name.is_empty() || name.contains("/")) {
+		p_call->fail("\"directory\" must be a folder of res://addons, such as res://addons/talewright.");
+		return String();
 	}
 	return directory;
 }
@@ -75,9 +79,15 @@ void tool_addon_status(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall>
 
 void tool_addon_install(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
 	const String directory = addon_directory(p_args, p_call);
-	if (!directory.is_empty()) {
-		p_call->complete_data(JRPGManagedAddon::install(directory));
+	if (directory.is_empty()) {
+		return;
 	}
+	const Dictionary report = JRPGManagedAddon::install(directory);
+	if (report.has("error")) {
+		p_call->fail(vformat("%s Report: %s", String(report["error"]), JSON::stringify(report))); // Review finding 29.
+		return;
+	}
+	p_call->complete_data(report);
 }
 
 void tool_setup_project(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
@@ -86,7 +96,9 @@ void tool_setup_project(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall
 		JRPGSetupDialog::get_singleton()->show_report(report); // The same report the menu item shows.
 	}
 	if (report.has("error")) {
-		p_call->fail(report["error"]);
+		// What was done before the error stays done: name it (review finding 29).
+		const PackedStringArray created = report.get("created", PackedStringArray());
+		p_call->fail(created.is_empty() ? String(report["error"]) : vformat("%s Created before the error: %s.", String(report["error"]), String(", ").join(created)));
 		return;
 	}
 	p_call->complete_data(report);
@@ -890,10 +902,10 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool install;
 	install.name = "jrpg_addon_install";
 	install.title = "Install or upgrade the JRPG addon";
-	install.description = "Installs or upgrades the Talewright managed addon (res://addons/talewright). Files the user changed are kept and listed in kept_modified; untouched files are replaced; returns the lists of added, replaced, unchanged and kept files.";
+	install.description = "Installs or upgrades the Talewright managed addon (res://addons/talewright, or another folder of res://addons). Files the user changed are kept and listed in kept_modified; untouched files are replaced, and untouched files this version no longer ships are removed; returns the lists of added, replaced, removed, unchanged and kept files, and the files that could not be written (failed).";
 	install.input_schema = directory_schema();
 	install.read_only = false;
-	install.destructive = false; // Never overwrites a file the user changed.
+	install.destructive = true; // Replaces and removes addon files (never one the user changed); not undoable.
 	install.func = &tool_addon_install;
 	r_mcp.register_tool(install);
 
@@ -938,7 +950,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	const Dictionary table_property = schema_property("string", "Table name: actors, classes, skills, items, weapons, armors, enemies, troops, states, animations, tilesets or common_events.");
 	const Dictionary id_property = schema_property("integer", "Entry ID (1 = first entry).");
 	const Dictionary allow_property = schema_property("boolean", "Apply even when other data still points at the affected entries (default false: the call fails and lists them).");
-	const Dictionary dialog_property = schema_property("boolean", "Instead of applying, open the same confirmation dialog as the Database section's button, for the user to confirm in the editor (default false).");
+	const Dictionary dialog_property = schema_property("boolean", "Instead of applying, do what the Database section's button does, for the user to finish in the editor: Change Maximum opens its dialog; Clear opens its confirmation when other data uses the entry and, like the button, clears at once when nothing does (the result says cleared). Default false.");
 
 	ClaudeBridgeMCP::Tool list;
 	list.name = "jrpg_db_list";
@@ -990,6 +1002,8 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	copy.title = "Copy a JRPG database entry";
 	copy.description = "Copies an entry to the database clipboard (shared with the Database section's Copy button).";
 	copy.input_schema = ClaudeBridgeMCP::object_schema(entry_properties, entry_required);
+	copy.read_only = false; // Changes the clipboard the Database section's Paste uses.
+	copy.destructive = false; // Transient: the copied entry itself is unchanged.
 	copy.func = &tool_db_copy_paste;
 	r_mcp.register_tool(copy);
 
@@ -1066,7 +1080,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	save.description = "Saves every database file with unsaved changes (the editor also saves them with the scene and before running the project, and asks before quitting). Returns the saved paths.";
 	save.input_schema = ClaudeBridgeMCP::object_schema(Dictionary());
 	save.read_only = false;
-	save.destructive = false; // Writes only the files the editor already shows as changed.
+	save.destructive = true; // Writes files: as saving scenes, not undoable (talewright/docs/claude_bridge.md, annotations).
 	save.func = &tool_db_save;
 	r_mcp.register_tool(save);
 

@@ -60,7 +60,7 @@ protected:
 
 public:
 	static constexpr const char *SETTING_ENABLED = "jrpg/enabled";
-	static constexpr const char *SETUP_MENU_ITEM = "Set Up JRPG Project...";
+	static constexpr const char *SETUP_MENU_ITEM = TTRC("Set Up JRPG Project..."); // Marked for translation extraction.
 
 	virtual String get_plugin_name() const override { return "JRPGBootstrap"; }
 	virtual String get_unsaved_status(const String &p_for_scene) const override;
