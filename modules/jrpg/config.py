@@ -61,6 +61,7 @@ def get_doc_classes():
         "JRPGTypesData",
         "JRPGUsableData",
         "JRPGWeaponData",
+        "JRPGWindow",
     ]
 
 

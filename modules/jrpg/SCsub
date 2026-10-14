@@ -4,7 +4,16 @@ from misc.utility.scons_hints import *
 Import("env")
 Import("env_modules")
 
+import os
+
+import jrpg_builders
+
 env_jrpg = env_modules.Clone()
+
+# The built-in window skin (D-049), from the generated assets, in every build: windows draw without project files.
+skin_dir = os.path.join(Dir("#").abspath, "talewright", "assets", "generated", "system")
+skin_files = [os.path.join(skin_dir, stem + ".png") for stem in jrpg_builders.DEFAULT_SKIN]
+env_jrpg.CommandNoCache("runtime/jrpg_default_skin.gen.h", skin_files, env.Run(jrpg_builders.make_default_skin))
 
 # core/: pure logic shared with MMO servers (no scene/, servers/ or editor/ includes; tests/check_core_includes.py).
 # runtime/: nodes and UI building blocks shipped in games. editor/: editor builds only.
@@ -14,9 +23,6 @@ env_jrpg.add_source_files(env.modules_sources, "runtime/*.cpp")
 
 if env.editor_build:
     import glob
-    import os
-
-    import jrpg_builders
 
     # The managed addon (res://addons/talewright, D-004) is embedded in editor builds; the setup tool copies it into
     # projects, so exported games get it as ordinary project files.

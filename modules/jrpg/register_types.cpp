@@ -75,6 +75,7 @@
 #include "modules/jrpg/runtime/jrpg_map_files.h"
 #include "modules/jrpg/runtime/jrpg_player.h"
 #include "modules/jrpg/runtime/jrpg_scene_manager.h"
+#include "modules/jrpg/runtime/jrpg_window.h"
 
 #ifdef TOOLS_ENABLED
 #include "core/io/resource_importer.h"
@@ -173,6 +174,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGMap);
 		GDREGISTER_CLASS(JRPGPlayer);
 		GDREGISTER_CLASS(JRPGSceneManager);
+		GDREGISTER_CLASS(JRPGWindow);
 		GDREGISTER_CLASS(JRPGGameState);
 	}
 #ifdef TOOLS_ENABLED

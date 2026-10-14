@@ -29,7 +29,7 @@ Tiles are 48 × 48 pixels (D-034).
 | `enemies/<name>.png` | Front-view battlers on transparent backgrounds: moss_blob (the starter Moss Blob), cave_bat, mushroom_imp, thorn_wolf, stone_golem, ember_wisp |
 | `battlebacks/<scene>_back.png`, `<scene>_ground.png` | 1280 × 720 battlebacks for grassland, forest and cave: an opaque backdrop and a ground layer in perspective, transparent above the horizon, so either half can be reused |
 | `system/icons.png` | The icon set: 32 × 32 icons, 16 per row; an entry's `icon_index` is the position (table below) |
-| `system/window.png`, `window_cursor.png`, `window_arrows.png` | The window skin (below) |
+| `system/window.png`, `window_back.png`, `window_border.png`, `window_cursor.png`, `window_arrows.png` | The window skin (below) |
 | `audio/se/<name>.ogg` | Sound effects (mono, 44.1 kHz Ogg Vorbis): cursor, decision, cancel, buzzer, equip, save, load, heal, hit, slash, magic, item_get, door, step, escape, miss |
 | `audio/bgm/<name>.ogg` | Looping music (stereo): title, field, battle, dungeon; each loops on a whole number of bars, and its `.import` file sets Godot's loop, bpm and beat count |
 | `audio/me/victory.ogg` | A short victory jingle that plays once |
@@ -51,6 +51,9 @@ Icon *i* is at column *i* mod 16, row *i* div 16 of `system/icons.png`. Index 0 
 ## Window skin
 - `system/window.png`: a 96 × 96 nine-slice window, 16-pixel margins on every side (corners stay, edges and the
   translucent body stretch); for a Godot `StyleBoxTexture` set all four texture margins to 16.
+- `system/window_back.png` and `system/window_border.png`: the same window in two layers, the translucent body and
+  the border drawn over it (same size and margins), so the window tone tints the body only. `JRPGWindow` draws these
+  two; the runtime carries copies of them, the cursor and the arrows as its built-in skin.
 - `system/window_cursor.png`: the selection highlight, 48 × 48 nine-slice with 8-pixel margins.
 - `system/window_arrows.png`: four 16 × 16 marks side by side: scroll up, scroll down, more text (the pause mark of
   a message), and a right arrow for submenus.

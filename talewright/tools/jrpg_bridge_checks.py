@@ -735,6 +735,98 @@ def run(checks: Checks) -> None:
     saved = (c.project / "jrpg" / "tilesets" / "checks.tres").read_text(encoding="utf-8")
     c.check("jrpg_db_save: saves the TileSet with its flag layers", "jrpg_pass" in saved and "jrpg_no_entry" in saved)
 
+    run_windows(c)
+
+
+# Windows (task 10.1.1) on a plain backdrop: open with a scroll mark, tinted with the pause mark, and three quarters open (its
+# label, at the top of the contents, cut by the opening band).
+WINDOW_SCENE = """[gd_scene format=3]
+
+[node name="WindowCheck" type="Control"]
+offset_right = 640.0
+offset_bottom = 360.0
+
+[node name="Backdrop" type="ColorRect" parent="."]
+offset_right = 640.0
+offset_bottom = 360.0
+color = Color(0.27, 0.43, 0.3, 1)
+
+[node name="Plain" type="JRPGWindow" parent="."]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 304.0
+offset_bottom = 184.0
+scroll_down_visible = true
+
+[node name="Label" type="Label" parent="Plain"]
+text = "Talewright"
+
+[node name="Toned" type="JRPGWindow" parent="."]
+offset_left = 336.0
+offset_top = 24.0
+offset_right = 616.0
+offset_bottom = 184.0
+tone = Vector3i(96, 0, -48)
+pause_visible = true
+
+[node name="Opening" type="JRPGWindow" parent="."]
+offset_left = 24.0
+offset_top = 208.0
+offset_right = 616.0
+offset_bottom = 336.0
+openness = 0.75
+
+[node name="Label" type="Label" parent="Opening"]
+size_flags_vertical = 0
+text = "Opening: the band cuts the top of this line."
+"""
+
+
+def compare_golden(c: Checks, name: str, image: str, what: str, extra: str = "") -> None:
+    """Compares image with talewright/goldens/<name> (img_compare.py); --update-goldens writes it instead."""
+    golden = GOLDENS / name
+    if UPDATE_GOLDENS:
+        GOLDENS.mkdir(exist_ok=True)
+        shutil.copyfile(image, golden)
+        print(f"[GOLDEN] wrote {golden.relative_to(ROOT)}")
+    compared = subprocess.run(
+        [sys.executable, str(ROOT / "talewright" / "tools" / "img_compare.py"), image, str(golden)],
+        capture_output=True,
+        text=True,
+    )
+    c.check(what, compared.returncode == 0, (compared.stdout.strip() or compared.stderr.strip()) + f" {image} {extra}")
+
+
+def run_windows(c: Checks) -> None:
+    folder = c.project / "ui_checks"
+    folder.mkdir(exist_ok=True)
+    (folder / "window.tscn").write_text(WINDOW_SCENE, encoding="utf-8")
+    c.call("editor_rescan")
+    c.call("run_project", {"scene": "res://ui_checks/window.tscn"})
+    connected = False
+    for _ in range(120):
+        if c.call("run_status").get("debugger_connected"):
+            connected = True
+            break
+        time.sleep(0.5)
+    c.check("JRPGWindow: the window scene runs", connected)
+    if not connected:
+        c.call("stop_project")
+        return
+    c.call("game_wait", {"frames": 30})
+    states = [
+        c.call("game_node_get", {"path": f"/root/WindowCheck/{node}", "properties": ["openness", "tone"]})
+        for node in ("Plain", "Toned", "Opening")
+    ]
+    shot = c.call("game_screenshot", {"include_image": False})
+    c.call("stop_project")
+    c.check(
+        "JRPGWindow: the scene's windows are there",
+        all("openness" in json.dumps(s) for s in states),
+        json.dumps(states)[:300],
+    )
+    compare_golden(c, "jrpg_window.png", shot.get("path", ""), "JRPGWindow: the windows match the golden image")
+
 
 def main() -> int:
     ap = argparse.ArgumentParser()

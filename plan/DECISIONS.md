@@ -719,3 +719,26 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** the failure is only visible in a build CI makes and this machine did not; one more incremental build
   before a push costs minutes, a red CI run costs a push and a fix commit.
 - **Reversal:** drop the profile and the step; CI still catches these failures, after the push.
+
+## D-049 — Game windows: the skin in Godot's theme, a toned back, opening through a band
+- **Context:** task 10.1.1 needs the game's window (RM-MNU-016: windows draw from a skin image whose back takes the
+  System data's window tone, -255..255 per channel). No step yet puts default assets into a project, the default
+  theme is built after modules initialize (`main/main.cpp:834` vs `:3880`) and again with every RenderingServer
+  (`scene/theme/theme_db.cpp:88-95`, per test case in doctests), and the help gives no opening time or padding.
+- **Options:** the skin as files in the managed addon, found by path; textures made per window from data built into
+  the runtime; the built-in skin added to Godot's default theme as theme items of a `JRPGWindow` type; a new skin
+  resource type. For the tone: a shader on the back, or the back's pixels tinted on the CPU.
+- **Choice:** `JRPGWindow` (runtime `Container`) reads theme items (icons `back`, `border`, `cursor`, `arrows`;
+  constants `padding` 12, `frame_margin` 16), so project themes and overrides change the skin as for any control. The
+  generated skin is embedded at build time (`modules/jrpg/SCsub`, `jrpg_builders.make_default_skin`) and added to the
+  default theme the first time a window updates its theme items (`JRPGWindow::ensure_default_skin`, the theme's
+  signals blocked meanwhile), so the textures live with the theme and its RenderingServer. The generator draws the
+  window in two layers (`window_back.png`, `window_border.png`; `window.png` unchanged) and the tone is added to the
+  back's pixels once per tone change (no shader: the same on every renderer, the headless one included). Opening and
+  closing take `OPEN_FRAMES` = 8 frames at 60 a second (Talewright's choice); meanwhile the frame is squashed into
+  the band it opens through and the window's children are clipped to that band (they show through it rather than
+  appearing only when open); closed, nothing is drawn. Windows stop mouse clicks.
+- **Why:** reuses Godot's theme system for customization and its renderer's clipping; no project files are needed for
+  a window to draw (games, tests, goldens); the tone tints only the body, as the skin's two layers allow.
+- **Reversal:** contents hidden until open: give the window an internal content node and toggle it; skin in the
+  addon: drop `ensure_default_skin` and point a project theme at the addon's images; timing: `OPEN_FRAMES`.

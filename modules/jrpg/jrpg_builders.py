@@ -1,4 +1,4 @@
-"""Build-time helpers for modules/jrpg (editor builds)."""
+"""Build-time helpers for modules/jrpg."""
 
 import hashlib
 import os
@@ -61,3 +61,21 @@ struct JRPGAddonFile {
             file.write(f'\t{{ "{relative}", "{digest}", {len(data)}, {compressed_size}, _jrpg_addon_file_{index} }},\n')
         file.write("};\n\n")
         file.write(f"inline constexpr int JRPG_ADDON_FILE_COUNT = {len(files)};\n")
+
+
+# The built-in window skin (D-049): file stem in talewright/assets/generated/system -> name in the generated header.
+DEFAULT_SKIN = {"window_back": "BACK", "window_border": "BORDER", "window_cursor": "CURSOR", "window_arrows": "ARROWS"}
+
+
+def make_default_skin(target, source, env):
+    """Embed the generated window skin PNGs (as they are: already compressed) for JRPGWindow's built-in skin."""
+    with methods.generated_wrapper(str(target[0])) as file:
+        file.write('#include "core/typedefs.h"\n\n')
+        for node in source:
+            path = str(node)
+            name = DEFAULT_SKIN[os.path.splitext(os.path.basename(path))[0]]
+            data = methods.get_buffer(path)
+            file.write(f"inline constexpr int JRPG_SKIN_{name}_SIZE = {len(data)};\n")
+            file.write(f"inline constexpr const unsigned char JRPG_SKIN_{name}[] = {{\n")
+            file.write(methods.format_buffer(data, 1))
+            file.write("\n};\n\n")

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGWindow" inherits="Container" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A game window: a tinted back, a border, and contents inside a padding, opening and closing from its middle.
+	</brief_description>
+	<description>
+		A window of the game's interface, such as a menu or a message box. It draws a back tinted by [member tone] and a nine-slice border over it, and lays its children out inside the padding, as [PanelContainer] does. [member openness] opens it from the middle: while it opens or closes, the frame is squashed into the band it opens through and the children show through that band only; closed, it draws nothing. [method open] and [method close] take [constant OPEN_FRAMES] frames at 60 frames a second and end with [signal opened] or [signal closed].
+		The skin comes from the theme items below, so a project theme or theme overrides replace it as for any control. Talewright's built-in skin is added to the default theme the first time a window needs it, so windows draw without any project file.
+		Authority: client. Windows only show what the game decides.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="close">
+			<return type="void" />
+			<description>
+				Starts closing the window over [constant OPEN_FRAMES] frames; [signal closed] is emitted when it is closed. A window that is already closed emits it at once.
+			</description>
+		</method>
+		<method name="ensure_default_skin" qualifiers="static">
+			<return type="void" />
+			<description>
+				Adds Talewright's built-in skin to the default theme, under the [code skip-lint]JRPGWindow[/code] theme type, unless it is there already. Windows call it before reading their theme items.
+			</description>
+		</method>
+		<method name="get_arrows_texture" qualifiers="const">
+			<return type="Texture2D" />
+			<description>
+				Returns the skin's sheet of marks: four 16 by 16 marks side by side (scroll up, scroll down, pause, submenu).
+			</description>
+		</method>
+		<method name="get_back_texture" qualifiers="const">
+			<return type="Texture2D" />
+			<description>
+				Returns the back as it is drawn: the skin's back with [member tone] added, or the skin's own back when the tone is zero.
+			</description>
+		</method>
+		<method name="get_content_rect" qualifiers="const">
+			<return type="Rect2" />
+			<description>
+				Returns the rectangle the contents go in: the window's rectangle inside the [theme_item padding], in the window's own coordinates.
+			</description>
+		</method>
+		<method name="get_cursor_texture" qualifiers="const">
+			<return type="Texture2D" />
+			<description>
+				Returns the skin's selection cursor, a nine-slice image, for windows that draw their own contents.
+			</description>
+		</method>
+		<method name="get_open_rect" qualifiers="const">
+			<return type="Rect2" />
+			<description>
+				Returns the rectangle the window shows now: all of it when open, the band through its middle while it opens or closes.
+			</description>
+		</method>
+		<method name="is_closed" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when [member openness] is 0.
+			</description>
+		</method>
+		<method name="is_closing" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] while the window is closing.
+			</description>
+		</method>
+		<method name="is_open" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when [member openness] is 1.
+			</description>
+		</method>
+		<method name="is_opening" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] while the window is opening.
+			</description>
+		</method>
+		<method name="open">
+			<return type="void" />
+			<description>
+				Starts opening the window over [constant OPEN_FRAMES] frames; [signal opened] is emitted when it is open. A window that is already open emits it at once.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="mouse_filter" type="int" setter="set_mouse_filter" getter="get_mouse_filter" overrides="Control" enum="Control.MouseFilter" default="0" />
+		<member name="openness" type="float" setter="set_openness" getter="get_openness" default="1.0">
+			How open the window is, from 0 (closed, nothing drawn) to 1 (open). Setting it shows the window at once and stops any opening or closing, without a signal.
+		</member>
+		<member name="pause_visible" type="bool" setter="set_pause_visible" getter="is_pause_visible" default="false">
+			If [code]true[/code], the pause mark shows at the bottom middle while the window is open (a message waiting for the player). It takes the place of the scroll down mark.
+		</member>
+		<member name="scroll_down_visible" type="bool" setter="set_scroll_down_visible" getter="is_scroll_down_visible" default="false">
+			If [code]true[/code], the scroll down mark shows at the bottom middle while the window is open.
+		</member>
+		<member name="scroll_up_visible" type="bool" setter="set_scroll_up_visible" getter="is_scroll_up_visible" default="false">
+			If [code]true[/code], the scroll up mark shows at the top middle while the window is open.
+		</member>
+		<member name="tone" type="Vector3i" setter="set_tone" getter="get_tone" default="Vector3i(0, 0, 0)">
+			Added to every pixel of the back, per channel, from -255 to 255, as the System data's window tone. The border and the contents keep their colors.
+		</member>
+	</members>
+	<signals>
+		<signal name="closed">
+			<description>
+				Emitted when the window has finished closing.
+			</description>
+		</signal>
+		<signal name="opened">
+			<description>
+				Emitted when the window has finished opening.
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="OPEN_FRAMES" value="8">
+			Frames, at 60 frames a second, that opening or closing takes.
+		</constant>
+		<constant name="DEFAULT_PADDING" value="12">
+			The built-in skin's [theme_item padding].
+		</constant>
+		<constant name="DEFAULT_FRAME_MARGIN" value="16">
+			The built-in skin's [theme_item frame_margin].
+		</constant>
+		<constant name="ARROW_SIZE" value="16">
+			The size of each mark in [theme_item arrows].
+		</constant>
+	</constants>
+	<theme_items>
+		<theme_item name="frame_margin" data_type="constant" type="int" default="16">
+			The margins of the [theme_item back] and [theme_item border] nine-slices, in pixels: corners keep their size, edges and the middle stretch.
+		</theme_item>
+		<theme_item name="padding" data_type="constant" type="int" default="12">
+			Space between the window's edge and its contents, in pixels.
+		</theme_item>
+		<theme_item name="arrows" data_type="icon" type="Texture2D">
+			Four marks side by side, [constant ARROW_SIZE] pixels each: scroll up, scroll down, pause, submenu.
+		</theme_item>
+		<theme_item name="back" data_type="icon" type="Texture2D">
+			The window's body, a nine-slice image drawn under the border and tinted by [member tone].
+		</theme_item>
+		<theme_item name="border" data_type="icon" type="Texture2D">
+			The window's border, a nine-slice image drawn over the back.
+		</theme_item>
+		<theme_item name="cursor" data_type="icon" type="Texture2D">
+			The selection cursor of lists, a nine-slice image.
+		</theme_item>
+	</theme_items>
+</class>

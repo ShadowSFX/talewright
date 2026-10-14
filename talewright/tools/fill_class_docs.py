@@ -3,7 +3,8 @@
 
 Usage: python talewright/tools/fill_class_docs.py <docs.json> [--doc-dir modules/jrpg/doc_classes]
 JSON shape: {"ClassName": {"brief": "...", "description": "...", "methods": {"name": "..."},
-             "members": {"name": "..."}, "constants": {"NAME": "..."}, "signals": {"name": "..."}}}
+             "members": {"name": "..."}, "constants": {"NAME": "..."}, "signals": {"name": "..."},
+             "theme_items": {"name": "..."}}}
 Only empty slots are filled; text already present is never replaced. Text is XML-escaped and indented the way
 `--doctool` writes it, so running `--doctool` afterwards produces no diff. Unknown names are reported (exit 1).
 After filling, the script lists every slot that is still empty in the touched files.
@@ -42,7 +43,7 @@ def fill(xml: str, kind: str, name: str, text: str) -> tuple[str, bool]:
         )
         new, n = rx.subn(lambda m: m.group(1) + block(text, t * 4) + m.group(2), xml, count=1)
         return new, n == 1 or (f'<{tag} name="{name}"' in xml)
-    tag = {"members": "member", "constants": "constant"}[kind]
+    tag = {"members": "member", "constants": "constant", "theme_items": "theme_item"}[kind]
     rx = re.compile(r"(\t\t<" + tag + r' name="' + re.escape(name) + r'"[^>]*>\n)(\t\t</' + tag + ">)")
     new, n = rx.subn(lambda m: m.group(1) + block(text, t * 3) + m.group(2), xml, count=1)
     return new, n == 1 or (f'<{tag} name="{name}"' in xml)
@@ -61,6 +62,14 @@ def empty_slots(xml: str) -> list[str]:
     ]
     out += ["member " + m for m in re.findall(r'<member name="([\w/]+)"[^>]*>\n\t\t</member>', xml)]
     out += ["constant " + m for m in re.findall(r'<constant name="(\w+)"[^>]*>\n\t\t</constant>', xml)]
+    out += [
+        "signal " + m
+        for m in re.findall(
+            r'<signal name="(\w+)"[^>]*>\n(?:\t\t\t(?!<description>).*\n)*\t\t\t<description>\n\t\t\t</description>',
+            xml,
+        )
+    ]
+    out += ["theme item " + m for m in re.findall(r'<theme_item name="(\w+)"[^>]*>\n\t\t</theme_item>', xml)]
     return out
 
 
@@ -80,7 +89,7 @@ def main() -> int:
         for kind in ("brief", "description"):
             if kind in entries:
                 xml, _ = fill(xml, kind, "", entries[kind])
-        for kind in ("methods", "members", "constants", "signals"):
+        for kind in ("methods", "members", "constants", "signals", "theme_items"):
             for name, text in entries.get(kind, {}).items():
                 xml, found = fill(xml, kind, name, text)
                 if not found:

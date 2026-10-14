@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 09:54 -0600
-- **Current task:** 8.9.3 Close epic 8
-- **Last completed:** 8.9.2 Epic 8 review: core and runtime findings
-- **Next task:** none ready (see `tasks.py next`)
-- **Done leaf tasks:** 119
+- **Updated:** 2026-10-14 10:51 -0600
+- **Current task:** none
+- **Last completed:** 10.1.1 Window frame, default skin, tone and open/close
+- **Next task:** 10.1.2 Selectable list: cursor, navigation, paging, key repeat, mouse, UI sounds
+- **Done leaf tasks:** 121
 <!-- status:end -->
 
 ## Log
@@ -318,3 +318,8 @@
 | 2026-10-14 09:42 -0600 | - | imported 0 new / 2 updated tasks | |
 | 2026-10-14 09:54 -0600 | 8.9.2 | done: Epic 8 review: core and runtime findings — Epic 8 review part A fixed: A1 map built at once on entering; A2 looping display criterion on epic 23, camera free on looping axes, docs state the limit; A5 D-029 stamps, upgrade() and fingerprints for JRPGMapList/JRPGMapData; A7 fade in simulation steps (FADE_STEPS 18); A8 walk distance from the mover; A9 set_maps builds a new array, repairs unknown/looping parents and tree order; A10 paints report only cells written; A11 map root type checked through inherited scenes, map created before a new/loaded game replaces the running one; A12 camera limits through the map transform and zoom, player camera made current; A13 load cost answered in D-041, per-index tile cache in rebuild, shadow-only redraws, marker redraw only when shown; A14 authority lines; A15 transfer during fade-in refused, note on 9.5.3. 32 px TileSet scene manager doctest. Full suite 1581/1581, static checks ALL PASS, bridge checks 167/167. (containers: 8.9 in_progress->pending, 8 in_progress->pending) | 598e9c0c5e |
 | 2026-10-14 09:54 -0600 | 8.9.3 | started: Close epic 8 (containers: 8.9 pending->in_progress, 8 pending->in_progress) |  |
+| 2026-10-14 10:24 -0600 | 8.9.3 | done: Close epic 8 — Epic 8 closed: review log plan/evidence/reviews/epic_8.md (28 findings, all fixed or answered); plain_2d/plain_3d smoke ALL PASS with a rebuilt release template; core_diff_check 0 unlisted; 1581 tests and static checks pass; pushed. The first push's CI (38593870675) failed in four template jobs on an editor-only doctest; fixed (inherited scene written as text), the template-tests profile added (D-048, 1471/1471 in the release template), CI run 38595462902 green. (containers: 8.9 in_progress->done, 8 in_progress->done) | 86701dc67f |
+| 2026-10-14 10:26 -0600 | - | imported 2 new / 1 updated tasks | |
+| 2026-10-14 10:26 -0600 | 10.1.1 | started: Window frame, default skin, tone and open/close (containers: 10.1 pending->in_progress, 10 pending->in_progress) |  |
+| 2026-10-14 10:45 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-14 10:51 -0600 | 10.1.1 | done: Window frame, default skin, tone and open/close — JRPGWindow (runtime Container): toned back and nine-slice border from theme items (back, border, cursor, arrows, padding, frame_margin), the generated skin embedded at build time and added to Godot's default theme on first use (D-049); children laid out inside the padding; open/close over 8 frames with opened/closed signals, the frame squashed and children clipped to the opening band; scroll and pause marks. Generator: window_back.png and window_border.png (window.png unchanged). Doctests (5 cases), golden talewright/goldens/jrpg_window.png through the bridge (bridge checks 170/170), 1585 editor tests, 1475 release-template tests, static checks ALL PASS. Static checks: SConstruct/SCsub left out of the shebang check as in CI; fill_class_docs fills theme items. (containers: 10.1 in_progress->pending, 10 in_progress->pending) | pending |

@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 95, in_progress: 3, done: 153, blocked: 0, deferred: 3 (of 254)
+**Totals:** pending: 96, in_progress: 0, done: 157, blocked: 0, deferred: 3 (of 256)
 
 ## [x] 0 Bootstrap and task system
 
@@ -160,7 +160,7 @@ Original generated assets, autotile importer and resolver, tileset flags.
   - [x] **7.6.2** Review fixes: tile flags, tileset form, bridge tools (P1) _(deps: 7.6.1; commit: 133cb6e076)_
   - [x] **7.6.3** Epic 7 close-out (P1) _(deps: 7.6.2; commit: c2fabd838a)_
 
-## [~] 8 Maps
+## [x] 8 Maps
 
 JRPGMap scenes, map editor canvas, cell cache, runtime map and movement.
 
@@ -193,10 +193,10 @@ JRPGMap scenes, map editor canvas, cell cache, runtime map and movement.
   - [x] **8.7.1** Character sheet frames and importer (P1) _(commit: a1fcdccc61)_
   - [x] **8.7.2** Character sprite on the map (P1) _(deps: 8.7.1; commit: eeac5a936e)_
 - [x] **8.8** Map authoring tools (P2) _(deps: 8.5; commit: 619960600b)_
-- [~] **8.9** Epic review: maps (P1) _(deps: 8.7, 8.8)_
+- [x] **8.9** Epic review: maps (P1) _(deps: 8.7, 8.8)_
   - [x] **8.9.1** Epic 8 review: editor and bridge findings (P1) _(commit: 6bf78a1eef)_
   - [x] **8.9.2** Epic 8 review: core and runtime findings (P1) _(deps: 8.9.1; commit: 598e9c0c5e)_
-  - [~] **8.9.3** Close epic 8 (P1) _(deps: 8.9.2)_
+  - [x] **8.9.3** Close epic 8 (P1) _(deps: 8.9.2; commit: 86701dc67f)_
 
 ## [ ] 9 Events and interpreter
 
@@ -230,6 +230,8 @@ Pages, conditions, triggers, command model with authority, interpreter with pres
 Window frame, selectable list, message system, screen stack. Built before epic 9 so the local presentation port and NPC dialogs have a message window (epic 3 review).
 
 - [ ] **10.1** Window frame + selectable list (C++) (P1)
+  - [x] **10.1.1** Window frame, default skin, tone and open/close (P1) _(commit: pending)_
+  - [ ] **10.1.2** Selectable list: cursor, navigation, paging, key repeat, mouse, UI sounds (P1) _(deps: 10.1.1)_
 - [ ] **10.2** Message system (P1) _(deps: 10.1)_
   - [ ] **10.2.1** Control-code parser and text layout (P1)
   - [ ] **10.2.2** Message window, choices, number input, gold window (P1) _(deps: 10.2.1)_

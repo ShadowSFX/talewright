@@ -433,6 +433,20 @@
       ],
       "pixels_sha256": "4fa4505594baf31b758b5e331b3e927d0e045256cdc68bcb1326062e62975450"
     },
+    "system/window_back.png": {
+      "size": [
+        96,
+        96
+      ],
+      "pixels_sha256": "3fa5cc6bf71ab01fa717c0c576114828dc3af062436a5bc56430c7eb3ee8b798"
+    },
+    "system/window_border.png": {
+      "size": [
+        96,
+        96
+      ],
+      "pixels_sha256": "679e1c18b9019b481712fbcaf6ae06b373886fbf54ddd203f48db7ef15ee732e"
+    },
     "system/window_cursor.png": {
       "size": [
         48,

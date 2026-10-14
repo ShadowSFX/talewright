@@ -580,28 +580,57 @@ WINDOW = 96
 WINDOW_MARGIN = 16
 
 
-def window_frame() -> Any:
-    """A nine-slice window: 16-pixel corners and edges, a translucent body that stretches."""
-    frame = blank(WINDOW, WINDOW)
-    xs, ys = grid(WINDOW, WINDOW)
-    body = sdf_box(xs, ys, 2, 2, WINDOW - 2, WINDOW - 2, 8)
+def _window_body(xs: Any, ys: Any) -> Any:
+    return sdf_box(xs, ys, 2, 2, WINDOW - 2, WINDOW - 2, 8)
+
+
+def _window_fill(image: Any, xs: Any, ys: Any) -> None:
+    """The translucent body, darker toward the bottom."""
     t = (ys / WINDOW)[..., None]
     fill = np.array(rgb("#22305a")) * (1 - t) + np.array(rgb("#121a33")) * t
-    over(frame, fill, coverage(body) * 0.88)
-    over(frame, rgb("#0a0f1f"), coverage(np.abs(body) - 1.0))
-    over(frame, rgb("#d9c38a"), coverage(np.abs(sdf_box(xs, ys, 4, 4, WINDOW - 4, WINDOW - 4, 6)) - 0.9))
+    over(image, fill, coverage(_window_body(xs, ys)) * 0.88)
+
+
+def _window_border(image: Any, xs: Any, ys: Any) -> None:
+    """The outline, the gold border with its highlight, and the corner gems, drawn over the body."""
+    over(image, rgb("#0a0f1f"), coverage(np.abs(_window_body(xs, ys)) - 1.0))
+    over(image, rgb("#d9c38a"), coverage(np.abs(sdf_box(xs, ys, 4, 4, WINDOW - 4, WINDOW - 4, 6)) - 0.9))
     over(
-        frame,
+        image,
         rgb("#fff3c4"),
         coverage(np.abs(sdf_box(xs, ys, 4, 4, WINDOW - 4, WINDOW - 4, 6)) - 0.4) * np.clip((40 - ys) / 40, 0, 1) * 0.6,
     )
     for cx, cy in ((8, 8), (WINDOW - 8, 8), (8, WINDOW - 8), (WINDOW - 8, WINDOW - 8)):
         over(
-            frame,
+            image,
             rgb("#e8d49a"),
             coverage(poly(xs, ys, [(cx, cy - 3.5), (cx + 3.5, cy), (cx, cy + 3.5), (cx - 3.5, cy)])),
         )
+
+
+def window_frame() -> Any:
+    """A nine-slice window: 16-pixel corners and edges, a translucent body that stretches."""
+    frame = blank(WINDOW, WINDOW)
+    xs, ys = grid(WINDOW, WINDOW)
+    _window_fill(frame, xs, ys)
+    _window_border(frame, xs, ys)
     return frame
+
+
+def window_back() -> Any:
+    """The window's body alone (what the window tone tints), the same nine-slice as window.png."""
+    back = blank(WINDOW, WINDOW)
+    xs, ys = grid(WINDOW, WINDOW)
+    _window_fill(back, xs, ys)
+    return back
+
+
+def window_border() -> Any:
+    """The window's border alone, drawn over the back; transparent elsewhere."""
+    border = blank(WINDOW, WINDOW)
+    xs, ys = grid(WINDOW, WINDOW)
+    _window_border(border, xs, ys)
+    return border
 
 
 def window_cursor() -> Any:
@@ -635,6 +664,8 @@ def generate() -> dict[str, Any]:
     return {
         "system/icons.png": icon_sheet(),
         "system/window.png": window_frame(),
+        "system/window_back.png": window_back(),
+        "system/window_border.png": window_border(),
         "system/window_cursor.png": window_cursor(),
         "system/window_arrows.png": window_arrows(),
     }

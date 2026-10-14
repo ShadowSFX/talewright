@@ -127,13 +127,17 @@ def content_hash(path: Path) -> str:
 
 
 def shebang_modes(root: Path, files: list[str]) -> list[str]:
-    """Files that start with a shebang but are not mode 100755 in the git index."""
+    """Files that start with a shebang but are not mode 100755 in the git index.
+
+    SConstruct and SCsub files are left out, as CI's hook leaves them out (.pre-commit-config.yaml:17-18: their
+    shebang is for syntax highlighting only).
+    """
     listed = subprocess.run(["git", "ls-files", "-s", "--", *files], cwd=root, capture_output=True, text=True).stdout
     modes = {line.split("	", 1)[1]: line.split()[0] for line in listed.splitlines() if "	" in line}
     problems = []
     for f in files:
         path = root / f
-        if not path.is_file():
+        if not path.is_file() or path.name in ("SConstruct", "SCsub"):
             continue
         with path.open("rb") as handle:
             if handle.read(2) != b"#!":

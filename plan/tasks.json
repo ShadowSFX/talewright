@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.9.2 Epic 8 review: core and runtime findings",
+  "last_completed": "10.1.1 Window frame, default skin, tone and open/close",
   "tasks": [
     {
       "id": "0",
@@ -2758,7 +2758,7 @@
       "dependencies": [
         "7"
       ],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Paint/undo/save/run via bridge",
@@ -2766,8 +2766,8 @@
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "8.1",
@@ -3512,15 +3512,15 @@
         "8.7",
         "8.8"
       ],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "8.9.1, 8.9.2 and 8.9.3 done"
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "8.9.1",
@@ -3594,9 +3594,9 @@
         "CI green on the push"
       ],
       "test_strategy": "Smoke, checks, CI.",
-      "status": "in_progress",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "86701dc67f",
       "notes": ""
     },
     {
@@ -4035,20 +4035,56 @@
     {
       "id": "10.1",
       "title": "Window frame + selectable list (C++)",
-      "description": "Skin, open/close animation, cursor, paging, key repeat, mouse. UI sound set (cursor, ok, cancel, buzzer) from System data.",
+      "description": "Skin, open/close animation, cursor, paging, key repeat, mouse. UI sound set (cursor, ok, cancel, buzzer) from System data. Split into 10.1.1 (window frame: default skin built into the runtime, window tone on the back, open/close, scroll marks, contents shown only when open) and 10.1.2 (selectable list: cursor, navigation, paging, key repeat, mouse and wheel, UI sounds, golden screenshot, bridge check of the sounds).",
       "parent": "10",
       "dependencies": [],
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Navigation doctest (wrap, page up/down, disabled items)",
-        "Window and list match the golden screenshot compared with talewright/tools/img_compare.py (NEW, written in 8.4.2): same window size and renderer, per-channel tolerance 2/255, at most 0.1 % of pixels differing; goldens are regenerated only on purpose",
-        "Cursor/ok/cancel/buzzer sounds play on the matching actions (audio player state via bridge)"
+        "10.1.1 and 10.1.2 done"
       ],
       "test_strategy": "Doctests + bridge.",
       "files": [],
       "commit": "",
       "notes": "Default skin from 7.1.2.3: talewright/assets/generated/system/window.png (96x96 nine-slice, 16 px margins), window_cursor.png (48x48, 8 px margins), window_arrows.png (4 marks of 16x16); see talewright/docs/assets.md."
+    },
+    {
+      "id": "10.1.1",
+      "parent": "10.1",
+      "title": "Window frame, default skin, tone and open/close",
+      "priority": 1,
+      "dependencies": [],
+      "description": "JRPGWindow (runtime Container): draws a back tinted by a tone (-255..255 per channel, System data's window tone) and a nine-slice frame over it (16 px margins), lays its children out inside a padding, shows scroll and pause marks from the arrows sheet, and opens and closes vertically from its middle over a fixed number of frames; contents show only when it is fully open. The default skin (back, frame, cursor, arrows) is built into the runtime from talewright/assets/generated/system, so any window draws without project files (as Godot's default theme); the asset generator gains separate back and frame images. Authority: client.",
+      "acceptance_criteria": [
+        "Doctests: openness steps and signals (opened, closed), tone applied to the back only, content rect and child layout, the built-in skin used without project files, theme overrides",
+        "Generated assets regenerated with the new back and border images; generate_assets.py --check passes",
+        "Golden screenshot of open, toned and opening windows (children clipped to the opening band, D-049) through the bridge, compared with talewright/tools/img_compare.py"
+      ],
+      "test_strategy": "Doctests [JRPG]; golden through the bridge.",
+      "status": "done",
+      "files": [],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "10.1.2",
+      "parent": "10.1",
+      "title": "Selectable list: cursor, navigation, paging, key repeat, mouse, UI sounds",
+      "priority": 1,
+      "dependencies": [
+        "10.1.1"
+      ],
+      "description": "JRPGSelectableList (runtime, in a JRPGWindow): items in columns and rows with a cursor drawn from the skin; up/down/left/right with wrap, page up/down (jrpg_page_prev/next), disabled items (buzzer on confirm), key repeat on the 24/6 frame rule (RM-INP-004), mouse hover/click and the wheel (RM-TST-016, RM-MNU-017); cursor, OK, cancel and buzzer sounds from System data (RM-MNU-019). Authority: client.",
+      "acceptance_criteria": [
+        "Navigation doctest (wrap, page up/down, disabled items, key repeat timing, mouse)",
+        "Window and list match the golden screenshot compared with talewright/tools/img_compare.py (same window size and renderer, per-channel tolerance 2/255, at most 0.1 % of pixels differing)",
+        "Cursor/ok/cancel/buzzer sounds play on the matching actions (audio player state via bridge)"
+      ],
+      "test_strategy": "Doctests + bridge.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "10.2",
