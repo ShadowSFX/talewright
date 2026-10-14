@@ -195,6 +195,20 @@ def main() -> int:
             print(check.stdout)
         ok &= check.returncode == 0
 
+    # The generated default assets match their generator and manifest (pixels, audio, importer settings).
+    assets = subprocess.run(
+        [sys.executable, "talewright/tools/generate_assets.py", "--check"], cwd=root, capture_output=True, text=True
+    )
+    last = (assets.stdout.strip().splitlines() or [""])[-1]
+    if assets.returncode == 2:
+        print("[SKIP] generated assets: " + last)
+        skipped.append("generated assets")
+    else:
+        print(("[PASS] " if assets.returncode == 0 else "[FAIL] ") + "generated assets: " + last)
+        if assets.returncode != 0:
+            print(assets.stdout)
+        ok &= assets.returncode == 0
+
     # clang's diagnostics on every fork translation unit (CI builds with clang on most platforms; MSVC misses some).
     clang = subprocess.run(
         [sys.executable, "talewright/tools/clang_check.py"], cwd=root, capture_output=True, text=True

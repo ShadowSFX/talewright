@@ -92,31 +92,35 @@ that never block (RM-TIL-007); the separate no-exit mask is a Talewright additio
 ## Autotile template (Talewright format)
 - **Source sheet = 47-tile blob sheet**, 8 columns × 6 rows of full tiles (48 cells; cell 47 is an optional preview
   icon). Each tile is drawn whole by the artist (or by the asset generator); there is no quarter-tile composition.
-- **Shape index:** the 8-neighbour mask uses bits N = 1, NE = 2, E = 4, SE = 8, S = 16, SW = 32, W = 64, NW = 128
+- **Shape index:** the 8-neighbor mask uses bits N = 1, NE = 2, E = 4, SE = 8, S = 16, SW = 32, W = 64, NW = 128
   (clockwise from north). A corner bit is kept only when both of its adjacent sides are set (the usual blob
   reduction), leaving 47 distinct masks. Shape index = position of the reduced mask in ascending numeric order
   (0 = isolated tile, 46 = fully surrounded); sheet cell = (index mod 8, index div 8). The full index-to-mask table
   and a generated example sheet live in `talewright/docs/autotile_template.md` (written with the importer, task 7.2).
 - **Animated kinds:** frames are further 8 × 6 blocks to the right (frame f at column offset 8·f); the importer uses
-  Godot atlas animation columns (`scene/resources/2d/tile_set.h:754-766`).
-- **Wall kinds:** a 4 × 4 sheet indexed by the 4-neighbour mask (N = 1, E = 2, S = 4, W = 8; cell (mask mod 4,
+  Godot atlas animation columns (`scene/resources/2d/tile_set.h:754-766`) and plays them at 3 frames per second
+  (animation speed 3 with Godot's default frame duration of 1 s); a palette entry stores the frame count only.
+- **Wall kinds:** a 4 × 4 sheet indexed by the 4-neighbor mask (N = 1, E = 2, S = 4, W = 8; cell (mask mod 4,
   mask div 4)), for wall faces where diagonal neighbors don't matter.
 - The importer (`JRPGAutotileImporter`, editor, task 7.2) adds the sheet to the TileSet as an atlas source, creates one
   palette entry per kind (one per tile for plain sheets), wires animation frames as the tiles' animation (columns =
-  frames, separation = one block) and sets Godot terrain peering bits (match corners and sides for blobs, sides for
+  frames; animation separation = one block minus one tile, 7 tiles for blobs and 3 for walls, so frame f starts one
+  block further right) and sets Godot terrain peering bits (match corners and sides for blobs, sides for
   walls) so the stock terrain painter also works. The shape tables live in core `JRPGAutotile`; the index table and
   guide sheets are in `talewright/docs/autotile_template.md` and `talewright/assets/generated/templates/`.
 
 ## Autotile resolver (core, deterministic)
-For each cell with an autotile kind, build the 8-neighbour mask from neighbors with the **same kind on the same
+For each cell with an autotile kind, build the 8-neighbor mask from neighbors with the **same kind on the same
 layer**, reduce it, and look up the shape index. Neighbors outside the map:
 - on an axis that loops (`scroll_type`), the wrapped cell is compared normally;
 - otherwise the tileset's `edge_mode` decides: `extend` (default; out-of-map counts as the same kind, so terrain runs
   cleanly to the map edge) or `border` (counts as different, drawing an outline at the edge).
-Re-resolve the 3 × 3 neighbourhood of every edited cell. Layers never influence each other.
+Re-resolve the 3 × 3 neighborhood of every edited cell. Layers never influence each other.
 Implementation (7.4): `JRPGAutotileResolver` (core) works on one layer's palette indexes with the palette's kinds
 (`get_palette_kinds`) and a flags word (`LOOP_HORIZONTAL`, `LOOP_VERTICAL` from the map's scroll type,
-`EDGE_BORDER` from the tileset's edge mode); "same kind" means the same palette index. `resolve_layer` returns one
+`EDGE_BORDER` from the tileset's edge mode; `get_flags` builds them: a map's scroll type 0..3, in the order listed
+under `JRPGMapData`, gives loop horizontal = type & 2 and loop vertical = type & 1); "same kind" means the same
+palette index. `resolve_layer` returns one
 shape byte per cell (blob 0..46, wall 0..15, 0 for plain cells), `update_around` re-resolves the 3 × 3 block
 (wrapping on looping axes) and lists the cells whose shape changed. A diagonal neighbor outside a non-looping edge
 follows the edge mode even when the other axis loops.

@@ -10,12 +10,21 @@
 	<tutorials>
 	</tutorials>
 	<methods>
+		<method name="get_flags" qualifiers="static">
+			<return type="int" enum="JRPGAutotileResolver.Flags" is_bitfield="true" />
+			<param index="0" name="loop_horizontal" type="bool" />
+			<param index="1" name="loop_vertical" type="bool" />
+			<param index="2" name="edge_mode" type="int" enum="JRPGTilesetData.EdgeMode" />
+			<description>
+				Returns the [enum Flags] for a map whose horizontal and vertical axes loop as given ([param loop_horizontal], [param loop_vertical]), drawn with a tileset whose [member JRPGTilesetData.edge_mode] is [param edge_mode].
+			</description>
+		</method>
 		<method name="get_neighbor_mask" qualifiers="static">
 			<return type="int" />
 			<param index="0" name="cells" type="PackedInt32Array" />
 			<param index="1" name="size" type="Vector2i" />
 			<param index="2" name="cell" type="Vector2i" />
-			<param index="3" name="flags" type="int" />
+			<param index="3" name="flags" type="int" enum="JRPGAutotileResolver.Flags" is_bitfield="true" />
 			<description>
 				Returns the neighbor mask of [param cell] for its own palette index (8 bits in the [enum JRPGAutotile.Neighbor] order, before corner reduction). [param cells] holds [param size] cells row by row; [param flags] combines [enum Flags] values.
 			</description>
@@ -33,7 +42,7 @@
 			<param index="1" name="size" type="Vector2i" />
 			<param index="2" name="kinds" type="PackedByteArray" />
 			<param index="3" name="cell" type="Vector2i" />
-			<param index="4" name="flags" type="int" />
+			<param index="4" name="flags" type="int" enum="JRPGAutotileResolver.Flags" is_bitfield="true" />
 			<description>
 				Returns the shape of [param cell]: 0 to 46 for a blob kind, 0 to 15 for a wall kind, or [code]-1[/code] for a plain tile, an empty cell or an index [param kinds] does not have.
 			</description>
@@ -43,7 +52,7 @@
 			<param index="0" name="cells" type="PackedInt32Array" />
 			<param index="1" name="size" type="Vector2i" />
 			<param index="2" name="kinds" type="PackedByteArray" />
-			<param index="3" name="flags" type="int" />
+			<param index="3" name="flags" type="int" enum="JRPGAutotileResolver.Flags" is_bitfield="true" />
 			<description>
 				Returns the shape of every cell of a layer, one byte per cell in the order of [param cells]. Cells without a shape hold 0.
 			</description>
@@ -54,7 +63,7 @@
 			<param index="1" name="size" type="Vector2i" />
 			<param index="2" name="kinds" type="PackedByteArray" />
 			<param index="3" name="cell" type="Vector2i" />
-			<param index="4" name="flags" type="int" />
+			<param index="4" name="flags" type="int" enum="JRPGAutotileResolver.Flags" is_bitfield="true" />
 			<param index="5" name="shapes" type="PackedByteArray" />
 			<description>
 				After cell [param cell] of a layer changed, resolves its 3 x 3 neighborhood again (across the edge of a looping map). [param shapes] is the layer's [method resolve_layer] result before the edit. Returns a dictionary with [code skip-lint]shapes[/code], the updated shapes, and [code]changed[/code], the cells whose shape changed (the edited cell is always listed).
@@ -71,13 +80,13 @@
 		<constant name="KIND_WALL" value="2" enum="Kind">
 			A wall autotile kind (16 shapes from four sides).
 		</constant>
-		<constant name="LOOP_HORIZONTAL" value="1" enum="Flags">
+		<constant name="LOOP_HORIZONTAL" value="1" enum="Flags" is_bitfield="true">
 			The map loops horizontally: the left and right edges are neighbors.
 		</constant>
-		<constant name="LOOP_VERTICAL" value="2" enum="Flags">
+		<constant name="LOOP_VERTICAL" value="2" enum="Flags" is_bitfield="true">
 			The map loops vertically: the top and bottom edges are neighbors.
 		</constant>
-		<constant name="EDGE_BORDER" value="4" enum="Flags">
+		<constant name="EDGE_BORDER" value="4" enum="Flags" is_bitfield="true">
 			Outside the map counts as another kind, so autotiles draw their edge at the map border. Without it, outside the map counts as the same kind ([member JRPGTilesetData.edge_mode]).
 		</constant>
 	</constants>

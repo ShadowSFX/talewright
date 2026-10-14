@@ -33,12 +33,13 @@
 
 #include "core/math/vector2i.h"
 #include "core/object/ref_counted.h"
-#include "core/variant/binder_common.h" // IWYU pragma: keep (VARIANT_ENUM_CAST).
+#include "core/templates/bit_field.h"
+#include "core/variant/binder_common.h" // IWYU pragma: keep (VARIANT_BITFIELD_CAST).
 
-// Autotile shapes (spec 05, task 7.2). A blob autotile draws each of the 47 shapes an 8-neighbour mask can take once
+// Autotile shapes (spec 05, task 7.2). A blob autotile draws each of the 47 shapes an 8-neighbor mask can take once
 // its corners are reduced (a corner counts only when both of its sides are the same kind); shape index = rank of the
 // reduced mask in ascending numeric order, sheet cell = (index mod 8, index div 8) of an 8 x 6 sheet. A wall
-// autotile has 16 shapes, one per 4-neighbour mask, at (mask mod 4, mask div 4) of a 4 x 4 sheet. Pure logic, shared
+// autotile has 16 shapes, one per 4-neighbor mask, at (mask mod 4, mask div 4) of a 4 x 4 sheet. Pure logic, shared
 // by the importer (editor), the resolver (task 7.4) and the servers.
 class JRPGAutotile : public RefCounted {
 	GDCLASS(JRPGAutotile, RefCounted);
@@ -47,7 +48,7 @@ protected:
 	static void _bind_methods();
 
 public:
-	// 8-neighbour mask bits, clockwise from north.
+	// 8-neighbor mask bits, clockwise from north.
 	enum Neighbor {
 		NEIGHBOR_N = 1,
 		NEIGHBOR_NE = 2,
@@ -58,7 +59,7 @@ public:
 		NEIGHBOR_W = 64,
 		NEIGHBOR_NW = 128,
 	};
-	// 4-neighbour mask bits of wall autotiles.
+	// 4-neighbor mask bits of wall autotiles.
 	enum Side {
 		SIDE_N = 1,
 		SIDE_E = 2,
@@ -74,18 +75,18 @@ public:
 	static constexpr int WALL_ROWS = 4;
 
 	// p_mask (0..255) with each corner bit cleared unless both of its sides are set.
-	static int reduce_mask(int p_mask);
-	// The blob shape index (0..46) of any 8-neighbour mask; it is reduced first.
-	static int get_blob_index(int p_mask);
+	static int reduce_mask(BitField<Neighbor> p_mask);
+	// The blob shape index (0..46) of any 8-neighbor mask; it is reduced first.
+	static int get_blob_index(BitField<Neighbor> p_mask);
 	// The reduced mask of blob shape p_index, or -1 when p_index is out of range.
 	static int get_blob_mask(int p_index);
-	// The sheet cell of blob shape p_index (column, row).
+	// The sheet cell of blob shape p_index (column, row); (-1, -1) for an index out of range.
 	static Vector2i get_blob_cell(int p_index);
-	// The 4-neighbour wall mask of an 8-neighbour mask (its N, E, S and W bits).
-	static int get_wall_mask(int p_mask);
-	// The sheet cell of wall shape p_mask4 (0..15).
-	static Vector2i get_wall_cell(int p_mask4);
+	// The 4-neighbor wall mask of an 8-neighbor mask (its N, E, S and W bits).
+	static int get_wall_mask(BitField<Neighbor> p_mask);
+	// The sheet cell of wall shape p_mask4 (0..15); (-1, -1) out of range.
+	static Vector2i get_wall_cell(BitField<Side> p_mask4);
 };
 
-VARIANT_ENUM_CAST(JRPGAutotile::Neighbor);
-VARIANT_ENUM_CAST(JRPGAutotile::Side);
+VARIANT_BITFIELD_CAST(JRPGAutotile::Neighbor);
+VARIANT_BITFIELD_CAST(JRPGAutotile::Side);

@@ -94,19 +94,23 @@ PackedByteArray JRPGAutotileResolver::get_palette_kinds(const Array &p_palette) 
 	return kinds;
 }
 
-int JRPGAutotileResolver::get_neighbor_mask(const PackedInt32Array &p_cells, const Vector2i &p_size, const Vector2i &p_cell, int p_flags) {
+BitField<JRPGAutotileResolver::Flags> JRPGAutotileResolver::get_flags(bool p_loop_horizontal, bool p_loop_vertical, JRPGTilesetData::EdgeMode p_edge_mode) {
+	return (p_loop_horizontal ? LOOP_HORIZONTAL : 0) | (p_loop_vertical ? LOOP_VERTICAL : 0) | (p_edge_mode == JRPGTilesetData::EDGE_BORDER ? EDGE_BORDER : 0);
+}
+
+int JRPGAutotileResolver::get_neighbor_mask(const PackedInt32Array &p_cells, const Vector2i &p_size, const Vector2i &p_cell, BitField<Flags> p_flags) {
 	ERR_FAIL_COND_V_MSG(!valid_layer(p_cells, p_size), 0, "The layer does not hold size.x * size.y cells.");
 	ERR_FAIL_COND_V(p_cell.x < 0 || p_cell.y < 0 || p_cell.x >= p_size.x || p_cell.y >= p_size.y, 0);
-	return mask_at(p_cells.ptr(), p_size, p_cell.x, p_cell.y, p_flags);
+	return mask_at(p_cells.ptr(), p_size, p_cell.x, p_cell.y, int(p_flags));
 }
 
-int JRPGAutotileResolver::resolve_cell(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, const Vector2i &p_cell, int p_flags) {
+int JRPGAutotileResolver::resolve_cell(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, const Vector2i &p_cell, BitField<Flags> p_flags) {
 	ERR_FAIL_COND_V_MSG(!valid_layer(p_cells, p_size), -1, "The layer does not hold size.x * size.y cells.");
 	ERR_FAIL_COND_V(p_cell.x < 0 || p_cell.y < 0 || p_cell.x >= p_size.x || p_cell.y >= p_size.y, -1);
-	return shape_at(p_cells.ptr(), p_size, p_kinds, p_cell.x, p_cell.y, p_flags);
+	return shape_at(p_cells.ptr(), p_size, p_kinds, p_cell.x, p_cell.y, int(p_flags));
 }
 
-PackedByteArray JRPGAutotileResolver::resolve_layer(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, int p_flags) {
+PackedByteArray JRPGAutotileResolver::resolve_layer(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, BitField<Flags> p_flags) {
 	PackedByteArray shapes;
 	ERR_FAIL_COND_V_MSG(!valid_layer(p_cells, p_size), shapes, "The layer does not hold size.x * size.y cells.");
 	shapes.resize(p_cells.size());
@@ -114,13 +118,14 @@ PackedByteArray JRPGAutotileResolver::resolve_layer(const PackedInt32Array &p_ce
 	const int32_t *cells = p_cells.ptr();
 	for (int y = 0; y < p_size.y; y++) {
 		for (int x = 0; x < p_size.x; x++) {
-			out[y * p_size.x + x] = uint8_t(MAX(0, shape_at(cells, p_size, p_kinds, x, y, p_flags)));
+			out[y * p_size.x + x] = uint8_t(MAX(0, shape_at(cells, p_size, p_kinds, x, y, int(p_flags))));
 		}
 	}
 	return shapes;
 }
 
-Vector<Vector2i> JRPGAutotileResolver::update_around(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, const Vector2i &p_cell, int p_flags, PackedByteArray &r_shapes) {
+Vector<Vector2i> JRPGAutotileResolver::update_around(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, const Vector2i &p_cell, BitField<Flags> p_flags, PackedByteArray &r_shapes) {
+	const int flags = int(p_flags);
 	Vector<Vector2i> changed;
 	ERR_FAIL_COND_V_MSG(!valid_layer(p_cells, p_size) || r_shapes.size() != p_cells.size(), changed, "The layer and its shapes do not hold size.x * size.y cells.");
 	ERR_FAIL_COND_V(p_cell.x < 0 || p_cell.y < 0 || p_cell.x >= p_size.x || p_cell.y >= p_size.y, changed);
@@ -129,12 +134,12 @@ Vector<Vector2i> JRPGAutotileResolver::update_around(const PackedInt32Array &p_c
 	uint8_t *shapes = r_shapes.ptrw();
 	for (int dy = -1; dy <= 1; dy++) {
 		for (int dx = -1; dx <= 1; dx++) {
-			const int x = wrap(p_cell.x + dx, p_size.x, p_flags & LOOP_HORIZONTAL);
-			const int y = wrap(p_cell.y + dy, p_size.y, p_flags & LOOP_VERTICAL);
+			const int x = wrap(p_cell.x + dx, p_size.x, flags & LOOP_HORIZONTAL);
+			const int y = wrap(p_cell.y + dy, p_size.y, flags & LOOP_VERTICAL);
 			if (x < 0 || y < 0) {
 				continue;
 			}
-			const uint8_t shape = uint8_t(MAX(0, shape_at(cells, p_size, p_kinds, x, y, p_flags)));
+			const uint8_t shape = uint8_t(MAX(0, shape_at(cells, p_size, p_kinds, x, y, flags)));
 			uint8_t &stored = shapes[y * p_size.x + x];
 			if (shape != stored) {
 				stored = shape;
@@ -147,7 +152,7 @@ Vector<Vector2i> JRPGAutotileResolver::update_around(const PackedInt32Array &p_c
 	return changed;
 }
 
-Dictionary JRPGAutotileResolver::update_around_bind(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, const Vector2i &p_cell, int p_flags, const PackedByteArray &p_shapes) {
+Dictionary JRPGAutotileResolver::update_around_bind(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, const Vector2i &p_cell, BitField<Flags> p_flags, const PackedByteArray &p_shapes) {
 	PackedByteArray shapes = p_shapes;
 	const Vector<Vector2i> changed = update_around(p_cells, p_size, p_kinds, p_cell, p_flags, shapes);
 	Array cells;
@@ -162,6 +167,7 @@ Dictionary JRPGAutotileResolver::update_around_bind(const PackedInt32Array &p_ce
 
 void JRPGAutotileResolver::_bind_methods() {
 	ClassDB::bind_static_method("JRPGAutotileResolver", D_METHOD("get_palette_kinds", "palette"), &JRPGAutotileResolver::get_palette_kinds);
+	ClassDB::bind_static_method("JRPGAutotileResolver", D_METHOD("get_flags", "loop_horizontal", "loop_vertical", "edge_mode"), &JRPGAutotileResolver::get_flags);
 	ClassDB::bind_static_method("JRPGAutotileResolver", D_METHOD("get_neighbor_mask", "cells", "size", "cell", "flags"), &JRPGAutotileResolver::get_neighbor_mask);
 	ClassDB::bind_static_method("JRPGAutotileResolver", D_METHOD("resolve_cell", "cells", "size", "kinds", "cell", "flags"), &JRPGAutotileResolver::resolve_cell);
 	ClassDB::bind_static_method("JRPGAutotileResolver", D_METHOD("resolve_layer", "cells", "size", "kinds", "flags"), &JRPGAutotileResolver::resolve_layer);
@@ -170,7 +176,7 @@ void JRPGAutotileResolver::_bind_methods() {
 	BIND_ENUM_CONSTANT(KIND_PLAIN);
 	BIND_ENUM_CONSTANT(KIND_BLOB);
 	BIND_ENUM_CONSTANT(KIND_WALL);
-	BIND_ENUM_CONSTANT(LOOP_HORIZONTAL);
-	BIND_ENUM_CONSTANT(LOOP_VERTICAL);
-	BIND_ENUM_CONSTANT(EDGE_BORDER);
+	BIND_BITFIELD_FLAG(LOOP_HORIZONTAL);
+	BIND_BITFIELD_FLAG(LOOP_VERTICAL);
+	BIND_BITFIELD_FLAG(EDGE_BORDER);
 }

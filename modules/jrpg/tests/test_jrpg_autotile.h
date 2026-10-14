@@ -78,6 +78,11 @@ TEST_CASE("[JRPG][Autotile] The 47 blob shapes are the reduced masks in ascendin
 	CHECK(JRPGAutotile::get_blob_mask(47) == -1);
 	CHECK(JRPGAutotile::get_wall_mask(JRPGAutotile::NEIGHBOR_N | JRPGAutotile::NEIGHBOR_NE | JRPGAutotile::NEIGHBOR_W) == (JRPGAutotile::SIDE_N | JRPGAutotile::SIDE_W));
 	CHECK(JRPGAutotile::get_wall_cell(13) == Vector2i(1, 3));
+	ERR_PRINT_OFF;
+	CHECK(JRPGAutotile::get_wall_cell(16) == Vector2i(-1, -1));
+	CHECK(JRPGAutotile::get_blob_cell(47) == Vector2i(-1, -1));
+	CHECK(JRPGAutotile::get_blob_cell(-1) == Vector2i(-1, -1));
+	ERR_PRINT_ON;
 }
 
 static String neighbor_names(int p_mask, const char *const *p_names, int p_count) {
@@ -143,6 +148,15 @@ TEST_CASE("[SceneTree][JRPG][Autotile] Sheets become atlas sources, terrains and
 		CHECK(source->has_tile(Vector2i(entry["atlas_coords"]) + JRPGAutotile::get_blob_cell(i)));
 	}
 	CHECK_FALSE(source->has_tile(Vector2i(7, 5)));
+	// Every shape's peering bits are its reduced mask, bit by bit: what Godot's terrain painter and the resolver share.
+	const TileSet::CellNeighbor blob_bits[8] = { TileSet::CELL_NEIGHBOR_TOP_SIDE, TileSet::CELL_NEIGHBOR_TOP_RIGHT_CORNER, TileSet::CELL_NEIGHBOR_RIGHT_SIDE, TileSet::CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER, TileSet::CELL_NEIGHBOR_BOTTOM_SIDE, TileSet::CELL_NEIGHBOR_BOTTOM_LEFT_CORNER, TileSet::CELL_NEIGHBOR_LEFT_SIDE, TileSet::CELL_NEIGHBOR_TOP_LEFT_CORNER };
+	for (int i = 0; i < JRPGAutotile::BLOB_SHAPES; i++) {
+		const TileData *tile = source->get_tile_data(JRPGAutotile::get_blob_cell(i), 0);
+		for (int bit = 0; bit < 8; bit++) {
+			const bool set = JRPGAutotile::get_blob_mask(i) & (1 << bit);
+			CHECK_MESSAGE(tile->get_terrain_peering_bit(blob_bits[bit]) == (set ? tile->get_terrain() : -1), vformat("shape %d, bit %d", i, bit));
+		}
+	}
 	// Shape 3 is N and E: its top and right sides are the terrain, its top-right corner is not.
 	const TileData *shape = source->get_tile_data(JRPGAutotile::get_blob_cell(3), 0);
 	CHECK(tileset->get_terrain_set_mode(shape->get_terrain_set()) == TileSet::TERRAIN_MODE_MATCH_CORNERS_AND_SIDES);
@@ -169,7 +183,7 @@ TEST_CASE("[SceneTree][JRPG][Autotile] Sheets become atlas sources, terrains and
 	REQUIRE(JRPGAutotileImporter::import_sheet(tileset, generated_sheet("autotiles/water.png"), JRPGAutotileImporter::SHEET_AUTOTILE, 3, "Water", data, indexes, error) == OK);
 	CHECK(int(Dictionary(data->get_palette()[2])["frames"]) == 3);
 
-	// A wall sheet: 16 tiles by the 4-neighbour mask, a sides-only terrain set.
+	// A wall sheet: 16 tiles by the 4-neighbor mask, a sides-only terrain set.
 	REQUIRE(JRPGAutotileImporter::import_sheet(tileset, generated_sheet("walls/stone_wall.png"), JRPGAutotileImporter::SHEET_WALL, 1, "Stone Wall", data, indexes, error) == OK);
 	const Dictionary wall = data->get_palette()[3];
 	CHECK(String(wall["kind"]) == "wall");
@@ -179,6 +193,21 @@ TEST_CASE("[SceneTree][JRPG][Autotile] Sheets become atlas sources, terrains and
 	CHECK(tileset->get_terrain_set_mode(corner->get_terrain_set()) == TileSet::TERRAIN_MODE_MATCH_SIDES);
 	CHECK(corner->get_terrain_peering_bit(TileSet::CELL_NEIGHBOR_BOTTOM_SIDE) == corner->get_terrain());
 	CHECK(corner->get_terrain_peering_bit(TileSet::CELL_NEIGHBOR_TOP_SIDE) == -1);
+	const TileSet::CellNeighbor wall_bits[4] = { TileSet::CELL_NEIGHBOR_TOP_SIDE, TileSet::CELL_NEIGHBOR_RIGHT_SIDE, TileSet::CELL_NEIGHBOR_BOTTOM_SIDE, TileSet::CELL_NEIGHBOR_LEFT_SIDE };
+	for (int mask = 0; mask < JRPGAutotile::WALL_SHAPES; mask++) {
+		const TileData *tile = walls->get_tile_data(JRPGAutotile::get_wall_cell(mask), 0);
+		for (int bit = 0; bit < 4; bit++) {
+			CHECK_MESSAGE(tile->get_terrain_peering_bit(wall_bits[bit]) == ((mask & (1 << bit)) ? tile->get_terrain() : -1), vformat("wall %d, bit %d", mask, bit));
+		}
+	}
+
+	// An animated wall sheet: frame f of each shape is f wall blocks (4 tiles) to the right.
+	const Ref<Image> wall_frames = Image::create_empty(2 * 4 * 48, 4 * 48, false, Image::FORMAT_RGBA8);
+	REQUIRE(JRPGAutotileImporter::import_sheet(tileset, ImageTexture::create_from_image(wall_frames), JRPGAutotileImporter::SHEET_WALL, 2, "Falls", data, indexes, error) == OK);
+	const Ref<TileSetAtlasSource> falls = tileset->get_source(Dictionary(data->get_palette()[indexes[0] - 1])["source_id"]);
+	const Vector2i wall_9 = JRPGAutotile::get_wall_cell(9);
+	CHECK(falls->get_tile_animation_separation(wall_9) == Vector2i(3, 0));
+	CHECK(falls->get_tile_texture_region(wall_9, 1) == Rect2i((wall_9 + Vector2i(4, 0)) * 48, Vector2i(48, 48)));
 
 	// A plain sheet: one entry per tile that shows anything (the building sheet has empty cells).
 	const Ref<Texture2D> buildings = generated_sheet("tiles/buildings.png");
@@ -192,8 +221,8 @@ TEST_CASE("[SceneTree][JRPG][Autotile] Sheets become atlas sources, terrains and
 	REQUIRE(JRPGAutotileImporter::import_sheet(tileset, buildings, JRPGAutotileImporter::SHEET_PLAIN, 1, "Buildings", data, indexes, error) == OK);
 	CHECK(indexes.size() == visible);
 	CHECK(visible < 8 * (image->get_height() / 48));
-	CHECK(indexes[0] == 5);
-	CHECK(String(Dictionary(data->get_palette()[4])["kind"]) == "plain");
+	CHECK(indexes[0] == 6); // After grass, flicker, water, stone wall and falls.
+	CHECK(String(Dictionary(data->get_palette()[5])["kind"]) == "plain");
 
 	// A sheet of the wrong size changes nothing.
 	const int sources = tileset->get_source_count();
@@ -202,6 +231,13 @@ TEST_CASE("[SceneTree][JRPG][Autotile] Sheets become atlas sources, terrains and
 	CHECK(error.contains("wall sheet"));
 	CHECK(JRPGAutotileImporter::import_sheet(tileset, grass, JRPGAutotileImporter::SHEET_AUTOTILE, 2, "Wrong", data, indexes, error) == ERR_INVALID_PARAMETER);
 	CHECK(JRPGAutotileImporter::import_sheet(tileset, grass, JRPGAutotileImporter::SHEET_PLAIN, 2, "Wrong", data, indexes, error) == ERR_INVALID_PARAMETER);
+	CHECK(JRPGAutotileImporter::import_sheet(tileset, grass, JRPGAutotileImporter::SheetKind(7), 1, "Wrong", data, indexes, error) == ERR_INVALID_PARAMETER);
+	CHECK(error.contains("Unknown sheet kind 7"));
+	CHECK(JRPGAutotileImporter::import_sheet(tileset, grass, JRPGAutotileImporter::SHEET_AUTOTILE, 0, "Wrong", data, indexes, error) == ERR_INVALID_PARAMETER);
+	// The script form reports the reason instead of the indexes.
+	const Dictionary refused = JRPGAutotileImporter::import_sheet_bind(tileset, grass, JRPGAutotileImporter::SHEET_WALL, 1, "Wrong", data);
+	CHECK(String(refused.get("error", "")).contains("wall sheet"));
+	CHECK_FALSE(refused.has("indexes"));
 	Ref<TileSet> isometric;
 	isometric.instantiate();
 	isometric->set_tile_shape(TileSet::TILE_SHAPE_ISOMETRIC);
@@ -210,6 +246,8 @@ TEST_CASE("[SceneTree][JRPG][Autotile] Sheets become atlas sources, terrains and
 	CHECK(error.contains("square"));
 	CHECK(tileset->get_source_count() == sources);
 	CHECK(data->get_palette().size() == entries);
+	const Dictionary added = JRPGAutotileImporter::import_sheet_bind(tileset, grass, JRPGAutotileImporter::SHEET_AUTOTILE, 1, "Meadow", data);
+	CHECK(PackedInt32Array(added["indexes"]) == PackedInt32Array({ entries + 1 }));
 }
 
 #endif // TOOLS_ENABLED

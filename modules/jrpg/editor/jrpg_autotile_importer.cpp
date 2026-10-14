@@ -41,7 +41,7 @@
 
 namespace {
 
-// Spec 05 neighbor bits to Godot's peering bits of square tiles (scene/resources/2d/tile_set.h:211-235).
+// Spec 05 neighbor bits to Godot's peering bits of square tiles (scene/resources/2d/tile_set.h:218-235).
 struct Peering {
 	int bit;
 	TileSet::CellNeighbor neighbor;
@@ -126,11 +126,19 @@ Error JRPGAutotileImporter::import_sheet(const Ref<TileSet> &p_tileset, const Re
 		r_error = "A TileSet, a texture and a JRPG tileset entry are needed.";
 		return ERR_INVALID_PARAMETER;
 	}
+	if (p_kind < SHEET_PLAIN || p_kind > SHEET_WALL) {
+		r_error = vformat("Unknown sheet kind %d (0 plain, 1 autotile, 2 wall).", p_kind);
+		return ERR_INVALID_PARAMETER;
+	}
+	if (p_frames < 1) {
+		r_error = "A sheet has at least one frame.";
+		return ERR_INVALID_PARAMETER;
+	}
 	if (p_kind == SHEET_PLAIN && p_frames > 1) {
 		r_error = "Only autotile and wall sheets have animation frames.";
 		return ERR_INVALID_PARAMETER;
 	}
-	const int frames = MAX(1, p_frames);
+	const int frames = p_frames;
 	const Vector2i tile = p_tileset->get_tile_size();
 	const Vector2i texture_size = p_texture->get_size();
 	if (tile.x <= 0 || tile.y <= 0 || texture_size.x % tile.x != 0 || texture_size.y % tile.y != 0) {

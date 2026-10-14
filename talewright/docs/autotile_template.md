@@ -19,7 +19,7 @@ exactly 8 × 6 (blob) or 4 × 4 (wall) tiles of the TileSet's tile size per anim
 - Neighbors outside the map count as the same kind (the terrain runs to the edge), or as different with the
   tileset's border edge mode; on maps that loop, the cell on the other side is used.
 
-<!-- blob index table: generated, checked against JRPGAutotile by modules/jrpg/tests/test_jrpg_autotile.h -->
+<!-- blob index table: kept equal to JRPGAutotile by modules/jrpg/tests/test_jrpg_autotile.h -->
 | Index | Mask | Same-kind neighbors | Sheet cell (column, row) |
 |---|---|---|---|
 | 0 | 0 | none | (0, 0) |
@@ -75,7 +75,7 @@ exactly 8 × 6 (blob) or 4 × 4 (wall) tiles of the TileSet's tile size per anim
 - A sheet of 4 × 4 tiles, one per 4-neighbor mask N 1, E 2, S 4, W 8: shape *m* at column *m* mod 4, row *m* div 4.
   Corners do not matter for wall faces.
 
-<!-- wall index table: generated, checked against JRPGAutotile by modules/jrpg/tests/test_jrpg_autotile.h -->
+<!-- wall index table: kept equal to JRPGAutotile by modules/jrpg/tests/test_jrpg_autotile.h -->
 | Mask | Same-kind neighbors | Sheet cell (column, row) |
 |---|---|---|
 | 0 | none | (0, 0) |
@@ -102,4 +102,5 @@ TileSet as an atlas source and lists it in a JRPG tileset's palette: one palette
 (`{kind, name, source_id, atlas_coords, alternative, frames}`, the shapes at the cells above from `atlas_coords`), one
 per tile for a plain sheet. It also sets Godot's terrain peering bits (match corners and sides for blobs, sides for
 walls), so Godot's own terrain painter works with the same sheets. Animation frames become the tile's animation
-(columns = frames, separation = one block).
+(columns = frames; Godot's animation separation is one block minus one tile, 7 tiles for blobs and 3 for walls, so
+each frame starts one block further right), played at 3 frames per second.

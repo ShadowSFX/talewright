@@ -69,8 +69,8 @@ const BlobTable &blob_table() {
 
 } // namespace
 
-int JRPGAutotile::reduce_mask(int p_mask) {
-	int mask = p_mask & 0xFF;
+int JRPGAutotile::reduce_mask(BitField<Neighbor> p_mask) {
+	int mask = int(p_mask) & 0xFF;
 	const int corners[4][3] = { { NEIGHBOR_NE, NEIGHBOR_N, NEIGHBOR_E }, { NEIGHBOR_SE, NEIGHBOR_E, NEIGHBOR_S }, { NEIGHBOR_SW, NEIGHBOR_S, NEIGHBOR_W }, { NEIGHBOR_NW, NEIGHBOR_W, NEIGHBOR_N } };
 	for (const int (&corner)[3] : corners) {
 		if (!(mask & corner[1]) || !(mask & corner[2])) {
@@ -80,8 +80,8 @@ int JRPGAutotile::reduce_mask(int p_mask) {
 	return mask;
 }
 
-int JRPGAutotile::get_blob_index(int p_mask) {
-	return blob_table().index_of_mask[p_mask & 0xFF];
+int JRPGAutotile::get_blob_index(BitField<Neighbor> p_mask) {
+	return blob_table().index_of_mask[int(p_mask) & 0xFF];
 }
 
 int JRPGAutotile::get_blob_mask(int p_index) {
@@ -89,15 +89,18 @@ int JRPGAutotile::get_blob_mask(int p_index) {
 }
 
 Vector2i JRPGAutotile::get_blob_cell(int p_index) {
+	ERR_FAIL_INDEX_V(p_index, BLOB_SHAPES, Vector2i(-1, -1));
 	return Vector2i(p_index % BLOB_COLUMNS, p_index / BLOB_COLUMNS);
 }
 
-int JRPGAutotile::get_wall_mask(int p_mask) {
-	return ((p_mask & NEIGHBOR_N) ? SIDE_N : 0) | ((p_mask & NEIGHBOR_E) ? SIDE_E : 0) | ((p_mask & NEIGHBOR_S) ? SIDE_S : 0) | ((p_mask & NEIGHBOR_W) ? SIDE_W : 0);
+int JRPGAutotile::get_wall_mask(BitField<Neighbor> p_mask) {
+	return (p_mask.has_flag(NEIGHBOR_N) ? SIDE_N : 0) | (p_mask.has_flag(NEIGHBOR_E) ? SIDE_E : 0) | (p_mask.has_flag(NEIGHBOR_S) ? SIDE_S : 0) | (p_mask.has_flag(NEIGHBOR_W) ? SIDE_W : 0);
 }
 
-Vector2i JRPGAutotile::get_wall_cell(int p_mask4) {
-	return Vector2i(p_mask4 % WALL_COLUMNS, (p_mask4 / WALL_COLUMNS) % WALL_ROWS);
+Vector2i JRPGAutotile::get_wall_cell(BitField<Side> p_mask4) {
+	const int mask = int(p_mask4);
+	ERR_FAIL_INDEX_V(mask, WALL_SHAPES, Vector2i(-1, -1));
+	return Vector2i(mask % WALL_COLUMNS, mask / WALL_COLUMNS);
 }
 
 void JRPGAutotile::_bind_methods() {
@@ -108,18 +111,18 @@ void JRPGAutotile::_bind_methods() {
 	ClassDB::bind_static_method("JRPGAutotile", D_METHOD("get_wall_mask", "mask"), &JRPGAutotile::get_wall_mask);
 	ClassDB::bind_static_method("JRPGAutotile", D_METHOD("get_wall_cell", "mask4"), &JRPGAutotile::get_wall_cell);
 
-	BIND_ENUM_CONSTANT(NEIGHBOR_N);
-	BIND_ENUM_CONSTANT(NEIGHBOR_NE);
-	BIND_ENUM_CONSTANT(NEIGHBOR_E);
-	BIND_ENUM_CONSTANT(NEIGHBOR_SE);
-	BIND_ENUM_CONSTANT(NEIGHBOR_S);
-	BIND_ENUM_CONSTANT(NEIGHBOR_SW);
-	BIND_ENUM_CONSTANT(NEIGHBOR_W);
-	BIND_ENUM_CONSTANT(NEIGHBOR_NW);
-	BIND_ENUM_CONSTANT(SIDE_N);
-	BIND_ENUM_CONSTANT(SIDE_E);
-	BIND_ENUM_CONSTANT(SIDE_S);
-	BIND_ENUM_CONSTANT(SIDE_W);
+	BIND_BITFIELD_FLAG(NEIGHBOR_N);
+	BIND_BITFIELD_FLAG(NEIGHBOR_NE);
+	BIND_BITFIELD_FLAG(NEIGHBOR_E);
+	BIND_BITFIELD_FLAG(NEIGHBOR_SE);
+	BIND_BITFIELD_FLAG(NEIGHBOR_S);
+	BIND_BITFIELD_FLAG(NEIGHBOR_SW);
+	BIND_BITFIELD_FLAG(NEIGHBOR_W);
+	BIND_BITFIELD_FLAG(NEIGHBOR_NW);
+	BIND_BITFIELD_FLAG(SIDE_N);
+	BIND_BITFIELD_FLAG(SIDE_E);
+	BIND_BITFIELD_FLAG(SIDE_S);
+	BIND_BITFIELD_FLAG(SIDE_W);
 	BIND_CONSTANT(BLOB_SHAPES);
 	BIND_CONSTANT(BLOB_COLUMNS);
 	BIND_CONSTANT(BLOB_ROWS);

@@ -132,8 +132,8 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGActorState);
 		GDREGISTER_CLASS(JRPGEventState);
 		GDREGISTER_CLASS(JRPGReferenceScanner);
-		GDREGISTER_CLASS(JRPGAutotile);
-		GDREGISTER_CLASS(JRPGAutotileResolver);
+		GDREGISTER_ABSTRACT_CLASS(JRPGAutotile); // Static methods only.
+		GDREGISTER_ABSTRACT_CLASS(JRPGAutotileResolver);
 		GDREGISTER_CLASS(JRPGGameState);
 	}
 #ifdef TOOLS_ENABLED
@@ -164,8 +164,8 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspacePlugin);
 		GDREGISTER_INTERNAL_CLASS(JRPGBootstrapPlugin);
 		GDREGISTER_CLASS(JRPGManagedAddon);
-		GDREGISTER_CLASS(JRPGAutotileImporter);
-		GDREGISTER_CLASS(JRPGTileFlags);
+		GDREGISTER_ABSTRACT_CLASS(JRPGAutotileImporter); // Static methods only.
+		GDREGISTER_ABSTRACT_CLASS(JRPGTileFlags);
 		GDREGISTER_CLASS(JRPGProjectSetup);
 		GDREGISTER_INTERNAL_CLASS(JRPGSetupDialog);
 		EditorPlugins::add_by_type<JRPGBootstrapPlugin>();

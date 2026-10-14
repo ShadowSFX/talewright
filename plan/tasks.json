@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "7.5 Import authoring tools",
+  "last_completed": "7.6.1 Review fixes: assets, autotile core, importer, resolver",
   "tasks": [
     {
       "id": "0",
@@ -2674,13 +2674,13 @@
       ],
       "test_strategy": "Bridge.",
       "files": [],
-      "commit": "pending",
+      "commit": "975dc7eda4",
       "notes": ""
     },
     {
       "id": "7.6",
       "title": "Epic review: assets",
-      "description": "Reviewer subagent.",
+      "description": "Reviewer subagents (part A: generator, autotile core, importer, resolver; part B: tile flags, tileset form, bridge tools). Split into 7.6.1 (part A fixes), 7.6.2 (part B fixes) and 7.6.3 (close-out).",
       "parent": "7",
       "dependencies": [
         "7.5",
@@ -2692,6 +2692,60 @@
         "Findings fixed"
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "7.6.1",
+      "parent": "7.6",
+      "title": "Review fixes: assets, autotile core, importer, resolver",
+      "description": "Part A findings 1-9: generator --check verifies the committed files (pixels, Ogg length/channels, .import text, stray files) and runs in static_checks.py; manifest records every import setting; pinned requirements; resolver flags helper from scroll type and edge mode; importer refuses unknown kinds and frames < 1; blob/wall cell lookups range-checked; bit-flag constants bound as bitfields and static-only classes abstract; tests for every shape's peering bits, animated wall sheets, the script wrappers and the exact changed list; D-034 reversal and doc fixes.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Each part A finding fixed or answered with its reason in plan/evidence/reviews/epic_7.md",
+        "Tests and static checks pass"
+      ],
+      "test_strategy": "Doctests + static checks.",
+      "status": "done",
+      "files": [],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "7.6.2",
+      "parent": "7.6",
+      "title": "Review fixes: tile flags, tileset form, bridge tools",
+      "description": "Part B findings 1-14: bakes made stale outside the form are rebuilt by the editor's saves and shown as unsaved; overlay and click rects match ItemList's icon placement (last column, RTL); jrpg_db_set_image timeout and rescan; no-op flag edits report no undo step; TileSet structure in the undo round trips and jrpg_tileset_create round-tripped; per-form mode; Menu key; force_fixed_history; flipped entries and mixed kinds shown; create refuses to orphan a palette; save/add_sheet reporting; bake cleared without a TileSet.",
+      "dependencies": [
+        "7.6.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Each part B finding fixed or answered with its reason in plan/evidence/reviews/epic_7.md",
+        "jrpg_bridge_checks.py and tests pass; bridge screenshot of the corrected overlay"
+      ],
+      "test_strategy": "Doctests + jrpg_bridge_checks.py + bridge.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "7.6.3",
+      "parent": "7.6",
+      "title": "Epic 7 close-out",
+      "description": "Review log in plan/evidence/reviews/epic_7.md and PROGRESS.md, plain_2d/plain_3d smoke, core_diff_check, full tests and static checks, push talewright and watch CI.",
+      "dependencies": [
+        "7.6.2"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Smoke ALL PASS, 0 unlisted core paths, pushed with CI green"
+      ],
+      "test_strategy": "Epic gate.",
+      "status": "pending",
       "files": [],
       "commit": "",
       "notes": ""

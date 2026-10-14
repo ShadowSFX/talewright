@@ -494,5 +494,7 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   any size (the importer reads the tile size from the TileSet or the import settings).
 - **Why:** assets made for the reference's standard import without scaling, 48 px reads well at 1280 × 720, and the
   generator can redraw everything at another size later.
-- **Reversal:** change `TILE` in `talewright/tools/asset_gen/common.py` and regenerate; maps store palette indexes,
-  not pixels.
+- **Reversal:** maps store palette indexes, not pixels, so only the assets change: change `TILE` in
+  `talewright/tools/asset_gen/common.py` and scale the painters' fixed 48 px geometry (texture cell sizes in
+  `tiles.py`, edge margins, furniture and character coordinates, template marks) by `TILE / 48` before regenerating;
+  until then the generator draws for 48 px only (epic 7 review, part A finding 8).

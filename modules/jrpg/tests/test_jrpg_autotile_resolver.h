@@ -36,6 +36,7 @@
 
 #include "modules/jrpg/core/jrpg_autotile.h"
 #include "modules/jrpg/core/jrpg_autotile_resolver.h"
+#include "modules/jrpg/core/jrpg_misc_data.h"
 
 namespace TestJRPGAutotileResolver {
 
@@ -166,9 +167,9 @@ TEST_CASE("[JRPG][AutotileResolver] The resolver matches a brute-force reference
 			CHECK(shapes == full);
 			CHECK(changed.has(cell));
 			for (int i = 0; i < full.size(); i++) {
-				if (full[i] != before[i]) {
-					CHECK(changed.has(Vector2i(i % size.x, i / size.x)));
-				}
+				// Listed exactly when its shape changed (the edited cell is always listed).
+				const Vector2i at_i(i % size.x, i / size.x);
+				CHECK(changed.has(at_i) == (full[i] != before[i] || at_i == cell));
 			}
 		}
 	}
@@ -255,6 +256,27 @@ TEST_CASE("[JRPG][AutotileResolver] Hand-made cases: a single cell, a block, map
 		CHECK(R::resolve_cell(cells, size, kinds, Vector2i(2, 2), 0) == -1); // Index 5 is not in the palette.
 		CHECK(at(shapes, size, 1, 1) == 0);
 	}
+}
+
+TEST_CASE("[JRPG][AutotileResolver] Flags from a map and a tileset; the script form of update_around") {
+	CHECK(int(R::get_flags(false, false, JRPGTilesetData::EDGE_EXTEND)) == 0);
+	CHECK(int(R::get_flags(true, false, JRPGTilesetData::EDGE_BORDER)) == (R::LOOP_HORIZONTAL | R::EDGE_BORDER));
+	CHECK(int(R::get_flags(false, true, JRPGTilesetData::EDGE_EXTEND)) == R::LOOP_VERTICAL);
+	// Spec 05 scroll types 0..3 (none, loop vertical, loop horizontal, loop both).
+	for (int scroll = 0; scroll < 4; scroll++) {
+		const int flags = int(R::get_flags(scroll & 2, scroll & 1, JRPGTilesetData::EDGE_EXTEND));
+		CHECK(bool(flags & R::LOOP_HORIZONTAL) == (scroll == 2 || scroll == 3));
+		CHECK(bool(flags & R::LOOP_VERTICAL) == (scroll == 1 || scroll == 3));
+	}
+
+	const Vector2i size(3, 1);
+	PackedInt32Array cells = grid(size, "110");
+	const PackedByteArray before = R::resolve_layer(cells, size, test_kinds(), R::EDGE_BORDER);
+	cells.set(2, 1);
+	const Dictionary result = R::update_around_bind(cells, size, test_kinds(), Vector2i(2, 0), R::EDGE_BORDER, before);
+	CHECK(PackedByteArray(result["shapes"]) == R::resolve_layer(cells, size, test_kinds(), R::EDGE_BORDER));
+	CHECK(Array(result["changed"]) == Array({ Vector2i(2, 0), Vector2i(1, 0) }));
+	CHECK(before == R::resolve_layer(grid(size, "110"), size, test_kinds(), R::EDGE_BORDER)); // The caller's copy is left as it was.
 }
 
 TEST_CASE("[JRPG][AutotileResolver] Palette kinds and malformed layers") {

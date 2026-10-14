@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 02:46 -0600
+- **Updated:** 2026-10-14 03:07 -0600
 - **Current task:** none
-- **Last completed:** 7.5 Import authoring tools
-- **Next task:** 7.6 Epic review: assets
-- **Done leaf tasks:** 94
+- **Last completed:** 7.6.1 Review fixes: assets, autotile core, importer, resolver
+- **Next task:** 7.6.2 Review fixes: tile flags, tileset form, bridge tools
+- **Done leaf tasks:** 95
 <!-- status:end -->
 
 ## Log
@@ -254,4 +254,8 @@
 | 2026-10-14 02:35 -0600 | 7.4 | started: Autotile resolver (containers: 7 pending->in_progress) |  |
 | 2026-10-14 02:41 -0600 | 7.4 | done: Autotile resolver — Core JRPGAutotileResolver (no scene deps): palette kinds, neighbor mask (same palette index on the same layer; wrapped cells on looping axes, otherwise the edge mode: extend = same, border = other), resolve_cell/resolve_layer (blob 0..46 via JRPGAutotile, wall 0..15), update_around (3x3 re-resolve with wrap, lists changed cells), bound statistics + class docs. Doctests: independent brute-force reference (direct neighbor checks, hand corner reduction, rank by trying all 256 masks) equal to the resolver on 100 seeded random maps (sizes 1-18, all 8 flag combinations, unknown indexes) + 20 random edits each re-resolved exactly; hand cases: single cell extend/border/self-wrap, 3x3 block, 2x2 corners extend vs border, horizontal loop seam incl. edit across it, two kinds side by side, same kind on two layers, walls; malformed layers refused. Mutation check (no vertical wrap) fails 38 assertions. Spec 05 updated. (containers: 7 in_progress->pending) | 7b1706be56 |
 | 2026-10-14 02:42 -0600 | 7.5 | started: Import authoring tools (containers: 7 pending->in_progress) |  |
-| 2026-10-14 02:46 -0600 | 7.5 | done: Import authoring tools — Bridge tool jrpg_db_set_image (D-012, mirrors the form's file pickers): image fields found by their *.png file hint (actor face/character/battler, enemy battler), res:// only, a new file triggers one scan and the call waits for its import (SceneTree timer poll, 20 s deadline, cancel-aware), a character sheet must divide into directions (4/8) x walk frames (spec 05), stores uid://, undoable, empty clears. Tileset sheets were already imported by jrpg_tileset_create/add_sheet (7.3.3). Doctests: registration, field/table/path/argument refusals, clearing. jrpg_bridge_checks.py 70/70: undo/redo of character sheet, face and enemy battler, UIDs stored, a face copied into a new folder while the editor runs, frame size, refused sheet; evidence plan/evidence/jrpg/7.5-jrpg-bridge-checks.txt. claude_bridge.md updated. (containers: 7 in_progress->pending) | pending |
+| 2026-10-14 02:46 -0600 | 7.5 | done: Import authoring tools — Bridge tool jrpg_db_set_image (D-012, mirrors the form's file pickers): image fields found by their *.png file hint (actor face/character/battler, enemy battler), res:// only, a new file triggers one scan and the call waits for its import (SceneTree timer poll, 20 s deadline, cancel-aware), a character sheet must divide into directions (4/8) x walk frames (spec 05), stores uid://, undoable, empty clears. Tileset sheets were already imported by jrpg_tileset_create/add_sheet (7.3.3). Doctests: registration, field/table/path/argument refusals, clearing. jrpg_bridge_checks.py 70/70: undo/redo of character sheet, face and enemy battler, UIDs stored, a face copied into a new folder while the editor runs, frame size, refused sheet; evidence plan/evidence/jrpg/7.5-jrpg-bridge-checks.txt. claude_bridge.md updated. (containers: 7 in_progress->pending) | 975dc7eda4 |
+| 2026-10-14 02:46 -0600 | 7.6 | started: Epic review: assets (containers: 7 pending->in_progress) |  |
+| 2026-10-14 03:00 -0600 | - | imported 3 new / 1 updated tasks (containers: 7.6 in_progress->pending, 7 in_progress->pending) | |
+| 2026-10-14 03:00 -0600 | 7.6.1 | started: Review fixes: assets, autotile core, importer, resolver (containers: 7.6 pending->in_progress, 7 pending->in_progress) |  |
+| 2026-10-14 03:07 -0600 | 7.6.1 | done: Review fixes: assets, autotile core, importer, resolver — Part A review fixes (plan/evidence/reviews/epic_7.md): generate_assets --check verifies committed files (pixels, Ogg length/channels, .import text, stray files), records all import settings, rewrites only what differs, recreates sidecars, runs in static_checks.py; pinned requirements.txt; JRPGAutotileResolver.get_flags + scroll-type mapping in spec 05; importer refuses unknown kinds and frames < 1; range-checked cell lookups; bitfield masks/flags and abstract static-only classes; tests for every shape's peering bits, animated walls, script wrappers, exact changed list; D-034 reversal and doc fixes (separation, frame rate, citation, US spellings). (containers: 7.6 in_progress->pending, 7 in_progress->pending) | pending |

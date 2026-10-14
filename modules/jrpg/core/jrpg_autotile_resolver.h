@@ -31,15 +31,18 @@
 
 #pragma once
 
+#include "jrpg_misc_data.h"
+
 #include "core/math/vector2i.h"
 #include "core/object/ref_counted.h"
+#include "core/templates/bit_field.h"
 #include "core/templates/vector.h"
-#include "core/variant/binder_common.h" // IWYU pragma: keep (VARIANT_ENUM_CAST).
+#include "core/variant/binder_common.h" // IWYU pragma: keep (VARIANT_ENUM_CAST, VARIANT_BITFIELD_CAST).
 
 // The autotile resolver (spec 05, "Autotile resolver"; task 7.4): which shape every autotile cell of a map layer
 // shows. A cell's neighbors count when they hold the same palette entry (the same kind) on the same layer; outside
 // the map, a looping axis wraps around and otherwise the tileset's edge mode decides (extend: the kind runs on, border:
-// it ends). Blob kinds use the 8-neighbour mask (JRPGAutotile::get_blob_index), wall kinds the 4-neighbour one. Shapes
+// it ends). Blob kinds use the 8-neighbor mask (JRPGAutotile::get_blob_index), wall kinds the 4-neighbor one. Shapes
 // are never stored: they are resolved on load and around every edit, so the map data stays the only source of truth.
 // Pure logic on palette indexes (no TileSet, no nodes), deterministic, shared by the editor, the game and the servers.
 class JRPGAutotileResolver : public RefCounted {
@@ -64,19 +67,23 @@ public:
 
 	// The kind of every palette index of a JRPGTilesetData palette (index 0, the empty cell, is plain).
 	static PackedByteArray get_palette_kinds(const Array &p_palette);
+	// The flags of a map whose axes loop as given, drawn with a tileset whose edge mode is p_edge_mode. A map's scroll
+	// type (spec 05: none, loop vertical, loop horizontal, loop both = 0..3) gives p_loop_horizontal = type & 2 and
+	// p_loop_vertical = type & 1.
+	static BitField<Flags> get_flags(bool p_loop_horizontal, bool p_loop_vertical, JRPGTilesetData::EdgeMode p_edge_mode);
 	// The neighbor mask of cell p_cell (8 bits, JRPGAutotile::Neighbor order) for its own kind, before any reduction.
-	static int get_neighbor_mask(const PackedInt32Array &p_cells, const Vector2i &p_size, const Vector2i &p_cell, int p_flags);
+	static int get_neighbor_mask(const PackedInt32Array &p_cells, const Vector2i &p_size, const Vector2i &p_cell, BitField<Flags> p_flags);
 	// The shape of cell p_cell: 0..46 for a blob kind, 0..15 for a wall kind, -1 for a plain or empty cell.
-	static int resolve_cell(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, const Vector2i &p_cell, int p_flags);
+	static int resolve_cell(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, const Vector2i &p_cell, BitField<Flags> p_flags);
 	// The shapes of a whole layer (p_size.x * p_size.y cells, row by row): one byte per cell, 0 for plain cells.
-	static PackedByteArray resolve_layer(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, int p_flags);
-	// After cell p_cell of the layer changed, resolves its 3 x 3 neighbourhood again (wrapping on looping axes) into
+	static PackedByteArray resolve_layer(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, BitField<Flags> p_flags);
+	// After cell p_cell of the layer changed, resolves its 3 x 3 neighborhood again (wrapping on looping axes) into
 	// r_shapes, a resolve_layer result, and returns the cells whose shape changed (the edited cell always).
-	static Vector<Vector2i> update_around(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, const Vector2i &p_cell, int p_flags, PackedByteArray &r_shapes);
+	static Vector<Vector2i> update_around(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, const Vector2i &p_cell, BitField<Flags> p_flags, PackedByteArray &r_shapes);
 
 	// Script-facing form of update_around: {shapes, changed}.
-	static Dictionary update_around_bind(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, const Vector2i &p_cell, int p_flags, const PackedByteArray &p_shapes);
+	static Dictionary update_around_bind(const PackedInt32Array &p_cells, const Vector2i &p_size, const PackedByteArray &p_kinds, const Vector2i &p_cell, BitField<Flags> p_flags, const PackedByteArray &p_shapes);
 };
 
 VARIANT_ENUM_CAST(JRPGAutotileResolver::Kind);
-VARIANT_ENUM_CAST(JRPGAutotileResolver::Flags);
+VARIANT_BITFIELD_CAST(JRPGAutotileResolver::Flags);

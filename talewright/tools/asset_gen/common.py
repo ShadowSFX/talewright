@@ -181,7 +181,7 @@ def save_png(image: Any, path: Path) -> None:
     image.save(path, format="PNG", optimize=False, compress_level=9)
 
 
-# Autotile shapes (spec 05): the 8-neighbour mask, reduced so a corner counts only when both of its sides are set.
+# Autotile shapes (spec 05): the 8-neighbor mask, reduced so a corner counts only when both of its sides are set.
 N, NE, E, SE, S, SW, W, NW = 1, 2, 4, 8, 16, 32, 64, 128
 
 

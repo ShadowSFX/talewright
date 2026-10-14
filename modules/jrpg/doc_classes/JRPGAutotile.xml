@@ -14,14 +14,14 @@
 			<return type="Vector2i" />
 			<param index="0" name="index" type="int" />
 			<description>
-				Returns the sheet cell (column, row) of blob shape [param index].
+				Returns the sheet cell (column, row) of blob shape [param index] (0 to 46), or [code](-1, -1)[/code] for any other index.
 			</description>
 		</method>
 		<method name="get_blob_index" qualifiers="static">
 			<return type="int" />
-			<param index="0" name="mask" type="int" />
+			<param index="0" name="mask" type="int" enum="JRPGAutotile.Neighbor" is_bitfield="true" />
 			<description>
-				Returns the blob shape index (0 to 46) of any 8-neighbour [param mask]. The mask is reduced first.
+				Returns the blob shape index (0 to 46) of any 8-neighbor [param mask]. The mask is reduced first.
 			</description>
 		</method>
 		<method name="get_blob_mask" qualifiers="static">
@@ -33,61 +33,61 @@
 		</method>
 		<method name="get_wall_cell" qualifiers="static">
 			<return type="Vector2i" />
-			<param index="0" name="mask4" type="int" />
+			<param index="0" name="mask4" type="int" enum="JRPGAutotile.Side" is_bitfield="true" />
 			<description>
-				Returns the sheet cell (column, row) of wall shape [param mask4] (0 to 15).
+				Returns the sheet cell (column, row) of wall shape [param mask4] (0 to 15), or [code](-1, -1)[/code] for any other value.
 			</description>
 		</method>
 		<method name="get_wall_mask" qualifiers="static">
 			<return type="int" />
-			<param index="0" name="mask" type="int" />
+			<param index="0" name="mask" type="int" enum="JRPGAutotile.Neighbor" is_bitfield="true" />
 			<description>
-				Returns the 4-neighbour wall mask (its N, E, S and W bits) of an 8-neighbour [param mask].
+				Returns the 4-neighbor wall mask (its N, E, S and W bits) of an 8-neighbor [param mask].
 			</description>
 		</method>
 		<method name="reduce_mask" qualifiers="static">
 			<return type="int" />
-			<param index="0" name="mask" type="int" />
+			<param index="0" name="mask" type="int" enum="JRPGAutotile.Neighbor" is_bitfield="true" />
 			<description>
 				Returns [param mask] (0 to 255) with each corner bit cleared unless both of its sides are set.
 			</description>
 		</method>
 	</methods>
 	<constants>
-		<constant name="NEIGHBOR_N" value="1" enum="Neighbor">
+		<constant name="NEIGHBOR_N" value="1" enum="Neighbor" is_bitfield="true">
 			The neighbor above.
 		</constant>
-		<constant name="NEIGHBOR_NE" value="2" enum="Neighbor">
+		<constant name="NEIGHBOR_NE" value="2" enum="Neighbor" is_bitfield="true">
 			The neighbor above and to the right.
 		</constant>
-		<constant name="NEIGHBOR_E" value="4" enum="Neighbor">
+		<constant name="NEIGHBOR_E" value="4" enum="Neighbor" is_bitfield="true">
 			The neighbor to the right.
 		</constant>
-		<constant name="NEIGHBOR_SE" value="8" enum="Neighbor">
+		<constant name="NEIGHBOR_SE" value="8" enum="Neighbor" is_bitfield="true">
 			The neighbor below and to the right.
 		</constant>
-		<constant name="NEIGHBOR_S" value="16" enum="Neighbor">
+		<constant name="NEIGHBOR_S" value="16" enum="Neighbor" is_bitfield="true">
 			The neighbor below.
 		</constant>
-		<constant name="NEIGHBOR_SW" value="32" enum="Neighbor">
+		<constant name="NEIGHBOR_SW" value="32" enum="Neighbor" is_bitfield="true">
 			The neighbor below and to the left.
 		</constant>
-		<constant name="NEIGHBOR_W" value="64" enum="Neighbor">
+		<constant name="NEIGHBOR_W" value="64" enum="Neighbor" is_bitfield="true">
 			The neighbor to the left.
 		</constant>
-		<constant name="NEIGHBOR_NW" value="128" enum="Neighbor">
+		<constant name="NEIGHBOR_NW" value="128" enum="Neighbor" is_bitfield="true">
 			The neighbor above and to the left.
 		</constant>
-		<constant name="SIDE_N" value="1" enum="Side">
+		<constant name="SIDE_N" value="1" enum="Side" is_bitfield="true">
 			The wall neighbor above.
 		</constant>
-		<constant name="SIDE_E" value="2" enum="Side">
+		<constant name="SIDE_E" value="2" enum="Side" is_bitfield="true">
 			The wall neighbor to the right.
 		</constant>
-		<constant name="SIDE_S" value="4" enum="Side">
+		<constant name="SIDE_S" value="4" enum="Side" is_bitfield="true">
 			The wall neighbor below.
 		</constant>
-		<constant name="SIDE_W" value="8" enum="Side">
+		<constant name="SIDE_W" value="8" enum="Side" is_bitfield="true">
 			The wall neighbor to the left.
 		</constant>
 		<constant name="BLOB_SHAPES" value="47">

@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 112, in_progress: 0, done: 117, blocked: 0, deferred: 3 (of 232)
+**Totals:** pending: 114, in_progress: 0, done: 118, blocked: 0, deferred: 3 (of 235)
 
 ## [x] 0 Bootstrap and task system
 
@@ -154,8 +154,11 @@ Original generated assets, autotile importer and resolver, tileset flags.
     - [x] **7.3.2.2** Tileset form with flag overlays (P1) _(deps: 7.3.2.1; commit: 4d026f244e)_
   - [x] **7.3.3** Tileset bridge tools (P1) _(deps: 7.3.2; commit: 42229a98dc)_
 - [x] **7.4** Autotile resolver (P1) _(deps: 7.2; commit: 7b1706be56)_
-- [x] **7.5** Import authoring tools (P2) _(deps: 7.3; commit: pending)_
+- [x] **7.5** Import authoring tools (P2) _(deps: 7.3; commit: 975dc7eda4)_
 - [ ] **7.6** Epic review: assets (P1) _(deps: 7.5, 7.4)_
+  - [x] **7.6.1** Review fixes: assets, autotile core, importer, resolver (P1) _(commit: pending)_
+  - [ ] **7.6.2** Review fixes: tile flags, tileset form, bridge tools (P1) _(deps: 7.6.1)_
+  - [ ] **7.6.3** Epic 7 close-out (P1) _(deps: 7.6.2)_
 
 ## [ ] 8 Maps
 

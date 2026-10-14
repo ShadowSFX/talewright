@@ -1,0 +1,5 @@
+# The versions talewright/assets/generated/manifest.json was made with: other versions may draw other pixels or
+# samples (numpy's random streams, Pillow's resampling), and --check would then report differences.
+numpy==1.26.0
+Pillow==11.1.0
+soundfile==0.14.0

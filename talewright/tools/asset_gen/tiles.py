@@ -2,7 +2,7 @@
 
 Autotile sheets: 47-tile blob sheets (8 x 6 tiles, shape index i at column i % 8, row i // 8, the 48th cell a
 preview), animated kinds with further 8 x 6 blocks to the right; wall sheets: 4 x 4 tiles indexed by the
-4-neighbour mask (N 1, E 2, S 4, W 8). All textures repeat every tile, so neighboring tiles join without seams.
+4-neighbor mask (N 1, E 2, S 4, W 8). All textures repeat every tile, so neighboring tiles join without seams.
 """
 
 from __future__ import annotations
@@ -270,7 +270,7 @@ def autotile_sheets() -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------------------------------------------
-# Wall autotiles (4 x 4 sheets by the 4-neighbour mask).
+# Wall autotiles (4 x 4 sheets by the 4-neighbor mask).
 
 
 def brick_texture(name: str, brick_w: int, brick_h: int, colors: tuple[Color, Color], mortar: Color) -> Any:
