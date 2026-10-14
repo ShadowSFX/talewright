@@ -1,0 +1,12 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+
+[params]
+
+loop=true
+loop_offset=0.0
+bpm=76
+beat_count=32
+bar_beats=4

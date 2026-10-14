@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 01:21 -0600
+- **Updated:** 2026-10-14 01:26 -0600
 - **Current task:** none
-- **Last completed:** 7.1.2.3 Generated icon set and window skin
-- **Next task:** 7.1.3 Synthesized SFX and BGM
-- **Done leaf tasks:** 86
+- **Last completed:** 7.1.3 Synthesized SFX and BGM
+- **Next task:** 7.2 Autotile template + importer
+- **Done leaf tasks:** 87
 <!-- status:end -->
 
 ## Log
@@ -234,4 +234,5 @@
 | 2026-10-14 01:13 -0600 | 7.1.2.2 | started: Generated enemy battlers and battlebacks (containers: 7.1.2 pending->in_progress, 7.1 pending->in_progress, 7 pending->in_progress) |  |
 | 2026-10-14 01:16 -0600 | 7.1.2.2 | done: Generated enemy battlers and battlebacks — Six original front-view enemy battlers (moss_blob for the starter Moss Blob, cave_bat, mushroom_imp, thorn_wolf, stone_golem, ember_wisp) and three 1280x720 battleback pairs (grassland, forest, cave: opaque backdrop + perspective ground transparent above the horizon); deterministic (34 images match manifest); evidence plan/evidence/assets/7.1.2.2-battles.png (containers: 7.1.2 in_progress->pending, 7.1 in_progress->pending, 7 in_progress->pending) | 0dc1b46965 |
 | 2026-10-14 01:16 -0600 | 7.1.2.3 | started: Generated icon set and window skin (containers: 7.1.2 pending->in_progress, 7.1 pending->in_progress, 7 pending->in_progress) |  |
-| 2026-10-14 01:21 -0600 | 7.1.2.3 | done: Generated icon set and window skin — 64-icon set (32x32, 16 per row; items, weapons, armors, elements, states, buffs/debuffs, misc; index table in talewright/docs/assets.md generated from the code) and window skin (96x96 nine-slice frame with 16 px margins, 48x48 cursor, four 16x16 marks), noted on task 10.1; deterministic (38 images match manifest); evidence plan/evidence/assets/7.1.2.3-icons-and-window.png (containers: 7.1.2 in_progress->done, 7.1 in_progress->pending, 7 in_progress->pending) | pending |
+| 2026-10-14 01:21 -0600 | 7.1.2.3 | done: Generated icon set and window skin — 64-icon set (32x32, 16 per row; items, weapons, armors, elements, states, buffs/debuffs, misc; index table in talewright/docs/assets.md generated from the code) and window skin (96x96 nine-slice frame with 16 px margins, 48x48 cursor, four 16x16 marks), noted on task 10.1; deterministic (38 images match manifest); evidence plan/evidence/assets/7.1.2.3-icons-and-window.png (containers: 7.1.2 in_progress->done, 7.1 in_progress->pending, 7 in_progress->pending) | df03e168d4 |
+| 2026-10-14 01:26 -0600 | 7.1.3 | done: Synthesized SFX and BGM — Synthesized original audio (asset_gen/audio.py, numpy; Ogg Vorbis via soundfile in 4096-frame blocks): 16 SFX (cursor, decision, cancel, buzzer, equip, save, load, heal, hit, slash, magic, item_get, door, step, escape, miss), 4 looping BGM tracks (title, field, battle, dungeon; whole bars, circular echo, seam jump <= 0.002) and a victory ME; .ogg.import sidecars with the oggvorbisstr loop/bpm/beat settings; PCM hashes in the manifest (59 files match); verified in Godot headless: all 21 import with correct lengths and loop flags, a looping track wraps past its end, an effect stops; evidence plan/evidence/assets/7.1.3-audio-check.txt. Perceived musical quality not verified (no listening). (containers: 7.1 pending->done) | pending |

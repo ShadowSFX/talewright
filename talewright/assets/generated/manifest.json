@@ -2,9 +2,136 @@
   "generator": "talewright/tools/generate_assets.py",
   "license": "CC0-1.0",
   "tile_size": 48,
+  "sample_rate": 44100,
   "numpy": "1.26.0",
   "pillow": "11.1.0",
   "files": {
+    "audio/bgm/battle.ogg": {
+      "seconds": 12.632,
+      "channels": 2,
+      "loop": true,
+      "pcm_sha256": "0e1dfb0c43829f05b78b648123051aec6cb4c850d9c0bc292f51b213ff4cc86e"
+    },
+    "audio/bgm/dungeon.ogg": {
+      "seconds": 25.263,
+      "channels": 2,
+      "loop": true,
+      "pcm_sha256": "f6631bdf7d32b99ebe602679cb002fadbd1cb1ca65346352ee570ece888b4fd6"
+    },
+    "audio/bgm/field.ogg": {
+      "seconds": 17.143,
+      "channels": 2,
+      "loop": true,
+      "pcm_sha256": "bfe2b24ca359e6f09cbb7d7b3323f7447b56ea3f8816ede3e1d51ec9b767cccb"
+    },
+    "audio/bgm/title.ogg": {
+      "seconds": 22.857,
+      "channels": 2,
+      "loop": true,
+      "pcm_sha256": "e9e26b2c7a3d18b2a74034c55621256dbb171f089c355fa7479fa97a27da913d"
+    },
+    "audio/me/victory.ogg": {
+      "seconds": 9.091,
+      "channels": 2,
+      "loop": false,
+      "pcm_sha256": "a0da35d921f05ad257d87e67fd70cd6f66bb9266b779e75f06e49aa3ff2b2f48"
+    },
+    "audio/se/buzzer.ogg": {
+      "seconds": 0.25,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "2ac7ef3f4cf8ef72b6e1b38699e887ad72ddc4455c57cddb9701d87942fc622b"
+    },
+    "audio/se/cancel.ogg": {
+      "seconds": 0.14,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "211572aff10467fdd4d67efd5826831bfd4580aeeacce99972b5748d8ad7e210"
+    },
+    "audio/se/cursor.ogg": {
+      "seconds": 0.05,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "500d33c425c226298b2a1b84f2a568d2dfac4cb7a71b306112f04c43537e2d7d"
+    },
+    "audio/se/decision.ogg": {
+      "seconds": 0.17,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "30f5d46ce6b40f367c15b1332d26888c9449799a26e592d26bf2f7271520fa30"
+    },
+    "audio/se/door.ogg": {
+      "seconds": 0.3,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "82fd4e58bdcf981acafde56d0f099276b4cbd9dcef39510ccf78467af0d4dec9"
+    },
+    "audio/se/equip.ogg": {
+      "seconds": 0.35,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "e4962d72a94a00d86f77b6564d5c1944badeb9b8ed7dc41878381488dd8a3ca7"
+    },
+    "audio/se/escape.ogg": {
+      "seconds": 0.5,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "cea46f1e6d6362d51b0cbb261fdb2315cfb356fa4d16807c0b3155028ca1dc3f"
+    },
+    "audio/se/heal.ogg": {
+      "seconds": 0.82,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "8a20b8054a1662a0b33d7c0dba0f6697dcfa44962bfa55e3d64e439f3c464183"
+    },
+    "audio/se/hit.ogg": {
+      "seconds": 0.18,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "bdc6a613dfe6f64f88dbc2271073c6d4b10c9dd8dc8b3d8af9041c2368890e41"
+    },
+    "audio/se/item_get.ogg": {
+      "seconds": 0.56,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "dcc32b2fd66b36d4dfee0cf04a3a67636ea752f1dbb7b1d2381a80455e1d5eca"
+    },
+    "audio/se/load.ogg": {
+      "seconds": 0.57,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "fb1f2c4d3635efa35fa9aa57a3c6f0b91fb5a87d53cf121fc0e02ff0f7731a6f"
+    },
+    "audio/se/magic.ogg": {
+      "seconds": 0.6,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "39e56eede87b9f0570fb655f0885aa711f0386caf4684ea4477858bdae4c1250"
+    },
+    "audio/se/miss.ogg": {
+      "seconds": 0.2,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "e89874c8041c81273bae1e56c4e96c1fee1d32e92248b64d0f46e3e068f18d4f"
+    },
+    "audio/se/save.ogg": {
+      "seconds": 0.57,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "5b3d2c7e83b06410c4143b586f4d4b0c6839bfc47a4d225b1e736b8d61f45572"
+    },
+    "audio/se/slash.ogg": {
+      "seconds": 0.22,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "ecd1dafa51497e50ff4a8070e43762047ff5443fc2a3e01447ea0e1e43939030"
+    },
+    "audio/se/step.ogg": {
+      "seconds": 0.08,
+      "channels": 1,
+      "loop": false,
+      "pcm_sha256": "57970b5fa96d1154c48db5f52ec5446ca86597183029f012c10fef9f017f4361"
+    },
     "autotiles/dirt_path.png": {
       "size": [
         384,

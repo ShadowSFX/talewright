@@ -8,9 +8,10 @@ Talewright's default tiles, autotiles and objects are drawn by code (D-011), so 
 python talewright/tools/generate_assets.py           # write the images and manifest.json
 python talewright/tools/generate_assets.py --check   # regenerate in memory and compare with manifest.json
 ```
-Needs Python with numpy and Pillow. `manifest.json` records each image's size and the SHA-256 of its RGBA pixels
-(not of the PNG file, which depends on the compressor) and the numpy and Pillow versions used: the same versions give
-the same pixels.
+Needs Python with numpy, Pillow and soundfile (`python -m pip install --user soundfile`, which brings libsndfile with Ogg Vorbis). `manifest.json` records each image's size and the SHA-256 of its RGBA pixels
+(not of the PNG file, which depends on the compressor), each sound's length, channels, loop setting and the SHA-256
+of its 16-bit samples before encoding, and the numpy and Pillow versions used: the same versions give the same
+pixels and samples. Copy a sound together with its `.import` file and Godot imports it with the intended loop.
 
 ## What is generated
 Tiles are 48 × 48 pixels (D-034).
@@ -28,6 +29,9 @@ Tiles are 48 × 48 pixels (D-034).
 | `battlebacks/<scene>_back.png`, `<scene>_ground.png` | 1280 × 720 battlebacks for grassland, forest and cave: an opaque backdrop and a ground layer in perspective, transparent above the horizon, so either half can be reused |
 | `system/icons.png` | The icon set: 32 × 32 icons, 16 per row; an entry's `icon_index` is the position (table below) |
 | `system/window.png`, `window_cursor.png`, `window_arrows.png` | The window skin (below) |
+| `audio/se/<name>.ogg` | Sound effects (mono, 44.1 kHz Ogg Vorbis): cursor, decision, cancel, buzzer, equip, save, load, heal, hit, slash, magic, item_get, door, step, escape, miss |
+| `audio/bgm/<name>.ogg` | Looping music (stereo): title, field, battle, dungeon; each loops on a whole number of bars, and its `.import` file sets Godot's loop, bpm and beat count |
+| `audio/me/victory.ogg` | A short victory jingle that plays once |
 
 Terrain textures repeat every tile, and autotile edges are shaped by waves that repeat every tile too, so
 neighboring tiles join without seams. Autotiles draw only their terrain: the area outside it is transparent, so a

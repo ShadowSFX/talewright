@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 118, in_progress: 0, done: 106, blocked: 0, deferred: 3 (of 227)
+**Totals:** pending: 116, in_progress: 0, done: 108, blocked: 0, deferred: 3 (of 227)
 
 ## [x] 0 Bootstrap and task system
 
@@ -139,13 +139,13 @@ Setup tool, managed addon, main-screen workspace, database editor, authoring API
 
 Original generated assets, autotile importer and resolver, tileset flags.
 
-- [ ] **7.1** Original asset generator (P1)
+- [x] **7.1** Original asset generator (P1)
   - [x] **7.1.1** Generated tiles and autotile templates (P1) _(commit: 5ae44ffd2f)_
   - [x] **7.1.2** Generated characters, faces, enemies, battlebacks, icons, window skin (P1) _(deps: 7.1.1)_
     - [x] **7.1.2.1** Generated character sheets and faces (P1) _(commit: 70f3604677)_
     - [x] **7.1.2.2** Generated enemy battlers and battlebacks (P1) _(deps: 7.1.2.1; commit: 0dc1b46965)_
-    - [x] **7.1.2.3** Generated icon set and window skin (P1) _(deps: 7.1.2.2; commit: pending)_
-  - [ ] **7.1.3** Synthesized SFX and BGM (P1) _(deps: 7.1.2)_
+    - [x] **7.1.2.3** Generated icon set and window skin (P1) _(deps: 7.1.2.2; commit: df03e168d4)_
+  - [x] **7.1.3** Synthesized SFX and BGM (P1) _(deps: 7.1.2; commit: pending)_
 - [ ] **7.2** Autotile template + importer (P1) _(deps: 7.1)_
 - [ ] **7.3** JRPGTileset + flags + tileset tab (P1) _(deps: 7.2)_
 - [ ] **7.4** Autotile resolver (P1) _(deps: 7.2)_

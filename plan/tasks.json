@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "7.1.2.3 Generated icon set and window skin",
+  "last_completed": "7.1.3 Synthesized SFX and BGM",
   "tasks": [
     {
       "id": "0",
@@ -2382,7 +2382,7 @@
       "description": "talewright/tools/asset_gen: tiles, 47-tile blob autotile sheets and 4x4 wall sheets (spec 05), character sheets (one character per image, rows up/right/down/left), faces, enemies, battlebacks, icons, window skin, SFX/BGM; LICENSES.md.",
       "parent": "7",
       "dependencies": [],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Deterministic hashes",
@@ -2391,8 +2391,8 @@
       ],
       "test_strategy": "Run twice, compare hashes.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "7.1.1",
@@ -2483,7 +2483,7 @@
       "test_strategy": "Run twice and compare hashes; icon sheet and a sample window viewed.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "df03e168d4",
       "notes": ""
     },
     {
@@ -2500,9 +2500,9 @@
       ],
       "test_strategy": "Headless play test + duration checks.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": "",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "7.2",

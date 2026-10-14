@@ -1,0 +1,34 @@
+# 7.1.3: generated audio imported by the editor (--headless --import) into a scratch project, then checked by a script
+PASS audio/bgm/battle.ogg length 12.632 loop true bpm 152.0 beats 32
+PASS audio/bgm/dungeon.ogg length 25.263 loop true bpm 76.0 beats 32
+PASS audio/bgm/field.ogg length 17.143 loop true bpm 112.0 beats 32
+PASS audio/bgm/title.ogg length 22.857 loop true bpm 84.0 beats 32
+PASS audio/me/victory.ogg length 9.091 loop false bpm 0.0 beats 0
+PASS audio/se/buzzer.ogg length 0.25 loop false bpm 0.0 beats 0
+PASS audio/se/cancel.ogg length 0.14 loop false bpm 0.0 beats 0
+PASS audio/se/cursor.ogg length 0.05 loop false bpm 0.0 beats 0
+PASS audio/se/decision.ogg length 0.17 loop false bpm 0.0 beats 0
+PASS audio/se/door.ogg length 0.3 loop false bpm 0.0 beats 0
+PASS audio/se/equip.ogg length 0.35 loop false bpm 0.0 beats 0
+PASS audio/se/escape.ogg length 0.5 loop false bpm 0.0 beats 0
+PASS audio/se/heal.ogg length 0.82 loop false bpm 0.0 beats 0
+PASS audio/se/hit.ogg length 0.18 loop false bpm 0.0 beats 0
+PASS audio/se/item_get.ogg length 0.56 loop false bpm 0.0 beats 0
+PASS audio/se/load.ogg length 0.57 loop false bpm 0.0 beats 0
+PASS audio/se/magic.ogg length 0.6 loop false bpm 0.0 beats 0
+PASS audio/se/miss.ogg length 0.2 loop false bpm 0.0 beats 0
+PASS audio/se/save.ogg length 0.57 loop false bpm 0.0 beats 0
+PASS audio/se/slash.ogg length 0.22 loop false bpm 0.0 beats 0
+PASS audio/se/step.ogg length 0.08 loop false bpm 0.0 beats 0
+PASS battle.ogg played past its end and wrapped to 0.31 s (length 12.63)
+PASS decision.ogg played once and stopped
+failures: 0
+
+# Loop seams (samples): jump from the last sample to the first vs ordinary sample-to-sample steps
+title: seam jump 0.0010, typical step p99 0.0367
+field: seam jump 0.0006, typical step p99 0.1411
+battle: seam jump 0.0004, typical step p99 0.1096
+dungeon: seam jump 0.0021, typical step p99 0.0396
+
+# Determinism
+59 of 59 files match manifest.json
