@@ -45,6 +45,7 @@ class Texture2D;
 // the frames' metadata.
 // The editor's Character Sheet importer (JRPGCharacterSheetImporter) saves these SpriteFrames for an image; an image
 // imported as a plain texture gets the default layout when a character is drawn with it.
+// Authority (D-007): client. Presentation only; servers never load character sheets.
 class JRPGCharacterSheet : public RefCounted {
 	GDCLASS(JRPGCharacterSheet, RefCounted);
 

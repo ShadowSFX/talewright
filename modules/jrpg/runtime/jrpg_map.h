@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include "core/templates/local_vector.h"
 #include "scene/2d/node_2d.h"
 
 #include "modules/jrpg/core/jrpg_map_data.h"
@@ -67,7 +68,13 @@ private:
 	// What the last build used.
 	Ref<JRPGTilesetData> tileset_data;
 	Ref<TileSet> tileset;
-	Array palette;
+	// The tile of each palette index (index 0: none), read once per build instead of once per cell (epic 8 review A13).
+	struct PaletteTile {
+		int source_id = -1; // TileSet::INVALID_SOURCE.
+		Vector2i coords;
+		int alternative = 0;
+	};
+	LocalVector<PaletteTile> palette_tiles;
 	PackedByteArray kinds;
 	PackedByteArray overhead; // 1 per palette index whose baked flags say overhead.
 	int flags = 0;
@@ -78,9 +85,11 @@ private:
 
 	void _connect_data(bool p_connect);
 	void _queue_rebuild();
+	void _rebuild_if_queued();
 	void _on_cells_changed(int p_layer, const PackedInt32Array &p_cells);
 	void _mark_edited();
-	void _update_cell(int p_layer, const Vector2i &p_cell);
+	// Draws p_cell of p_layer, which holds palette index p_index.
+	void _update_cell(int p_layer, const Vector2i &p_cell, int p_index);
 	void _draw_shadows();
 
 protected:

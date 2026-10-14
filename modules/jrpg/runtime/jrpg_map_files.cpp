@@ -40,20 +40,39 @@
 
 #include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_map_list.h"
+#include "modules/jrpg/runtime/jrpg_map.h"
 
-Ref<JRPGMapData> JRPGMapFiles::read_map_data_from(const Ref<PackedScene> &p_scene) {
+Ref<JRPGMapData> JRPGMapFiles::read_map_data_from(const Ref<PackedScene> &p_scene, bool p_own_only) {
 	ERR_FAIL_COND_V(p_scene.is_null(), Ref<JRPGMapData>());
-	const Ref<SceneState> state = p_scene->get_state();
-	if (state.is_null() || state->get_node_count() == 0) {
-		return Ref<JRPGMapData>();
-	}
-	// Node 0 is the scene's root; its stored properties hold the built-in map data.
-	for (int i = 0; i < state->get_node_property_count(0); i++) {
-		if (state->get_node_property_name(0, i) == StringName(MAP_DATA_PROPERTY)) {
-			return state->get_node_property_value(0, i);
+	// Node 0 is the scene's root; its stored properties hold the built-in map data. An inherited scene's root has no
+	// type of its own (scene/resources/packed_scene.cpp:1888-1894): it is its base scene's root (1484-1493), followed
+	// down a bounded chain.
+	static constexpr int MAX_BASES = 16;
+	Ref<SceneState> state = p_scene->get_state();
+	Ref<JRPGMapData> data;
+	StringName root_type;
+	for (int depth = 0; depth <= MAX_BASES && state.is_valid() && state->get_node_count() > 0; depth++) {
+		for (int i = 0; data.is_null() && i < state->get_node_property_count(0); i++) {
+			if (state->get_node_property_name(0, i) == StringName(MAP_DATA_PROPERTY)) {
+				data = state->get_node_property_value(0, i);
+			}
 		}
+		if (p_own_only && depth == 0 && data.is_null()) {
+			return Ref<JRPGMapData>();
+		}
+		root_type = state->get_node_type(0);
+		if (root_type != StringName()) {
+			break;
+		}
+		state = state->get_base_scene_state();
 	}
-	return Ref<JRPGMapData>();
+	if (root_type == StringName() || !ClassDB::is_parent_class(root_type, JRPGMap::get_class_static())) {
+		return Ref<JRPGMapData>(); // A scene of another kind that happens to store a map_data property.
+	}
+	if (data.is_valid()) {
+		data->upgrade(); // D-029: tools read data in this build's format.
+	}
+	return data;
 }
 
 Ref<JRPGMapData> JRPGMapFiles::read_map_data(const String &p_path) {
@@ -78,7 +97,7 @@ Dictionary JRPGMapFiles::scan(const Ref<JRPGMapList> &p_list, const PackedString
 	Vector<Found> found;
 	for (const String &path : p_scene_paths) {
 		const Ref<PackedScene> scene = ResourceLoader::exists(path) ? ResourceLoader::load(path) : Ref<Resource>();
-		const Ref<JRPGMapData> data = scene.is_valid() ? read_map_data_from(scene) : Ref<JRPGMapData>();
+		const Ref<JRPGMapData> data = scene.is_valid() ? read_map_data_from(scene, true) : Ref<JRPGMapData>();
 		if (data.is_valid()) {
 			found.push_back({ path, scene, data, FileAccess::get_modified_time(path) });
 		}
@@ -133,6 +152,6 @@ Dictionary JRPGMapFiles::scan(const Ref<JRPGMapList> &p_list, const PackedString
 
 void JRPGMapFiles::_bind_methods() {
 	ClassDB::bind_static_method("JRPGMapFiles", D_METHOD("read_map_data", "path"), &JRPGMapFiles::read_map_data);
-	ClassDB::bind_static_method("JRPGMapFiles", D_METHOD("read_map_data_from", "scene"), &JRPGMapFiles::read_map_data_from);
+	ClassDB::bind_static_method("JRPGMapFiles", D_METHOD("read_map_data_from", "scene", "own_only"), &JRPGMapFiles::read_map_data_from, DEFVAL(false));
 	ClassDB::bind_static_method("JRPGMapFiles", D_METHOD("scan", "list", "scene_paths"), &JRPGMapFiles::scan);
 }

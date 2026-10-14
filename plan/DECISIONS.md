@@ -426,7 +426,8 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   migrations). Stored defaults stay as they are and are frozen: `test_jrpg_core_regressions.h` fingerprints the
   stored defaults of every persisted JRPG class (entries, troop pages, system, types, terms, rules, audio cues,
   tables, manifest); changing one fails the test until a `JRPGSchema` migration step writes the old value into data
-  saved by the previous version and the fingerprint is updated.
+  saved by the previous version and the fingerprint is updated. The map list and map data follow the same rules
+  (epic 8 review A5: stamped on every content change, migrated or warned about when loaded, fingerprinted).
 - **Why:** no project files exist yet, so the stamping convention costs nothing now; freezing defaults keeps the
   starter content convenient (inspector-created resources are usable) and makes accidental rebalancing impossible.
 - **Reversal:** to change a default, add the migration step described above; to drop the freeze, delete the test.
@@ -586,7 +587,16 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   the current map as its first child (a `JRPGMap` scene instance found through the map list), owns internal BGM/BGS
   `AudioStreamPlayer`s and a fade `CanvasLayer`. `transfer(map_id, cell, direction = retain, fade = black)` checks
   the destination first (listed, loadable, a map, cell inside) and refuses with one warning, the player staying;
-  with a fade the map changes at the darkest point (0.3 s each way). Talewright's own rules where the help is silent:
+  with a fade the map changes at the darkest point (`FADE_STEPS` = 18 simulation steps each way, 0.3 s at 60 steps a
+  second: counted in steps, so the map changes after the same steps at any frame rate; epic 8 review A7). The
+  destination's scene is loaded when the transfer is asked for, synchronously, because the check needs its map data
+  to refuse a bad destination before the fade starts (epic 8 review A13: a one-off load of a few hundred kilobytes for
+  slice-size maps; a threaded preload, `ResourceLoader::load_threaded_request` during the fade-out with the check at
+  the darkest point, is the reversal if large maps hitch). A new or loaded game creates its map from the scene before
+  it replaces the running game, so a scene that fails leaves that game as it was (review A11). A transfer asked for
+  while another is under way, its fade-in included, is refused (`ERR_BUSY`, one warning); the event interpreter's
+  Transfer Player waits on `is_transferring()` / `transfer_finished` before going on (review A15, task 9.5.3).
+  Talewright's own rules where the help is silent:
   `FADE_NONE` exists; the four facings besides Retain; a transfer within the current map keeps its instance (events
   keep their states) and still fades; a map without autoplay leaves the music playing; autoplay without a file
   stops it; the same track continues on transfers too; cue pan waits for the audio system (task 29:
@@ -643,9 +653,11 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   actions: of those held, the one pressed last (tracked every step, so a direction pressed during a step wins when
   it ends); no new step while a transfer fades. A step counts (`JRPGGameState.increase_steps`) when the player
   arrives; the game state's position follows every step and turn. `JRPGPlayer` lives inside the current map (moved
-  along on transfers) at `Z_CHARACTERS`, drawn at the cell's middle, with a `Camera2D` without smoothing whose limits
-  are the map's edges, or one screen centered on the map on an axis where the map is smaller, or none on a looping
-  axis. Until sprites (8.7) it draws a marker showing its facing.
+  along on transfers) at `Z_CHARACTERS`, drawn at the cell's middle, with a `Camera2D` without smoothing, made the
+  current camera on each map, whose limits are the map's edges, or one screen centered on the map on an axis where the
+  map is smaller, or none on a looping axis (the looping display itself comes with epic 23). The map's area is taken
+  through its transform and the screen through the camera's zoom (epic 8 review A12). Until sprites (8.7) it draws a
+  marker showing its facing. The transfer fade also runs on the simulation steps (D-041).
 - **Why:** deterministic movement (servers, replays), the reference's grid feel, small maps framed like the
   reference's centered small maps.
 - **Reversal:** `JRPGSceneManager::_simulation_step` and `_update_camera_limits` hold these rules.
@@ -671,7 +683,9 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Options:** frames by time (a fixed rate while moving), or by distance walked.
 - **Choice:** `JRPGCharacterSprite` advances one frame every half cell walked (`FRAMES_PER_CELL` = 2), starting on
   frame 1 when a walk begins, so a 4-frame sheet shows 1, 2, 3, 0 over two cells at any speed; standing shows
-  frame 0. The frame's bottom edge sits on the cell's bottom edge, centered, raised by the sheet's y offset. The
+  frame 0. The distance walked comes from the mover (`JRPGMover.get_walk_distance()`: whole steps counted plus the
+  step under way, reset when a simulation step passes without a step), not from positions on screen, so it is exact
+  across looping edges and the same at any frame rate (epic 8 review A8). The frame's bottom edge sits on the cell's bottom edge, centered, raised by the sheet's y offset. The
   frames are set from the simulation, never played, so they match the steps exactly (and online, the server's).
 - **Why:** stepping looks the same at every speed and frame rate; deterministic from the mover's position.
 - **Reversal:** `FRAMES_PER_CELL` and `JRPGCharacterSprite::show_state`.

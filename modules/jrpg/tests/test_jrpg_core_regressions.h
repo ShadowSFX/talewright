@@ -257,6 +257,8 @@ TEST_CASE("[JRPG][Regression] Stored defaults are frozen (finding 6)") {
 		{ "JRPGAudioCue", "631ec063c8a0dc502a25b24cb4b0e5ab" },
 		{ "JRPGTable", "302c959acc299f93662331c20ab23916" },
 		{ "JRPGDatabase", "9ef7304b68876fa82816dcdb8d12fd10" },
+		{ "JRPGMapList", "5c0b0e581e8b80536101a25af5bc9c9c" }, // Epic 8 review A5.
+		{ "JRPGMapData", "a67392046cb3f5e08be7c58e7cd950d8" },
 	};
 	for (const auto &entry : frozen) {
 		const String fingerprint = defaults_fingerprint(entry[0]);

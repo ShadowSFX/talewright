@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.9.1 Epic 8 review: editor and bridge findings",
+  "last_completed": "8.9.2 Epic 8 review: core and runtime findings",
   "tasks": [
     {
       "id": "0",
@@ -3557,7 +3557,7 @@
         "talewright/docs/claude_bridge.md",
         "plan/specs/05_maps_tiles.md"
       ],
-      "commit": "pending",
+      "commit": "6bf78a1eef",
       "notes": ""
     },
     {
@@ -3574,9 +3574,9 @@
         "A scene manager doctest on a 32 px TileSet map"
       ],
       "test_strategy": "Doctests + bridge.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -3850,7 +3850,7 @@
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
       "commit": "",
-      "notes": "",
+      "notes": "Transfer Player (epic 8 review A15, D-041): JRPGSceneManager.transfer refuses a transfer while another is under way, the fade-in included (ERR_BUSY); the interpreter waits on is_transferring() / the transfer_finished signal before running the next command, as the MZ command waits for the transfer to finish.",
       "status": "pending"
     },
     {
@@ -4930,12 +4930,13 @@
       "status": "pending",
       "priority": 3,
       "acceptance_criteria": [
-        "Every gap-map row of this area implemented and tested, or deferred with reason"
+        "Every gap-map row of this area implemented and tested, or deferred with reason",
+        "Looping maps display (epic 8 review A2): on a looping axis the tiles, characters and parallax wrap with the camera following the player across the edge (no camera limit on that axis); until then the scene manager keeps the camera free on looping axes and the map shows once"
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
-      "notes": ""
+      "notes": "Epic 8 review A2: the looping display (wrapped drawing of tiles and characters, camera across the edge) belongs to this epic's map loops row and becomes its own subtask when the epic is split; JRPGMover already steps across looping edges (8.6.2.1)."
     },
     {
       "id": "24",

@@ -162,38 +162,57 @@ TEST_CASE("[SceneTree][JRPG][CharacterSprite] The feet stand on the cell; walk f
 	Sheet::Layout raised;
 	raised.y_offset = 6;
 	sprite->set_character_frames(Sheet::make_frames(sheet(4, 4), raised));
-	sprite->show_state(Vector2(), JRPGSystemData::DIRECTION_DOWN, false);
+	sprite->show_state(JRPGSystemData::DIRECTION_DOWN, false, 0);
 	CHECK(sprite->get_animation() == StringName("down"));
 	CHECK(sprite->get_offset() == Vector2(-24, 24 - 48 - 6)); // Bottom edge on the cell's, 6 pixels higher.
 	sprite->set_character_frames(Sheet::make_frames(sheet(4, 4), Sheet::Layout()));
 	CHECK(sprite->get_offset() == Vector2(-24, -24));
 
-	// The same frame at the same distance, whatever the speed: 1 on the first half cell, then 2, 3, 0.
-	for (int speed : { 1, 4, 6 }) {
-		Ref<JRPGMover> mover;
-		mover.instantiate();
-		mover->set_speed(speed);
-		mover->set_cell(Vector2i());
-		sprite->reset_walk();
-		sprite->show_state(mover->get_position(), mover->get_direction(), false);
-		const real_t marks[4] = { 0.25, 0.75, 1.25, 1.75 };
-		const int expected[4] = { 1, 2, 3, 0 };
-		int mark = 0;
-		while (mark < 4) {
-			if (!mover->is_moving()) {
-				REQUIRE(mover->move(JRPGSystemData::DIRECTION_RIGHT, cache));
+	// A ring of three cells that loops: walking across its edge goes on counting.
+	Ref<JRPGMapData> ring;
+	ring.instantiate();
+	ring->set_size(Vector2i(3, 1));
+	ring->set_scroll_type(JRPGMapData::SCROLL_LOOP_HORIZONTAL);
+	for (int x = 0; x < 3; x++) {
+		ring->paint(JRPGMapData::LAYER_GROUND, PackedInt32Array({ x }), PackedInt32Array({ 1 }));
+	}
+	const Ref<JRPGMapCellCache> ring_cache = JRPGMapCellCache::compile(ring, Ref<JRPGTilesetData>());
+
+	// The frame at a distance into the walk is the same at every speed and across a looping edge: 1 on the first half
+	// cell, then 2, 3, 0 (counted in steps by the mover, epic 8 review A8).
+	for (const Ref<JRPGMapCellCache> &road : { cache, ring_cache }) {
+		for (int speed : { 1, 4, 6 }) {
+			Ref<JRPGMover> mover;
+			mover.instantiate();
+			mover->set_speed(speed);
+			mover->set_cell(Vector2i(road == ring_cache ? 2 : 0, 0));
+			const real_t marks[4] = { 0.25, 0.75, 1.25, 1.75 };
+			const int expected[4] = { 1, 2, 3, 0 };
+			int mark = 0;
+			while (mark < 4) {
+				// As the game loop does each simulation step: advance, then a new step when none is under way.
+				mover->advance();
+				if (!mover->is_moving()) {
+					REQUIRE(mover->move(JRPGSystemData::DIRECTION_RIGHT, road));
+				}
+				sprite->show_state(mover->get_direction(), mover->is_moving(), mover->get_walk_distance());
+				if (mover->get_walk_distance() >= marks[mark]) {
+					CHECK_MESSAGE(sprite->get_frame() == expected[mark], vformat("speed %d at %.2f cells", speed, marks[mark]));
+					mark++;
+				}
+			}
+			CHECK(sprite->get_animation() == StringName("right"));
+			// Stopping: the step ends, then a simulation step without one ends the walk.
+			while (!mover->advance()) {
 			}
 			mover->advance();
-			sprite->show_state(mover->get_position(), mover->get_direction(), mover->is_moving() || mover->get_position().x < 2);
-			if (mover->get_position().x >= marks[mark]) {
-				CHECK_MESSAGE(sprite->get_frame() == expected[mark], vformat("speed %d at %.2f cells", speed, marks[mark]));
-				mark++;
-			}
+			CHECK(mover->get_walk_distance() == 0);
 		}
-		CHECK(sprite->get_animation() == StringName("right"));
 	}
-	sprite->show_state(Vector2(2, 0), JRPGSystemData::DIRECTION_UP, false); // Standing still, facing up.
-	CHECK((sprite->get_animation() == StringName("up") && sprite->get_frame() == 0 && sprite->get_walked() == 0));
+	CHECK(JRPGCharacterSprite::get_walk_frame(0.6, 3) == 2);
+	CHECK(JRPGCharacterSprite::get_walk_frame(1.1, 3) == 0);
+	sprite->show_state(JRPGSystemData::DIRECTION_UP, false, 0); // Standing still, facing up.
+	CHECK((sprite->get_animation() == StringName("up") && sprite->get_frame() == 0));
 	memdelete(sprite);
 }
 

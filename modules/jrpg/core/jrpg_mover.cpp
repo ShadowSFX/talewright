@@ -57,6 +57,7 @@ void JRPGMover::set_cell(const Vector2i &p_cell) {
 	cell = p_cell;
 	move_steps = 0;
 	progress = 0;
+	standing = true; // Placed: any walk ends.
 }
 
 void JRPGMover::set_direction(JRPGSystemData::Direction p_direction) {
@@ -89,11 +90,16 @@ bool JRPGMover::move(JRPGSystemData::Direction p_direction, const Ref<JRPGMapCel
 	cell = next;
 	move_steps = get_steps_per_cell(p_dash ? speed + 1 : speed);
 	progress = 0;
+	if (standing) {
+		walk_start = steps_walked; // A new walk; one that goes on from the step just ended keeps its start.
+		standing = false;
+	}
 	return true;
 }
 
 bool JRPGMover::advance() {
 	if (!is_moving()) {
+		standing = true; // A whole simulation step without a step: the walk is over.
 		return false;
 	}
 	progress++;
@@ -102,7 +108,15 @@ bool JRPGMover::advance() {
 	}
 	move_steps = 0;
 	progress = 0;
+	steps_walked++;
 	return true;
+}
+
+real_t JRPGMover::get_walk_distance() const {
+	if (standing) {
+		return 0;
+	}
+	return real_t(steps_walked - walk_start) + (is_moving() ? real_t(progress) / move_steps : real_t(0));
 }
 
 Vector2 JRPGMover::get_position() const {
@@ -129,6 +143,7 @@ void JRPGMover::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("move", "direction", "cell_cache", "dash"), &JRPGMover::move, DEFVAL(false));
 	ClassDB::bind_method(D_METHOD("advance"), &JRPGMover::advance);
 	ClassDB::bind_method(D_METHOD("get_position"), &JRPGMover::get_position);
+	ClassDB::bind_method(D_METHOD("get_walk_distance"), &JRPGMover::get_walk_distance);
 
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "cell"), "set_cell", "get_cell");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "direction", PROPERTY_HINT_ENUM, "Up,Right,Down,Left"), "set_direction", "get_direction");

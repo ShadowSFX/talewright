@@ -66,7 +66,7 @@ public:
 	};
 
 	static constexpr int DIRECTION_RETAIN = -1; // transfer(): the player keeps facing the way they face.
-	static constexpr double FADE_SECONDS = 0.3; // Each way: out, then in.
+	static constexpr int FADE_STEPS = 18; // Simulation steps each way, out then in (0.3 s at 60 steps a second).
 
 private:
 	String database_path;
@@ -91,7 +91,7 @@ private:
 		int direction = DIRECTION_RETAIN;
 		Fade fade = FADE_BLACK;
 		Ref<PackedScene> scene; // Null: the same map, kept as it is.
-		double time = 0; // Seconds into the current half of the fade.
+		int steps = 0; // Simulation steps into the current half of the fade.
 		bool entered = false; // The new map shows: fading in.
 	};
 	bool transferring = false;
@@ -102,13 +102,17 @@ private:
 	// Whether the player can go to p_cell of map p_map_id: OK with the scene to show (null: the map shown, when
 	// p_keep_same), or an error with the reason.
 	Error _check_destination(int p_map_id, const Vector2i &p_cell, bool p_keep_same, Ref<PackedScene> &r_scene, String &r_reason);
+	// The map p_transfer goes to, created from its scene but not yet shown; null with the reason when the scene's root
+	// turns out not to be a JRPGMap.
+	JRPGMap *_instantiate_map(const Transfer &p_transfer, String &r_reason);
 	// Makes p_state the running game.
 	void _begin(const Ref<JRPGGameState> &p_state);
-	Error _enter(const Transfer &p_transfer);
+	// Shows p_transfer's map (p_instance when it was created already, or one created from its scene) with the player.
+	Error _enter(const Transfer &p_transfer, JRPGMap *p_instance = nullptr);
 	void _play_cue(AudioStreamPlayer *p_player, const Ref<JRPGAudioCue> &p_cue);
 	void _play_map_audio(const Ref<JRPGMapData> &p_data);
 	void _set_fade(double p_amount);
-	void _process_transfer(double p_delta);
+	void _transfer_step();
 	void _autostart();
 	void _run_simulation(double p_delta);
 	void _simulation_step();

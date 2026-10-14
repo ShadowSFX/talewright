@@ -64,18 +64,32 @@ void JRPGMapData::_fit_arrays() {
 
 void JRPGMapData::_stamp_version() {
 	if (schema_version == SCHEMA_UNSTAMPED) {
+		schema_version = CURRENT_SCHEMA_VERSION; // New content follows this build's format.
+	}
+}
+
+void JRPGMapData::upgrade() {
+	if (schema_version == SCHEMA_UNSTAMPED) {
+		_stamp_version(); // Nothing was saved with an older format.
+	} else if (schema_version > CURRENT_SCHEMA_VERSION) {
+		WARN_PRINT_ONCE(vformat("JRPGMapData \"%s\" was saved by a newer Talewright (schema %d, this build knows %d); some data may not load.", get_path(), schema_version, CURRENT_SCHEMA_VERSION));
+	} else if (schema_version < CURRENT_SCHEMA_VERSION) {
+		JRPGSchema::migrate(this, get_class_static(), schema_version, CURRENT_SCHEMA_VERSION);
 		schema_version = CURRENT_SCHEMA_VERSION;
+		emit_changed();
 	}
 }
 
 void JRPGMapData::set_map_id(int p_id) {
 	ERR_FAIL_COND(p_id < 0);
 	map_id = p_id;
+	_stamp_version(); // While loading, the saved schema_version came first (property order) and is kept.
 	emit_changed();
 }
 
 void JRPGMapData::set_revision(int p_revision) {
 	revision = MAX(0, p_revision);
+	_stamp_version();
 	emit_changed();
 }
 
@@ -85,16 +99,19 @@ void JRPGMapData::bump_revision() {
 
 void JRPGMapData::set_display_name(const String &p_name) {
 	display_name = p_name;
+	_stamp_version();
 	emit_changed();
 }
 
 void JRPGMapData::set_note(const String &p_note) {
 	note = p_note;
+	_stamp_version();
 	emit_changed();
 }
 
 void JRPGMapData::set_tileset_id(int p_id) {
 	tileset_id = MAX(0, p_id);
+	_stamp_version();
 	emit_signal(SNAME("layout_changed"));
 	emit_changed();
 }
@@ -102,6 +119,7 @@ void JRPGMapData::set_tileset_id(int p_id) {
 void JRPGMapData::set_size(const Vector2i &p_size) {
 	const Vector2i new_size = p_size.clamp(Vector2i(1, 1), Vector2i(MAX_SIDE, MAX_SIDE));
 	ERR_FAIL_COND_MSG(new_size != p_size, vformat("A map is 1 to %d cells on each axis.", MAX_SIDE));
+	_stamp_version(); // Also when the size stays: a map saved at the default size records its version too.
 	if (new_size == size && layers[0].size() == _cell_count()) {
 		return;
 	}
@@ -127,7 +145,6 @@ void JRPGMapData::set_size(const Vector2i &p_size) {
 	remap(shadows);
 	remap(regions);
 	size = new_size;
-	_stamp_version();
 	emit_signal(SNAME("layout_changed"));
 	emit_changed();
 }
@@ -155,12 +172,14 @@ Array JRPGMapData::get_layers() const {
 
 void JRPGMapData::set_shadows(const PackedByteArray &p_shadows) {
 	shadows = _fitted(p_shadows, "shadows");
+	_stamp_version();
 	emit_signal(SNAME("layout_changed"));
 	emit_changed();
 }
 
 void JRPGMapData::set_regions(const PackedByteArray &p_regions) {
 	regions = _fitted(p_regions, "regions");
+	_stamp_version();
 	emit_signal(SNAME("layout_changed"));
 	emit_changed();
 }
@@ -188,12 +207,18 @@ void JRPGMapData::paint(int p_layer, const PackedInt32Array &p_cells, const Pack
 	ERR_FAIL_COND_MSG(p_cells.size() != p_values.size(), "paint: one value per cell.");
 	const int count = _cell_count();
 	int32_t *data = layers[p_layer].ptrw();
+	PackedInt32Array written; // Only these reach cells_changed (epic 8 review A10).
 	for (int i = 0; i < p_cells.size(); i++) {
 		ERR_CONTINUE_MSG(p_cells[i] < 0 || p_cells[i] >= count, vformat("paint: cell %d is outside the %d x %d map.", p_cells[i], size.x, size.y));
 		ERR_CONTINUE_MSG(p_values[i] < 0, "paint: palette indexes are 0 or more.");
 		data[p_cells[i]] = p_values[i];
+		written.push_back(p_cells[i]);
 	}
-	emit_signal(SNAME("cells_changed"), p_layer, p_cells);
+	if (written.is_empty()) {
+		return;
+	}
+	_stamp_version();
+	emit_signal(SNAME("cells_changed"), p_layer, written);
 	emit_changed();
 }
 
@@ -201,11 +226,17 @@ void JRPGMapData::paint_regions(const PackedInt32Array &p_cells, const PackedInt
 	ERR_FAIL_COND_MSG(p_cells.size() != p_values.size(), "paint_regions: one value per cell.");
 	const int count = _cell_count();
 	uint8_t *data = regions.ptrw();
+	PackedInt32Array written;
 	for (int i = 0; i < p_cells.size(); i++) {
 		ERR_CONTINUE(p_cells[i] < 0 || p_cells[i] >= count);
 		data[p_cells[i]] = uint8_t(CLAMP(p_values[i], 0, 255));
+		written.push_back(p_cells[i]);
 	}
-	emit_signal(SNAME("cells_changed"), -1, p_cells); // Layer -1: regions or shadows.
+	if (written.is_empty()) {
+		return;
+	}
+	_stamp_version();
+	emit_signal(SNAME("cells_changed"), CELLS_REGIONS, written);
 	emit_changed();
 }
 
@@ -213,17 +244,24 @@ void JRPGMapData::paint_shadows(const PackedInt32Array &p_cells, const PackedInt
 	ERR_FAIL_COND_MSG(p_cells.size() != p_values.size(), "paint_shadows: one value per cell.");
 	const int count = _cell_count();
 	uint8_t *data = shadows.ptrw();
+	PackedInt32Array written;
 	for (int i = 0; i < p_cells.size(); i++) {
 		ERR_CONTINUE(p_cells[i] < 0 || p_cells[i] >= count);
 		data[p_cells[i]] = uint8_t(p_values[i] & 0xF);
+		written.push_back(p_cells[i]);
 	}
-	emit_signal(SNAME("cells_changed"), -1, p_cells);
+	if (written.is_empty()) {
+		return;
+	}
+	_stamp_version();
+	emit_signal(SNAME("cells_changed"), CELLS_SHADOWS, written);
 	emit_changed();
 }
 
 void JRPGMapData::set_scroll_type(ScrollType p_type) {
 	ERR_FAIL_INDEX(int(p_type), SCROLL_LOOP_BOTH + 1);
 	scroll_type = p_type;
+	_stamp_version();
 	emit_signal(SNAME("layout_changed"));
 	emit_changed();
 }
@@ -234,56 +272,67 @@ BitField<JRPGAutotileResolver::Flags> JRPGMapData::get_resolver_flags(JRPGTilese
 
 void JRPGMapData::set_bgm(const Ref<JRPGAudioCue> &p_cue) {
 	bgm = p_cue;
+	_stamp_version();
 	emit_changed();
 }
 
 void JRPGMapData::set_autoplay_bgm(bool p_enabled) {
 	autoplay_bgm = p_enabled;
+	_stamp_version();
 	emit_changed();
 }
 
 void JRPGMapData::set_bgs(const Ref<JRPGAudioCue> &p_cue) {
 	bgs = p_cue;
+	_stamp_version();
 	emit_changed();
 }
 
 void JRPGMapData::set_autoplay_bgs(bool p_enabled) {
 	autoplay_bgs = p_enabled;
+	_stamp_version();
 	emit_changed();
 }
 
 void JRPGMapData::set_battleback(const Dictionary &p_battleback) {
 	battleback = p_battleback;
+	_stamp_version();
 	emit_changed();
 }
 
 void JRPGMapData::set_parallax(const Dictionary &p_parallax) {
 	parallax = p_parallax;
+	_stamp_version();
 	emit_changed();
 }
 
 void JRPGMapData::set_encounters(const Array &p_encounters) {
 	encounters = p_encounters;
+	_stamp_version();
 	emit_changed();
 }
 
 void JRPGMapData::set_encounter_steps(int p_steps) {
 	encounter_steps = CLAMP(p_steps, 1, 999);
+	_stamp_version();
 	emit_changed();
 }
 
 void JRPGMapData::set_disable_dash(bool p_disable) {
 	disable_dash = p_disable;
+	_stamp_version();
 	emit_changed();
 }
 
 void JRPGMapData::set_next_event_id(int p_id) {
 	next_event_id = MAX(1, p_id);
+	_stamp_version();
 	emit_changed();
 }
 
 void JRPGMapData::set_events(const Array &p_events) {
 	events = p_events;
+	_stamp_version();
 	emit_changed();
 }
 
@@ -302,6 +351,7 @@ bool JRPGMapData::_set(const StringName &p_name, const Variant &p_value) {
 void JRPGMapData::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_schema_version", "version"), &JRPGMapData::set_schema_version);
 	ClassDB::bind_method(D_METHOD("get_schema_version"), &JRPGMapData::get_schema_version);
+	ClassDB::bind_method(D_METHOD("upgrade"), &JRPGMapData::upgrade);
 	ClassDB::bind_method(D_METHOD("set_map_id", "id"), &JRPGMapData::set_map_id);
 	ClassDB::bind_method(D_METHOD("get_map_id"), &JRPGMapData::get_map_id);
 	ClassDB::bind_method(D_METHOD("set_revision", "revision"), &JRPGMapData::set_revision);
@@ -395,6 +445,10 @@ void JRPGMapData::_bind_methods() {
 	BIND_ENUM_CONSTANT(LAYER_UPPER);
 	BIND_ENUM_CONSTANT(LAYER_COUNT);
 	BIND_CONSTANT(MAX_SIDE);
+	BIND_CONSTANT(CURRENT_SCHEMA_VERSION);
+	BIND_CONSTANT(SCHEMA_UNSTAMPED);
+	BIND_CONSTANT(CELLS_REGIONS);
+	BIND_CONSTANT(CELLS_SHADOWS);
 }
 
 JRPGMapData::JRPGMapData() {

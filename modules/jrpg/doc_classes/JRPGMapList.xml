@@ -107,16 +107,30 @@
 				Sets the scene path of the map [param map_id].
 			</description>
 		</method>
+		<method name="upgrade">
+			<return type="void" />
+			<description>
+				Brings a list saved by an older version of Talewright to the current format by running its migration steps, then sets [member schema_version] to [constant CURRENT_SCHEMA_VERSION]; an unstamped list is stamped. A list saved by a newer version is left unchanged and a warning is printed. Loading a list calls it once its maps are loaded.
+			</description>
+		</method>
 	</methods>
 	<members>
 		<member name="maps" type="Array" setter="set_maps" getter="get_maps" default="[]">
-			The maps in tree order. Entries without a positive, unique [code]map_id[/code] are dropped with a warning.
+			The maps in tree order. Entries without a positive, unique [code]map_id[/code] are dropped with a warning. A map whose parent the list does not have, or that would be its own ancestor, moves to the top level, and maps out of tree order are put back in it, with a warning.
 		</member>
 		<member name="next_map_id" type="int" setter="set_next_map_id" getter="get_next_map_id" default="1">
 			The ID the next new map gets. It only grows.
 		</member>
-		<member name="schema_version" type="int" setter="set_schema_version" getter="get_schema_version" default="1">
-			The data format version this list follows.
+		<member name="schema_version" type="int" setter="set_schema_version" getter="get_schema_version" default="-1">
+			Version of the list's data format, used to upgrade lists saved by older versions. [constant SCHEMA_UNSTAMPED] (-1) until the content first changes; any change stamps [constant CURRENT_SCHEMA_VERSION]. The default is never a real version, so every saved list records it.
 		</member>
 	</members>
+	<constants>
+		<constant name="CURRENT_SCHEMA_VERSION" value="1">
+			The data format version this build writes.
+		</constant>
+		<constant name="SCHEMA_UNSTAMPED" value="-1">
+			The [member schema_version] of a list whose content never changed: never a real version.
+		</constant>
+	</constants>
 </class>

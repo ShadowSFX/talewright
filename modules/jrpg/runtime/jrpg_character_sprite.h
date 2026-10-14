@@ -39,6 +39,7 @@
 // character's feet on the bottom of its cell (the sheet's y offset raises it) and the animation of its facing. While it
 // walks, the frames go round in order, one every half cell walked, so steps look the same at every speed; standing, it
 // shows frame 0. The frames are set, never played, so the simulation decides what is shown.
+// Authority (D-007): client. It only presents what the mover says (the server's mover, online).
 class JRPGCharacterSprite : public AnimatedSprite2D {
 	GDCLASS(JRPGCharacterSprite, AnimatedSprite2D);
 
@@ -47,9 +48,6 @@ public:
 
 private:
 	Vector2i cell_size = Vector2i(48, 48);
-	real_t walked = 0; // Cells walked since the character last stood.
-	Vector2 last_position;
-	bool has_last_position = false;
 
 	void _update_offset();
 
@@ -60,12 +58,12 @@ public:
 	void set_character_frames(const Ref<SpriteFrames> &p_frames);
 	void set_cell_size(const Vector2i &p_size);
 	Vector2i get_cell_size() const { return cell_size; }
-	// Shows a character at p_position (in cells, as JRPGMover::get_position() gives it) facing p_direction, walking
-	// or standing.
-	void show_state(const Vector2 &p_position, JRPGSystemData::Direction p_direction, bool p_moving);
-	// Forgets the walk (the character was placed elsewhere).
-	void reset_walk();
-	real_t get_walked() const { return walked; }
+	// Shows a character facing p_direction, walking (p_walk_distance cells since it last stood still, as
+	// JRPGMover::get_walk_distance() counts them) or standing.
+	void show_state(JRPGSystemData::Direction p_direction, bool p_moving, real_t p_walk_distance);
+	// The walk frame at p_walk_distance cells into a walk, with p_frame_count frames: 1 on the first half cell, then
+	// round in order (1, 2, 3, 0, ... with four frames).
+	static int get_walk_frame(real_t p_walk_distance, int p_frame_count);
 
 	JRPGCharacterSprite();
 };

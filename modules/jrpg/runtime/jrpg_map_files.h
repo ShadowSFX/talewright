@@ -39,6 +39,8 @@ class PackedScene;
 
 // Map scene files (spec 05, D-006): a map's JRPGMapData read from the scene's SceneState without creating any node
 // (tools, the server data compiler, the map list scan), and the scan that keeps map ids unique across scenes.
+// Authority (D-007): both. Reading map data runs wherever maps are needed (the server data compiler included); the
+// scan writes project files and runs in the editor.
 class JRPGMapFiles : public RefCounted {
 	GDCLASS(JRPGMapFiles, RefCounted);
 
@@ -49,13 +51,17 @@ public:
 	static constexpr const char *MAP_LIST_PATH = "res://jrpg/map_list.tres";
 	static constexpr const char *MAP_DATA_PROPERTY = "map_data"; // JRPGMap's property holding the data.
 
-	// The JRPGMapData the root node of p_scene stores (scene/resources/packed_scene.h:191-193), or null.
-	static Ref<JRPGMapData> read_map_data_from(const Ref<PackedScene> &p_scene);
+	// The JRPGMapData the root node of p_scene stores (scene/resources/packed_scene.h:191-193), or null when the root
+	// is no JRPGMap (or a class extending it). An inherited scene stores only what it changes: its root's type, and its
+	// map data unless it replaced it, come from its base scene (epic 8 review A11); p_own_only leaves those out (null
+	// unless p_scene itself stores the data, as the scan needs to save a new id into it).
+	static Ref<JRPGMapData> read_map_data_from(const Ref<PackedScene> &p_scene, bool p_own_only = false);
 	// The same for the scene file at p_path (loaded, not instantiated).
 	static Ref<JRPGMapData> read_map_data(const String &p_path);
 	// Checks map scenes against the map list. When two scenes claim one map_id (a copied file), the one modified
 	// first keeps it and the newer gets a fresh id from the list, saved into its scene, with a warning; scenes the
 	// list lacks are added under their id (or a fresh one). Returns {reassigned: [{scene, old_id, new_id}],
-	// added: [{scene, map_id}]}. Scenes without map data are skipped.
+	// added: [{scene, map_id}]}. Scenes without map data of their own are skipped (an inherited scene using its base
+	// scene's data is that map, not another one).
 	static Dictionary scan(const Ref<JRPGMapList> &p_list, const PackedStringArray &p_scene_paths);
 };

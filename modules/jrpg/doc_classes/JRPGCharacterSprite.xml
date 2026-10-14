@@ -5,7 +5,8 @@
 	</brief_description>
 	<description>
 		Shows the [SpriteFrames] [JRPGCharacterSheet] cuts from a character sheet, with the character's feet on the bottom edge of its cell (a sheet's y offset draws it higher) and the animation of the way it faces. The frames are set, never played: while the character walks they go round in order, one every half cell walked ([constant FRAMES_PER_CELL] a cell), so a step looks the same at every speed; standing, it shows frame 0.
-		The node sits at the middle of the character's cell; [method show_state] updates it from the character's position and facing.
+		The node sits at the middle of the character's cell; [method show_state] updates it from the character's facing and how far it has walked ([method JRPGMover.get_walk_distance]).
+		Authority: client. It only shows what the character's mover says (online, the server's).
 	</description>
 	<tutorials>
 	</tutorials>
@@ -16,16 +17,12 @@
 				Returns the size of the map's cells, in pixels.
 			</description>
 		</method>
-		<method name="get_walked" qualifiers="const">
-			<return type="float" />
+		<method name="get_walk_frame" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="walk_distance" type="float" />
+			<param index="1" name="frame_count" type="int" />
 			<description>
-				Returns how many cells the character has walked since it last stood still.
-			</description>
-		</method>
-		<method name="reset_walk">
-			<return type="void" />
-			<description>
-				Forgets the walk, as when the character is placed somewhere else.
+				Returns the walk frame shown [param walk_distance] cells into a walk on a sheet with [param frame_count] frames: frame 1 on the first half cell, then round in order (1, 2, 3, 0, 1, ... with four frames). Returns 0 when [param frame_count] is 0.
 			</description>
 		</method>
 		<method name="set_cell_size">
@@ -44,11 +41,11 @@
 		</method>
 		<method name="show_state">
 			<return type="void" />
-			<param index="0" name="position" type="Vector2" />
-			<param index="1" name="direction" type="int" enum="JRPGSystemData.Direction" />
-			<param index="2" name="moving" type="bool" />
+			<param index="0" name="direction" type="int" enum="JRPGSystemData.Direction" />
+			<param index="1" name="moving" type="bool" />
+			<param index="2" name="walk_distance" type="float" />
 			<description>
-				Shows the character at [param position] (in cells, as [method JRPGMover.get_position] gives it), facing [param direction], walking when [param moving] is [code]true[/code] or standing.
+				Shows the character facing [param direction], walking when [param moving] is [code]true[/code] (with the frame for [param walk_distance] cells walked, as [method JRPGMover.get_walk_distance] counts them) or standing.
 			</description>
 		</method>
 	</methods>

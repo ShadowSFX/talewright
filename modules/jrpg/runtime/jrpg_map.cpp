@@ -50,6 +50,9 @@ void JRPGMap::set_map_data(const Ref<JRPGMapData> &p_data) {
 	}
 	_connect_data(false);
 	map_data = p_data;
+	if (map_data.is_valid()) {
+		map_data->upgrade(); // D-029: older data is migrated here, newer data warned about.
+	}
 	_connect_data(true);
 	_queue_rebuild();
 }
@@ -91,7 +94,13 @@ void JRPGMap::_connect_data(bool p_connect) {
 void JRPGMap::_queue_rebuild() {
 	if (!rebuild_queued && is_inside_tree()) {
 		rebuild_queued = true;
-		callable_mp(this, &JRPGMap::rebuild).call_deferred();
+		callable_mp(this, &JRPGMap::_rebuild_if_queued).call_deferred();
+	}
+}
+
+void JRPGMap::_rebuild_if_queued() {
+	if (rebuild_queued) {
+		rebuild(); // Not when a rebuild ran since it was asked for (the scene manager builds at once).
 	}
 }
 
@@ -122,6 +131,7 @@ void JRPGMap::rebuild() {
 	}
 	tileset_data.unref();
 	tileset.unref();
+	palette_tiles.clear();
 	if (map_data.is_null()) {
 		return;
 	}
@@ -139,43 +149,50 @@ void JRPGMap::rebuild() {
 	if (tileset.is_null()) {
 		return; // Nothing to draw with (a map can be painted once its tileset has a TileSet).
 	}
-	palette = tileset_data->get_palette();
+	const Array palette = tileset_data->get_palette();
 	kinds = JRPGAutotileResolver::get_palette_kinds(palette);
 	overhead.resize(palette.size() + 1);
+	palette_tiles.resize(palette.size() + 1);
 	for (int index = 0; index < overhead.size(); index++) {
 		overhead.set(index, (tileset_data->get_tile_flags(index) & JRPGTilesetData::FLAG_OVERHEAD) ? 1 : 0);
+		if (index > 0) {
+			const Dictionary entry = palette[index - 1];
+			palette_tiles[index].source_id = entry.get("source_id", TileSet::INVALID_SOURCE);
+			palette_tiles[index].coords = entry.get("atlas_coords", Vector2i());
+			palette_tiles[index].alternative = entry.get("alternative", 0);
+		}
 	}
 	flags = int(map_data->get_resolver_flags(tileset_data->get_edge_mode()));
 	const Vector2i size = map_data->get_size();
 	for (int layer = 0; layer < JRPGMapData::LAYER_COUNT; layer++) {
-		shapes[layer] = JRPGAutotileResolver::resolve_layer(map_data->get_layer(layer), size, kinds, flags);
+		const PackedInt32Array cells = map_data->get_layer(layer); // Always size.x * size.y long.
+		shapes[layer] = JRPGAutotileResolver::resolve_layer(cells, size, kinds, flags);
 		for (int y = 0; y < size.y; y++) {
 			for (int x = 0; x < size.x; x++) {
-				_update_cell(layer, Vector2i(x, y));
+				_update_cell(layer, Vector2i(x, y), cells[y * size.x + x]);
 			}
 		}
 	}
 }
 
-void JRPGMap::_update_cell(int p_layer, const Vector2i &p_cell) {
-	const int at = map_data->get_cell_index(p_cell);
-	const int index = map_data->get_layer(p_layer)[at];
-	TileMapLayer *target = (index > 0 && index < overhead.size() && overhead[index]) ? above[p_layer] : below[p_layer];
+void JRPGMap::_update_cell(int p_layer, const Vector2i &p_cell, int p_index) {
+	TileMapLayer *target = (p_index > 0 && p_index < overhead.size() && overhead[p_index]) ? above[p_layer] : below[p_layer];
 	TileMapLayer *other = target == below[p_layer] ? above[p_layer] : below[p_layer];
 	other->erase_cell(p_cell);
-	if (index <= 0 || index > palette.size()) {
+	if (p_index <= 0 || p_index >= int(palette_tiles.size())) {
 		target->erase_cell(p_cell); // Empty, or an index the palette does not have.
 		return;
 	}
-	const Dictionary entry = palette[index - 1];
-	Vector2i coords = entry.get("atlas_coords", Vector2i());
+	const PaletteTile &tile = palette_tiles[p_index];
+	Vector2i coords = tile.coords;
+	const int at = map_data->get_cell_index(p_cell);
 	const int shape = shapes[p_layer].size() > at ? shapes[p_layer][at] : 0;
-	if (kinds[index] == JRPGAutotileResolver::KIND_BLOB) {
+	if (kinds[p_index] == JRPGAutotileResolver::KIND_BLOB) {
 		coords += JRPGAutotile::get_blob_cell(shape);
-	} else if (kinds[index] == JRPGAutotileResolver::KIND_WALL) {
+	} else if (kinds[p_index] == JRPGAutotileResolver::KIND_WALL) {
 		coords += JRPGAutotile::get_wall_cell(shape);
 	}
-	target->set_cell(p_cell, entry.get("source_id", TileSet::INVALID_SOURCE), coords, entry.get("alternative", 0));
+	target->set_cell(p_cell, tile.source_id, coords, tile.alternative);
 }
 
 int JRPGMap::get_palette_kind(int p_index) const {
@@ -204,9 +221,11 @@ void JRPGMap::_draw_shadows() {
 }
 
 void JRPGMap::_on_cells_changed(int p_layer, const PackedInt32Array &p_cells) {
+	if (p_layer == JRPGMapData::CELLS_SHADOWS) {
+		shadows->queue_redraw();
+	}
 	if (p_layer < 0) {
-		shadows->queue_redraw(); // Shadows or regions (regions are not drawn by the map).
-		return;
+		return; // Regions are not drawn by the map.
 	}
 	if (p_layer >= JRPGMapData::LAYER_COUNT || tileset.is_null() || rebuild_queued) {
 		return; // A full build is coming anyway.
@@ -224,7 +243,7 @@ void JRPGMap::_on_cells_changed(int p_layer, const PackedInt32Array &p_cells) {
 		for (const Vector2i &changed : JRPGAutotileResolver::update_around(cells, size, kinds, cell, flags, shapes[p_layer])) {
 			if (!done.has(changed)) {
 				done.insert(changed);
-				_update_cell(p_layer, changed);
+				_update_cell(p_layer, changed, cells[map_data->get_cell_index(changed)]);
 			}
 		}
 	}

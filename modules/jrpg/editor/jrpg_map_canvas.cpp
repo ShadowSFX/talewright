@@ -101,8 +101,8 @@ void JRPGMapCanvas::_watch_data(JRPGMap *p_map) {
 }
 
 void JRPGMapCanvas::_cells_changed(int p_layer, const PackedInt32Array &p_cells) {
-	if (p_layer < 0 && session->get_mode() == JRPGMapEditSession::MODE_REGIONS) {
-		marks->queue_redraw(); // Regions (or shadows, which the map draws itself).
+	if (p_layer == JRPGMapData::CELLS_REGIONS && session->get_mode() == JRPGMapEditSession::MODE_REGIONS) {
+		marks->queue_redraw(); // Shadows are drawn by the map itself.
 	}
 }
 

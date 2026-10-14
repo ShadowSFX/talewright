@@ -42,6 +42,7 @@
 
 #include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_map_list.h"
+#include "modules/jrpg/core/jrpg_schema.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 #include "modules/jrpg/runtime/jrpg_map_files.h"
 
@@ -75,14 +76,23 @@ TEST_CASE("[JRPG][MapData] Arrays always match the size; paints report their cel
 	CHECK(map->get_cell(JRPGMapData::LAYER_OBJECTS, Vector2i(20, 0)) == 0); // Outside.
 	map->paint_regions(PackedInt32Array({ map->get_cell_index(Vector2i(2, 3)) }), PackedInt32Array({ 300 }));
 	CHECK(map->get_region(Vector2i(2, 3)) == 255); // Clamped.
-	CHECK(last_layer == -1);
+	CHECK(last_layer == JRPGMapData::CELLS_REGIONS);
 	map->paint_shadows(PackedInt32Array({ map->get_cell_index(Vector2i(2, 3)) }), PackedInt32Array({ 0x1F }));
 	CHECK(map->get_shadow(Vector2i(2, 3)) == 0xF); // Four quarter bits.
+	CHECK(last_layer == JRPGMapData::CELLS_SHADOWS);
 	ERR_PRINT_OFF;
+	// Epic 8 review A10: only the cells written are reported, and nothing when none was.
+	last_layer = 99;
 	map->paint(JRPGMapData::LAYER_GROUND, PackedInt32Array({ 999 }), PackedInt32Array({ 1 })); // Outside: skipped.
 	map->paint(JRPGMapData::LAYER_GROUND, PackedInt32Array({ 0 }), PackedInt32Array({ 1, 2 })); // Mismatched: refused.
+	map->paint_regions(PackedInt32Array({ -1 }), PackedInt32Array({ 1 }));
+	map->paint_shadows(PackedInt32Array({ 300 }), PackedInt32Array({ 1 }));
+	CHECK(last_layer == 99);
+	map->paint(JRPGMapData::LAYER_UPPER, PackedInt32Array({ 999, 4, 5 }), PackedInt32Array({ 1, 2, -3 }));
 	ERR_PRINT_ON;
 	CHECK(map->get_cell(JRPGMapData::LAYER_GROUND, Vector2i()) == 0);
+	CHECK(last_layer == JRPGMapData::LAYER_UPPER);
+	CHECK(last_cells == PackedInt32Array({ 4 }));
 
 	// Smaller: the top left stays; larger: new cells are empty.
 	map->set_size(Vector2i(10, 10));
@@ -164,6 +174,76 @@ TEST_CASE("[JRPG][MapData] Map data and the map list save and load") {
 	ERR_PRINT_ON;
 	CHECK(list_loaded->get_map_ids() == PackedInt32Array({ 9 })); // Invalid and repeated ids dropped.
 	CHECK(list_loaded->get_next_map_id() == 10);
+	CHECK(list_loaded->get_schema_version() == JRPGMapList::CURRENT_SCHEMA_VERSION);
+}
+
+int migrated_from = -1;
+void note_map_data_step(Object *p_resource) {
+	migrated_from = Object::cast_to<JRPGMapData>(p_resource)->get_schema_version();
+}
+
+TEST_CASE("[SceneTree][JRPG][MapData] Map data and the map list record their version (D-029)") {
+	// Epic 8 review A5: unstamped until their content changes, so a saved file always names its version.
+	Ref<JRPGMapList> list;
+	list.instantiate();
+	CHECK(list->get_schema_version() == JRPGMapList::SCHEMA_UNSTAMPED);
+	list->reserve_id();
+	CHECK(list->get_schema_version() == JRPGMapList::CURRENT_SCHEMA_VERSION);
+
+	Ref<JRPGMapData> map;
+	map.instantiate();
+	CHECK(map->get_schema_version() == JRPGMapData::SCHEMA_UNSTAMPED);
+	map->set_size(map->get_size()); // The default size, unchanged, still stamps.
+	CHECK(map->get_schema_version() == JRPGMapData::CURRENT_SCHEMA_VERSION);
+	map.instantiate();
+	map->paint_regions(PackedInt32Array({ 0 }), PackedInt32Array({ 3 }));
+	CHECK(map->get_schema_version() == JRPGMapData::CURRENT_SCHEMA_VERSION);
+	map.instantiate();
+	map->set_encounter_steps(12);
+	CHECK(map->get_schema_version() == JRPGMapData::CURRENT_SCHEMA_VERSION);
+
+	// Data saved by an older version is migrated when a map takes it; a newer version is kept (with a warning).
+	map.instantiate();
+	map->set_schema_version(JRPGMapData::CURRENT_SCHEMA_VERSION - 1);
+	map->set_display_name("Old");
+	CHECK(map->get_schema_version() == JRPGMapData::CURRENT_SCHEMA_VERSION - 1); // A real version is never restamped.
+	JRPGSchema::register_step(JRPGMapData::get_class_static(), JRPGMapData::CURRENT_SCHEMA_VERSION - 1, &note_map_data_step);
+	JRPGMap *node = memnew(JRPGMap);
+	node->set_map_data(map);
+	JRPGSchema::unregister_step(JRPGMapData::get_class_static(), JRPGMapData::CURRENT_SCHEMA_VERSION - 1);
+	CHECK(migrated_from == JRPGMapData::CURRENT_SCHEMA_VERSION - 1);
+	CHECK(map->get_schema_version() == JRPGMapData::CURRENT_SCHEMA_VERSION);
+	Ref<JRPGMapData> newer;
+	newer.instantiate();
+	newer->set_schema_version(JRPGMapData::CURRENT_SCHEMA_VERSION + 1);
+	ERR_PRINT_OFF;
+	node->set_map_data(newer);
+	ERR_PRINT_ON;
+	CHECK(newer->get_schema_version() == JRPGMapData::CURRENT_SCHEMA_VERSION + 1);
+	memdelete(node);
+}
+
+TEST_CASE("[JRPG][MapData] A map list keeps its own maps and repairs parents and order") {
+	Ref<JRPGMapList> list;
+	list.instantiate();
+	const int world = list->add_map("World", "res://w.tscn");
+	const int town = list->add_map("Town", "res://t.tscn", world);
+	// Epic 8 review A9: its own array given back (get_maps() shares it) is not wiped.
+	list->set_maps(list->get_maps());
+	CHECK(list->get_map_ids() == PackedInt32Array({ world, town }));
+
+	// Unknown parents and loops move to the top level; children are put back after their parents.
+	const auto map = [](int p_id, int p_parent) {
+		return Dictionary({ { "map_id", p_id }, { "name", itos(p_id) }, { "parent_id", p_parent }, { "scene", vformat("res://%d.tscn", p_id) } });
+	};
+	ERR_PRINT_OFF;
+	list->set_maps(Array({ map(3, 1), map(1, 0), map(4, 5), map(5, 4), map(6, 77), map(2, 1) }));
+	ERR_PRINT_ON;
+	CHECK(int(list->get_map(6)["parent_id"]) == 0); // Unknown parent.
+	CHECK(int(list->get_map(4)["parent_id"]) == 0); // 4 and 5 were each other's parent: the first one met moves up.
+	CHECK(int(list->get_map(5)["parent_id"]) == 4);
+	CHECK(list->get_map_ids() == PackedInt32Array({ 1, 3, 2, 4, 5, 6 }));
+	CHECK(list->get_children(1) == PackedInt32Array({ 3, 2 }));
 }
 
 TEST_CASE("[JRPG][MapData] Moving maps keeps the tree order and never puts a map under its own maps") {
@@ -229,6 +309,27 @@ TEST_CASE("[SceneTree][JRPG][MapData] Map data is read from a scene's SceneState
 	CHECK(data->get_cell(JRPGMapData::LAYER_GROUND, Vector2i()) == 11);
 	CHECK(JRPGMapFiles::read_map_data(folder.path_join("missing.tscn")).is_null());
 
+	// Epic 8 review A11: an inherited scene's root is its base's JRPGMap (it stores no type of its own) and its map
+	// data comes from the base unless it stores its own; the scan leaves such a scene out (it shows the base's map).
+	const Ref<PackedScene> base = ResourceLoader::load(town);
+	REQUIRE(base.is_valid());
+	Node *inheriting = base->instantiate(PackedScene::GEN_EDIT_STATE_MAIN_INHERITED);
+	REQUIRE(inheriting);
+	inheriting->set_scene_inherited_state(base->get_state());
+	Ref<PackedScene> variant;
+	variant.instantiate();
+	REQUIRE(variant->pack(inheriting) == OK);
+	memdelete(inheriting);
+	const String variant_path = folder.path_join("town_variant.tscn");
+	REQUIRE(ResourceSaver::save(variant, variant_path) == OK);
+	const Ref<PackedScene> variant_loaded = ResourceLoader::load(variant_path, "", ResourceFormatLoader::CACHE_MODE_IGNORE);
+	REQUIRE(variant_loaded.is_valid());
+	CHECK(variant_loaded->get_state()->get_node_type(0) == StringName());
+	const Ref<JRPGMapData> inherited = JRPGMapFiles::read_map_data_from(variant_loaded);
+	REQUIRE(inherited.is_valid());
+	CHECK(inherited->get_map_id() == 1);
+	CHECK(JRPGMapFiles::read_map_data_from(variant_loaded, true).is_null());
+
 	// A copy made later claims the same id: the older file keeps it, the newer gets a fresh one (whatever the names).
 	OS::get_singleton()->delay_usec(1100000); // File times are in seconds.
 	const String copy = save_map_scene(folder.path_join("a_copy.tscn"), 1, 22);
@@ -254,7 +355,7 @@ TEST_CASE("[SceneTree][JRPG][MapData] Map data is read from a scene's SceneState
 	CHECK(list->get_scene(int(change["new_id"])) == copy);
 	CHECK(Array(result["added"]).size() == 2); // field and the copy.
 	// A second scan finds nothing to change.
-	const Dictionary again = JRPGMapFiles::scan(list, PackedStringArray({ copy, town, field }));
+	const Dictionary again = JRPGMapFiles::scan(list, PackedStringArray({ copy, town, field, variant_path }));
 	CHECK(Array(again["reassigned"]).is_empty());
 	CHECK(Array(again["added"]).is_empty());
 }

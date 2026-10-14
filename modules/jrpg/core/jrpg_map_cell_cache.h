@@ -49,6 +49,8 @@ class JRPGTilesetData;
 // - the terrain tag is the top-most nonzero one; the region comes from the map.
 // A step from A toward d is allowed when A can be left on side d, B (the next cell, wrapped on a looping axis, none
 // past another edge) can be entered from the opposite side, and B is not blocked.
+// Authority (D-007): server. The zone server compiles the cache from its own map data and decides every step with it;
+// a client compiles the same cache to predict its player's steps.
 class JRPGMapCellCache : public RefCounted {
 	GDCLASS(JRPGMapCellCache, RefCounted);
 

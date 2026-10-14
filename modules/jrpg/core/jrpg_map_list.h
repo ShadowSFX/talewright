@@ -42,13 +42,15 @@ class JRPGMapList : public Resource {
 
 public:
 	static constexpr int CURRENT_SCHEMA_VERSION = 1;
+	static constexpr int SCHEMA_UNSTAMPED = -1; // D-029: never a real version; any content change stamps the current one.
 
 private:
-	int schema_version = CURRENT_SCHEMA_VERSION;
+	int schema_version = SCHEMA_UNSTAMPED;
 	Array maps;
 	int next_map_id = 1;
 
 	int _find(int p_map_id) const;
+	void _stamp_version();
 
 protected:
 	static void _bind_methods();
@@ -57,8 +59,12 @@ protected:
 public:
 	void set_schema_version(int p_version) { schema_version = p_version; }
 	int get_schema_version() const { return schema_version; }
+	// Brings a list saved by an older version up to this one (JRPGSchema steps), stamps an unstamped one and warns
+	// about one saved by a newer version (D-029). Runs as the maps load.
+	void upgrade();
 	// Maps as stored. Entries without a positive, unique map_id are dropped with a warning; next_map_id is raised
-	// past every id.
+	// past every id. A parent the list does not have, or a map that would be its own ancestor, moves to the top level
+	// and the maps are put back in tree order, with a warning.
 	void set_maps(const Array &p_maps);
 	Array get_maps() const { return maps; }
 	void set_next_map_id(int p_id);

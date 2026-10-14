@@ -63,6 +63,11 @@ private:
 	// The step under way: toward direction, move_steps simulation steps long, progress of them done.
 	int move_steps = 0;
 	int progress = 0;
+	// The walk (epic 8 review A8): steps taken in all, and how many of them before the current walk began; a walk
+	// ends when a simulation step passes with no step under way.
+	int64_t steps_walked = 0;
+	int64_t walk_start = 0;
+	bool standing = true;
 
 protected:
 	static void _bind_methods();
@@ -95,4 +100,7 @@ public:
 	// Where to draw the character, in cells: its cell, or on the way there (fractional, leaving the previous cell
 	// evenly; across a looping edge it comes from outside the map's side).
 	Vector2 get_position() const;
+	// How far the character has walked since it last stood still, in cells, the step under way included: an exact
+	// count of simulation steps, the same at any frame rate and across a looping edge (what walk frames follow).
+	real_t get_walk_distance() const;
 };

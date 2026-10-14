@@ -69,7 +69,10 @@ public:
 	static constexpr int DEFAULT_WIDTH = 20; // A 960 x 720 screen of 48 px tiles.
 	static constexpr int DEFAULT_HEIGHT = 15;
 	static constexpr int CURRENT_SCHEMA_VERSION = 1;
-	static constexpr int SCHEMA_UNSTAMPED = -1;
+	static constexpr int SCHEMA_UNSTAMPED = -1; // D-029: never a real version; any content change stamps the current one.
+	// The layer cells_changed names for painted regions and shadows (tile layers are 0 to LAYER_COUNT - 1).
+	static constexpr int CELLS_REGIONS = -1;
+	static constexpr int CELLS_SHADOWS = -2;
 
 private:
 	int schema_version = SCHEMA_UNSTAMPED;
@@ -109,6 +112,9 @@ protected:
 public:
 	void set_schema_version(int p_version) { schema_version = p_version; }
 	int get_schema_version() const { return schema_version; }
+	// Brings data saved by an older version up to this one (JRPGSchema steps), stamps unstamped data and warns about
+	// data saved by a newer version (D-029). JRPGMap calls it when it takes the data.
+	void upgrade();
 	void set_map_id(int p_id);
 	int get_map_id() const { return map_id; }
 	void set_revision(int p_revision);
@@ -141,7 +147,9 @@ public:
 	int get_region(const Vector2i &p_cell) const;
 	int get_shadow(const Vector2i &p_cell) const;
 	// Writes p_values[i] to the cell at p_cells[i] (cell indexes, row by row) of p_layer: one paint stroke or undo
-	// step. Emits cells_changed once, then changed. Values are palette indexes (0 = empty).
+	// step. Values are palette indexes (0 = empty). Cells outside the map and negative values are skipped with an
+	// error. Emits cells_changed once with the cells written, then changed; nothing when no cell was written.
+	// paint_regions and paint_shadows do the same with the layers CELLS_REGIONS and CELLS_SHADOWS.
 	void paint(int p_layer, const PackedInt32Array &p_cells, const PackedInt32Array &p_values);
 	void paint_regions(const PackedInt32Array &p_cells, const PackedInt32Array &p_values);
 	void paint_shadows(const PackedInt32Array &p_cells, const PackedInt32Array &p_values);

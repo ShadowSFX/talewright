@@ -44,7 +44,6 @@
 void JRPGPlayer::place(const Vector2i &p_cell, JRPGSystemData::Direction p_direction) {
 	mover->set_cell(p_cell);
 	mover->set_direction(p_direction);
-	sprite->reset_walk();
 	update_position();
 }
 
@@ -57,6 +56,7 @@ void JRPGPlayer::set_character(const String &p_reference) {
 	}
 	sprite->set_character_frames(frames);
 	sprite->set_visible(frames.is_valid());
+	queue_redraw(); // The marker shows, or goes.
 	update_position();
 }
 
@@ -69,8 +69,10 @@ void JRPGPlayer::set_cell_size(const Vector2i &p_size) {
 void JRPGPlayer::update_position() {
 	// The middle of the cell the mover is on, or between two on the way.
 	set_position((mover->get_position() + Vector2(0.5, 0.5)) * Vector2(cell_size));
-	sprite->show_state(mover->get_position(), mover->get_direction(), mover->is_moving());
-	queue_redraw(); // The marker's facing may have changed.
+	sprite->show_state(mover->get_direction(), mover->is_moving(), mover->get_walk_distance());
+	if (!sprite->is_visible()) {
+		queue_redraw(); // The marker's facing may have changed (a character sprite needs no drawing: epic 8 review A13).
+	}
 }
 
 int JRPGPlayer::read_direction() {

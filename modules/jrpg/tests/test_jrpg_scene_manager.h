@@ -40,6 +40,7 @@
 #include "scene/audio/audio_stream_player.h"
 #include "scene/main/scene_tree.h"
 #include "scene/main/window.h"
+#include "scene/resources/2d/tile_set.h"
 #include "scene/resources/audio_stream_wav.h"
 #include "scene/resources/image_texture.h"
 #include "scene/resources/packed_scene.h"
@@ -274,18 +275,18 @@ TEST_CASE("[SceneTree][JRPG][SceneManager] A transfer fades out, changes the map
 		CHECK(m->transfer(5, Vector2i()) == ERR_BUSY);
 		CHECK(counter.warnings == 1);
 	}
-	SceneTree::get_singleton()->process(JRPGSceneManager::FADE_SECONDS / 2);
+	m->run_steps(JRPGSceneManager::FADE_STEPS / 2);
 	CHECK(m->get_fade_amount() == doctest::Approx(0.5));
 	CHECK(m->get_map_id() == 2); // Still fading out.
 	SIGNAL_CHECK_FALSE("map_entered");
-	SceneTree::get_singleton()->process(JRPGSceneManager::FADE_SECONDS / 2);
+	m->run_steps(JRPGSceneManager::FADE_STEPS / 2);
 	CHECK(m->get_map_id() == 1);
 	CHECK(m->get_fade_amount() == doctest::Approx(1.0));
 	CHECK((f.state()->get_player_cell() == Vector2i(4, 3) && f.state()->get_player_direction() == JRPGSystemData::DIRECTION_RIGHT));
 	const Array arrived = { { 1 } };
 	SIGNAL_CHECK("map_entered", arrived);
 	CHECK(m->is_transferring());
-	SceneTree::get_singleton()->process(JRPGSceneManager::FADE_SECONDS);
+	m->run_steps(JRPGSceneManager::FADE_STEPS);
 	CHECK((!m->is_transferring() && m->get_fade_amount() == 0));
 	SIGNAL_CHECK("transfer_finished", arrived);
 
@@ -537,6 +538,83 @@ TEST_CASE("[SceneTree][JRPG][SceneManager] A map can turn dashing off; the camer
 	CHECK(player->get_parent() == m->get_map()); // The player went along.
 	CHECK((camera->get_limit(SIDE_LEFT) == 0 && camera->get_limit(SIDE_RIGHT) == 4800));
 	CHECK((camera->get_limit(SIDE_TOP) == 0 && camera->get_limit(SIDE_BOTTOM) == 3840));
+}
+
+TEST_CASE("[SceneTree][JRPG][SceneManager] A map of 32 px tiles, moved in its scene, seen through a zoomed camera") {
+	// Epic 8 review A1, A12: the map's TileSet gives the cell size before the player is placed; the camera's limits are
+	// the map's area on the canvas (through the map's transform), measured with the camera's zoom; the player's camera
+	// is the one the game is seen through.
+	Fixture f;
+	add_meadow(f);
+	Ref<TileSet> tiles;
+	tiles.instantiate();
+	tiles->set_tile_size(Vector2i(32, 32));
+	const String tiles_path = TestUtils::get_temp_path("jrpg_scene_manager_tiles_32.tres");
+	REQUIRE(ResourceSaver::save(tiles, tiles_path) == OK);
+	Ref<JRPGTilesetData>(f.db->get_table(JRPGDatabase::TABLE_TILESETS)->get_entry(1))->set_tileset_uid(tiles_path);
+	Ref<JRPGMapData> field = map_data(Vector2i(40, 30), 1);
+	field->set_tileset_id(1);
+	PackedInt32Array cells;
+	PackedInt32Array values;
+	for (int i = 0; i < 40 * 30; i++) {
+		cells.push_back(i);
+		values.push_back(1);
+	}
+	field->paint(JRPGMapData::LAYER_GROUND, cells, values);
+	JRPGMap *root = memnew(JRPGMap);
+	root->set_position(Vector2(64, 32));
+	root->set_map_data(field);
+	Ref<PackedScene> scene;
+	scene.instantiate();
+	REQUIRE(scene->pack(root) == OK);
+	memdelete(root);
+	const String path = TestUtils::get_temp_path("jrpg_scene_manager_field_32.tscn");
+	REQUIRE(ResourceSaver::save(scene, path) == OK);
+	REQUIRE(f.list->add_map_with_id(11, "Field 32", path) == OK);
+	f.db->get_system()->set_start_map_id(11);
+	f.db->get_system()->set_start_cell(Vector2i(1, 1));
+
+	JRPGSceneManager *m = f.manager;
+	JRPGPlayer *player = m->get_player();
+	Camera2D *camera = player->get_camera();
+	camera->set_zoom(Vector2(2, 2));
+	REQUIRE(m->start_new_game(5) == OK);
+	CHECK(m->get_map()->get_cell_size() == Vector2i(32, 32));
+	CHECK(player->get_position() == Vector2(48, 48)); // The middle of cell (1, 1).
+	hold("jrpg_right", true);
+	m->run_steps(20);
+	hold("jrpg_right", false);
+	m->run_steps(1);
+	CHECK((player->get_cell() == Vector2i(2, 1) && !player->is_moving() && player->get_position() == Vector2(80, 48)));
+	CHECK(camera->is_current());
+
+	const Vector2 view = m->get_viewport()->get_visible_rect().size / 2; // Zoomed in twice: half the screen shows.
+	const Rect2 area(64, 32, 40 * 32, 30 * 32);
+	for (int axis = 0; axis < 2; axis++) {
+		const Side low = axis == 0 ? SIDE_LEFT : SIDE_TOP;
+		const Side high = axis == 0 ? SIDE_RIGHT : SIDE_BOTTOM;
+		if (area.size[axis] >= view[axis]) {
+			CHECK((camera->get_limit(low) == int(area.position[axis]) && camera->get_limit(high) == int(area.get_end()[axis])));
+		} else {
+			CHECK(camera->get_limit(low) == int(Math::floor(area.position[axis] + (area.size[axis] - view[axis]) / 2)));
+			CHECK(camera->get_limit(high) - camera->get_limit(low) == int(Math::ceil(view[axis])));
+		}
+	}
+	camera->set_zoom(Vector2(1, 1));
+}
+
+TEST_CASE("[SceneTree][JRPG][SceneManager] A game that cannot begin leaves the running one as it was") {
+	// Epic 8 review A11: the new game's map is checked before it replaces the running game.
+	Fixture f;
+	JRPGSceneManager *m = f.manager;
+	REQUIRE(m->start_new_game(5) == OK);
+	const Ref<JRPGGameState> running = f.state();
+	JRPGMap *shown = m->get_map();
+	f.db->get_system()->set_start_map_id(4); // A scene whose root is no map.
+	ERR_PRINT_OFF;
+	CHECK(m->start_new_game(6) != OK);
+	ERR_PRINT_ON;
+	CHECK((f.state() == running && m->get_map() == shown && m->get_map_id() == 1));
 }
 
 TEST_CASE("[SceneTree][JRPG][SceneManager] The player shows the party leader's character, or the marker without one") {

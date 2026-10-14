@@ -7,6 +7,7 @@
 		Tracks a character's [member cell], [member direction] and the step it is taking. A step to the next cell takes [method get_steps_per_cell] simulation steps at the character's [member speed] (each level is twice as fast as the one below), and [method advance] runs one simulation step at a time, so movement is the same at any frame rate and on servers.
 		Whether a step can start comes from the map's [JRPGMapCellCache]: the sides of the current and next cells, blocked cells, and looping edges. A step that is not allowed only turns the character. From the moment a step starts, [member cell] is the destination, as events and other characters see it; [method get_position] says where to draw the character on the way.
 		It holds no nodes and reads no input: the game decides when to move a character and draws it where this says.
+		Authority: server. Online, the zone server moves characters; clients predict their player's own steps with the same rules and follow the server's corrections.
 	</description>
 	<tutorials>
 	</tutorials>
@@ -35,6 +36,12 @@
 			<param index="0" name="speed" type="int" />
 			<description>
 				Returns how many simulation steps (1/60 s each) a step to the next cell takes at [param speed]: 160, 80, 40, 20, 10 and 5 for speeds 1 to 6. Speeds outside 1-6 count as the nearest one.
+			</description>
+		</method>
+		<method name="get_walk_distance" qualifiers="const">
+			<return type="float" />
+			<description>
+				Returns how far the character has walked since it last stood still, in cells, the step under way included. It counts simulation steps, so it is the same at any frame rate and across a looping edge; a simulation step without a step under way ends the walk and it returns 0. [JRPGCharacterSprite] picks its walk frames from it.
 			</description>
 		</method>
 		<method name="is_moving" qualifiers="const">

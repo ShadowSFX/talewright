@@ -5,6 +5,7 @@
 	</brief_description>
 	<description>
 		Tools, the map list and servers read a map's [JRPGMapData] from its scene file through the scene's stored state, without creating any node.
+		Authority: both. Reading map data runs wherever maps are needed, the server data compiler included; [method scan] writes project files and runs in the editor.
 	</description>
 	<tutorials>
 	</tutorials>
@@ -19,8 +20,9 @@
 		<method name="read_map_data_from" qualifiers="static">
 			<return type="JRPGMapData" />
 			<param index="0" name="scene" type="PackedScene" />
+			<param index="1" name="own_only" type="bool" default="false" />
 			<description>
-				Returns the [JRPGMapData] stored by the root node of [param scene], or [code]null[/code].
+				Returns the [JRPGMapData] stored by the root node of [param scene], or [code]null[/code] when the root is not a [JRPGMap] (or a class extending it). An inherited scene stores only what it changes: its root's type, and its map data unless it replaced it, come from its base scene. With [param own_only], data that comes from a base scene is left out and [code]null[/code] is returned.
 			</description>
 		</method>
 		<method name="scan" qualifiers="static">
@@ -28,7 +30,7 @@
 			<param index="0" name="list" type="JRPGMapList" />
 			<param index="1" name="scene_paths" type="PackedStringArray" />
 			<description>
-				Checks the map scenes [param scene_paths] against [param list]. When two scenes claim one map ID (a copied file), the scene the list names, or else the one modified first, keeps it; the other gets a fresh ID, saved into its scene, with a warning. Scenes the list lacks are added. Returns a dictionary with [code]reassigned[/code] ([code]{scene, old_id, new_id}[/code] entries) and [code]added[/code] ([code]{scene, map_id}[/code] entries).
+				Checks the map scenes [param scene_paths] against [param list]. When two scenes claim one map ID (a copied file), the scene the list names, or else the one modified first, keeps it; the other gets a fresh ID, saved into its scene, with a warning. Scenes the list lacks are added. Scenes without map data of their own (an inherited scene that shows its base scene's map) are skipped. Returns a dictionary with [code]reassigned[/code] ([code]{scene, old_id, new_id}[/code] entries) and [code]added[/code] ([code]{scene, map_id}[/code] entries).
 			</description>
 		</method>
 	</methods>

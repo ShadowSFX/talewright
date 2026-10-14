@@ -114,13 +114,31 @@ Error JRPGSceneManager::start_new_game(int64_t p_seed) {
 	start.direction = state->get_player_direction();
 	start.fade = FADE_NONE;
 	String reason;
-	const Error checked = _check_destination(start.map_id, start.cell, false, start.scene, reason);
+	Error checked = _check_destination(start.map_id, start.cell, false, start.scene, reason);
+	// Created before the game begins (epic 8 review A11): a scene that fails leaves the running game as it was.
+	JRPGMap *instance = checked == OK ? _instantiate_map(start, reason) : nullptr;
+	if (checked == OK && !instance) {
+		checked = ERR_INVALID_DATA;
+	}
 	if (checked != OK) {
 		WARN_PRINT(vformat("JRPG: a new game cannot start at map %d, cell (%d, %d): %s Set the start position in System data.", start.map_id, start.cell.x, start.cell.y, reason));
 		return checked;
 	}
 	_begin(state);
-	return _enter(start);
+	return _enter(start, instance);
+}
+
+JRPGMap *JRPGSceneManager::_instantiate_map(const Transfer &p_transfer, String &r_reason) {
+	ERR_FAIL_COND_V(p_transfer.scene.is_null(), nullptr);
+	Node *instance = p_transfer.scene->instantiate();
+	JRPGMap *created = Object::cast_to<JRPGMap>(instance);
+	if (!created) {
+		if (instance) {
+			memdelete(instance);
+		}
+		r_reason = vformat("the root of %s is not a JRPGMap.", p_transfer.scene->get_path());
+	}
+	return created;
 }
 
 void JRPGSceneManager::_begin(const Ref<JRPGGameState> &p_state) {
@@ -160,7 +178,13 @@ Error JRPGSceneManager::resume(const Ref<JRPGGameState> &p_state) {
 	place.direction = p_state->get_player_direction();
 	place.fade = FADE_NONE;
 	String reason;
-	if (_check_destination(place.map_id, place.cell, false, place.scene, reason) != OK) {
+	// The map is created before the game begins (epic 8 review A11): a scene that fails leaves the running game as it
+	// was.
+	JRPGMap *instance = nullptr;
+	if (_check_destination(place.map_id, place.cell, false, place.scene, reason) == OK) {
+		instance = _instantiate_map(place, reason);
+	}
+	if (!instance) {
 		const Ref<JRPGSystemData> system = p_state->get_database()->get_system();
 		ERR_FAIL_COND_V(system.is_null(), ERR_UNCONFIGURED);
 		WARN_PRINT(vformat("JRPG: the saved position (map %d, cell (%d, %d)) is gone: %s The game continues at the start position.", place.map_id, place.cell.x, place.cell.y, reason));
@@ -169,9 +193,11 @@ Error JRPGSceneManager::resume(const Ref<JRPGGameState> &p_state) {
 		place.direction = system->get_start_direction();
 		const Error checked = _check_destination(place.map_id, place.cell, false, place.scene, reason);
 		ERR_FAIL_COND_V_MSG(checked != OK, checked, vformat("JRPGSceneManager: the start position (map %d) cannot be shown either: %s", place.map_id, reason));
+		instance = _instantiate_map(place, reason);
+		ERR_FAIL_NULL_V_MSG(instance, ERR_INVALID_DATA, vformat("JRPGSceneManager: the start position (map %d) cannot be shown either: %s", place.map_id, reason));
 	}
 	_begin(p_state);
-	const Error entered = _enter(place);
+	const Error entered = _enter(place, instance);
 	if (entered != OK) {
 		return entered;
 	}
@@ -257,15 +283,12 @@ Error JRPGSceneManager::_check_destination(int p_map_id, const Vector2i &p_cell,
 	return OK;
 }
 
-Error JRPGSceneManager::_enter(const Transfer &p_transfer) {
+Error JRPGSceneManager::_enter(const Transfer &p_transfer, JRPGMap *p_instance) {
 	if (p_transfer.scene.is_valid()) {
-		Node *instance = p_transfer.scene->instantiate();
-		JRPGMap *entered = Object::cast_to<JRPGMap>(instance);
+		String reason;
+		JRPGMap *entered = p_instance ? p_instance : _instantiate_map(p_transfer, reason);
 		if (!entered) {
-			if (instance) {
-				memdelete(instance);
-			}
-			WARN_PRINT(vformat("JRPG: the transfer to map %d was refused: its scene's root is not a JRPGMap. The player stays where they are.", p_transfer.map_id));
+			WARN_PRINT(vformat("JRPG: the transfer to map %d was refused: %s The player stays where they are.", p_transfer.map_id, reason));
 			return ERR_INVALID_DATA;
 		}
 		if (player->get_parent()) {
@@ -280,12 +303,14 @@ Error JRPGSceneManager::_enter(const Transfer &p_transfer) {
 		entered->set_name("Map"); // One path for the current map, whichever it is: get_map_id() tells which.
 		add_child(entered);
 		move_child(entered, 0); // Under everything else the game scene shows.
+		entered->rebuild(); // Now, not deferred: its TileSet gives the cell size placed below (epic 8 review A1).
 		map = entered;
 		map_id = p_transfer.map_id;
 		const Ref<JRPGMapData> entered_data = map->get_map_data();
 		cell_cache = entered_data.is_valid() ? JRPGMapCellCache::compile(entered_data, map->find_tileset_data()) : Ref<JRPGMapCellCache>();
 		map->add_child(player);
 		player->set_cell_size(map->get_cell_size());
+		player->get_camera()->make_current(); // The map is seen through the player's camera (epic 8 review A12).
 	}
 	const JRPGSystemData::Direction direction = p_transfer.direction == DIRECTION_RETAIN ? game_state->get_player_direction() : JRPGSystemData::Direction(p_transfer.direction);
 	game_state->set_player_position(p_transfer.map_id, p_transfer.cell, direction);
@@ -347,24 +372,22 @@ double JRPGSceneManager::get_fade_amount() const {
 	return fade_rect->is_visible() ? fade_rect->get_color().a : 0.0;
 }
 
-void JRPGSceneManager::_process_transfer(double p_delta) {
-	if (!transferring) {
-		return;
-	}
-	pending.time += p_delta;
-	const double half = MIN(pending.time / FADE_SECONDS, 1.0);
+void JRPGSceneManager::_transfer_step() {
+	// Counted in simulation steps, so the map changes after the same steps at any frame rate (epic 8 review A7).
+	pending.steps++;
+	const double half = MIN(double(pending.steps) / FADE_STEPS, 1.0);
 	if (!pending.entered) {
 		_set_fade(half);
-		if (half >= 1.0) {
+		if (pending.steps >= FADE_STEPS) {
 			// At the darkest point. A scene that turns out not to be a map leaves the player where they were.
 			_enter(pending);
 			pending.entered = true;
-			pending.time = 0;
+			pending.steps = 0;
 		}
 		return;
 	}
 	_set_fade(1.0 - half);
-	if (half >= 1.0) {
+	if (pending.steps >= FADE_STEPS) {
 		const int arrived = map_id; // The map shown: the one asked for, unless its scene failed at the darkest point.
 		transferring = false;
 		pending = Transfer();
@@ -394,9 +417,7 @@ void JRPGSceneManager::_notification(int p_what) {
 			player = nullptr;
 		} break;
 		case NOTIFICATION_INTERNAL_PROCESS: {
-			const double delta = get_process_delta_time();
-			_process_transfer(delta);
-			_run_simulation(delta);
+			_run_simulation(get_process_delta_time());
 		} break;
 	}
 }
@@ -420,6 +441,9 @@ void JRPGSceneManager::run_steps(int p_steps) {
 }
 
 void JRPGSceneManager::_simulation_step() {
+	if (transferring) {
+		_transfer_step(); // May change the map: the player is then on the new one.
+	}
 	const Ref<JRPGMover> mover = player->get_mover();
 	if (mover->advance()) {
 		game_state->increase_steps(); // Arrived on a new cell.
@@ -445,19 +469,24 @@ void JRPGSceneManager::_update_camera_limits() {
 		return;
 	}
 	// The camera stays inside the map; on an axis where the map is smaller than the screen it stays in the middle,
-	// and on a looping axis it is free.
+	// and on a looping axis it is free (the looping display comes with epic 23, map loops). Limits are canvas
+	// positions and the camera shows the screen divided by its zoom (scene/2d/camera_2d.cpp:110, 166), so the map's
+	// area is taken through its transform (epic 8 review A12); it is measured when a map is entered and when the
+	// window resizes.
 	const Ref<JRPGMapData> map_data = map->get_map_data();
-	const Vector2 extent = Vector2(map_data->get_size() * map->get_cell_size());
-	const Vector2 view = get_viewport()->get_visible_rect().size;
+	const Rect2 area = map->get_global_transform().xform(Rect2(Vector2(), Vector2(map_data->get_size() * map->get_cell_size())));
+	Camera2D *camera = player->get_camera();
+	const Vector2 view = get_viewport()->get_visible_rect().size / camera->get_zoom();
 	const JRPGMapData::ScrollType scroll = map_data->get_scroll_type();
 	const bool loops[2] = { scroll == JRPGMapData::SCROLL_LOOP_HORIZONTAL || scroll == JRPGMapData::SCROLL_LOOP_BOTH, scroll == JRPGMapData::SCROLL_LOOP_VERTICAL || scroll == JRPGMapData::SCROLL_LOOP_BOTH };
-	Camera2D *camera = player->get_camera();
 	for (int axis = 0; axis < 2; axis++) {
 		int low = -10000000; // Camera2D's own defaults: no limit.
 		int high = 10000000;
 		if (!loops[axis]) {
-			low = extent[axis] >= view[axis] ? 0 : int(Math::floor((extent[axis] - view[axis]) / 2));
-			high = extent[axis] >= view[axis] ? int(extent[axis]) : low + int(Math::ceil(view[axis]));
+			const real_t start = area.position[axis];
+			const real_t extent = area.size[axis];
+			low = int(Math::floor(extent >= view[axis] ? start : start + (extent - view[axis]) / 2));
+			high = extent >= view[axis] ? int(Math::ceil(start + extent)) : low + int(Math::ceil(view[axis]));
 		}
 		camera->set_limit(axis == 0 ? SIDE_LEFT : SIDE_TOP, low);
 		camera->set_limit(axis == 0 ? SIDE_RIGHT : SIDE_BOTTOM, high);

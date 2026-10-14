@@ -38,7 +38,6 @@
 
 void JRPGCharacterSprite::set_character_frames(const Ref<SpriteFrames> &p_frames) {
 	set_sprite_frames(p_frames);
-	reset_walk();
 	_update_offset();
 }
 
@@ -55,12 +54,11 @@ void JRPGCharacterSprite::_update_offset() {
 	set_offset(Vector2(-size.x / 2, cell_size.y / 2.0 - size.y - JRPGCharacterSheet::get_y_offset(sheet)));
 }
 
-void JRPGCharacterSprite::reset_walk() {
-	walked = 0;
-	has_last_position = false;
+int JRPGCharacterSprite::get_walk_frame(real_t p_walk_distance, int p_frame_count) {
+	return p_frame_count > 0 ? (int(Math::floor(MAX(p_walk_distance, real_t(0)) * FRAMES_PER_CELL)) + 1) % p_frame_count : 0;
 }
 
-void JRPGCharacterSprite::show_state(const Vector2 &p_position, JRPGSystemData::Direction p_direction, bool p_moving) {
+void JRPGCharacterSprite::show_state(JRPGSystemData::Direction p_direction, bool p_moving, real_t p_walk_distance) {
 	const Ref<SpriteFrames> sheet = get_sprite_frames();
 	ERR_FAIL_INDEX(int(p_direction), 4);
 	if (sheet.is_null()) {
@@ -72,27 +70,15 @@ void JRPGCharacterSprite::show_state(const Vector2 &p_position, JRPGSystemData::
 		_update_offset();
 	}
 	const int count = sheet->has_animation(get_animation()) ? sheet->get_frame_count(get_animation()) : 0;
-	if (p_moving) {
-		if (has_last_position) {
-			walked += (p_position - last_position).length();
-		}
-		// Frame 1 on the first half cell, then round in order: 1, 2, 3, 0, 1, ... with four frames.
-		set_frame(count > 0 ? (int(Math::floor(walked * FRAMES_PER_CELL)) + 1) % count : 0);
-	} else {
-		walked = 0;
-		set_frame(0);
-	}
-	last_position = p_position;
-	has_last_position = true;
+	set_frame(p_moving ? get_walk_frame(p_walk_distance, count) : 0);
 }
 
 void JRPGCharacterSprite::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_character_frames", "frames"), &JRPGCharacterSprite::set_character_frames);
 	ClassDB::bind_method(D_METHOD("set_cell_size", "size"), &JRPGCharacterSprite::set_cell_size);
 	ClassDB::bind_method(D_METHOD("get_cell_size"), &JRPGCharacterSprite::get_cell_size);
-	ClassDB::bind_method(D_METHOD("show_state", "position", "direction", "moving"), &JRPGCharacterSprite::show_state);
-	ClassDB::bind_method(D_METHOD("reset_walk"), &JRPGCharacterSprite::reset_walk);
-	ClassDB::bind_method(D_METHOD("get_walked"), &JRPGCharacterSprite::get_walked);
+	ClassDB::bind_method(D_METHOD("show_state", "direction", "moving", "walk_distance"), &JRPGCharacterSprite::show_state);
+	ClassDB::bind_static_method("JRPGCharacterSprite", D_METHOD("get_walk_frame", "walk_distance", "frame_count"), &JRPGCharacterSprite::get_walk_frame);
 	BIND_CONSTANT(FRAMES_PER_CELL);
 }
 

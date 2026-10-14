@@ -6,6 +6,7 @@
 	<description>
 		A character sheet holds one character by default: a row of walk frames for each way it faces, up, right, down and left (then up-right, down-right, down-left and up-left on an 8-direction sheet), with column 0 the standing pose. [method make_frames] turns a sheet into [SpriteFrames] with one animation per direction, named [code]up[/code], [code]right[/code], [code]down[/code], [code]left[/code] (and [code]up_right[/code], [code]down_right[/code], [code]down_left[/code], [code]up_left[/code]).
 		Sheets laid out differently are described by options: [code]frames[/code] (walk frames a row, default 4), [code]directions[/code] (4 or 8), [code]grid[/code] (characters across and down the image, default [code]Vector2i(1, 1)[/code]) with [code]index[/code] (which one, row by row), [code]row_order[/code] (the direction names of the rows, comma-separated), [code]y_offset[/code] (pixels to draw the character higher) and [code]object[/code] (an object that bushes do not hide). The editor's Character Sheet importer (Import As in the Import dock) takes the same options and saves the [SpriteFrames]; an image imported as a plain texture is cut with the default layout.
+		Authority: client. Character sheets are presentation only; servers never load them.
 	</description>
 	<tutorials>
 	</tutorials>

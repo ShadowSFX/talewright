@@ -72,7 +72,7 @@
 			<param index="1" name="cells" type="PackedInt32Array" />
 			<param index="2" name="values" type="PackedInt32Array" />
 			<description>
-				Writes [code]values[i][/code] to the cell at position [code]cells[i][/code] (from [method get_cell_index]) of [param layer], as one paint stroke or undo step. Cells outside the map are skipped with an error. Emits [signal cells_changed] once.
+				Writes [code]values[i][/code] to the cell at position [code]cells[i][/code] (from [method get_cell_index]) of [param layer], as one paint stroke or undo step. Cells outside the map and negative values are skipped with an error. Emits [signal cells_changed] once with the cells written, then [signal Resource.changed]; nothing is emitted when no cell was written.
 			</description>
 		</method>
 		<method name="paint_regions">
@@ -80,7 +80,7 @@
 			<param index="0" name="cells" type="PackedInt32Array" />
 			<param index="1" name="values" type="PackedInt32Array" />
 			<description>
-				Writes regions (clamped to 0 to 255) to the cells at the given positions. Emits [signal cells_changed] with layer -1.
+				Writes regions (clamped to 0 to 255) to the cells at the given positions. Emits [signal cells_changed] with layer [constant CELLS_REGIONS] and the cells written.
 			</description>
 		</method>
 		<method name="paint_shadows">
@@ -88,7 +88,13 @@
 			<param index="0" name="cells" type="PackedInt32Array" />
 			<param index="1" name="values" type="PackedInt32Array" />
 			<description>
-				Writes shadow quarters (the low 4 bits of each value) to the cells at the given positions. Emits [signal cells_changed] with layer -1.
+				Writes shadow quarters (the low 4 bits of each value) to the cells at the given positions. Emits [signal cells_changed] with layer [constant CELLS_SHADOWS] and the cells written.
+			</description>
+		</method>
+		<method name="upgrade">
+			<return type="void" />
+			<description>
+				Brings data saved by an older version of Talewright to the current format by running its migration steps, then sets [member schema_version] to [constant CURRENT_SCHEMA_VERSION]; unstamped data is stamped. Data saved by a newer version is left unchanged and a warning is printed. A [JRPGMap] calls it when it takes the data.
 			</description>
 		</method>
 	</methods>
@@ -145,10 +151,10 @@
 			Raised by every save that changes the layers or the events, so saved games can tell the map changed.
 		</member>
 		<member name="schema_version" type="int" setter="set_schema_version" getter="get_schema_version" default="-1">
-			The data format version this map follows.
+			Version of the map data's format, used to upgrade data saved by older versions. [constant SCHEMA_UNSTAMPED] (-1) until the content first changes; any change stamps [constant CURRENT_SCHEMA_VERSION]. The default is never a real version, so every saved map records it.
 		</member>
 		<member name="scroll_type" type="int" setter="set_scroll_type" getter="get_scroll_type" enum="JRPGMapData.ScrollType" default="0">
-			Which axes of the map loop around.
+			Which axes of the map loop around. Characters step across a looping edge to the other side; the map itself is still drawn once (the looping display comes with a later version).
 		</member>
 		<member name="shadows" type="PackedByteArray" setter="set_shadows" getter="get_shadows" default="PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)">
 			The shadow quarters of every cell, row by row: bit 1 top left, 2 top right, 4 bottom left, 8 bottom right. [JRPGMap] draws them half-opaque over the ground layers and under the objects.
@@ -165,7 +171,7 @@
 			<param index="0" name="layer" type="int" />
 			<param index="1" name="cells" type="PackedInt32Array" />
 			<description>
-				Emitted when cells of [param layer] (-1 for regions and shadows) were painted. [param cells] holds their positions.
+				Emitted when cells of [param layer] ([constant CELLS_REGIONS] for regions, [constant CELLS_SHADOWS] for shadows) were painted. [param cells] holds the positions of the cells written.
 			</description>
 		</signal>
 		<signal name="layout_changed">
@@ -204,6 +210,18 @@
 		</constant>
 		<constant name="MAX_SIDE" value="512">
 			The largest number of cells on one axis.
+		</constant>
+		<constant name="CURRENT_SCHEMA_VERSION" value="1">
+			The data format version this build writes.
+		</constant>
+		<constant name="SCHEMA_UNSTAMPED" value="-1">
+			The [member schema_version] of map data whose content never changed: never a real version.
+		</constant>
+		<constant name="CELLS_REGIONS" value="-1">
+			The layer [signal cells_changed] reports for painted regions.
+		</constant>
+		<constant name="CELLS_SHADOWS" value="-2">
+			The layer [signal cells_changed] reports for painted shadows.
 		</constant>
 	</constants>
 </class>

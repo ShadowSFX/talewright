@@ -7,6 +7,7 @@
 		The [JRPGSceneManager] places one player on the current map and moves it once per simulation step: the [JRPGMover] returned by [method get_mover] decides each step from the map's cell cache, and the node is drawn where the mover says, between the map's lower tiles and its overhead tiles.
 		The player moves with the [code]jrpg_up[/code], [code]jrpg_down[/code], [code]jrpg_left[/code] and [code]jrpg_right[/code] actions; when several are held, the one pressed last wins. Holding [code]jrpg_dash[/code] makes it one speed level faster, unless the map turns dashing off. The [Camera2D] returned by [method get_camera] follows it within the map's bounds.
 		It shows the party leader's character as a [JRPGCharacterSprite] ([method set_character]); without one it draws a marker that shows the way it faces.
+		Authority: server. Online, the client sends the steps its player asks for and predicts them with the same mover; the zone server's mover decides.
 	</description>
 	<tutorials>
 	</tutorials>
