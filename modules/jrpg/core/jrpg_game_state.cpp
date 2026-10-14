@@ -283,6 +283,59 @@ int JRPGGameState::attach_database(const Ref<JRPGDatabase> &p_database) {
 	return fixes;
 }
 
+void JRPGGameState::set_events_map(int p_map_id, int64_t p_revision) {
+	ERR_FAIL_COND_MSG(p_map_id < 0, "JRPGGameState: map IDs cannot be negative.");
+	if (p_map_id != data.events_map_id) {
+		data.events.clear();
+	}
+	data.events_map_id = p_map_id;
+	data.events_map_revision = p_revision;
+}
+
+Ref<JRPGEventState> JRPGGameState::get_event_state(int p_event_id) const {
+	const RBMap<int, Ref<JRPGEventState>>::Element *e = data.events.find(p_event_id);
+	return e ? e->value() : Ref<JRPGEventState>();
+}
+
+Ref<JRPGEventState> JRPGGameState::ensure_event_state(int p_event_id) {
+	ERR_FAIL_COND_V_MSG(p_event_id < 1, Ref<JRPGEventState>(), "JRPGGameState: event IDs start at 1.");
+	Ref<JRPGEventState> state = get_event_state(p_event_id);
+	if (state.is_null()) {
+		state.instantiate();
+		state->set_event_id(p_event_id);
+		data.events[p_event_id] = state;
+	}
+	return state;
+}
+
+bool JRPGGameState::remove_event_state(int p_event_id) {
+	return data.events.erase(p_event_id);
+}
+
+PackedInt32Array JRPGGameState::get_event_state_ids() const {
+	PackedInt32Array ids;
+	for (const KeyValue<int, Ref<JRPGEventState>> &kv : data.events) {
+		ids.push_back(kv.key);
+	}
+	return ids;
+}
+
+int JRPGGameState::prune_event_states(const PackedInt32Array &p_existing_event_ids) {
+	LocalVector<int> gone;
+	for (const KeyValue<int, Ref<JRPGEventState>> &kv : data.events) {
+		if (!p_existing_event_ids.has(kv.key)) {
+			gone.push_back(kv.key);
+		}
+	}
+	for (int id : gone) {
+		data.events.erase(id);
+	}
+	if (!gone.is_empty()) {
+		WARN_PRINT(vformat("JRPG game state: map %d changed since this game was saved; the saved state of %d events that no longer exist was dropped.", data.events_map_id, int(gone.size())));
+	}
+	return gone.size();
+}
+
 void JRPGGameState::set_party_members(const PackedInt32Array &p_actor_ids) {
 	for (int i = 0; i < p_actor_ids.size(); i++) {
 		ERR_FAIL_COND_MSG(p_actor_ids[i] < 1, "JRPGGameState: party members are actor IDs from 1.");
@@ -483,6 +536,16 @@ Dictionary JRPGGameState::serialize() const {
 
 	d["rng"] = random->serialize();
 	d["clock"] = clock->get_steps();
+
+	Dictionary events_state;
+	events_state["map_id"] = data.events_map_id;
+	events_state["map_revision"] = data.events_map_revision;
+	Array events;
+	for (const KeyValue<int, Ref<JRPGEventState>> &kv : data.events) {
+		events.push_back(kv.value->serialize());
+	}
+	events_state["events"] = events;
+	d["events_state"] = events_state;
 	return d;
 }
 
@@ -662,6 +725,28 @@ Error JRPGGameState::_parse(const Dictionary &p_data, Data &r_data, Dictionary &
 	v = 0;
 	JRPG_LOAD_CHECK(read(p_data, "clock", Variant::INT, v) && int64_t(v) >= 0, "clock");
 	r_clock_steps = v;
+
+	v = Dictionary();
+	JRPG_LOAD_CHECK(read(p_data, "events_state", Variant::DICTIONARY, v), "event states");
+	{
+		const Dictionary events_state = v;
+		v = 0;
+		JRPG_LOAD_CHECK(read(events_state, "map_id", Variant::INT, v) && int64_t(v) >= 0 && int64_t(v) <= INT32_MAX, "event states");
+		r_data.events_map_id = v;
+		v = 0;
+		JRPG_LOAD_CHECK(read(events_state, "map_revision", Variant::INT, v), "event states");
+		r_data.events_map_revision = v;
+		v = Array();
+		JRPG_LOAD_CHECK(read(events_state, "events", Variant::ARRAY, v), "event states");
+		const Array events = v;
+		for (int i = 0; i < events.size(); i++) {
+			JRPG_LOAD_CHECK(events[i].get_type() == Variant::DICTIONARY, "event states");
+			Ref<JRPGEventState> state;
+			state.instantiate();
+			JRPG_LOAD_CHECK(state->deserialize(events[i]) == OK && !r_data.events.has(state->get_event_id()), "event states");
+			r_data.events[state->get_event_id()] = state;
+		}
+	}
 	return OK;
 }
 
@@ -723,6 +808,14 @@ void JRPGGameState::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("ensure_actor", "database", "actor_id"), &JRPGGameState::ensure_actor);
 	ClassDB::bind_method(D_METHOD("get_actor_ids"), &JRPGGameState::get_actor_ids);
 	ClassDB::bind_method(D_METHOD("attach_database", "database"), &JRPGGameState::attach_database);
+	ClassDB::bind_method(D_METHOD("set_events_map", "map_id", "revision"), &JRPGGameState::set_events_map);
+	ClassDB::bind_method(D_METHOD("get_events_map_id"), &JRPGGameState::get_events_map_id);
+	ClassDB::bind_method(D_METHOD("get_events_map_revision"), &JRPGGameState::get_events_map_revision);
+	ClassDB::bind_method(D_METHOD("get_event_state", "event_id"), &JRPGGameState::get_event_state);
+	ClassDB::bind_method(D_METHOD("ensure_event_state", "event_id"), &JRPGGameState::ensure_event_state);
+	ClassDB::bind_method(D_METHOD("remove_event_state", "event_id"), &JRPGGameState::remove_event_state);
+	ClassDB::bind_method(D_METHOD("get_event_state_ids"), &JRPGGameState::get_event_state_ids);
+	ClassDB::bind_method(D_METHOD("prune_event_states", "existing_event_ids"), &JRPGGameState::prune_event_states);
 	ClassDB::bind_method(D_METHOD("set_party_members", "actor_ids"), &JRPGGameState::set_party_members);
 	ClassDB::bind_method(D_METHOD("get_party_members"), &JRPGGameState::get_party_members);
 	ClassDB::bind_method(D_METHOD("add_party_member", "actor_id"), &JRPGGameState::add_party_member);

@@ -22,6 +22,7 @@ def get_doc_classes():
         "JRPGEnemyData",
         "JRPGEntry",
         "JRPGEquipData",
+        "JRPGEventState",
         "JRPGFormula",
         "JRPGFormulaBattler",
         "JRPGGameState",

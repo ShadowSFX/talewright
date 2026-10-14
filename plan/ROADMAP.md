@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 138, in_progress: 2, done: 69, blocked: 0, deferred: 3 (of 212)
+**Totals:** pending: 136, in_progress: 2, done: 71, blocked: 0, deferred: 3 (of 212)
 
 ## [x] 0 Bootstrap and task system
 
@@ -98,11 +98,11 @@ modules/jrpg with pure-logic core (no Node dependency), database, game state, RN
   - [x] **5.4.1** JRPGRandom (PCG32) (P1) _(commit: 00d2e575a7)_
   - [x] **5.4.2** Traits, effects, parameters, stat cache, EXP curve (P1) _(deps: 5.4.1; commit: d05cbf6650)_
   - [x] **5.4.3** JRPGFormula (P1) _(deps: 5.4.2; commit: bebdd8b95a)_
-- [ ] **5.5** Game state core (P1) _(deps: 5.4)_
+- [x] **5.5** Game state core (P1) _(deps: 5.4)_
   - [x] **5.5.1** JRPGGameState core (P1) _(commit: f357cf1e53)_
   - [x] **5.5.2** Runtime actor state (P1) _(deps: 5.5.1; commit: 1295b2eb53)_
-  - [ ] **5.5.3** Event runtime state (P1) _(deps: 5.5.1)_
-  - [x] **5.5.4** Actor equipment, class change and reference repair (P1) _(deps: 5.5.2; commit: pending)_
+  - [x] **5.5.3** Event runtime state (P1) _(deps: 5.5.1; commit: pending)_
+  - [x] **5.5.4** Actor equipment, class change and reference repair (P1) _(deps: 5.5.2; commit: 63a440f97e)_
 - [ ] **5.6** Reference scanner (P2) _(deps: 5.5)_
 - [ ] **5.7** Epic review: JRPG core (P1) _(deps: 5.6)_
 

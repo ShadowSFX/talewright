@@ -4,7 +4,7 @@
 		Everything a JRPG remembers while it is played, saved and loaded as a [Dictionary].
 	</brief_description>
 	<description>
-		Holds the switches, variables, self switches, the party with its gold, steps and inventory, the actor states, the player's position, system flags (save, menu, encounter and formation access, window tone, battle music, timer), the [JRPGRandomStreams] and the [JRPGSimClock] of a game.
+		Holds the switches, variables, self switches, the party with its gold, steps and inventory, the actor states, the player's position, the current map's event states, system flags (save, menu, encounter and formation access, window tone, battle music, timer), the [JRPGRandomStreams] and the [JRPGSimClock] of a game.
 		[method serialize] converts the state to a [Dictionary] of plain values in a canonical form: saving, loading and saving again gives an equal [Dictionary] with the same bytes. [method deserialize] checks the whole input before changing anything.
 		Online, zone servers hold the authoritative state of each character and of the world; clients keep a copy to show their own event pages and never send it back.
 	</description>
@@ -59,6 +59,13 @@
 				Returns the state of actor [param actor_id], creating it from [param database] the first time. Returns [code]null[/code] when the database has no such actor.
 			</description>
 		</method>
+		<method name="ensure_event_state">
+			<return type="JRPGEventState" />
+			<param index="0" name="event_id" type="int" />
+			<description>
+				Returns the state of event [param event_id] on the current map, creating an empty one when there is none.
+			</description>
+		</method>
 		<method name="gain_gold">
 			<return type="int" />
 			<param index="0" name="amount" type="int" />
@@ -104,6 +111,31 @@
 			<return type="int" />
 			<description>
 				Returns the schema version of the database this state was saved with.
+			</description>
+		</method>
+		<method name="get_event_state" qualifiers="const">
+			<return type="JRPGEventState" />
+			<param index="0" name="event_id" type="int" />
+			<description>
+				Returns the state of event [param event_id] on the current map, or [code]null[/code].
+			</description>
+		</method>
+		<method name="get_event_state_ids" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<description>
+				Returns the IDs of the events that have a saved state, in ascending order.
+			</description>
+		</method>
+		<method name="get_events_map_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the map the event states belong to.
+			</description>
+		</method>
+		<method name="get_events_map_revision" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the revision number of the map data the event states were saved with.
 			</description>
 		</method>
 		<method name="get_game_id" qualifiers="const">
@@ -298,6 +330,20 @@
 				Returns [code]true[/code] while the timer is started.
 			</description>
 		</method>
+		<method name="prune_event_states">
+			<return type="int" />
+			<param index="0" name="existing_event_ids" type="PackedInt32Array" />
+			<description>
+				After loading, drops the states of events that the current map no longer has ([param existing_event_ids] lists the map's events), with one warning. Returns how many were dropped.
+			</description>
+		</method>
+		<method name="remove_event_state">
+			<return type="bool" />
+			<param index="0" name="event_id" type="int" />
+			<description>
+				Forgets the state of one event. Returns [code]false[/code] when it had none.
+			</description>
+		</method>
 		<method name="remove_party_member">
 			<return type="bool" />
 			<param index="0" name="actor_id" type="int" />
@@ -324,6 +370,14 @@
 			<param index="0" name="enabled" type="bool" />
 			<description>
 				Allows or forbids random encounters.
+			</description>
+		</method>
+		<method name="set_events_map">
+			<return type="void" />
+			<param index="0" name="map_id" type="int" />
+			<param index="1" name="revision" type="int" />
+			<description>
+				Sets the map the event states belong to and the revision of its data. Entering another map forgets the previous map's states: other maps start from their data.
 			</description>
 		</method>
 		<method name="set_formation_enabled">

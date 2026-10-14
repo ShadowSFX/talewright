@@ -33,6 +33,7 @@
 
 #include "jrpg_actor_state.h"
 #include "jrpg_audio_cue.h"
+#include "jrpg_event_state.h"
 #include "jrpg_random.h"
 #include "jrpg_sim_clock.h"
 #include "jrpg_system_data.h"
@@ -102,6 +103,10 @@ private:
 		int timer_steps = 0;
 
 		RBMap<int, Ref<JRPGActorState>> actors; // Actors used so far, by actor ID.
+
+		int events_map_id = 0; // The map the event states belong to (the current map).
+		int64_t events_map_revision = 0;
+		RBMap<int, Ref<JRPGEventState>> events; // By event ID.
 	};
 
 	Data data;
@@ -173,6 +178,21 @@ public:
 	// inventory entries, and each actor's class, skills, states and equipment (JRPGActorState::repair_references).
 	// Prints one warning when something was cleared and returns how many references were fixed.
 	int attach_database(const Ref<JRPGDatabase> &p_database);
+
+	// Runtime state of the current map's events. Entering another map (set_events_map with another map ID) forgets
+	// the previous map's states: other maps start from their data. p_revision is the map data's revision number,
+	// saved so that loading can notice an edited map.
+	void set_events_map(int p_map_id, int64_t p_revision);
+	int get_events_map_id() const { return data.events_map_id; }
+	int64_t get_events_map_revision() const { return data.events_map_revision; }
+	Ref<JRPGEventState> get_event_state(int p_event_id) const;
+	// Returns the event's state, creating an empty one for p_event_id when there is none.
+	Ref<JRPGEventState> ensure_event_state(int p_event_id);
+	bool remove_event_state(int p_event_id);
+	PackedInt32Array get_event_state_ids() const;
+	// After loading, drops the states of events that the current map no longer has, with one warning, and returns
+	// how many were dropped.
+	int prune_event_states(const PackedInt32Array &p_existing_event_ids);
 
 	// Party members are actor IDs in formation order, each at most once.
 	void set_party_members(const PackedInt32Array &p_actor_ids);

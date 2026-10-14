@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGEventState" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The saved runtime state of one map event: position, facing, frame, move route progress and flags.
+	</brief_description>
+	<description>
+		What changes about a map event while the map is played and must survive a save: its cell, facing direction, animation frame, progress in its move route, whether it was erased, its transparency and a "through" setting changed by a move route. The active page is not saved; it follows the conditions in [JRPGGameState].
+		Only the current map's events are saved (see [method JRPGGameState.set_events_map]); other maps start from their data when entered.
+		Online, event states live on the zone server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="deserialize">
+			<return type="int" enum="Error" />
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Replaces the state with [param data], made by [method serialize]. Every key is required; malformed data leaves the state unchanged and returns [constant ERR_INVALID_DATA].
+			</description>
+		</method>
+		<method name="get_cell" qualifiers="const">
+			<return type="Vector2i" />
+			<description>
+				Returns the event's map cell.
+			</description>
+		</method>
+		<method name="get_direction" qualifiers="const">
+			<return type="int" enum="JRPGSystemData.Direction" />
+			<description>
+				Returns the direction the event faces.
+			</description>
+		</method>
+		<method name="get_event_id" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the ID of the event in its map.
+			</description>
+		</method>
+		<method name="get_pattern" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the animation frame (column of the character sheet).
+			</description>
+		</method>
+		<method name="get_route_index" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the index of the next command of the event's move route.
+			</description>
+		</method>
+		<method name="get_route_wait" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the simulation steps left in the current move route wait.
+			</description>
+		</method>
+		<method name="get_through" qualifiers="const">
+			<return type="int" enum="JRPGEventState.ThroughOverride" />
+			<description>
+				Returns whether a move route forced "through" on or off, or left it to the page.
+			</description>
+		</method>
+		<method name="is_erased" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when the event was erased (Erase Event); it stays gone until the map is entered again.
+			</description>
+		</method>
+		<method name="is_transparent" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when the event is transparent.
+			</description>
+		</method>
+		<method name="serialize" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns the state as a [Dictionary] of plain values.
+			</description>
+		</method>
+		<method name="set_cell">
+			<return type="void" />
+			<param index="0" name="cell" type="Vector2i" />
+			<description>
+				Sets the event's map cell.
+			</description>
+		</method>
+		<method name="set_direction">
+			<return type="void" />
+			<param index="0" name="direction" type="int" enum="JRPGSystemData.Direction" />
+			<description>
+				Sets the direction the event faces.
+			</description>
+		</method>
+		<method name="set_erased">
+			<return type="void" />
+			<param index="0" name="erased" type="bool" />
+			<description>
+				Erases the event, or brings it back.
+			</description>
+		</method>
+		<method name="set_event_id">
+			<return type="void" />
+			<param index="0" name="id" type="int" />
+			<description>
+				Sets the ID of the event in its map (from 1).
+			</description>
+		</method>
+		<method name="set_pattern">
+			<return type="void" />
+			<param index="0" name="pattern" type="int" />
+			<description>
+				Sets the animation frame, kept between 0 and [constant MAX_PATTERN].
+			</description>
+		</method>
+		<method name="set_route_index">
+			<return type="void" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Sets the index of the next move route command.
+			</description>
+		</method>
+		<method name="set_route_wait">
+			<return type="void" />
+			<param index="0" name="steps" type="int" />
+			<description>
+				Sets the simulation steps left in the current move route wait.
+			</description>
+		</method>
+		<method name="set_through">
+			<return type="void" />
+			<param index="0" name="through" type="int" enum="JRPGEventState.ThroughOverride" />
+			<description>
+				Forces "through" on or off, or leaves it to the page.
+			</description>
+		</method>
+		<method name="set_transparent">
+			<return type="void" />
+			<param index="0" name="transparent" type="bool" />
+			<description>
+				Makes the event transparent or visible.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="MAX_PATTERN" value="63">
+			Highest animation frame index.
+		</constant>
+		<constant name="THROUGH_FROM_PAGE" value="0" enum="ThroughOverride">
+			The page's "through" option decides.
+		</constant>
+		<constant name="THROUGH_ON" value="1" enum="ThroughOverride">
+			The event passes through everything.
+		</constant>
+		<constant name="THROUGH_OFF" value="2" enum="ThroughOverride">
+			The event is blocked as usual, whatever the page says.
+		</constant>
+	</constants>
+</class>

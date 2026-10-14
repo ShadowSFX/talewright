@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "5.5.4 Actor equipment, class change and reference repair",
+  "last_completed": "5.5.3 Event runtime state",
   "tasks": [
     {
       "id": "0",
@@ -1525,7 +1525,7 @@
       "dependencies": [
         "5.4"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "serialize -> deserialize -> serialize gives an identical Dictionary (canonical form, saved_at excluded)",
@@ -1533,8 +1533,8 @@
       ],
       "test_strategy": "Doctests.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "5.5.1",
@@ -1614,9 +1614,9 @@
         "States of missing events are dropped on load with one warning"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -1636,7 +1636,7 @@
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "63a440f97e",
       "notes": ""
     },
     {
@@ -2285,7 +2285,8 @@
       "priority": 1,
       "acceptance_criteria": [
         "Transfer to an existing map works; a missing map or out-of-bounds cell leaves the player in place with one warning",
-        "After a transfer the map's BGM is playing (game_node_get on the audio player)"
+        "After a transfer the map's BGM is playing (game_node_get on the audio player)",
+        "Entering a map calls JRPGGameState.set_events_map(map_id, revision); loading a save calls prune_event_states() with the map's event IDs, and when the saved map_revision differs from the map data, events whose data changed are reset to their data position with one warning (spec 06)"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],

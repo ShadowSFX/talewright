@@ -35,9 +35,11 @@ whole input before changing anything.
 0..99 per item, weapon or armor (RM-CMD-019); gold 0..999 999 999 — the help gives no gold limit (RM-CMD-018 notes),
 so this is Talewright's own: nine digits fit the menu's gold window and stay far from 32-bit overflow when rewards are
 added; timer 0..99 min 59 s (RM-CMD-009).
-`JRPGEventState` (core): `event_id`, cell, direction, pattern, move-route index and wait, erased flag, transparency,
-"through" override. On load, states whose `event_id` no longer exists are dropped; if `map_revision` differs, events
-whose data changed are reset to their data position (one warning).
+`JRPGEventState` (core): `{event_id, cell, direction, pattern, route_index, route_wait, erased, transparent,
+through}` (through: 0 from the page, 1 on, 2 off), every key required, in ascending `event_id`. Entering another map
+(`JRPGGameState.set_events_map`) forgets the previous map's states. On load, states whose `event_id` no longer exists
+are dropped (`prune_event_states`, one warning); if `map_revision` differs, events whose data changed are reset to
+their data position (one warning) — done by the map loader once map data exists (task 8.6.1).
 Header (`slot_info`): title, playtime, party faces/characters, map name — readable without loading the full state.
 
 ## Encoding and files
