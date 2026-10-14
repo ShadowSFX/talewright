@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGChangeItemsCommand" inherits="JRPGPartyAmountCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: gives the party an item or takes it.
+	</brief_description>
+	<description>
+		Changes how many of item [member item_id] the party holds by the amount (see [JRPGPartyAmountCommand]), kept within 0 and [constant JRPGGameState.MAX_ITEM_COUNT]. [JRPGChangeWeaponsCommand] and [JRPGChangeArmorsCommand] do the same with weapons and armors; when they take more than the bag holds and [member include_equipped] is on, the rest comes off the party members' equipment, in party order, and is discarded.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="include_equipped" type="bool" setter="set_include_equipped" getter="is_including_equipped" default="false">
+			For weapons and armors: a decrease also takes the ones party members have equipped, after the bag.
+		</member>
+		<member name="item_id" type="int" setter="set_item_id" getter="get_item_id" default="1">
+			The item, weapon or armor.
+		</member>
+	</members>
+</class>

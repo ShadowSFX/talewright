@@ -532,3 +532,100 @@ void JRPGControlSelfSwitchCommand::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "self_switch", PROPERTY_HINT_ENUM, "A,B,C,D"), "set_self_switch", "get_self_switch");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "value"), "set_value", "get_value");
 }
+
+// Party amounts: Change Gold, Change Items, Change Weapons, Change Armors.
+
+void JRPGPartyAmountCommand::set_operation(Operation p_operation) {
+	ERR_FAIL_INDEX(int(p_operation), 2);
+	operation = p_operation;
+}
+
+int64_t JRPGPartyAmountCommand::_change(const JRPGInterpreter *p_interpreter) const {
+	int64_t value = amount;
+	if (amount_is_variable) {
+		const Variant held = p_interpreter->get_game_state()->get_variable(variable_id);
+		value = held.get_type() == Variant::INT || held.get_type() == Variant::FLOAT ? int64_t(held) : 0;
+	}
+	value = CLAMP(value, -JRPGControlVariablesCommand::VALUE_LIMIT, JRPGControlVariablesCommand::VALUE_LIMIT);
+	return operation == OPERATION_INCREASE ? value : -value;
+}
+
+String JRPGPartyAmountCommand::_amount_text() const {
+	return (operation == OPERATION_INCREASE ? "+ " : "- ") + (amount_is_variable ? vformat("variable %d", variable_id) : itos(amount));
+}
+
+void JRPGPartyAmountCommand::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_operation", "operation"), &JRPGPartyAmountCommand::set_operation);
+	ClassDB::bind_method(D_METHOD("get_operation"), &JRPGPartyAmountCommand::get_operation);
+	ClassDB::bind_method(D_METHOD("set_amount", "amount"), &JRPGPartyAmountCommand::set_amount);
+	ClassDB::bind_method(D_METHOD("get_amount"), &JRPGPartyAmountCommand::get_amount);
+	ClassDB::bind_method(D_METHOD("set_amount_is_variable", "variable"), &JRPGPartyAmountCommand::set_amount_is_variable);
+	ClassDB::bind_method(D_METHOD("is_amount_variable"), &JRPGPartyAmountCommand::is_amount_variable);
+	ClassDB::bind_method(D_METHOD("set_variable_id", "id"), &JRPGPartyAmountCommand::set_variable_id);
+	ClassDB::bind_method(D_METHOD("get_variable_id"), &JRPGPartyAmountCommand::get_variable_id);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "operation", PROPERTY_HINT_ENUM, "Increase,Decrease"), "set_operation", "get_operation");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "amount"), "set_amount", "get_amount");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "amount_is_variable"), "set_amount_is_variable", "is_amount_variable");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "variable_id", PROPERTY_HINT_RANGE, "1,100000,1"), "set_variable_id", "get_variable_id");
+	BIND_ENUM_CONSTANT(OPERATION_INCREASE);
+	BIND_ENUM_CONSTANT(OPERATION_DECREASE);
+}
+
+String JRPGChangeGoldCommand::get_summary() const {
+	return "Change Gold: " + _amount_text();
+}
+
+JRPGEventCommand::ExecuteResult JRPGChangeGoldCommand::execute(Object *p_context) {
+	JRPGInterpreter *interpreter = Object::cast_to<JRPGInterpreter>(p_context);
+	ERR_FAIL_NULL_V(interpreter, EXECUTE_CONTINUE);
+	ERR_FAIL_COND_V(interpreter->get_game_state().is_null(), EXECUTE_CONTINUE);
+	interpreter->get_game_state()->gain_gold(_change(interpreter)); // Within 0..MAX_GOLD.
+	return EXECUTE_CONTINUE;
+}
+
+String JRPGChangeItemsCommand::get_summary() const {
+	static const char *const KINDS[3] = { "Item", "Weapon", "Armor" };
+	return vformat("%s: %s %d %s%s", get_display_name(), KINDS[_get_item_kind()], item_id, _amount_text(), include_equipped && _get_item_kind() != 0 ? " (equipped too)" : "");
+}
+
+Dictionary JRPGChangeItemsCommand::get_id_parameters() const {
+	static const JRPGDatabase::TableKind TABLES[3] = { JRPGDatabase::TABLE_ITEMS, JRPGDatabase::TABLE_WEAPONS, JRPGDatabase::TABLE_ARMORS };
+	Dictionary ids;
+	ids["item_id"] = JRPGDatabase::get_table_name(TABLES[_get_item_kind()]);
+	return ids;
+}
+
+JRPGEventCommand::ExecuteResult JRPGChangeItemsCommand::execute(Object *p_context) {
+	JRPGInterpreter *interpreter = Object::cast_to<JRPGInterpreter>(p_context);
+	ERR_FAIL_NULL_V(interpreter, EXECUTE_CONTINUE);
+	const Ref<JRPGGameState> state = interpreter->get_game_state();
+	ERR_FAIL_COND_V(state.is_null(), EXECUTE_CONTINUE);
+	const JRPGGameState::ItemKind kind = JRPGGameState::ItemKind(_get_item_kind());
+	const int64_t change = _change(interpreter);
+	const int before = state->get_item_count(kind, item_id);
+	const int after = state->gain_item(kind, item_id, int(CLAMP(change, int64_t(-JRPGGameState::MAX_ITEM_COUNT - 1), int64_t(JRPGGameState::MAX_ITEM_COUNT + 1))));
+	int64_t missing = change < 0 ? -change - (before - after) : 0; // What the bag could not give.
+	if (missing <= 0 || !include_equipped || kind == JRPGGameState::ITEM_KIND_ITEM) {
+		return EXECUTE_CONTINUE;
+	}
+	const JRPGActorState::EquipKind equip_kind = kind == JRPGGameState::ITEM_KIND_WEAPON ? JRPGActorState::EQUIP_WEAPON : JRPGActorState::EQUIP_ARMOR;
+	for (const int actor_id : state->get_party_members()) {
+		const Ref<JRPGActorState> actor = state->get_actor(actor_id);
+		for (int slot = 0; actor.is_valid() && slot < actor->get_equip_slot_count() && missing > 0; slot++) {
+			if (actor->get_equip_kind(slot) == equip_kind && actor->get_equip(slot) == item_id) {
+				actor->force_equip(slot, equip_kind, 0); // Discarded, not back to the bag.
+				missing--;
+			}
+		}
+	}
+	return EXECUTE_CONTINUE;
+}
+
+void JRPGChangeItemsCommand::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_item_id", "id"), &JRPGChangeItemsCommand::set_item_id);
+	ClassDB::bind_method(D_METHOD("get_item_id"), &JRPGChangeItemsCommand::get_item_id);
+	ClassDB::bind_method(D_METHOD("set_include_equipped", "include"), &JRPGChangeItemsCommand::set_include_equipped);
+	ClassDB::bind_method(D_METHOD("is_including_equipped"), &JRPGChangeItemsCommand::is_including_equipped);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "item_id", PROPERTY_HINT_RANGE, "1,100000,1"), "set_item_id", "get_item_id");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "include_equipped"), "set_include_equipped", "is_including_equipped");
+}

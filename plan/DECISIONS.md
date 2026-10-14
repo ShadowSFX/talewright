@@ -1202,3 +1202,16 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** deterministic integer arithmetic matches the formula rules (D-009) and never wraps; per-variable random
   draws make "fill a range with dice" work; documented numbering for directions keeps authors' knowledge valid.
 - **Reversal:** the command classes; `JRPGControlVariablesCommand::apply`.
+
+## D-069 — Change Gold, Items, Weapons, Armors
+- **Context:** task 9.5.2.2 (RM-CMD-018..021). The help gives Increase/Decrease, Constant/Variable, the 0-99 count range
+  and "Include Equipped" for decreases of weapons and armors, but not the order equipment is taken in or where it goes.
+- **Options:** four unrelated classes or a shared parent; equipment taken before or after the bag, returned or lost.
+- **Choice:** an abstract parent `JRPGPartyAmountCommand` (operation, amount or variable amount: ints, floats cut,
+  text 0; a negative amount works the other way) with `change_gold` (within 0..MAX_GOLD) and `change_items`, whose
+  subclasses `change_weapons` and `change_armors` only change the kind. A decrease takes from the bag first; with
+  include_equipped, what the bag lacked comes off the party members' slots in party order and is discarded
+  (`force_equip(slot, kind, 0)`).
+- **Why:** the bag first keeps what the player wears unless the event really needs more; discarding matches "take
+  away" (returning it to the bag would undo the decrease).
+- **Reversal:** the command classes in `jrpg_state_commands.*`.

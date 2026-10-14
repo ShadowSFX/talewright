@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.5.2.1 Control Switches, Control Variables, Control Self Switch",
+  "last_completed": "9.5.2.2 Change Gold, Items, Weapons, Armors",
   "tasks": [
     {
       "id": "0",
@@ -4276,7 +4276,7 @@
         "modules/jrpg/tests/test_jrpg_state_commands.h",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "8b97d866a2",
       "notes": ""
     },
     {
@@ -4291,9 +4291,21 @@
         "Clamping at 0 and at the limits; include equipped takes from party members"
       ],
       "test_strategy": "Doctests [JRPG].",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_state_commands.h",
+        "modules/jrpg/core/jrpg_state_commands.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGPartyAmountCommand.xml",
+        "modules/jrpg/doc_classes/JRPGChangeGoldCommand.xml",
+        "modules/jrpg/doc_classes/JRPGChangeItemsCommand.xml",
+        "modules/jrpg/doc_classes/JRPGChangeWeaponsCommand.xml",
+        "modules/jrpg/doc_classes/JRPGChangeArmorsCommand.xml",
+        "modules/jrpg/tests/test_jrpg_state_commands.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

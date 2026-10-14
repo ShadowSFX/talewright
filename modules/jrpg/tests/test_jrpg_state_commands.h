@@ -267,4 +267,90 @@ TEST_CASE("[JRPG][StateCommands] The game progression commands go through a comm
 	CHECK(copy->get_content_hash() == list->get_content_hash());
 }
 
+template <typename T>
+static Ref<T> amount_command(JRPGPartyAmountCommand::Operation p_operation, int64_t p_amount) {
+	Ref<T> command;
+	command.instantiate();
+	command->set_operation(p_operation);
+	command->set_amount(p_amount);
+	return command;
+}
+
+template <typename T>
+static Ref<T> items_command(int p_id, JRPGPartyAmountCommand::Operation p_operation, int64_t p_amount, bool p_include_equipped = false) {
+	const Ref<T> command = amount_command<T>(p_operation, p_amount);
+	command->set_item_id(p_id);
+	command->set_include_equipped(p_include_equipped);
+	return command;
+}
+
+TEST_CASE("[JRPG][StateCommands] Change Gold: up and down by an amount or a variable's value, within its limits") {
+	TestJRPGConditionalBranch::Game game;
+	game.state->set_gold(0);
+	run(game.state, amount_command<JRPGChangeGoldCommand>(JRPGPartyAmountCommand::OPERATION_INCREASE, 100));
+	CHECK(game.state->get_gold() == 100);
+	game.state->set_variable(3, 30);
+	const Ref<JRPGChangeGoldCommand> spend = amount_command<JRPGChangeGoldCommand>(JRPGPartyAmountCommand::OPERATION_DECREASE, 0);
+	spend->set_amount_is_variable(true);
+	spend->set_variable_id(3);
+	run(game.state, spend);
+	CHECK(game.state->get_gold() == 70);
+	CHECK(spend->get_summary() == "Change Gold: - variable 3");
+	run(game.state, amount_command<JRPGChangeGoldCommand>(JRPGPartyAmountCommand::OPERATION_DECREASE, 500));
+	CHECK(game.state->get_gold() == 0);
+	run(game.state, amount_command<JRPGChangeGoldCommand>(JRPGPartyAmountCommand::OPERATION_INCREASE, JRPGGameState::MAX_GOLD * 3));
+	CHECK(game.state->get_gold() == JRPGGameState::MAX_GOLD);
+	run(game.state, amount_command<JRPGChangeGoldCommand>(JRPGPartyAmountCommand::OPERATION_INCREASE, -9)); // A negative amount takes.
+	CHECK(game.state->get_gold() == JRPGGameState::MAX_GOLD - 9);
+}
+
+TEST_CASE("[JRPG][StateCommands] Change Items, Weapons and Armors: counts within 0..99; equipped ones when asked") {
+	TestJRPGConditionalBranch::Game game;
+	const auto count = [&](JRPGGameState::ItemKind p_kind, int p_id) { return game.state->get_item_count(p_kind, p_id); };
+	run(game.state, items_command<JRPGChangeItemsCommand>(2, JRPGPartyAmountCommand::OPERATION_INCREASE, 5));
+	CHECK(count(JRPGGameState::ITEM_KIND_ITEM, 2) == 5);
+	run(game.state, items_command<JRPGChangeItemsCommand>(2, JRPGPartyAmountCommand::OPERATION_INCREASE, 200));
+	CHECK(count(JRPGGameState::ITEM_KIND_ITEM, 2) == JRPGGameState::MAX_ITEM_COUNT);
+	run(game.state, items_command<JRPGChangeItemsCommand>(2, JRPGPartyAmountCommand::OPERATION_DECREASE, 10));
+	CHECK(count(JRPGGameState::ITEM_KIND_ITEM, 2) == 89);
+	run(game.state, items_command<JRPGChangeItemsCommand>(2, JRPGPartyAmountCommand::OPERATION_DECREASE, 500));
+	CHECK(count(JRPGGameState::ITEM_KIND_ITEM, 2) == 0);
+
+	// Actor 1 has weapon 1 and armor 3 equipped; the bag gets one more weapon 1.
+	const Ref<JRPGActorState> ondine = game.state->get_actor(1);
+	const auto equipped = [&](JRPGActorState::EquipKind p_kind, int p_id) {
+		for (int slot = 0; slot < ondine->get_equip_slot_count(); slot++) {
+			if (ondine->get_equip_kind(slot) == p_kind && ondine->get_equip(slot) == p_id) {
+				return true;
+			}
+		}
+		return false;
+	};
+	REQUIRE((equipped(JRPGActorState::EQUIP_WEAPON, 1) && equipped(JRPGActorState::EQUIP_ARMOR, 3)));
+	run(game.state, items_command<JRPGChangeWeaponsCommand>(1, JRPGPartyAmountCommand::OPERATION_INCREASE, 1));
+	CHECK(count(JRPGGameState::ITEM_KIND_WEAPON, 1) == 1);
+	run(game.state, items_command<JRPGChangeWeaponsCommand>(1, JRPGPartyAmountCommand::OPERATION_DECREASE, 2));
+	CHECK((count(JRPGGameState::ITEM_KIND_WEAPON, 1) == 0 && equipped(JRPGActorState::EQUIP_WEAPON, 1))); // The bag only.
+	run(game.state, items_command<JRPGChangeWeaponsCommand>(1, JRPGPartyAmountCommand::OPERATION_INCREASE, 1));
+	run(game.state, items_command<JRPGChangeWeaponsCommand>(1, JRPGPartyAmountCommand::OPERATION_DECREASE, 2, true));
+	CHECK((count(JRPGGameState::ITEM_KIND_WEAPON, 1) == 0 && !equipped(JRPGActorState::EQUIP_WEAPON, 1))); // The bag, then the actor.
+	run(game.state, items_command<JRPGChangeArmorsCommand>(3, JRPGPartyAmountCommand::OPERATION_DECREASE, 1, true));
+	CHECK((!equipped(JRPGActorState::EQUIP_ARMOR, 3) && count(JRPGGameState::ITEM_KIND_ARMOR, 3) == 0)); // Discarded.
+	run(game.state, items_command<JRPGChangeArmorsCommand>(1, JRPGPartyAmountCommand::OPERATION_DECREASE, 1));
+	CHECK(equipped(JRPGActorState::EQUIP_ARMOR, 1)); // Without include equipped, the equipped armor stays.
+
+	const Ref<JRPGChangeArmorsCommand> armors = items_command<JRPGChangeArmorsCommand>(4, JRPGPartyAmountCommand::OPERATION_DECREASE, 2, true);
+	CHECK(armors->get_summary() == "Change Armors: Armor 4 - 2 (equipped too)");
+	CHECK(armors->get_id_parameters() == Dictionary({ { "item_id", "armors" } }));
+	CHECK((armors->get_code() == StringName("change_armors") && armors->get_category() == JRPGEventCommand::CATEGORY_PARTY));
+	Ref<JRPGCommandList> copy;
+	copy.instantiate();
+	copy->set_data(commands({ armors, items_command<JRPGChangeWeaponsCommand>(2, JRPGPartyAmountCommand::OPERATION_INCREASE, 3) })->get_data());
+	const Ref<JRPGChangeArmorsCommand> armors_copy = copy->get_command(0);
+	const Ref<JRPGChangeWeaponsCommand> weapons_copy = copy->get_command(1);
+	REQUIRE((armors_copy.is_valid() && weapons_copy.is_valid()));
+	CHECK((armors_copy->get_item_id() == 4 && armors_copy->is_including_equipped() && armors_copy->get_amount() == 2));
+	CHECK((weapons_copy->get_item_id() == 2 && weapons_copy->get_operation() == JRPGPartyAmountCommand::OPERATION_INCREASE));
+}
+
 } // namespace TestJRPGStateCommands

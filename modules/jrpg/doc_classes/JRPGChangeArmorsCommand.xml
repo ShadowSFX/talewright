@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGChangeArmorsCommand" inherits="JRPGChangeItemsCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: gives the party an armor or takes it.
+	</brief_description>
+	<description>
+		[JRPGChangeItemsCommand] for armors: [member JRPGChangeItemsCommand.item_id] is an armor, and a decrease can take equipped ones ([member JRPGChangeItemsCommand.include_equipped]).
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+</class>

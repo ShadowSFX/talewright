@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGChangeGoldCommand" inherits="JRPGPartyAmountCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: gives the party gold or takes it.
+	</brief_description>
+	<description>
+		Changes the party's gold by the amount (see [JRPGPartyAmountCommand]), kept within 0 and [constant JRPGGameState.MAX_GOLD].
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+</class>

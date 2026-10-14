@@ -202,6 +202,11 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGControlSwitchesCommand);
 		GDREGISTER_CLASS(JRPGControlVariablesCommand);
 		GDREGISTER_CLASS(JRPGControlSelfSwitchCommand);
+		GDREGISTER_ABSTRACT_CLASS(JRPGPartyAmountCommand); // The parent of the gold and item commands.
+		GDREGISTER_CLASS(JRPGChangeGoldCommand);
+		GDREGISTER_CLASS(JRPGChangeItemsCommand);
+		GDREGISTER_CLASS(JRPGChangeWeaponsCommand);
+		GDREGISTER_CLASS(JRPGChangeArmorsCommand);
 		JRPGCommandRegistry::register_command(JRPGShowTextCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGShowChoicesCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGInputNumberCommand::get_class_static());
@@ -216,6 +221,10 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		JRPGCommandRegistry::register_command(JRPGControlSwitchesCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGControlVariablesCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGControlSelfSwitchCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGChangeGoldCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGChangeItemsCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGChangeWeaponsCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGChangeArmorsCommand::get_class_static());
 		GDREGISTER_CLASS(JRPGReferenceScanner);
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotile); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotileResolver);

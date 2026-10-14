@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 80, in_progress: 0, done: 198, blocked: 0, deferred: 3 (of 281)
+**Totals:** pending: 79, in_progress: 0, done: 199, blocked: 0, deferred: 3 (of 281)
 
 ## [x] 0 Bootstrap and task system
 
@@ -226,8 +226,8 @@ Pages, conditions, triggers, command model with authority, interpreter with pres
     - [x] **9.5.1.2** Conditional Branch (P1) _(deps: 9.5.1.1; commit: f3f63ed1ae)_
     - [x] **9.5.1.3** Loop, Break Loop, Label, Jump to Label, Common Event, Comment, Exit (P1) _(deps: 9.5.1.1; commit: 7d14d5402e)_
   - [ ] **9.5.2** State commands (P1) _(deps: 9.5.1)_
-    - [x] **9.5.2.1** Control Switches, Control Variables, Control Self Switch (P1) _(commit: pending)_
-    - [ ] **9.5.2.2** Change Gold, Items, Weapons, Armors (P1)
+    - [x] **9.5.2.1** Control Switches, Control Variables, Control Self Switch (P1) _(commit: 8b97d866a2)_
+    - [x] **9.5.2.2** Change Gold, Items, Weapons, Armors (P1) _(commit: pending)_
     - [ ] **9.5.2.3** Change HP, MP, TP, State; Recover All (P1)
   - [ ] **9.5.3** Scene and movement commands (P1) _(deps: 9.5.2)_
 - [ ] **9.6** Event characters runtime (P1) _(deps: 9.5, 8.7)_

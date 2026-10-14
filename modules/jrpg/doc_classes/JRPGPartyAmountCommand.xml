@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGPartyAmountCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The base of the event commands that change the party's gold and items by an amount.
+	</brief_description>
+	<description>
+		Holds what [JRPGChangeGoldCommand] and [JRPGChangeItemsCommand] (and its weapon and armor versions) change things by: [member amount], or the value of variable [member variable_id] when [member amount_is_variable] (an integer; a float is cut to one; text is 0), added on [constant OPERATION_INCREASE] and taken away on [constant OPERATION_DECREASE]. A negative amount works the other way.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="amount" type="int" setter="set_amount" getter="get_amount" default="1">
+			The amount, when it is not read from a variable.
+		</member>
+		<member name="amount_is_variable" type="bool" setter="set_amount_is_variable" getter="is_amount_variable" default="false">
+			The amount is variable [member variable_id]'s value.
+		</member>
+		<member name="operation" type="int" setter="set_operation" getter="get_operation" enum="JRPGPartyAmountCommand.Operation" default="0">
+			Whether the amount is added or taken away.
+		</member>
+		<member name="variable_id" type="int" setter="set_variable_id" getter="get_variable_id" default="1">
+			The variable the amount is read from.
+		</member>
+	</members>
+	<constants>
+		<constant name="OPERATION_INCREASE" value="0" enum="Operation">
+			The amount is added.
+		</constant>
+		<constant name="OPERATION_DECREASE" value="1" enum="Operation">
+			The amount is taken away.
+		</constant>
+	</constants>
+</class>

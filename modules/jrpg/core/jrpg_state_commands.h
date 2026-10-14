@@ -235,9 +235,113 @@ public:
 	virtual ExecuteResult execute(Object *p_context) override;
 };
 
+// The amount a party command changes things by: amount, or variable variable_id's value (an integer; a float is cut
+// to one, text is 0), added on INCREASE and taken away on DECREASE (a negative amount works the other way).
+class JRPGPartyAmountCommand : public JRPGEventCommand {
+	GDCLASS(JRPGPartyAmountCommand, JRPGEventCommand);
+
+public:
+	enum Operation {
+		OPERATION_INCREASE,
+		OPERATION_DECREASE,
+	};
+
+private:
+	Operation operation = OPERATION_INCREASE;
+	int64_t amount = 1;
+	bool amount_is_variable = false;
+	int variable_id = 1;
+
+protected:
+	static void _bind_methods();
+	// The signed change for the run p_interpreter is (positive: more).
+	int64_t _change(const JRPGInterpreter *p_interpreter) const;
+	String _amount_text() const;
+
+public:
+	void set_operation(Operation p_operation);
+	Operation get_operation() const { return operation; }
+	void set_amount(int64_t p_amount) { amount = p_amount; }
+	int64_t get_amount() const { return amount; }
+	void set_amount_is_variable(bool p_variable) { amount_is_variable = p_variable; }
+	bool is_amount_variable() const { return amount_is_variable; }
+	void set_variable_id(int p_id) { variable_id = p_id; }
+	int get_variable_id() const { return variable_id; }
+
+	virtual Category get_category() const override { return CATEGORY_PARTY; }
+	virtual Authority get_authority() const override { return AUTHORITY_SERVER; }
+};
+
+// Change Gold (RM-CMD-018; task 9.5.2.2, D-069): the party's gold goes up or down, within 0..JRPGGameState::MAX_GOLD.
+// Authority (D-007): server.
+class JRPGChangeGoldCommand : public JRPGPartyAmountCommand {
+	GDCLASS(JRPGChangeGoldCommand, JRPGPartyAmountCommand);
+
+public:
+	virtual StringName get_code() const override { return "change_gold"; }
+	virtual String get_display_name() const override { return "Change Gold"; }
+	virtual String get_summary() const override;
+	virtual ExecuteResult execute(Object *p_context) override;
+};
+
+// Change Items (RM-CMD-019; task 9.5.2.2, D-069): the party holds more or fewer of item item_id, within
+// 0..JRPGGameState::MAX_ITEM_COUNT. Change Weapons and Change Armors work the same on weapons and armors, and a
+// decrease with include_equipped also takes what the bag lacks from the party members' equipment (in party order, the
+// items discarded).
+// Authority (D-007): server.
+class JRPGChangeItemsCommand : public JRPGPartyAmountCommand {
+	GDCLASS(JRPGChangeItemsCommand, JRPGPartyAmountCommand);
+
+	int item_id = 1;
+	bool include_equipped = false;
+
+protected:
+	static void _bind_methods();
+	// 0 items, 1 weapons, 2 armors (JRPGGameState::ItemKind).
+	virtual int _get_item_kind() const { return 0; }
+
+public:
+	void set_item_id(int p_id) { item_id = p_id; }
+	int get_item_id() const { return item_id; }
+	// Weapons and armors only.
+	void set_include_equipped(bool p_include) { include_equipped = p_include; }
+	bool is_including_equipped() const { return include_equipped; }
+
+	virtual StringName get_code() const override { return "change_items"; }
+	virtual String get_display_name() const override { return "Change Items"; }
+	virtual String get_summary() const override;
+	virtual Dictionary get_id_parameters() const override;
+	virtual ExecuteResult execute(Object *p_context) override;
+};
+
+// Change Weapons (RM-CMD-020; task 9.5.2.2): Change Items on weapons.
+class JRPGChangeWeaponsCommand : public JRPGChangeItemsCommand {
+	GDCLASS(JRPGChangeWeaponsCommand, JRPGChangeItemsCommand);
+
+protected:
+	virtual int _get_item_kind() const override { return 1; }
+
+public:
+	virtual StringName get_code() const override { return "change_weapons"; }
+	virtual String get_display_name() const override { return "Change Weapons"; }
+};
+
+// Change Armors (RM-CMD-021; task 9.5.2.2): Change Items on armors.
+class JRPGChangeArmorsCommand : public JRPGChangeItemsCommand {
+	GDCLASS(JRPGChangeArmorsCommand, JRPGChangeItemsCommand);
+
+protected:
+	virtual int _get_item_kind() const override { return 2; }
+
+public:
+	virtual StringName get_code() const override { return "change_armors"; }
+	virtual String get_display_name() const override { return "Change Armors"; }
+};
+
 VARIANT_ENUM_CAST(JRPGControlVariablesCommand::Operation);
 VARIANT_ENUM_CAST(JRPGControlVariablesCommand::OperandType);
 VARIANT_ENUM_CAST(JRPGControlVariablesCommand::GameData);
 VARIANT_ENUM_CAST(JRPGControlVariablesCommand::ActorValue);
 VARIANT_ENUM_CAST(JRPGControlVariablesCommand::CharacterValue);
 VARIANT_ENUM_CAST(JRPGControlVariablesCommand::OtherValue);
+VARIANT_ENUM_CAST(JRPGPartyAmountCommand::Operation);
