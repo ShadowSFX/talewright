@@ -36,6 +36,7 @@
 #include "jrpg_map_canvas.h"
 #include "jrpg_map_tree.h"
 
+#include "core/io/image.h"
 #include "core/object/callable_mp.h"
 #include "editor/editor_string_names.h"
 #include "editor/settings/editor_settings.h"
@@ -44,13 +45,19 @@
 #include "scene/gui/center_container.h"
 #include "scene/gui/flow_container.h"
 #include "scene/gui/label.h"
+#include "scene/gui/option_button.h"
 #include "scene/gui/panel_container.h"
 #include "scene/gui/separator.h"
 #include "scene/gui/split_container.h"
 #include "scene/gui/tab_bar.h"
+#include "scene/resources/image_texture.h"
 #include "scene/resources/style_box_flat.h"
 
 #include "modules/jrpg/core/jrpg_database.h"
+#include "modules/jrpg/core/jrpg_map_data.h"
+#include "modules/jrpg/core/jrpg_misc_data.h"
+#include "modules/jrpg/core/jrpg_table.h"
+#include "modules/jrpg/runtime/jrpg_map.h"
 
 JRPGWorkspaceShell *JRPGWorkspaceShell::singleton = nullptr;
 
@@ -59,7 +66,19 @@ namespace {
 const char *const SECTION_NAMES[JRPGWorkspaceShell::SECTION_MAX] = { TTRC("Map"), TTRC("Database") }; // Translated when shown.
 const char *const SECTION_ICONS[JRPGWorkspaceShell::SECTION_MAX] = { "TileMapLayer", "FileList" };
 const char *const MODE_ICONS[JRPGWorkspaceShell::MODE_MAX] = { "TileMapLayer", "Object", "Grid" };
-const char *const TOOL_ICONS[JRPGWorkspaceShell::TOOL_MAX] = { "Edit", "Rectangle", "Bucket", "Eraser" };
+// Editor icons; the ellipse has none of its own (the round ones are class or widget icons), so it is drawn here.
+const char *const TOOL_ICONS[JRPGMapEditSession::TOOL_MAX] = { "Edit", "Rectangle", nullptr, "Bucket", "Eraser", "ColorPick" };
+
+// A 16 x 16 ellipse outline in the editor's icon size and text color (light and dark themes alike).
+Ref<Texture2D> make_ellipse_icon(const Color &p_color) {
+	const String svg = vformat("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><ellipse cx=\"8\" cy=\"8\" rx=\"6.5\" ry=\"4.5\" fill=\"none\" stroke=\"#%s\" stroke-width=\"2\"/></svg>", p_color.to_html(false));
+	Ref<Image> image;
+	image.instantiate();
+	if (image->load_svg_from_string(svg, EDSCALE) != OK) {
+		return Ref<Texture2D>();
+	}
+	return ImageTexture::create_from_image(image);
+}
 
 } // namespace
 
@@ -149,6 +168,54 @@ void JRPGWorkspaceShell::_update_canvas() {
 	const bool has_map = map_canvas->has_map();
 	map_canvas->set_visible(has_map);
 	canvas_center->set_visible(!has_map);
+	_sync_brush();
+}
+
+void JRPGWorkspaceShell::_sync_brush() {
+	const Ref<JRPGMapEditSession> session = map_canvas->get_session();
+	const JRPGMap *map = session->get_map();
+	const bool tiles = map && session->get_mode() == JRPGMapEditSession::MODE_TILES;
+	for (int i = 0; i < JRPGMapEditSession::TOOL_MAX; i++) {
+		tool_buttons[i]->set_disabled(!tiles);
+		tool_buttons[i]->set_pressed_no_signal(i == session->get_tool());
+	}
+	layer_picker->set_disabled(!tiles);
+	layer_picker->select(session->get_layer());
+	if (!map) {
+		palette_empty->set_text(TTR("Open a map to choose its tiles."));
+		return;
+	}
+	// The tile drawn, until the palette lists the tileset (task 8.5): its index and its sheet's name.
+	String tile = TTR("nothing (erasing)");
+	if (session->get_value() > 0) {
+		tile = vformat("%04d", session->get_value());
+		JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
+		const Ref<JRPGDatabase> db = editing ? editing->get_database() : Ref<JRPGDatabase>();
+		const Ref<JRPGTable> tilesets = db.is_valid() ? db->get_table(JRPGDatabase::TABLE_TILESETS) : Ref<JRPGTable>();
+		const int tileset_id = map->get_map_data().is_valid() ? map->get_map_data()->get_tileset_id() : 0;
+		const Ref<JRPGTilesetData> tileset = tilesets.is_valid() && tilesets->has_entry(tileset_id) ? Ref<JRPGTilesetData>(tilesets->get_entry(tileset_id)) : Ref<JRPGTilesetData>();
+		const Array palette = tileset.is_valid() ? tileset->get_palette() : Array();
+		if (session->get_value() <= palette.size()) {
+			tile += "  " + String(Dictionary(palette[session->get_value() - 1]).get("name", ""));
+		}
+	}
+	palette_empty->set_text(vformat(TTR("Drawing with %s on the %s layer. Right-click a tile on the map to draw with it."), tile, layer_picker->get_item_text(session->get_layer())));
+}
+
+void JRPGWorkspaceShell::_mode_toggled(bool p_on, int p_mode) {
+	if (p_on && map_canvas) { // The constructor presses Tiles before the canvas exists.
+		map_canvas->get_session()->set_mode(JRPGMapEditSession::Mode(p_mode));
+	}
+}
+
+void JRPGWorkspaceShell::_tool_toggled(bool p_on, int p_tool) {
+	if (p_on && map_canvas) {
+		map_canvas->get_session()->set_tool(JRPGMapEditSession::Tool(p_tool));
+	}
+}
+
+void JRPGWorkspaceShell::_layer_selected(int p_index) {
+	map_canvas->get_session()->set_layer(p_index);
 }
 
 Label *JRPGWorkspaceShell::_make_note(const String &p_text) {
@@ -168,8 +235,8 @@ void JRPGWorkspaceShell::_update_theme() {
 	for (int i = 0; i < MODE_MAX; i++) {
 		mode_buttons[i]->set_button_icon(get_editor_theme_icon(MODE_ICONS[i]));
 	}
-	for (int i = 0; i < TOOL_MAX; i++) {
-		tool_buttons[i]->set_button_icon(get_editor_theme_icon(TOOL_ICONS[i]));
+	for (int i = 0; i < JRPGMapEditSession::TOOL_MAX; i++) {
+		tool_buttons[i]->set_button_icon(TOOL_ICONS[i] ? get_editor_theme_icon(TOOL_ICONS[i]) : make_ellipse_icon(get_theme_color(SNAME("font_color"), EditorStringName(Editor))));
 	}
 
 	// Notes are the theme's read-only text color; the canvas is the darker editor surface; the message frame matches
@@ -278,19 +345,38 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 		mode_buttons[i]->set_toggle_mode(true);
 		mode_buttons[i]->set_button_group(mode_group);
 		mode_buttons[i]->set_theme_type_variation("FlatButton");
+		mode_buttons[i]->connect(SceneStringName(toggled), callable_mp(this, &JRPGWorkspaceShell::_mode_toggled).bind(i));
 		toolbar->add_child(mode_buttons[i]);
 	}
 	mode_buttons[MODE_TILES]->set_pressed(true);
 	toolbar->add_child(memnew(VSeparator));
-	const String tool_names[TOOL_MAX] = { TTR("Pencil"), TTR("Rectangle"), TTR("Fill"), TTR("Eraser") };
-	for (int i = 0; i < TOOL_MAX; i++) {
+	// The drawing tools, one at a time, as the TileMap editor's (editor/scene/2d/tiles/tile_map_layer_editor.cpp:2207-2251).
+	tool_group.instantiate();
+	const String tool_names[JRPGMapEditSession::TOOL_MAX] = { TTR("Pencil"), TTR("Rectangle"), TTR("Ellipse"), TTR("Fill"), TTR("Eraser"), TTR("Eyedropper") };
+	const String tool_tips[JRPGMapEditSession::TOOL_MAX] = { TTR("Draw tiles where you drag."), TTR("Draw a filled rectangle: drag from one corner to the other."), TTR("Draw a filled ellipse inside the rectangle you drag."), TTR("Fill the area of matching tiles you click."), TTR("Erase tiles where you drag."), TTR("Pick the tile you click to draw with it (right-click does the same with any tool).") };
+	for (int i = 0; i < JRPGMapEditSession::TOOL_MAX; i++) {
 		tool_buttons[i] = memnew(Button);
-		tool_buttons[i]->set_tooltip_text(tool_names[i] + "\n" + TTR("Open a map to draw."));
+		tool_buttons[i]->set_tooltip_text(tool_names[i] + "\n" + tool_tips[i]);
 		tool_buttons[i]->set_accessibility_name(tool_names[i]);
 		tool_buttons[i]->set_theme_type_variation("FlatButton");
+		tool_buttons[i]->set_toggle_mode(true);
+		tool_buttons[i]->set_button_group(tool_group);
 		tool_buttons[i]->set_disabled(true);
+		tool_buttons[i]->connect(SceneStringName(toggled), callable_mp(this, &JRPGWorkspaceShell::_tool_toggled).bind(i));
 		toolbar->add_child(tool_buttons[i]);
 	}
+	toolbar->add_child(memnew(VSeparator));
+	layer_picker = memnew(OptionButton);
+	layer_picker->set_flat(true);
+	const String layer_names[JRPGMapData::LAYER_COUNT] = { TTR("Ground"), TTR("Ground Detail"), TTR("Objects"), TTR("Upper") };
+	for (const String &name : layer_names) {
+		layer_picker->add_item(name);
+	}
+	layer_picker->set_tooltip_text(TTR("The tile layer the tools draw on, from the ground up."));
+	layer_picker->set_accessibility_name(TTR("Layer"));
+	layer_picker->set_disabled(true);
+	layer_picker->connect(SceneStringName(item_selected), callable_mp(this, &JRPGWorkspaceShell::_layer_selected));
+	toolbar->add_child(layer_picker);
 
 	PanelContainer *canvas_panel = memnew(PanelContainer);
 	canvas_panel->set_v_size_flags(SIZE_EXPAND_FILL);
@@ -299,6 +385,7 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 	map_canvas = memnew(JRPGMapCanvas);
 	map_canvas->set_visible(false);
 	map_canvas->connect(SNAME("map_changed"), callable_mp(this, &JRPGWorkspaceShell::_update_canvas));
+	map_canvas->get_session()->connect(SNAME("brush_changed"), callable_mp(this, &JRPGWorkspaceShell::_sync_brush));
 	canvas_panel->add_child(map_canvas);
 	canvas_center = memnew(CenterContainer);
 	CenterContainer *center = canvas_center;

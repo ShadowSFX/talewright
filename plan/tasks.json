@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.4.1 Map canvas view and MapEditSession",
+  "last_completed": "8.4.2 Drawing tools with undo patches",
   "tasks": [
     {
       "id": "0",
@@ -3011,7 +3011,7 @@
         "talewright/docs/claude_bridge.md",
         "plan/evidence/jrpg/8.4.1-*"
       ],
-      "commit": "pending",
+      "commit": "58ce91703c",
       "notes": "",
       "status": "done"
     },
@@ -3029,10 +3029,29 @@
         "Undo restores the layer hash; redo re-applies it"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
-      "files": [],
-      "commit": "",
+      "files": [
+        "modules/jrpg/core/jrpg_map_shapes.{h,cpp}",
+        "modules/jrpg/doc_classes/JRPGMapShapes.xml",
+        "modules/jrpg/editor/jrpg_map_editing.{h,cpp}",
+        "modules/jrpg/editor/jrpg_map_edit_session.{h,cpp}",
+        "modules/jrpg/editor/jrpg_map_canvas.{h,cpp}",
+        "modules/jrpg/editor/jrpg_workspace_shell.{h,cpp}",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/tests/test_jrpg_map_shapes.h",
+        "modules/jrpg/tests/test_jrpg_map_canvas.h",
+        "modules/jrpg/tests/test_jrpg_workspace_shell.h",
+        "talewright/tools/img_compare.py",
+        "talewright/tools/jrpg_bridge_checks.py",
+        "talewright/goldens/",
+        "talewright/docs/claude_bridge.md",
+        "CLAUDE.md",
+        "plan/evidence/jrpg/8.4.2-*"
+      ],
+      "commit": "pending",
       "notes": "",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "8.4.3",

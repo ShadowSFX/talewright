@@ -34,6 +34,7 @@ import bridge  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 GENERATED = ROOT / "talewright" / "assets" / "generated"
+GOLDENS = ROOT / "talewright" / "goldens"
 SHEETS = {  # Generated CC0 sheets (talewright/assets/LICENSES.md) the tileset checks import.
     "grass.png": GENERATED / "autotiles" / "grass.png",
     "outdoor.png": GENERATED / "tiles" / "outdoor.png",
@@ -52,6 +53,9 @@ config/features=PackedStringArray("4.7")
 """
 
 
+UPDATE_GOLDENS = False  # --update-goldens: write the goldens instead of comparing (only on purpose).
+
+
 class Checks:
     def __init__(self, project: Path) -> None:
         self.project = project
@@ -68,7 +72,13 @@ class Checks:
         if result.get("isError"):
             text = "".join(b.get("text", "") for b in result.get("content", []))
             raise bridge.BridgeError(f"{tool} failed: {text}")
-        data: dict[str, Any] = result.get("structuredContent", {})
+        data: dict[str, Any] | None = result.get("structuredContent")
+        if data is None:  # Image results (jrpg_map_capture) carry their data as text.
+            text = "".join(b.get("text", "") for b in result.get("content", []) if b.get("type") == "text")
+            try:
+                data = json.loads(text)
+            except ValueError:
+                data = {}
         return data
 
     def check(self, name: str, ok: bool, detail: str = "") -> None:
@@ -442,6 +452,56 @@ def run(checks: Checks) -> None:
         json.dumps(under)[:200],
     )
 
+    # The drawing tools (task 8.4.2): a scripted pattern on a new map, each stroke one undo action that undo takes back
+    # exactly (the layers' SHA-256), and the rendered map against a golden image.
+    c.call("jrpg_map_create", {"name": "Strokes", "width": 10, "height": 8})
+    time.sleep(2)
+
+    def hashes() -> Any:
+        return c.call("jrpg_map_get")["layer_sha256"]
+
+    def stroke(tool: str, layer: str, points: list[list[int]], value: int = 0) -> Any:
+        args: dict[str, Any] = {"tool": tool, "layer": layer, "points": points}
+        if value:
+            args["value"] = value
+        return c.call("jrpg_map_stroke", args)
+
+    filled = stroke("fill", "ground", [[0, 0]], 1)
+    c.check("jrpg_map_stroke: fill covers the empty map", filled.get("changed") == 80, json.dumps(filled)[:200])
+    c.round_trip("jrpg_map_stroke (a rectangle)", hashes, lambda: stroke("rectangle", "objects", [[3, 2], [1, 1]], 5))
+    c.round_trip("jrpg_map_stroke (an ellipse)", hashes, lambda: stroke("ellipse", "objects", [[5, 1], [8, 6]], 9))
+    c.round_trip(
+        "jrpg_map_stroke (a pencil path)", hashes, lambda: stroke("pencil", "objects", [[0, 7], [4, 5], [9, 7]], 19)
+    )
+    erased = stroke("eraser", "objects", [[6, 3], [7, 3]])
+    c.check(
+        "jrpg_map_stroke: the eraser clears the cells it crosses", erased.get("changed") == 2, json.dumps(erased)[:200]
+    )
+    outside = stroke("pencil", "objects", [[-3, -3], [-1, -1]], 4)
+    c.check(
+        "jrpg_map_stroke: cells outside the map are skipped", outside.get("changed") == 0, json.dumps(outside)[:200]
+    )
+    c.check(
+        "jrpg_map_stroke: the eyedropper is not a stroke",
+        c.refused("jrpg_map_stroke", {"tool": "eyedropper", "layer": 0, "points": [[0, 0]]}),
+    )
+    capture = c.call("jrpg_map_capture")
+    golden = GOLDENS / "jrpg_map_strokes.png"
+    if UPDATE_GOLDENS:
+        GOLDENS.mkdir(exist_ok=True)
+        shutil.copyfile(capture["path"], golden)
+        print(f"[GOLDEN] wrote {golden.relative_to(ROOT)}")
+    compared = subprocess.run(
+        [sys.executable, str(ROOT / "talewright" / "tools" / "img_compare.py"), capture["path"], str(golden)],
+        capture_output=True,
+        text=True,
+    )
+    c.check(
+        "jrpg_map_capture: the drawn pattern matches the golden image",
+        compared.returncode == 0 and capture.get("width") == 480 and capture.get("height") == 384,
+        (compared.stdout.strip() or compared.stderr.strip()) + " " + json.dumps(capture)[:200],
+    )
+
     # Saving leaves nothing unsaved, bakes the tile flags and writes the TileSet.
     c.call("jrpg_db_save")
     unsaved = c.call("jrpg_db_list")["unsaved_paths"]
@@ -461,7 +521,12 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", help="use (and empty) this folder instead of a temporary one")
     ap.add_argument("--keep", action="store_true", help="leave the editor running and the project folder in place")
+    ap.add_argument(
+        "--update-goldens", action="store_true", help="write the golden images from this run (only on purpose)"
+    )
     args = ap.parse_args()
+    global UPDATE_GOLDENS
+    UPDATE_GOLDENS = args.update_goldens
     if not bridge.EDITOR.is_file():
         print(f"error: {bridge.EDITOR} not found; build the editor first", file=sys.stderr)
         return 2

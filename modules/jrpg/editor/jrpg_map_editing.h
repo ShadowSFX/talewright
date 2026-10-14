@@ -33,9 +33,11 @@
 
 #include "core/math/vector2i.h"
 #include "core/object/ref_counted.h"
+#include "core/templates/hash_set.h"
+
+#include "modules/jrpg/core/jrpg_map_data.h"
 
 class JRPGMap;
-class JRPGMapData;
 class JRPGMapList;
 
 // Map authoring (spec 05, D-006, D-012; task 8.1.3, extended by 8.4 and 8.8): creating map scenes and painting their
@@ -91,4 +93,34 @@ public:
 	// Checks a System start position (task 8.3.2): p_map_id is 0 (not set) or a listed map, and p_cell is inside that
 	// map. r_message says what is wrong.
 	static Error check_start_position(int p_map_id, const Vector2i &p_cell, String *r_message = nullptr);
+};
+
+// A brush stroke on one tile layer (spec 05 "one brush stroke = one undo action"; task 8.4.2). Cells are painted as
+// they come, so the canvas shows the stroke while the mouse moves; end() files one undo action of the map scene with
+// the touched cells' old and new values (EditorUndoRedoManager::commit_action without executing them again,
+// editor/editor_undo_redo_manager.cpp:246), and cancel() puts the old values back. The canvas tools and the
+// jrpg_map_stroke bridge tool both draw through it.
+class JRPGMapStroke : public RefCounted {
+	GDCLASS(JRPGMapStroke, RefCounted);
+
+	ObjectID map;
+	Ref<JRPGMapData> data;
+	int layer = 0;
+	int value = 0;
+	PackedInt32Array positions; // Cell indexes, in the order first touched.
+	PackedInt32Array before; // Their values before the stroke.
+	HashSet<int> touched;
+
+public:
+	// Starts painting p_value (0 erases) on tile layer p_layer of p_map.
+	Error begin(JRPGMap *p_map, int p_layer, int p_value, String *r_message = nullptr);
+	bool is_active() const { return data.is_valid(); }
+	int get_layer() const { return layer; }
+	int get_value() const { return value; }
+	// Paints p_cells now; cells outside the map are skipped. Returns how many cells changed with this call.
+	int add(const Vector<Vector2i> &p_cells);
+	// Files the stroke as one undo action named p_name (none when nothing changed); returns how many cells changed.
+	int end(const String &p_name);
+	// Puts every touched cell back.
+	void cancel();
 };

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGMapShapes" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The cells covered by the map drawing tools: lines, rectangles, ellipses and fills.
+	</brief_description>
+	<description>
+		Static helpers for map drawing: the cells a pencil drags over, the filled rectangle or ellipse between two corners, and the area a fill covers. They work on cell coordinates only, so the editor's map canvas, its bridge tools and game code that draws on map data get the same cells.
+		Results are in drawing order and hold each cell once; cells may lie outside the map, so clip them to the map's size before painting.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_ellipse" qualifiers="static">
+			<return type="Vector2i[]" />
+			<param index="0" name="from" type="Vector2i" />
+			<param index="1" name="to" type="Vector2i" />
+			<description>
+				Returns the cells of the filled ellipse inscribed in the rectangle with corners [param from] and [param to]: those whose centers lie inside it, row by row.
+			</description>
+		</method>
+		<method name="get_flood_fill" qualifiers="static">
+			<return type="Vector2i[]" />
+			<param index="0" name="values" type="PackedInt32Array" />
+			<param index="1" name="size" type="Vector2i" />
+			<param index="2" name="start" type="Vector2i" />
+			<description>
+				Returns the cells connected to [param start] (up, down, left and right) that hold the same value as it in [param values], a grid of [param size] cells stored row by row, as [method JRPGMapData.get_layer] returns a layer. Returns an empty array when [param start] is outside the grid.
+			</description>
+		</method>
+		<method name="get_line" qualifiers="static">
+			<return type="Vector2i[]" />
+			<param index="0" name="from" type="Vector2i" />
+			<param index="1" name="to" type="Vector2i" />
+			<description>
+				Returns every cell on the straight line from [param from] to [param to], both included, with no gaps between successive cells.
+			</description>
+		</method>
+		<method name="get_rectangle" qualifiers="static">
+			<return type="Vector2i[]" />
+			<param index="0" name="from" type="Vector2i" />
+			<param index="1" name="to" type="Vector2i" />
+			<description>
+				Returns every cell of the rectangle with corners [param from] and [param to], both included, row by row.
+			</description>
+		</method>
+	</methods>
+</class>

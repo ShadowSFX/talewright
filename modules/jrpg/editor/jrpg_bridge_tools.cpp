@@ -39,6 +39,7 @@
 #include "jrpg_list_editors.h"
 #include "jrpg_managed_addon.h"
 #include "jrpg_map_canvas.h"
+#include "jrpg_map_edit_session.h"
 #include "jrpg_map_editing.h"
 #include "jrpg_project_setup.h"
 #include "jrpg_setup_dialog.h"
@@ -46,6 +47,7 @@
 #include "jrpg_trait_editor.h"
 #include "jrpg_workspace_shell.h"
 
+#include "core/crypto/crypto_core.h"
 #include "core/io/file_access.h"
 #include "core/io/json.h"
 #include "core/io/resource_loader.h"
@@ -57,15 +59,20 @@
 #include "editor/editor_node.h"
 #include "editor/editor_undo_redo_manager.h"
 #include "editor/file_system/editor_file_system.h"
+#include "main/main.h"
 #include "scene/main/scene_tree.h"
+#include "scene/main/viewport.h"
 #include "scene/resources/2d/tile_set.h"
 #include "scene/resources/texture.h"
+#include "scene/resources/world_2d.h"
+#include "servers/rendering/rendering_server.h"
 
 #include "modules/claude_bridge/claude_bridge_registry.h"
 #include "modules/claude_bridge/claude_bridge_tools.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_map_list.h"
+#include "modules/jrpg/core/jrpg_map_shapes.h"
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
@@ -1463,7 +1470,151 @@ Dictionary describe_map(const Ref<JRPGMapData> &p_data, const String &p_scene) {
 		painted[LAYER_KEYS[layer]] = count;
 	}
 	map["painted_cells"] = painted;
+	// A fingerprint of each layer's cells: undo must bring it back exactly (task 8.4.2).
+	Dictionary hashes;
+	for (int layer = 0; layer < JRPGMapData::LAYER_COUNT; layer++) {
+		const PackedByteArray bytes = p_data->get_layer(layer).to_byte_array();
+		unsigned char hash[32];
+		CryptoCore::sha256(bytes.ptr(), bytes.size(), hash);
+		hashes[LAYER_KEYS[layer]] = String::hex_encode_buffer(hash, 32);
+	}
+	map["layer_sha256"] = hashes;
 	return map;
+}
+
+// The [x, y] pairs of p_args[p_key]; false after failing the call.
+bool cell_list(const Dictionary &p_args, const String &p_key, const Ref<ClaudeBridgeToolCall> &p_call, Vector<Vector2i> &r_cells) {
+	const Variant list = p_args.get(p_key, Variant());
+	bool valid = list.get_type() == Variant::ARRAY;
+	for (const Variant &v : valid ? Array(list) : Array()) {
+		int64_t x = 0;
+		int64_t y = 0;
+		const Array pair = v.get_type() == Variant::ARRAY ? Array(v) : Array();
+		valid = valid && pair.size() == 2 && whole_number(pair[0], x) && whole_number(pair[1], y);
+		r_cells.push_back(Vector2i(int(CLAMP(x, int64_t(INT32_MIN), int64_t(INT32_MAX))), int(CLAMP(y, int64_t(INT32_MIN), int64_t(INT32_MAX)))));
+	}
+	if (!valid) {
+		p_call->fail(vformat("\"%s\" is a list of [x, y] cell coordinates.", p_key));
+	}
+	return valid;
+}
+
+void tool_map_stroke(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGMap *map = edited_map(p_call);
+	if (!map) {
+		return;
+	}
+	const JRPGMapEditSession::Tool tool = JRPGMapEditSession::find_tool(p_args.get("tool", ""));
+	if (tool == JRPGMapEditSession::TOOL_MAX || tool == JRPGMapEditSession::TOOL_EYEDROPPER) {
+		p_call->fail("\"tool\" must be pencil, rectangle, ellipse, fill or eraser.");
+		return;
+	}
+	const int layer = map_layer(p_args, p_call);
+	if (layer < 0) {
+		return;
+	}
+	int64_t value = 0;
+	if (tool != JRPGMapEditSession::TOOL_ERASER) {
+		if (!int_arg(p_args, "value", 0, p_call, value)) {
+			return;
+		}
+		if (value < 1) {
+			p_call->fail("\"value\" is the palette index to draw, 1 or more (the eraser draws nothing, 0).");
+			return;
+		}
+	}
+	Vector<Vector2i> points;
+	if (!cell_list(p_args, "points", p_call, points)) {
+		return;
+	}
+	const int needed = tool == JRPGMapEditSession::TOOL_FILL ? 1 : (tool == JRPGMapEditSession::TOOL_RECTANGLE || tool == JRPGMapEditSession::TOOL_ELLIPSE ? 2 : 0);
+	if (points.is_empty() || (needed > 0 && points.size() != needed)) {
+		p_call->fail("\"points\": the pencil and the eraser take the path as [x, y] points (joined by straight lines), rectangle and ellipse two corners, fill the cell it starts from.");
+		return;
+	}
+	// The canvas tools' own stroke: painted, then filed as one undo action of the map scene.
+	Ref<JRPGMapStroke> stroke;
+	stroke.instantiate();
+	String message;
+	if (stroke->begin(map, layer, int(CLAMP(value, int64_t(0), int64_t(INT32_MAX))), &message) != OK) {
+		p_call->fail(message);
+		return;
+	}
+	const Ref<JRPGMapData> data = map->get_map_data();
+	switch (tool) {
+		case JRPGMapEditSession::TOOL_RECTANGLE: {
+			stroke->add(JRPGMapShapes::rectangle(points[0], points[1]));
+		} break;
+		case JRPGMapEditSession::TOOL_ELLIPSE: {
+			stroke->add(JRPGMapShapes::ellipse(points[0], points[1]));
+		} break;
+		case JRPGMapEditSession::TOOL_FILL: {
+			stroke->add(JRPGMapShapes::flood_fill(data->get_layer(layer), data->get_size(), points[0]));
+		} break;
+		default: {
+			stroke->add({ points[0] });
+			for (int i = 1; i < points.size(); i++) {
+				stroke->add(JRPGMapShapes::line(points[i - 1], points[i]));
+			}
+		} break;
+	}
+	const int changed = stroke->end(JRPGMapEditSession::get_action_name(tool));
+	Dictionary result = describe_map(data, map->get_scene_file_path());
+	result["tool"] = String(JRPGMapEditSession::get_tool_name(tool)).to_lower();
+	result["layer"] = LAYER_KEYS[layer];
+	result["changed"] = changed;
+	result["undoable"] = changed > 0;
+	p_call->complete_data(result);
+}
+
+constexpr int CAPTURE_MAX_SIDE = 8192; // Pixels; a larger map is captured scaled down.
+
+void map_capture_frame(const Ref<ClaudeBridgeToolCall> &p_call, ObjectID p_viewport, int p_frames_left, int p_max_width, bool p_include_image) {
+	SubViewport *viewport = ObjectDB::get_instance<SubViewport>(p_viewport);
+	if (!viewport || p_call->is_cancelled() || p_call->is_done()) {
+		if (viewport) {
+			viewport->queue_free();
+		}
+		return;
+	}
+	if (p_frames_left > 0) {
+		// Wait for the viewport to have drawn once.
+		RenderingServer::get_singleton()->connect("frame_post_draw", callable_mp_static(&map_capture_frame).bind(p_call, p_viewport, p_frames_left - 1, p_max_width, p_include_image), Object::CONNECT_ONE_SHOT);
+		Main::force_redraw();
+		return;
+	}
+	Ref<Image> image = viewport->get_texture()->get_image();
+	viewport->queue_free();
+	if (image.is_null() || image->is_empty()) {
+		p_call->fail("The map could not be captured (the viewport returned no image).");
+		return;
+	}
+	image->convert(Image::FORMAT_RGBA8);
+	ClaudeBridgeTools::complete_with_image(p_call, image, "jrpg-map", p_max_width, p_include_image);
+}
+
+void tool_map_capture(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGMap *map = edited_map(p_call);
+	if (!map) {
+		return;
+	}
+	// The map alone, one screen pixel per map pixel, through the editor scene root's World2D as the map canvas draws it:
+	// the same image whatever the window, so goldens compare.
+	const Vector2 map_size = Vector2(map->get_map_data()->get_size() * map->get_cell_size());
+	const float scale = MIN(1.0f, float(CAPTURE_MAX_SIDE) / MAX(map_size.x, map_size.y));
+	const Viewport *scene_root = EditorNode::get_singleton()->get_scene_root();
+	SubViewport *viewport = memnew(SubViewport);
+	viewport->set_size((map_size * scale).round());
+	viewport->set_transparent_background(true);
+	viewport->set_disable_input(true);
+	viewport->set_world_2d(scene_root->get_world_2d());
+	viewport->set_default_canvas_item_texture_filter(scene_root->get_default_canvas_item_texture_filter());
+	viewport->set_default_canvas_item_texture_repeat(scene_root->get_default_canvas_item_texture_repeat());
+	viewport->set_update_mode(SubViewport::UPDATE_ALWAYS);
+	EditorNode::get_singleton()->add_child(viewport);
+	viewport->set_canvas_transform(Transform2D(0, Vector2(scale, scale), 0, Vector2()) * map->get_global_transform().affine_inverse());
+	const int max_width = CLAMP(int(p_args.get("max_width", CAPTURE_MAX_SIDE)), 16, CAPTURE_MAX_SIDE);
+	map_capture_frame(p_call, viewport->get_instance_id(), 2, max_width, p_args.get("include_image", false));
 }
 
 void tool_map_create(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
@@ -1816,10 +1967,38 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	select.func = &tool_workspace_select;
 	r_mcp.register_tool(select);
 
+	ClaudeBridgeMCP::Tool map_stroke;
+	map_stroke.name = "jrpg_map_stroke";
+	map_stroke.title = "Draw on the map";
+	map_stroke.description = "Draws one stroke on a tile layer of the edited map with a map canvas tool, as one undo action of the map scene: pencil (the path through points, joined by straight lines), rectangle and ellipse (filled, between two corner points), fill (the area of matching tiles around the one point), eraser (the pencil drawing 0). value is the palette index drawn. Points outside the map are allowed; only cells inside are drawn. Returns the cells changed and each layer's SHA-256 (layer_sha256), which undo restores exactly.";
+	Dictionary map_stroke_properties;
+	Dictionary tool_property = schema_property("string", "The tool.");
+	tool_property["enum"] = Array({ "pencil", "rectangle", "ellipse", "fill", "eraser" });
+	map_stroke_properties["tool"] = tool_property;
+	map_stroke_properties["layer"] = schema_property("string", "ground, ground_detail, objects or upper (or 0-3).");
+	map_stroke_properties["value"] = schema_property("integer", "Palette index to draw (not for the eraser).");
+	map_stroke_properties["points"] = schema_property("array", "[x, y] cells: the path (pencil, eraser), two corners (rectangle, ellipse) or the start cell (fill).");
+	map_stroke.input_schema = ClaudeBridgeMCP::object_schema(map_stroke_properties, PackedStringArray({ "tool", "layer", "points" }));
+	map_stroke.read_only = false;
+	map_stroke.destructive = false; // Undoable.
+	map_stroke.func = &tool_map_stroke;
+	r_mcp.register_tool(map_stroke);
+
+	ClaudeBridgeMCP::Tool map_capture;
+	map_capture.name = "jrpg_map_capture";
+	map_capture.title = "Capture the map";
+	map_capture.description = "Renders the edited map alone, one pixel per map pixel (scaled down past 8192 pixels on a side), as the map canvas draws it, and saves it as a PNG (path in the result; include_image=true also returns it). The image does not depend on the editor window, so it can be compared with a golden image (talewright/tools/img_compare.py).";
+	Dictionary map_capture_properties;
+	map_capture_properties["include_image"] = schema_property("boolean", "Return the image too (default false).");
+	map_capture_properties["max_width"] = schema_property("integer", "Scale the saved image down to this width (default: no limit up to 8192).");
+	map_capture.input_schema = ClaudeBridgeMCP::object_schema(map_capture_properties);
+	map_capture.func = &tool_map_capture;
+	r_mcp.register_tool(map_capture);
+
 	ClaudeBridgeMCP::Tool map_view;
 	map_view.name = "jrpg_map_view";
 	map_view.title = "View the map canvas";
-	map_view.description = "Reads, and optionally changes, the view of the JRPG workspace's map canvas (the Map section; jrpg_workspace_select shows it), which draws the map open in the editor: fit=true shows the whole map, zoom sets the scale (1 = one screen pixel per map pixel, 1/32 to 8), center_cell puts a cell in the middle, grid shows or hides the cell grid. Applied in that order. Returns map_id, scene, zoom, center_cell, visible_cells ([x, y, width, height], clipped to the map), grid and hovered_cell. Each map tab keeps its own view.";
+	map_view.description = "Reads, and optionally changes, the view of the JRPG workspace's map canvas (the Map section; jrpg_workspace_select shows it), which draws the map open in the editor: fit=true shows the whole map, zoom sets the scale (1 = one screen pixel per map pixel, 1/32 to 8), center_cell puts a cell in the middle, grid shows or hides the cell grid. Applied in that order. Returns map_id, scene, zoom, center_cell, visible_cells ([x, y, width, height], clipped to the map), grid, hovered_cell and the brush the canvas tools draw with (mode, tool, layer, value). Each map tab keeps its own view.";
 	Dictionary map_view_properties;
 	map_view_properties["fit"] = schema_property("boolean", "Show the whole map, centered.");
 	map_view_properties["zoom"] = schema_property("number", "Scale, 1/32 to 8.");
@@ -2095,7 +2274,7 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool map_get;
 	map_get.name = "jrpg_map_get";
 	map_get.title = "Read a map";
-	map_get.description = "Reads a map: the edited map, or the map scene file scene (res://...) without opening or instancing it. Returns its id, name, tileset, size, scroll type and how many cells each layer has painted; with layer, also that layer's palette indexes as rows (maps of up to 4096 cells).";
+	map_get.description = "Reads a map: the edited map, or the map scene file scene (res://...) without opening or instancing it. Returns its id, name, tileset, size, scroll type, how many cells each layer has painted and each layer's SHA-256 (layer_sha256: undo brings it back exactly); with layer, also that layer's palette indexes as rows (maps of up to 4096 cells).";
 	Dictionary map_get_properties;
 	map_get_properties["scene"] = schema_property("string", "res:// path of a map scene (default: the edited map).");
 	map_get_properties["layer"] = schema_property("string", "0-3 or ground, ground_detail, objects, upper: list its cells.");

@@ -33,12 +33,15 @@
 
 #ifdef TOOLS_ENABLED // The map canvas is editor UI.
 
+#include "core/input/input_event.h"
 #include "scene/main/scene_tree.h"
 #include "scene/main/window.h"
 #include "tests/test_macros.h"
 
+#include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/editor/jrpg_map_canvas.h"
 #include "modules/jrpg/editor/jrpg_map_edit_session.h"
+#include "modules/jrpg/editor/jrpg_map_editing.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 
 namespace TestJRPGMapCanvas {
@@ -103,6 +106,142 @@ TEST_CASE("[SceneTree][JRPG][MapCanvas] Without an edited map the canvas and its
 TEST_CASE("[SceneTree][JRPG][MapCanvas] A map without a TileSet uses the default cell size") {
 	JRPGMap *map = memnew(JRPGMap);
 	CHECK(map->get_cell_size() == Vector2i(JRPGMap::DEFAULT_CELL_SIZE, JRPGMap::DEFAULT_CELL_SIZE));
+	memdelete(map);
+}
+
+// A 6 x 4 map node with empty layers (no tileset: cells are 48 pixels).
+static JRPGMap *make_map() {
+	Ref<JRPGMapData> data;
+	data.instantiate();
+	data->set_size(Vector2i(6, 4));
+	JRPGMap *map = memnew(JRPGMap);
+	map->set_map_data(data);
+	return map;
+}
+
+TEST_CASE("[SceneTree][JRPG][MapCanvas] A stroke paints as it goes, ends as one change and can be taken back") {
+	JRPGMap *map = make_map();
+	const Ref<JRPGMapData> data = map->get_map_data();
+	Ref<JRPGMapStroke> stroke;
+	stroke.instantiate();
+	REQUIRE(stroke->begin(map, JRPGMapData::LAYER_OBJECTS, 3) == OK);
+	CHECK(stroke->add({ Vector2i(0, 0), Vector2i(1, 0), Vector2i(1, 0) }) == 2); // A cell twice is painted once.
+	CHECK(data->get_cell(JRPGMapData::LAYER_OBJECTS, Vector2i(1, 0)) == 3); // Painted at once.
+	CHECK(stroke->add({ Vector2i(1, 0), Vector2i(2, 0), Vector2i(9, 9) }) == 1); // Outside the map: skipped.
+	CHECK(stroke->end("Draw with Pencil") == 3);
+	CHECK_FALSE(stroke->is_active());
+
+	// Cancel puts back every value the stroke covered, also cells it painted twice.
+	REQUIRE(stroke->begin(map, JRPGMapData::LAYER_OBJECTS, 0) == OK);
+	stroke->add({ Vector2i(0, 0), Vector2i(0, 1) });
+	stroke->add({ Vector2i(0, 0) });
+	stroke->cancel();
+	CHECK(data->get_cell(JRPGMapData::LAYER_OBJECTS, Vector2i(0, 0)) == 3);
+	CHECK(data->get_cell(JRPGMapData::LAYER_OBJECTS, Vector2i(0, 1)) == 0);
+	// Drawing what is already there changes nothing.
+	REQUIRE(stroke->begin(map, JRPGMapData::LAYER_OBJECTS, 3) == OK);
+	stroke->add({ Vector2i(0, 0) });
+	CHECK(stroke->end("Draw with Pencil") == 0);
+
+	String message;
+	CHECK(stroke->begin(map, 7, 1, &message) == ERR_INVALID_PARAMETER);
+	CHECK(stroke->begin(nullptr, 0, 1, &message) == ERR_UNCONFIGURED);
+	REQUIRE(stroke->begin(map, 0, 1) == OK);
+	ERR_PRINT_OFF;
+	CHECK(stroke->begin(map, 0, 1) == ERR_ALREADY_IN_USE);
+	ERR_PRINT_ON;
+	stroke->cancel();
+	memdelete(map);
+}
+
+static void click(JRPGMapCanvas *p_canvas, MouseButton p_button, const Vector2 &p_at, bool p_pressed) {
+	Ref<InputEventMouseButton> event;
+	event.instantiate();
+	event->set_button_index(p_button);
+	event->set_pressed(p_pressed);
+	event->set_position(p_at);
+	p_canvas->handle_input(event);
+}
+
+static void move(JRPGMapCanvas *p_canvas, const Vector2 &p_to) {
+	Ref<InputEventMouseMotion> event;
+	event.instantiate();
+	event->set_position(p_to);
+	p_canvas->handle_input(event);
+}
+
+TEST_CASE("[SceneTree][JRPG][MapCanvas] The canvas tools draw what the mouse does") {
+	JRPGMap *map = make_map();
+	const Ref<JRPGMapData> data = map->get_map_data();
+	ERR_PRINT_OFF; // No editor theme, settings or shortcuts in doctests.
+	JRPGMapCanvas *canvas = memnew(JRPGMapCanvas);
+	SceneTree::get_singleton()->get_root()->add_child(canvas);
+	const Ref<JRPGMapEditSession> session = canvas->get_session();
+	session->set_map(map); // Without the editor: zoom 1, the map's corner at the canvas's.
+	REQUIRE(canvas->has_map());
+	const auto at = [](int p_x, int p_y) { return Vector2(p_x * 48 + 10, p_y * 48 + 10); };
+	const auto cell = [&](int p_layer, int p_x, int p_y) { return data->get_cell(p_layer, Vector2i(p_x, p_y)); };
+
+	// Pencil: the cells between two mouse positions too.
+	session->set_layer(JRPGMapData::LAYER_GROUND);
+	session->set_value(3);
+	click(canvas, MouseButton::LEFT, at(0, 0), true);
+	move(canvas, at(3, 0));
+	click(canvas, MouseButton::LEFT, at(3, 0), false);
+	CHECK((cell(0, 0, 0) == 3 && cell(0, 1, 0) == 3 && cell(0, 2, 0) == 3 && cell(0, 3, 0) == 3 && cell(0, 4, 0) == 0));
+	CHECK(canvas->get_state()["hovered_cell"] == Variant(Array({ 3, 0 })));
+
+	// Rectangle: drawn on release, between the press and the last position.
+	session->set_tool(JRPGMapEditSession::TOOL_RECTANGLE);
+	session->set_value(4);
+	click(canvas, MouseButton::LEFT, at(1, 1), true);
+	move(canvas, at(2, 3));
+	CHECK(cell(0, 1, 1) == 0); // Only previewed so far.
+	click(canvas, MouseButton::LEFT, at(2, 3), false);
+	CHECK((cell(0, 1, 1) == 4 && cell(0, 2, 3) == 4 && cell(0, 3, 3) == 0 && cell(0, 0, 1) == 0));
+
+	// Fill on an empty layer covers it; the eraser clears where it is dragged.
+	session->set_tool(JRPGMapEditSession::TOOL_FILL);
+	session->set_layer(JRPGMapData::LAYER_UPPER);
+	session->set_value(5);
+	click(canvas, MouseButton::LEFT, at(5, 3), true);
+	click(canvas, MouseButton::LEFT, at(5, 3), false);
+	CHECK((cell(3, 0, 0) == 5 && cell(3, 5, 3) == 5));
+	session->set_tool(JRPGMapEditSession::TOOL_ERASER);
+	click(canvas, MouseButton::LEFT, at(0, 0), true);
+	move(canvas, at(1, 0));
+	click(canvas, MouseButton::LEFT, at(1, 0), false);
+	CHECK((cell(3, 0, 0) == 0 && cell(3, 1, 0) == 0 && cell(3, 2, 0) == 5));
+
+	// Right click picks a tile: the current layer's, else the top-most one there (and its layer).
+	click(canvas, MouseButton::RIGHT, at(2, 0), true);
+	CHECK((session->get_layer() == JRPGMapData::LAYER_UPPER && session->get_value() == 5));
+	click(canvas, MouseButton::RIGHT, at(0, 0), true);
+	CHECK((session->get_layer() == JRPGMapData::LAYER_GROUND && session->get_value() == 3));
+
+	// Escape takes a stroke back; so does a right click during it.
+	session->set_tool(JRPGMapEditSession::TOOL_PENCIL);
+	session->set_value(9);
+	click(canvas, MouseButton::LEFT, at(5, 0), true);
+	CHECK(cell(0, 5, 0) == 9);
+	Ref<InputEventKey> escape;
+	escape.instantiate();
+	escape->set_keycode(Key::ESCAPE);
+	escape->set_pressed(true);
+	canvas->handle_input(escape);
+	CHECK(cell(0, 5, 0) == 0);
+	click(canvas, MouseButton::LEFT, at(5, 1), true);
+	click(canvas, MouseButton::RIGHT, at(5, 1), true);
+	click(canvas, MouseButton::LEFT, at(5, 1), false);
+	CHECK(cell(0, 5, 1) == 0);
+
+	// Other modes do not draw tiles.
+	session->set_mode(JRPGMapEditSession::MODE_REGIONS);
+	click(canvas, MouseButton::LEFT, at(5, 2), true);
+	click(canvas, MouseButton::LEFT, at(5, 2), false);
+	CHECK(cell(0, 5, 2) == 0);
+	ERR_PRINT_ON;
+	memdelete(canvas);
 	memdelete(map);
 }
 

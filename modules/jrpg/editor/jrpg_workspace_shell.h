@@ -31,6 +31,8 @@
 
 #pragma once
 
+#include "jrpg_map_edit_session.h"
+
 #include "scene/gui/box_container.h"
 
 class Button;
@@ -40,6 +42,7 @@ class JRPGDatabaseView;
 class JRPGMapCanvas;
 class JRPGMapTree;
 class Label;
+class OptionButton;
 class PanelContainer;
 class TabBar;
 
@@ -66,14 +69,6 @@ public:
 		MODE_MAX,
 	};
 
-	enum DrawTool {
-		TOOL_PENCIL,
-		TOOL_RECTANGLE,
-		TOOL_FILL,
-		TOOL_ERASER,
-		TOOL_MAX,
-	};
-
 private:
 	static JRPGWorkspaceShell *singleton;
 
@@ -86,7 +81,9 @@ private:
 	Label *palette_empty = nullptr;
 	Ref<ButtonGroup> mode_group;
 	Button *mode_buttons[MODE_MAX] = {};
-	Button *tool_buttons[TOOL_MAX] = {};
+	Ref<ButtonGroup> tool_group;
+	Button *tool_buttons[JRPGMapEditSession::TOOL_MAX] = {};
+	OptionButton *layer_picker = nullptr;
 	Control *canvas = nullptr;
 	JRPGMapCanvas *map_canvas = nullptr;
 	CenterContainer *canvas_center = nullptr;
@@ -99,6 +96,10 @@ private:
 
 	void _on_tab_changed(int p_tab);
 	void _update_canvas();
+	void _sync_brush();
+	void _mode_toggled(bool p_on, int p_mode);
+	void _tool_toggled(bool p_on, int p_tool);
+	void _layer_selected(int p_index);
 	void _update_theme();
 	Label *_make_note(const String &p_text);
 

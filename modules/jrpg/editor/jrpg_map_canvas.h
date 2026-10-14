@@ -32,6 +32,7 @@
 #pragma once
 
 #include "jrpg_map_edit_session.h"
+#include "jrpg_map_editing.h"
 
 #include "scene/gui/control.h"
 #include "scene/gui/view_panner.h"
@@ -51,6 +52,9 @@ class SubViewportContainer;
 // through ViewPanner, with an EditorZoomWidget and a Center View button, as TileAtlasView
 // (editor/scene/2d/tiles/tile_atlas_view.cpp:44-60,615-665). Over the map: its bounds, a cell grid and the hovered cell
 // with its coordinates. The map follows the editor's scene tabs through JRPGMapEditSession; each tab keeps its view.
+// Drawing (task 8.4.2): the left button draws with the session's tool (pencil and eraser as the mouse moves, rectangle
+// and ellipse previewed until release, fill at once), the right button picks the tile under the mouse, Escape (or the
+// right button while drawing) cancels the stroke. One stroke is one undo action (JRPGMapStroke).
 class JRPGMapCanvas : public Control {
 	GDCLASS(JRPGMapCanvas, Control);
 
@@ -72,6 +76,10 @@ class JRPGMapCanvas : public Control {
 	String view_path; // The scene whose view zoom and offset are.
 	ObjectID watched_data; // The JRPGMapData whose layout changes redraw the bounds.
 	Vector2i hovered = Vector2i(-1, -1);
+	Ref<JRPGMapStroke> stroke; // While the left button is down.
+	JRPGMapEditSession::Tool stroke_tool = JRPGMapEditSession::TOOL_PENCIL;
+	Vector2i stroke_anchor; // Where the stroke started.
+	Vector2i stroke_last; // The last cell the pencil reached; the rectangle's or ellipse's other corner.
 
 	JRPGMap *_get_map() const;
 	void _map_changed();
@@ -82,9 +90,13 @@ class JRPGMapCanvas : public Control {
 	void _pan_callback(Vector2 p_scroll_vec, Ref<InputEvent> p_event);
 	void _zoom_callback(float p_zoom_factor, Vector2 p_origin, Ref<InputEvent> p_event);
 	void _zoom_widget_changed();
-	void _overlay_input(const Ref<InputEvent> &p_event);
 	void _draw_overlay();
 	void _grid_toggled(bool p_on);
+	void _begin_stroke(const Vector2i &p_cell);
+	void _continue_stroke(const Vector2i &p_cell);
+	void _finish_stroke();
+	void _cancel_stroke();
+	Vector<Vector2i> _shape_cells() const;
 
 protected:
 	void _notification(int p_what);
@@ -106,9 +118,15 @@ public:
 	void center_view();
 	// Puts cell p_cell at the middle of the canvas.
 	void center_on_cell(const Vector2i &p_cell);
+	// Sets the brush to the tile under p_cell: the current layer's, or the top-most layer's that has one (and that
+	// layer). False when the cell is empty on every layer.
+	bool pick_tile(const Vector2i &p_cell);
+	// The canvas's mouse and key handling (its overlay's gui_input); positions in canvas coordinates.
+	void handle_input(const Ref<InputEvent> &p_event);
 	void set_grid_visible(bool p_visible);
 	bool is_grid_visible() const;
-	// {map_id, scene, zoom, center_cell, visible_cells: [x, y, w, h], grid, hovered_cell}; map_id 0 without a map.
+	// {map_id, scene, zoom, center_cell, visible_cells: [x, y, w, h], grid, hovered_cell, brush: {mode, tool, layer,
+	// value}}; map_id 0 without a map.
 	Dictionary get_state() const;
 
 	JRPGMapCanvas();

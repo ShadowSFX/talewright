@@ -53,6 +53,7 @@
 #include "modules/jrpg/core/jrpg_map_cell_cache.h"
 #include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_map_list.h"
+#include "modules/jrpg/core/jrpg_map_shapes.h"
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_random.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
@@ -146,6 +147,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGMapData);
 		GDREGISTER_CLASS(JRPGMapList);
 		GDREGISTER_CLASS(JRPGMapCellCache);
+		GDREGISTER_ABSTRACT_CLASS(JRPGMapShapes); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGMapFiles); // Static methods only.
 		GDREGISTER_CLASS(JRPGMap);
 		GDREGISTER_CLASS(JRPGGameState);
@@ -177,6 +179,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_INTERNAL_CLASS(JRPGMapTree);
 		GDREGISTER_INTERNAL_CLASS(JRPGMapEditSession);
 		GDREGISTER_INTERNAL_CLASS(JRPGMapCanvas);
+		GDREGISTER_INTERNAL_CLASS(JRPGMapStroke);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspaceShell);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspaceView);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspacePlugin);

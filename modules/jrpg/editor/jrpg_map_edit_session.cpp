@@ -35,6 +35,7 @@
 #include "editor/editor_interface.h"
 #include "editor/editor_node.h"
 
+#include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 
 void JRPGMapEditSession::_scene_changed() {
@@ -67,6 +68,12 @@ void JRPGMapEditSession::update() {
 	emit_signal(SNAME("map_changed"));
 }
 
+void JRPGMapEditSession::set_map(JRPGMap *p_map) {
+	map_object = p_map ? p_map->get_instance_id() : ObjectID();
+	scene_path = p_map ? p_map->get_scene_file_path() : String();
+	emit_signal(SNAME("map_changed"));
+}
+
 JRPGMap *JRPGMapEditSession::get_map() const {
 	return ObjectDB::get_instance<JRPGMap>(map_object);
 }
@@ -90,8 +97,68 @@ void JRPGMapEditSession::set_view(const String &p_scene_path, float p_zoom, cons
 	view.offset = p_offset;
 }
 
+namespace {
+
+const char *const TOOL_NAMES[JRPGMapEditSession::TOOL_MAX] = { "Pencil", "Rectangle", "Ellipse", "Fill", "Eraser", "Eyedropper" };
+
+} // namespace
+
+void JRPGMapEditSession::set_mode(Mode p_mode) {
+	ERR_FAIL_INDEX(int(p_mode), MODE_MAX);
+	mode = p_mode;
+	emit_signal(SNAME("brush_changed"));
+}
+
+void JRPGMapEditSession::set_tool(Tool p_tool) {
+	ERR_FAIL_INDEX(int(p_tool), TOOL_MAX);
+	tool = p_tool;
+	emit_signal(SNAME("brush_changed"));
+}
+
+void JRPGMapEditSession::set_layer(int p_layer) {
+	ERR_FAIL_INDEX(p_layer, JRPGMapData::LAYER_COUNT);
+	layer = p_layer;
+	emit_signal(SNAME("brush_changed"));
+}
+
+void JRPGMapEditSession::set_value(int p_value) {
+	ERR_FAIL_COND(p_value < 0);
+	value = p_value;
+	emit_signal(SNAME("brush_changed"));
+}
+
+String JRPGMapEditSession::get_tool_name(Tool p_tool) {
+	ERR_FAIL_INDEX_V(int(p_tool), TOOL_MAX, String());
+	return TOOL_NAMES[p_tool];
+}
+
+JRPGMapEditSession::Tool JRPGMapEditSession::find_tool(const String &p_name) {
+	for (int i = 0; i < TOOL_MAX; i++) {
+		if (p_name.nocasecmp_to(TOOL_NAMES[i]) == 0) {
+			return Tool(i);
+		}
+	}
+	return TOOL_MAX;
+}
+
+String JRPGMapEditSession::get_action_name(Tool p_tool) {
+	switch (p_tool) {
+		case TOOL_RECTANGLE:
+			return TTR("Draw Rectangle");
+		case TOOL_ELLIPSE:
+			return TTR("Draw Ellipse");
+		case TOOL_FILL:
+			return TTR("Fill");
+		case TOOL_ERASER:
+			return TTR("Erase");
+		default:
+			return TTR("Draw with Pencil");
+	}
+}
+
 void JRPGMapEditSession::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("map_changed"));
+	ADD_SIGNAL(MethodInfo("brush_changed"));
 }
 
 JRPGMapEditSession::~JRPGMapEditSession() {

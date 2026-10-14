@@ -393,6 +393,93 @@ Error JRPGMapEditing::check_start_position(int p_map_id, const Vector2i &p_cell,
 	return OK;
 }
 
+Error JRPGMapStroke::begin(JRPGMap *p_map, int p_layer, int p_value, String *r_message) {
+	ERR_FAIL_COND_V_MSG(is_active(), ERR_ALREADY_IN_USE, "JRPGMapStroke: a stroke is already in progress.");
+	if (!p_map || p_map->get_map_data().is_null()) {
+		return refuse("there is no map to draw on.", r_message, ERR_UNCONFIGURED);
+	}
+	if (p_layer < 0 || p_layer >= JRPGMapData::LAYER_COUNT) {
+		return refuse(vformat("there is no tile layer %d (0 to %d).", p_layer, JRPGMapData::LAYER_COUNT - 1), r_message);
+	}
+	if (p_value < 0) {
+		return refuse("a palette index is 0 (empty) or more.", r_message);
+	}
+	map = p_map->get_instance_id();
+	data = p_map->get_map_data();
+	layer = p_layer;
+	value = p_value;
+	positions.clear();
+	before.clear();
+	touched.clear();
+	return OK;
+}
+
+int JRPGMapStroke::add(const Vector<Vector2i> &p_cells) {
+	ERR_FAIL_COND_V(!is_active(), 0);
+	PackedInt32Array cells;
+	HashSet<int> in_call; // A cell twice in p_cells is painted once.
+	for (const Vector2i &cell : p_cells) {
+		if (!data->has_cell(cell)) {
+			continue;
+		}
+		const int at = data->get_cell_index(cell);
+		const int old = data->get_cell(layer, cell);
+		if (!touched.has(at)) {
+			touched.insert(at);
+			positions.push_back(at);
+			before.push_back(old);
+		}
+		if (old != value && !in_call.has(at)) {
+			in_call.insert(at);
+			cells.push_back(at);
+		}
+	}
+	if (!cells.is_empty()) {
+		PackedInt32Array values;
+		values.resize(cells.size());
+		values.fill(value);
+		data->paint(layer, cells, values);
+	}
+	return cells.size();
+}
+
+int JRPGMapStroke::end(const String &p_name) {
+	ERR_FAIL_COND_V(!is_active(), 0);
+	// Only the cells the stroke changed go into the action.
+	PackedInt32Array changed;
+	PackedInt32Array old_values;
+	for (int i = 0; i < positions.size(); i++) {
+		if (before[i] != value) {
+			changed.push_back(positions[i]);
+			old_values.push_back(before[i]);
+		}
+	}
+	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
+	JRPGMap *target = ObjectDB::get_instance<JRPGMap>(map);
+	if (!changed.is_empty() && undo_redo && target) {
+		PackedInt32Array new_values;
+		new_values.resize(changed.size());
+		new_values.fill(value);
+		// The map node as context: the action belongs to the map scene's history. Already painted: not executed again.
+		undo_redo->create_action(p_name, UndoRedo::MERGE_DISABLE, target);
+		undo_redo->add_do_method(data.ptr(), "paint", layer, changed, new_values);
+		undo_redo->add_undo_method(data.ptr(), "paint", layer, changed, old_values);
+		undo_redo->commit_action(false);
+	}
+	data.unref();
+	return changed.size();
+}
+
+void JRPGMapStroke::cancel() {
+	if (!is_active()) {
+		return;
+	}
+	if (!positions.is_empty()) {
+		data->paint(layer, positions, before);
+	}
+	data.unref();
+}
+
 void JRPGMapEditing::_bind_methods() {
 	ClassDB::bind_static_method("JRPGMapEditing", D_METHOD("get_map_list"), &JRPGMapEditing::get_map_list);
 }

@@ -1,0 +1,22 @@
+# 8.4.2 bridge verification: drawing tools
+## the toolbar follows the brush: Rectangle pressed, the Objects layer chosen
+  brush: {'mode': 'tiles', 'tool': 'pencil', 'layer': 0, 'value': 1}
+  brush: {'mode': 'tiles', 'tool': 'rectangle', 'layer': 2, 'value': 1}
+  palette note: 'Drawing with 0001  Grass on the Objects layer. Right-click a tile on the map to draw with it.'
+## strokes through the canvas tools' own code: fill, ellipse of water, a pencil path of trees, a rectangle erased
+  empty: {'ground': '3dc463a76fc1', 'ground_detail': '3dc463a76fc1', 'objects': '3dc463a76fc1', 'upper': '3dc463a76fc1'} painted {'ground': 0, 'ground_detail': 0, 'objects': 0, 'upper': 0}
+  fill on ground: 240 cells, undoable True
+  ellipse on ground: 44 cells, undoable True
+  pencil on objects: 13 cells, undoable True
+  after three strokes: {'ground': '03c74bc0d947', 'ground_detail': '3dc463a76fc1', 'objects': 'b4a03b4257ce', 'upper': '3dc463a76fc1'} painted {'ground': 240, 'ground_detail': 0, 'objects': 13, 'upper': 0}
+  eraser on objects: 3 cells, undoable True
+  after the eraser: {'ground': '03c74bc0d947', 'ground_detail': '3dc463a76fc1', 'objects': '3bcdaa9580e6', 'upper': '3dc463a76fc1'} painted {'ground': 240, 'ground_detail': 0, 'objects': 10, 'upper': 0}
+## undo the eraser: the objects layer hash is the one before it; redo brings the erased hash back
+  undo: {'ground': '03c74bc0d947', 'ground_detail': '3dc463a76fc1', 'objects': 'b4a03b4257ce', 'upper': '3dc463a76fc1'} painted {'ground': 240, 'ground_detail': 0, 'objects': 13, 'upper': 0}
+  redo: {'ground': '03c74bc0d947', 'ground_detail': '3dc463a76fc1', 'objects': '3bcdaa9580e6', 'upper': '3dc463a76fc1'} painted {'ground': 240, 'ground_detail': 0, 'objects': 10, 'upper': 0}
+  screenshot: plan/evidence/jrpg/8.4.2-toolbar-and-strokes.png
+## capture of the map alone (jrpg_map_capture), independent of the window
+  capture: 960 x 576
+## errors
+    "errors": 0,
+    "warnings": 0,

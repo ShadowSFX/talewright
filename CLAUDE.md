@@ -95,7 +95,8 @@ and move on to the next ready task.
   is committed).
 - Bridge (after epic 4): `python talewright/tools/bridge.py status|list|call <tool> --args '{...}'`.
 - JRPG database end to end (setup idempotency, undo/redo round trips of every database tool, save) in a real
-  editor: `python talewright/tools/jrpg_bridge_checks.py` (fresh temporary project; part of each JRPG epic's review).
+  editor: `python talewright/tools/jrpg_bridge_checks.py` (fresh temporary project; part of each JRPG epic's review; map captures
+  are compared with `talewright/goldens/` through `talewright/tools/img_compare.py`, and `--update-goldens` rewrites them only on purpose).
 - Do not run `npm run build` anywhere (owner's global rule).
 
 ## Layout of fork additions
