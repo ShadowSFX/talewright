@@ -31,16 +31,32 @@
 
 #include "register_types.h"
 
+#include "core/config/project_settings.h"
+#include "core/object/class_db.h"
+
+#ifdef TOOLS_ENABLED
+#include "editor/jrpg_bootstrap_plugin.h"
+#include "editor/jrpg_workspace_plugin.h"
+#include "editor/jrpg_workspace_view.h"
+#include "editor/plugins/editor_plugin.h"
+#endif // TOOLS_ENABLED
+
 // Registration levels (plan/specs/01_module_layout.md): core and runtime classes at SCENE level so games and MMO
 // servers get them; editor plugins at EDITOR level, compiled only in editor builds.
 
 void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) {
+		// The only JRPG project setting (D-008): shows the JRPG workspace in the editor. Everything else lives in the
+		// project's System data.
+		GLOBAL_DEF_BASIC(PropertyInfo(Variant::BOOL, "jrpg/enabled"), false);
 		// Core and runtime classes are registered here as they are added (epic 5 onward).
 	}
 #ifdef TOOLS_ENABLED
 	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) {
-		// Editor plugins are registered here (task 5.1.2 onward).
+		GDREGISTER_INTERNAL_CLASS(JRPGWorkspaceView);
+		GDREGISTER_INTERNAL_CLASS(JRPGWorkspacePlugin);
+		GDREGISTER_INTERNAL_CLASS(JRPGBootstrapPlugin);
+		EditorPlugins::add_by_type<JRPGBootstrapPlugin>();
 	}
 #endif // TOOLS_ENABLED
 }

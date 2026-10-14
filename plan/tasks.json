@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "1.7 Fork files pass upstream CI static checks",
+  "last_completed": "5.1.2 jrpg/enabled + dynamic workspace",
   "tasks": [
     {
       "id": "0",
@@ -277,7 +277,7 @@
         "plan/DECISIONS.md"
       ],
       "status": "done",
-      "commit": "pending",
+      "commit": "b1fb0940d7",
       "notes": ""
     },
     {
@@ -1082,7 +1082,7 @@
         "3",
         "4"
       ],
-      "status": "in_progress",
+      "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
         "Core compiles without scene/ includes",
@@ -1100,7 +1100,7 @@
       "description": "modules/jrpg/{core,runtime,editor}; jrpg/enabled project setting; bootstrap plugin adds/removes the JRPG main screen dynamically.",
       "parent": "5",
       "dependencies": [],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Setting off => no JRPG tab",
@@ -1109,8 +1109,8 @@
       ],
       "test_strategy": "Bridge screenshot of tabs; doctests.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "5.1.1",
@@ -1153,10 +1153,25 @@
         "Setting on: JRPG tab appears without restart"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
-      "files": [],
-      "commit": "",
+      "files": [
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/editor/jrpg_bootstrap_plugin.h",
+        "modules/jrpg/editor/jrpg_bootstrap_plugin.cpp",
+        "modules/jrpg/editor/jrpg_workspace_plugin.h",
+        "modules/jrpg/editor/jrpg_workspace_plugin.cpp",
+        "modules/jrpg/editor/jrpg_workspace_view.h",
+        "modules/jrpg/editor/jrpg_workspace_view.cpp",
+        "modules/jrpg/icons/JRPG.svg",
+        "modules/jrpg/tests/test_jrpg_module.h",
+        "modules/claude_bridge/claude_bridge_tools.cpp",
+        "talewright/docs/jrpg_workspace.md",
+        "talewright/docs/claude_bridge.md",
+        "plan/evidence/jrpg/",
+        "plan/status.py"
+      ],
+      "commit": "pending",
       "notes": "",
-      "status": "in_progress"
+      "status": "done"
     },
     {
       "id": "5.2",

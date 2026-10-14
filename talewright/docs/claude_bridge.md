@@ -70,6 +70,7 @@ by the editor. Exit codes: 0 ok, 1 the tool reported an error, 2 transport/proto
 | `editor_rescan` | Rescan project files (the editor otherwise rescans only on focus) |
 | `editor_screenshot` | Window, main screen, 2D or 3D viewport capture |
 | `project_info` / `project_settings_get` | Project summary / settings by prefix |
+| `project_settings_set` | Change an existing project setting (or `reset` it to its default) and save `project.godot`; not undoable |
 | `project_list_files` / `project_read_file` | Files inside `res://` (traversal outside the project is refused) |
 | `run_project` / `stop_project` / `run_status` | Run (main, current or a given scene, with extra args), stop, status |
 | `get_logs` / `clear_logs` | Editor and game output/errors (script errors carry the `res://` file and line) |

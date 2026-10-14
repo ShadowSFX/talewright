@@ -603,6 +603,47 @@ static void _tool_project_settings(const Dictionary &p_args, const Ref<ClaudeBri
 	p_call->complete_data(out);
 }
 
+static void _tool_project_settings_set(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *) {
+	ProjectSettings *ps = ProjectSettings::get_singleton();
+	const String name = String(p_args.get("name", "")).strip_edges();
+	if (name.is_empty() || !ps->has_setting(name)) {
+		p_call->fail("Unknown project setting: " + name + " (only existing settings can be changed).");
+		return;
+	}
+	const Variant old_value = ps->get_setting(name);
+	Variant value;
+	if (bool(p_args.get("reset", false))) {
+		value = ps->property_get_revert(name);
+	} else {
+		if (!p_args.has("value")) {
+			p_call->fail("Pass \"value\" or \"reset\": true.");
+			return;
+		}
+		bool ok = false;
+		value = json_to_value(p_args["value"], old_value.get_type(), ok);
+		if (!ok) {
+			p_call->fail(vformat("Cannot convert the value to %s; use a Godot literal string such as \"Vector2(1, 2)\".", Variant::get_type_name(old_value.get_type())));
+			return;
+		}
+	}
+	ps->set_setting(name, value);
+	Dictionary out;
+	out["name"] = name;
+	out["old_value"] = variant_to_json(old_value);
+	out["new_value"] = variant_to_json(ps->get_setting(name));
+	if (bool(p_args.get("save", true))) {
+		const Error err = ps->save();
+		out["saved"] = err == OK;
+		if (err != OK) {
+			p_call->fail(vformat("The setting changed but project.godot could not be saved (error %d).", err));
+			return;
+		}
+	} else {
+		out["saved"] = false;
+	}
+	p_call->complete_data(out);
+}
+
 static void _list_dir(const String &p_dir, bool p_recursive, const PackedStringArray &p_ext, PackedStringArray &r_out, int p_limit) {
 	Ref<DirAccess> da = DirAccess::open(p_dir);
 	if (da.is_null()) {
@@ -891,6 +932,17 @@ void register_editor_tools(ClaudeBridgeMCP &r_mcp, ClaudeBridgePlugin *p_plugin)
 	p["prefix"] = _prop("string", "Only settings whose name starts with this prefix, e.g. \"application/\" or \"input/\".");
 	p["limit"] = _prop("integer", "Maximum number of settings (default 200).");
 	_add(r_mcp, "project_settings_get", "Project settings", "Reads project settings (values as JSON or Godot literal strings).", p, PackedStringArray(), &_tool_project_settings, true, p_plugin);
+
+	p.clear();
+	p["name"] = _prop("string", "Existing setting name, e.g. \"jrpg/enabled\" or \"application/config/name\".");
+	Dictionary any_value;
+	any_value["description"] = "New value: JSON value or Godot literal string, converted to the setting's current type.";
+	p["value"] = any_value;
+	p["reset"] = _prop("boolean", "Restore the default value instead of setting one.");
+	p["save"] = _prop("boolean", "Save project.godot afterwards (default true).");
+	req.clear();
+	req.push_back("name");
+	_add(r_mcp, "project_settings_set", "Change project setting", "Changes an existing project setting (or resets it to its default) and saves project.godot. Not undoable.", p, req, &_tool_project_settings_set, false, p_plugin);
 
 	p.clear();
 	p["dir"] = _prop("string", "Directory inside res:// (default res://).");

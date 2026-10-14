@@ -376,7 +376,7 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   file name). Two upstream-file patches (ledger rows 1–2): fork modules are excluded from `copyright-headers` (their
   Talewright header is checked by `add_header.py --check`) and fork paths get CODEOWNERS entries. Before every push,
   run `python talewright/tools/static_checks.py` (same hooks on the files the push brings, plus fork checks) and
-  review any file a hook rewrote: codespell's automatic fixes renamed identifiers (`and`→`and`, `end`→`end`) and
+  review any file a hook rewrote: codespell's automatic fixes turned a Python variable into the keyword `and` and a C++ variable into `end`, and changed
   labels once and must never be committed unreviewed.
 - **Why:** keeps the fork's CI green so real regressions are visible, with the smallest upstream diff.
 - **Reversal:** revert ledger rows 1–2; the fork's own checks keep working locally.

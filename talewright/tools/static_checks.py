@@ -18,6 +18,7 @@ Exit code 0 only when every check passes without modifying anything.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import io
 import subprocess
 import sys
@@ -44,8 +45,8 @@ def changed_files(root: Path, base: str) -> list[str]:
     return sorted(f for f in files if f and (root / f).is_file())
 
 
-def status_snapshot(root: Path) -> str:
-    return git(root, "status", "--porcelain", "-z")
+def content_hash(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else ""
 
 
 def main() -> int:
@@ -63,20 +64,21 @@ def main() -> int:
     print(f"checking {len(files)} files")
     ok = True
 
-    before = status_snapshot(root)
-    diff_before = git(root, "diff")
+    before = {f: content_hash(root / f) for f in files}
     prek = subprocess.run([sys.executable, "-m", "prek", "run", "--color", "never", "--files", *files], cwd=root)
     if prek.returncode != 0:
         ok = False
         print("[FAIL] prek hooks (see output above)")
     else:
         print("[PASS] prek hooks")
-    if status_snapshot(root) != before or git(root, "diff") != diff_before:
+    rewritten = [f for f in files if content_hash(root / f) != before[f]]
+    if rewritten:
         ok = False
-        modified = [ln[3:] for ln in git(root, "status", "--porcelain").splitlines()]
-        print("[REVIEW] hooks rewrote files; inspect `git diff` before committing (identifiers, labels, URLs):")
-        for m in modified:
-            print("   ", m)
+        print(
+            "[REVIEW] hooks rewrote these files; check the changes (identifiers, labels, URLs, quotes) before committing:"
+        )
+        for f in rewritten:
+            print("   ", f)
 
     cpp = [f for f in files if f.startswith(FORK_MODULES) and f.endswith(CPP_SUFFIXES)]
     if cpp:

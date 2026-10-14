@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 18:03 -0600
-- **Current task:** 5.1.2 jrpg/enabled + dynamic workspace
-- **Last completed:** 1.7 Fork files pass upstream CI static checks
-- **Next task:** none ready (see `tasks.py next`)
-- **Done leaf tasks:** 47
+- **Updated:** 2026-10-13 18:07 -0600
+- **Current task:** none
+- **Last completed:** 5.1.2 jrpg/enabled + dynamic workspace
+- **Next task:** 5.2.1 Entry/table/manifest classes
+- **Done leaf tasks:** 48
 <!-- status:end -->
 
 ## Log
@@ -116,4 +116,6 @@
 | 2026-10-13 17:37 -0600 | - | imported 0 new / 1 updated tasks | |
 | 2026-10-13 17:51 -0600 | - | imported 1 new / 0 updated tasks (containers: 1 done->pending) | |
 | 2026-10-13 17:51 -0600 | 1.7 | started: Fork files pass upstream CI static checks (containers: 1 pending->in_progress) |  |
-| 2026-10-13 18:03 -0600 | 1.7 | done: Fork files pass upstream CI static checks — CI static checks green on push c94eddfc3d (run 38486896480: Static checks success). Local static_checks.py --all passes on all fork files; bad codespell fixes reviewed and reverted (anc/edn identifiers, SAV labels, PostgreSQL licence URL, Baloon.png quote, retuned/statics/stings); research gates unchanged (1927 citations ok, labels 0 missing, verbatim 0), gap map same counts; ledger rows 1-2 + D-027 (containers: 1 in_progress->done) | pending |
+| 2026-10-13 18:03 -0600 | 1.7 | done: Fork files pass upstream CI static checks — CI static checks green on push c94eddfc3d (run 38486896480: Static checks success). Local static_checks.py --all passes on all fork files; bad codespell fixes reviewed and reverted (two identifiers, the save/load area label, the PostgreSQL URL, a quoted file name, three prose words); research gates unchanged (1927 citations ok, labels 0 missing, verbatim 0), gap map same counts; ledger rows 1-2 + D-027 (containers: 1 in_progress->done) | b1fb0940d7 |
+| 2026-10-13 18:07 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 18:07 -0600 | 5.1.2 | done: jrpg/enabled + dynamic workspace — jrpg/enabled (GLOBAL_DEF_BASIC, default off; doctest) + JRPGBootstrapPlugin adds/removes the JRPG main screen on settings_changed without restart (EditorNode::add/remove_editor_plugin, view freed with the plugin); JRPG tab icon (original message-window glyph via module icons); empty-state view designed with frontend-design in editor theme only (framed message-window panel with continue mark, disabled Set up JRPG project, Turn off JRPG workspace, guide link, readable column width, wrapping actions); bridge tool project_settings_set (existing settings, literal allow-list, reset, save). Verified via bridge: off -> no tab; set on -> tab appears live; off -> tab removed live, Script selected, no errors; restart with setting on -> tab at startup (plan/evidence/jrpg/5.1.2-*.png); full suite 1404/1404. Not verified: clicking Turn off / guide link (same set+save path as the tool), narrow-width layout (containers: 5.1 in_progress->done, 5 in_progress->pending) | pending |

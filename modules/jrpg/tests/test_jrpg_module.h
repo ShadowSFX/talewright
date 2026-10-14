@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include "core/config/project_settings.h"
 #include "tests/test_macros.h"
 
 #include "modules/jrpg/core/jrpg_core.h"
@@ -39,6 +40,13 @@ namespace TestJRPGModule {
 
 TEST_CASE("[JRPG] Module skeleton is built into the test runner") {
 	CHECK(JRPGCore::DATA_SCHEMA_VERSION == 1);
+}
+
+TEST_CASE("[JRPG] jrpg/enabled is the module's project setting and is off by default") {
+	ProjectSettings *ps = ProjectSettings::get_singleton();
+	REQUIRE(ps->has_setting("jrpg/enabled"));
+	CHECK(ps->property_get_revert("jrpg/enabled") == Variant(false));
+	CHECK(ps->get_setting("jrpg/enabled").get_type() == Variant::BOOL);
 }
 
 } // namespace TestJRPGModule
