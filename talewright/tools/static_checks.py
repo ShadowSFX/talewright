@@ -35,6 +35,10 @@ FORK_MODULES = ("modules/claude_bridge/", "modules/jrpg/", "modules/mmo/")
 CPP_SUFFIXES = (".h", ".hpp", ".cpp", ".inc")
 
 
+# Fork C++ must not use these without their standard header; the engine has portable equivalents.
+PORTABILITY = {"std::size(": "std_size( (core/typedefs.h)"}
+
+
 def git(root: Path, *args: str) -> str:
     return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, check=True).stdout
 
@@ -131,6 +135,19 @@ def main() -> int:
         r = subprocess.run([sys.executable, "talewright/tools/add_header.py", "--check", *cpp], cwd=root)
         print(("[PASS]" if r.returncode == 0 else "[FAIL]") + f" Talewright headers ({len(cpp)} files)")
         ok &= r.returncode == 0
+
+    # Standard-library names whose header MSVC's STL pulls in transitively but libc++ (macOS, CI run 38510290436)
+    # does not: use the engine's helpers instead.
+    portability = []
+    for f in cpp:
+        for number, line in enumerate((root / f).read_text(encoding="utf-8").splitlines(), 1):
+            for name, use in PORTABILITY.items():
+                if name in line:
+                    portability.append(f"{f}:{number}: {name} -> {use}")
+    print(("[PASS]" if not portability else "[FAIL]") + f" portable standard-library use ({len(cpp)} files)")
+    for finding in portability:
+        print("   ", finding)
+    ok &= not portability
 
     for name, cmd in (
         ("jrpg core include boundary", [sys.executable, "modules/jrpg/tests/check_core_includes.py"]),

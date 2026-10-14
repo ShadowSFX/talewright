@@ -65,8 +65,8 @@ static Dictionary effect(int p_code, int p_data_id, int64_t p_value1, int64_t p_
 TEST_CASE("[JRPG][TraitEditor] Every trait and effect code has one editor kind with sane ranges") {
 	const int trait_codes[] = { TRAIT_ELEMENT_RATE, TRAIT_DEBUFF_RATE, TRAIT_STATE_RATE, TRAIT_STATE_RESIST, TRAIT_PARAM, TRAIT_XPARAM, TRAIT_SPARAM, TRAIT_ATTACK_ELEMENT, TRAIT_ATTACK_STATE, TRAIT_ATTACK_SPEED, TRAIT_ATTACK_TIMES, TRAIT_ATTACK_SKILL, TRAIT_ADD_SKILL_TYPE, TRAIT_SEAL_SKILL_TYPE, TRAIT_ADD_SKILL, TRAIT_SEAL_SKILL, TRAIT_EQUIP_WEAPON, TRAIT_EQUIP_ARMOR, TRAIT_LOCK_EQUIP, TRAIT_SEAL_EQUIP, TRAIT_SLOT_TYPE, TRAIT_ACTION_TIMES, TRAIT_SPECIAL_FLAG, TRAIT_COLLAPSE_EFFECT, TRAIT_PARTY_ABILITY };
 	const int effect_codes[] = { EFFECT_RECOVER_HP, EFFECT_RECOVER_MP, EFFECT_GAIN_TP, EFFECT_ADD_STATE, EFFECT_REMOVE_STATE, EFFECT_ADD_BUFF, EFFECT_ADD_DEBUFF, EFFECT_REMOVE_BUFF, EFFECT_REMOVE_DEBUFF, EFFECT_ESCAPE, EFFECT_GROW, EFFECT_LEARN_SKILL, EFFECT_COMMON_EVENT };
-	CHECK(JRPGTraitKinds::get_kinds(false).size() == int(std::size(trait_codes)));
-	CHECK(JRPGTraitKinds::get_kinds(true).size() == int(std::size(effect_codes)));
+	CHECK(JRPGTraitKinds::get_kinds(false).size() == int(std_size(trait_codes)));
+	CHECK(JRPGTraitKinds::get_kinds(true).size() == int(std_size(effect_codes)));
 	for (int code : trait_codes) {
 		CHECK_MESSAGE(JRPGTraitKinds::find_kind(false, code) != nullptr, code);
 	}

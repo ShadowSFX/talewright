@@ -63,11 +63,11 @@ const char *const SPECIAL_FLAGS[] = { TTRC("Auto Battle"), TTRC("Guard"), TTRC("
 const char *const COLLAPSE_EFFECTS[] = { TTRC("Normal"), TTRC("Boss"), TTRC("Instant"), TTRC("Stays") };
 const char *const PARTY_ABILITIES[] = { TTRC("Half Encounters"), TTRC("No Encounters"), TTRC("No Surprise Attacks"), TTRC("More First Strikes"), TTRC("Double Gold"), TTRC("Double Drops") };
 
-static_assert(std::size(PARAMS) == 8, "One label per JRPGClassData::Param.");
-static_assert(std::size(XPARAMS) == XPARAM_MAX, "One label per JRPGTraits::XParam.");
-static_assert(std::size(SPARAMS) == SPARAM_MAX, "One label per JRPGTraits::SParam.");
-static_assert(std::size(COLLAPSE_EFFECTS) == COLLAPSE_STAYS + 1, "One label per JRPGTraits::CollapseEffect.");
-static_assert(std::size(PARTY_ABILITIES) == ABILITY_DOUBLE_DROPS + 1, "One label per JRPGTraits::PartyAbility.");
+static_assert(std_size(PARAMS) == 8, "One label per JRPGClassData::Param.");
+static_assert(std_size(XPARAMS) == XPARAM_MAX, "One label per JRPGTraits::XParam.");
+static_assert(std_size(SPARAMS) == SPARAM_MAX, "One label per JRPGTraits::SParam.");
+static_assert(std_size(COLLAPSE_EFFECTS) == COLLAPSE_STAYS + 1, "One label per JRPGTraits::CollapseEffect.");
+static_assert(std_size(PARTY_ABILITIES) == ABILITY_DOUBLE_DROPS + 1, "One label per JRPGTraits::PartyAbility.");
 
 Kind kind(int p_code, int p_tab, const char *p_label, DataSource p_data, ValueStyle p_value = VALUE_NONE, int p_min = 0, int p_max = 0, int p_default = 0) {
 	Kind k;
