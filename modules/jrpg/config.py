@@ -33,6 +33,7 @@ def get_doc_classes():
         "JRPGManagedAddon",
         "JRPGMap",
         "JRPGMapData",
+        "JRPGMapEditing",
         "JRPGMapFiles",
         "JRPGMapList",
         "JRPGProjectSetup",

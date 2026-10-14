@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 03:52 -0600
+- **Updated:** 2026-10-14 04:01 -0600
 - **Current task:** none
-- **Last completed:** 8.1.2 JRPGMap node
-- **Next task:** 8.1.3 Map scene spike
-- **Done leaf tasks:** 99
+- **Last completed:** 8.1.3 Map scene spike
+- **Next task:** 8.2 Map cell cache compiler
+- **Done leaf tasks:** 100
 <!-- status:end -->
 
 ## Log
@@ -267,4 +267,5 @@
 | 2026-10-14 03:18 -0600 | 8.1.1 | started: Map data and map list (containers: 8.1 pending->in_progress, 8 pending->in_progress) |  |
 | 2026-10-14 03:28 -0600 | 8.1.1 | done: Map data and map list — Core JRPGMapData (spec 05 properties, 4 palette-index layers + shadow/region bytes always sized to the map, fitted with a warning; set_size keeps the top-left overlap; paint/paint_regions/paint_shadows as strokes emitting cells_changed; layout_changed for structural changes; schema version; get_resolver_flags) and JRPGMapList (map_id/name/parent/scene in tree order, ids never reused); runtime JRPGMapFiles (map data from a scene's SceneState without instancing; scan: an id claimed twice stays with the listed scene, else the older file; the other gets a fresh id past all claimed ids, saved into its scene with a warning; unlisted scenes added); minimal JRPGMap node (map_data). Docs for the 4 classes; doctests (sizes, paint, resize, fitting, flags, save/load, list tree order and id reuse, SceneState read, duplicate scan with a newer copy). Spec 05 updated (cues, authority D-007). (containers: 8.1 in_progress->pending, 8 in_progress->pending) | cab2cece50 |
 | 2026-10-14 03:46 -0600 | 8.1.2 | started: JRPGMap node (containers: 8.1 pending->in_progress, 8 pending->in_progress) |  |
-| 2026-10-14 03:52 -0600 | 8.1.2 | done: JRPGMap node — JRPGMap draws its JRPGMapData: two internal TileMapLayers per data layer (z 0 below characters, z 2 overhead by the baked flags; characters z 1), tileset from the database entry (project database through the resource cache, or set_database), autotile/wall shapes from JRPGAutotileResolver, full build deferred and coalesced on enter tree / layout_changed / tileset entry changes, 3x3 re-resolve on cells_changed (no full build), rebuild counter for diagnostics; JRPGDatabase::PROJECT_PATH. Doctest: fixture map with blob, wall, plain and overhead tiles matches the resolver's atlas coords, paint updates neighbours without a rebuild, flag/size/data changes rebuild. Docs + spec 05. (containers: 8.1 in_progress->pending, 8 in_progress->pending) | pending |
+| 2026-10-14 03:52 -0600 | 8.1.2 | done: JRPGMap node — JRPGMap draws its JRPGMapData: two internal TileMapLayers per data layer (z 0 below characters, z 2 overhead by the baked flags; characters z 1), tileset from the database entry (project database through the resource cache, or set_database), autotile/wall shapes from JRPGAutotileResolver, full build deferred and coalesced on enter tree / layout_changed / tileset entry changes, 3x3 re-resolve on cells_changed (no full build), rebuild counter for diagnostics; JRPGDatabase::PROJECT_PATH. Doctest: fixture map with blob, wall, plain and overhead tiles matches the resolver's atlas coords, paint updates neighbors without a rebuild, flag/size/data changes rebuild. Docs + spec 05. (containers: 8.1 in_progress->pending, 8 in_progress->pending) | a807812582 |
+| 2026-10-14 04:01 -0600 | 8.1.3 | done: Map scene spike — Map scene spike passed (D-036, D-006 route kept): JRPGMapEditing (create_map writes res://jrpg/maps/map_NNNN.tscn with a JRPGMap root and lists it in res://jrpg/map_list.tres; paint is one undo action with the map node as context, so it lands in the map scene's own history) + bridge tools jrpg_map_create/jrpg_map_paint/jrpg_map_get (file read through SceneState without instancing). Bridge evidence plan/evidence/jrpg/8.1.3-*: create+open, 3 paints in the map scene history, undo/redo exact, database untouched, save, file read, game run shows the same tiles (editor and game screenshots), 0 errors. Doctests (paint refusals/dedupe/no-op, create refusal, tool refusals without an editor); jrpg_bridge_checks.py 80/80 with a paint round trip. Docs + claude_bridge.md. (containers: 8.1 pending->done) | pending |

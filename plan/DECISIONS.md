@@ -513,3 +513,17 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   `--allow-skips`.
 - **Why:** catches GCC-only diagnostics before the push, the same way clang_check.py does for clang.
 - **Reversal:** remove the call from static_checks.py; CI still reports the failure after the push.
+
+## D-036 — Map scene spike passed: D-006's route kept
+- **Context:** D-006 made maps scenes whose root `JRPGMap` holds a built-in `JRPGMapData`, with task 8.1 as a spike and
+  a 2D-editor-plugin route as the fallback.
+- **Options:** keep the scene route; fall back to the 2D-editor plugin route (same data model).
+- **Choice:** keep the scene route. Spike (task 8.1.3, `plan/evidence/jrpg/8.1.3-*`, through the bridge): a map scene
+  was created and opened, three paints went to the map scene's own undo history (the map node is the action's
+  context; the built-in data resource routes to the same history, `editor/editor_undo_redo_manager.cpp:63-97`), undo
+  and redo restored the cells exactly, no database file was marked unsaved, the scene saved, its `JRPGMapData` was
+  read back from the file's SceneState without instancing, and the scene ran in a new game process showing the same
+  tiles (editor and game screenshots); `jrpg_bridge_checks.py` round-trips a paint (80/80). The internal TileMapLayers
+  are not saved with the scene (no owner).
+- **Why:** every requirement of D-006 held on the first try; the fallback would only lose per-map undo and scene tabs.
+- **Reversal:** the 2D-editor plugin route of D-006, with the same `JRPGMapData`.

@@ -82,6 +82,7 @@
 #include "modules/jrpg/editor/jrpg_inspector_plugin.h"
 #include "modules/jrpg/editor/jrpg_list_editors.h"
 #include "modules/jrpg/editor/jrpg_managed_addon.h"
+#include "modules/jrpg/editor/jrpg_map_editing.h"
 #include "modules/jrpg/editor/jrpg_param_editor.h"
 #include "modules/jrpg/editor/jrpg_picker.h"
 #include "modules/jrpg/editor/jrpg_project_setup.h"
@@ -174,6 +175,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGManagedAddon);
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotileImporter); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGTileFlags);
+		GDREGISTER_ABSTRACT_CLASS(JRPGMapEditing); // Static methods only.
 		GDREGISTER_CLASS(JRPGProjectSetup);
 		GDREGISTER_INTERNAL_CLASS(JRPGSetupDialog);
 		EditorPlugins::add_by_type<JRPGBootstrapPlugin>();

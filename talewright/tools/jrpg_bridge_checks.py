@@ -316,6 +316,30 @@ def run(checks: Checks) -> None:
         ),
     )
 
+    # Maps (task 8.1.3): a map scene painted through the bridge; the paint is undone and redone in the map scene's
+    # own history and never marks database files unsaved.
+    created_map = c.call("jrpg_map_create", {"name": "Checks", "width": 6, "height": 4})
+    c.check("jrpg_map_create: makes and opens map 1", created_map.get("map_id") == 1, json.dumps(created_map)[:200])
+    time.sleep(2)  # The scene opens on the editor's next frames.
+    c.round_trip(
+        "jrpg_map_paint (a rectangle of grass)",
+        lambda: c.call("jrpg_map_get", {"layer": "ground"})["cells"],
+        lambda: c.call(
+            "jrpg_map_paint", {"layer": "ground", "value": 1, "rect": {"x": 1, "y": 1, "width": 3, "height": 2}}
+        ),
+    )
+    paint = c.call("jrpg_map_paint", {"layer": "objects", "value": 2, "cells": [[0, 0]]})
+    c.check(
+        "jrpg_map_paint: goes to the map scene's history", paint.get("history") == "map scene", json.dumps(paint)[:200]
+    )
+    c.call("editor_save_scene")
+    saved_map = c.call("jrpg_map_get", {"scene": created_map["scene"], "layer": "objects"})
+    c.check(
+        "jrpg_map_get: reads the saved scene without opening it",
+        saved_map["cells"][0][0] == 2,
+        json.dumps(saved_map)[:200],
+    )
+
     # Saving leaves nothing unsaved, bakes the tile flags and writes the TileSet.
     c.call("jrpg_db_save")
     unsaved = c.call("jrpg_db_list")["unsaved_paths"]

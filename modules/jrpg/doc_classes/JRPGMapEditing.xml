@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGMapEditing" inherits="RefCounted" api_type="editor" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Editor helpers that create map scenes and paint maps.
+	</brief_description>
+	<description>
+		Creates map scenes (a scene whose root is a [JRPGMap], listed in the project's [JRPGMapList]) and paints their tile layers. Every paint is one undo action of the map scene's own history, so undoing it never touches another scene or the database. The Claude bridge's map tools use the same functions.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_map_list" qualifiers="static">
+			<return type="JRPGMapList" />
+			<description>
+				Returns the project's map list ([code]res://jrpg/map_list.tres[/code]), or a new empty list when the project has none yet.
+			</description>
+		</method>
+	</methods>
+</class>

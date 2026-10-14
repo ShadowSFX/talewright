@@ -38,6 +38,7 @@
 #include "jrpg_database_view.h"
 #include "jrpg_list_editors.h"
 #include "jrpg_managed_addon.h"
+#include "jrpg_map_editing.h"
 #include "jrpg_project_setup.h"
 #include "jrpg_setup_dialog.h"
 #include "jrpg_tile_flags.h"
@@ -52,6 +53,8 @@
 #include "core/object/class_db.h"
 #include "core/os/os.h"
 #include "editor/editor_interface.h"
+#include "editor/editor_node.h"
+#include "editor/editor_undo_redo_manager.h"
 #include "editor/file_system/editor_file_system.h"
 #include "scene/main/scene_tree.h"
 #include "scene/resources/2d/tile_set.h"
@@ -60,11 +63,14 @@
 #include "modules/claude_bridge/claude_bridge_registry.h"
 #include "modules/claude_bridge/claude_bridge_tools.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
+#include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
 #include "modules/jrpg/core/jrpg_types_data.h"
+#include "modules/jrpg/runtime/jrpg_map.h"
+#include "modules/jrpg/runtime/jrpg_map_files.h"
 
 namespace {
 
@@ -1352,6 +1358,193 @@ void tool_db_set_image(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall>
 	wait_for_import(p_call, table_name, id, field, path, int(frames), int(directions), int64_t(OS::get_singleton()->get_ticks_msec() + IMPORT_WAIT_MSEC), 1);
 }
 
+// Map tools (task 8.1.3; task 8.8 adds the rest): create a map scene, paint the edited map, read a map.
+
+const char *LAYER_KEYS[JRPGMapData::LAYER_COUNT] = { "ground", "ground_detail", "objects", "upper" };
+constexpr int MAX_CELLS_LISTED = 64 * 64;
+
+// The edited scene's map, or null after failing the call.
+JRPGMap *edited_map(const Ref<ClaudeBridgeToolCall> &p_call) {
+	// Without the editor (doctests) there is no edited scene: EditorInterface may exist, EditorNode does not.
+	JRPGMap *map = EditorNode::get_singleton() ? Object::cast_to<JRPGMap>(EditorInterface::get_singleton()->get_edited_scene_root()) : nullptr;
+	if (!map || map->get_map_data().is_null()) {
+		p_call->fail("The edited scene is not a map (its root is not a JRPGMap with map data): open one with editor_open_scene or create one with jrpg_map_create.");
+		return nullptr;
+	}
+	return map;
+}
+
+// The layer named by "layer" (0-3 or ground, ground_detail, objects, upper), or -1 after failing the call.
+int map_layer(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call) {
+	const Variant v = p_args.get("layer", Variant());
+	int64_t number = -1;
+	if (whole_number(v, number) && number >= 0 && number < JRPGMapData::LAYER_COUNT) {
+		return int(number);
+	}
+	for (int i = 0; i < JRPGMapData::LAYER_COUNT; i++) {
+		if (String(v).strip_edges().to_lower() == LAYER_KEYS[i]) {
+			return i;
+		}
+	}
+	p_call->fail("\"layer\" must be 0-3 or ground, ground_detail, objects, upper.");
+	return -1;
+}
+
+Dictionary describe_map(const Ref<JRPGMapData> &p_data, const String &p_scene) {
+	Dictionary map;
+	map["scene"] = p_scene;
+	map["map_id"] = p_data->get_map_id();
+	map["name"] = p_data->get_display_name();
+	map["tileset_id"] = p_data->get_tileset_id();
+	map["size"] = Array({ p_data->get_size().x, p_data->get_size().y });
+	map["scroll_type"] = int(p_data->get_scroll_type());
+	Dictionary painted;
+	for (int layer = 0; layer < JRPGMapData::LAYER_COUNT; layer++) {
+		int count = 0;
+		for (const int index : p_data->get_layer(layer)) {
+			count += index != 0 ? 1 : 0;
+		}
+		painted[LAYER_KEYS[layer]] = count;
+	}
+	map["painted_cells"] = painted;
+	return map;
+}
+
+void tool_map_create(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	const String name = String(p_args.get("name", "")).strip_edges();
+	int64_t tileset_id = 1;
+	int64_t width = JRPGMapData::DEFAULT_WIDTH;
+	int64_t height = JRPGMapData::DEFAULT_HEIGHT;
+	if (!int_arg(p_args, "tileset_id", 1, p_call, tileset_id) || !int_arg(p_args, "width", JRPGMapData::DEFAULT_WIDTH, p_call, width) || !int_arg(p_args, "height", JRPGMapData::DEFAULT_HEIGHT, p_call, height)) {
+		return;
+	}
+	if (name.is_empty()) {
+		p_call->fail("\"name\" is the map's name, such as \"Meadow\".");
+		return;
+	}
+	int map_id = 0;
+	String path;
+	String message;
+	const Vector2i size(int(CLAMP(width, int64_t(0), int64_t(INT32_MAX))), int(CLAMP(height, int64_t(0), int64_t(INT32_MAX))));
+	if (JRPGMapEditing::create_map(name, int(CLAMP(tileset_id, int64_t(0), int64_t(INT32_MAX))), size, map_id, path, &message) != OK) {
+		p_call->fail(message);
+		return;
+	}
+	if (bool(p_args.get("open", true)) && EditorNode::get_singleton()) {
+		EditorInterface::get_singleton()->open_scene_from_path(path);
+	}
+	Dictionary result;
+	result["map_id"] = map_id;
+	result["scene"] = path;
+	result["size"] = Array({ size.x, size.y });
+	result["opened"] = bool(p_args.get("open", true));
+	p_call->complete_data(result);
+}
+
+void tool_map_paint(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGMap *map = edited_map(p_call);
+	if (!map) {
+		return;
+	}
+	const int layer = map_layer(p_args, p_call);
+	int64_t value = 0;
+	if (layer < 0 || !int_arg(p_args, "value", -1, p_call, value)) {
+		return;
+	}
+	Vector<Vector2i> cells;
+	if (p_args.has("rect")) {
+		const Dictionary rect = p_args["rect"];
+		int64_t x = 0;
+		int64_t y = 0;
+		int64_t w = 0;
+		int64_t h = 0;
+		if (!whole_number(rect.get("x", 0), x) || !whole_number(rect.get("y", 0), y) || !whole_number(rect.get("width", 0), w) || !whole_number(rect.get("height", 0), h) || w < 1 || h < 1 || w * h > JRPGMapData::MAX_SIDE * JRPGMapData::MAX_SIDE) {
+			p_call->fail("\"rect\" is {x, y, width, height} in cells, width and height 1 or more.");
+			return;
+		}
+		for (int64_t cy = y; cy < y + h; cy++) {
+			for (int64_t cx = x; cx < x + w; cx++) {
+				cells.push_back(Vector2i(int(cx), int(cy)));
+			}
+		}
+	}
+	if (p_args.has("cells")) {
+		const Variant list = p_args["cells"];
+		bool valid = list.get_type() == Variant::ARRAY;
+		for (const Variant &v : valid ? Array(list) : Array()) {
+			int64_t x = 0;
+			int64_t y = 0;
+			const Array pair = v.get_type() == Variant::ARRAY ? Array(v) : Array();
+			valid = valid && pair.size() == 2 && whole_number(pair[0], x) && whole_number(pair[1], y);
+			cells.push_back(Vector2i(int(CLAMP(x, int64_t(INT32_MIN), int64_t(INT32_MAX))), int(CLAMP(y, int64_t(INT32_MIN), int64_t(INT32_MAX)))));
+		}
+		if (!valid) {
+			p_call->fail("\"cells\" is a list of [x, y] cell coordinates.");
+			return;
+		}
+	}
+	if (cells.is_empty()) {
+		p_call->fail("Give \"cells\" ([[x, y], ...]) or \"rect\" ({x, y, width, height}) to paint.");
+		return;
+	}
+	int changed = 0;
+	String message;
+	if (JRPGMapEditing::paint(map, layer, cells, int(CLAMP(value, int64_t(-1), int64_t(INT32_MAX))), changed, &message) != OK) {
+		p_call->fail(message + " Nothing was changed.");
+		return;
+	}
+	Dictionary result = describe_map(map->get_map_data(), map->get_scene_file_path());
+	result["changed"] = changed;
+	result["undoable"] = changed > 0;
+	// Which history the action went to: the map scene's own, never the global one (D-006).
+	if (EditorUndoRedoManager::get_singleton()) {
+		result["history"] = EditorUndoRedoManager::get_singleton()->get_history_id_for_object(map) == EditorUndoRedoManager::GLOBAL_HISTORY ? "global" : "map scene";
+	}
+	p_call->complete_data(result);
+}
+
+void tool_map_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	Ref<JRPGMapData> data;
+	String scene;
+	if (p_args.has("scene")) {
+		scene = ClaudeBridgeTools::validate_res_path(p_args["scene"]);
+		data = scene.is_empty() ? Ref<JRPGMapData>() : JRPGMapFiles::read_map_data(scene); // No node is created.
+		if (data.is_null()) {
+			p_call->fail("\"scene\" must be a map scene in the project (res://...tscn whose root is a JRPGMap).");
+			return;
+		}
+	} else {
+		JRPGMap *map = edited_map(p_call);
+		if (!map) {
+			return;
+		}
+		data = map->get_map_data();
+		scene = map->get_scene_file_path();
+	}
+	Dictionary result = describe_map(data, scene);
+	if (p_args.has("layer")) {
+		const int layer = map_layer(p_args, p_call);
+		if (layer < 0) {
+			return;
+		}
+		const Vector2i size = data->get_size();
+		if (size.x * size.y > MAX_CELLS_LISTED) {
+			p_call->fail(vformat("The map has %d cells; cells are listed for maps of up to %d.", size.x * size.y, MAX_CELLS_LISTED));
+			return;
+		}
+		Array rows;
+		for (int y = 0; y < size.y; y++) {
+			PackedInt32Array row;
+			for (int x = 0; x < size.x; x++) {
+				row.push_back(data->get_cell(layer, Vector2i(x, y)));
+			}
+			rows.push_back(row);
+		}
+		result["cells"] = rows; // Rows top to bottom, palette indexes (0 = empty).
+	}
+	p_call->complete_data(result);
+}
+
 Dictionary schema_property(const String &p_type, const String &p_description) {
 	Dictionary property;
 	property["type"] = p_type;
@@ -1579,6 +1772,48 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	set_image.timeout_msec = IMPORT_WAIT_MSEC + 5000; // Longer than the import wait, so the tool's own message reports it.
 	set_image.func = &tool_db_set_image;
 	r_mcp.register_tool(set_image);
+
+	ClaudeBridgeMCP::Tool map_create;
+	map_create.name = "jrpg_map_create";
+	map_create.title = "Create a map";
+	map_create.description = "Creates a map scene (res://jrpg/maps/map_NNNN.tscn, NNNN its new map id) with a JRPGMap root, lists it in the map list and opens it (open=false to leave it closed). The map uses the database tileset tileset_id (default 1) and is width x height cells (default 20 x 15). Writes files; not undoable, as creating a scene.";
+	Dictionary map_create_properties;
+	map_create_properties["name"] = schema_property("string", "The map's name.");
+	map_create_properties["tileset_id"] = schema_property("integer", "Database tileset (default 1).");
+	map_create_properties["width"] = schema_property("integer", "Width in cells, 1-512 (default 20).");
+	map_create_properties["height"] = schema_property("integer", "Height in cells, 1-512 (default 15).");
+	map_create_properties["open"] = schema_property("boolean", "Open the new map scene in the editor (default true).");
+	map_create.input_schema = ClaudeBridgeMCP::object_schema(map_create_properties, PackedStringArray({ "name" }));
+	map_create.read_only = false;
+	map_create.destructive = true; // Writes files.
+	map_create.func = &tool_map_create;
+	r_mcp.register_tool(map_create);
+
+	ClaudeBridgeMCP::Tool map_paint;
+	map_paint.name = "jrpg_map_paint";
+	map_paint.title = "Paint map tiles";
+	map_paint.description = "Paints the edited map (the open scene whose root is a JRPGMap): writes the palette index value (0 erases; jrpg_tileset_flags lists the palette) to the cells given as cells ([[x, y], ...]) or rect ({x, y, width, height}) of a tile layer (0-3: ground, ground_detail, objects, upper). Autotiles take their shapes from their neighbors. One undo action in the map scene's own history; saved with editor_save_scene.";
+	Dictionary map_paint_properties;
+	map_paint_properties["layer"] = schema_property("string", "0-3 or ground, ground_detail, objects, upper.");
+	map_paint_properties["value"] = schema_property("integer", "Palette index to paint, 0 to erase.");
+	map_paint_properties["cells"] = schema_property("array", "Cells as [x, y] pairs.");
+	map_paint_properties["rect"] = schema_property("object", "{x, y, width, height} in cells.");
+	map_paint.input_schema = ClaudeBridgeMCP::object_schema(map_paint_properties, PackedStringArray({ "layer", "value" }));
+	map_paint.read_only = false;
+	map_paint.destructive = false; // Undoable.
+	map_paint.func = &tool_map_paint;
+	r_mcp.register_tool(map_paint);
+
+	ClaudeBridgeMCP::Tool map_get;
+	map_get.name = "jrpg_map_get";
+	map_get.title = "Read a map";
+	map_get.description = "Reads a map: the edited map, or the map scene file scene (res://...) without opening or instancing it. Returns its id, name, tileset, size, scroll type and how many cells each layer has painted; with layer, also that layer's palette indexes as rows (maps of up to 4096 cells).";
+	Dictionary map_get_properties;
+	map_get_properties["scene"] = schema_property("string", "res:// path of a map scene (default: the edited map).");
+	map_get_properties["layer"] = schema_property("string", "0-3 or ground, ground_detail, objects, upper: list its cells.");
+	map_get.input_schema = ClaudeBridgeMCP::object_schema(map_get_properties);
+	map_get.func = &tool_map_get;
+	r_mcp.register_tool(map_get);
 
 	const Dictionary tileset_id = schema_property("integer", "Tileset ID in the database (1 = first tileset).");
 

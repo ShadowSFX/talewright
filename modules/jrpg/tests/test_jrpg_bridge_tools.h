@@ -97,7 +97,7 @@ struct Bridge {
 
 TEST_CASE("[JRPG][BridgeTools] The database tools are registered") {
 	Bridge bridge;
-	for (const char *name : { "jrpg_db_list", "jrpg_db_get", "jrpg_db_set", "jrpg_db_create", "jrpg_db_set_maximum", "jrpg_db_clear", "jrpg_db_copy", "jrpg_db_paste", "jrpg_db_generate_curve", "jrpg_db_save", "jrpg_addon_install", "jrpg_tileset_flags", "jrpg_tileset_set_flag", "jrpg_tileset_create", "jrpg_tileset_add_sheet", "jrpg_db_set_image" }) {
+	for (const char *name : { "jrpg_db_list", "jrpg_db_get", "jrpg_db_set", "jrpg_db_create", "jrpg_db_set_maximum", "jrpg_db_clear", "jrpg_db_copy", "jrpg_db_paste", "jrpg_db_generate_curve", "jrpg_db_save", "jrpg_addon_install", "jrpg_tileset_flags", "jrpg_tileset_set_flag", "jrpg_tileset_create", "jrpg_tileset_add_sheet", "jrpg_db_set_image", "jrpg_map_create", "jrpg_map_paint", "jrpg_map_get" }) {
 		CHECK_MESSAGE(bridge.mcp.has_tool(name), name);
 	}
 }
@@ -335,6 +335,25 @@ TEST_CASE("[JRPG][BridgeTools] Setting images: which fields, which files") {
 	REQUIRE_FALSE(bridge.failed);
 	CHECK(String(hero->get("face")).is_empty());
 	CHECK(bool(cleared["undoable"]));
+}
+
+TEST_CASE("[JRPG][BridgeTools] Map tools: what they refuse without a map") {
+	Bridge bridge;
+	// Painting and reading the edited map need an editor with a map scene open (talewright/tools/jrpg_bridge_checks.py).
+	bridge.call("jrpg_map_paint", R"({"layer":"ground","value":1,"cells":[[0,0]]})");
+	CHECK(bridge.failed);
+	CHECK(bridge.text.contains("not a map"));
+	bridge.call("jrpg_map_get", R"({"scene":"res://no/such/map.tscn"})");
+	CHECK(bridge.failed);
+	CHECK(bridge.text.contains("map scene"));
+	bridge.call("jrpg_map_get", R"({"scene":"C:/elsewhere/map.tscn"})");
+	CHECK(bridge.failed);
+	bridge.call("jrpg_map_create", R"({"name":""})");
+	CHECK(bridge.failed);
+	CHECK(bridge.text.contains("map's name"));
+	bridge.call("jrpg_map_create", R"({"name":"Huge","width":0})"); // Refused before any file is written.
+	CHECK(bridge.failed);
+	CHECK(bridge.text.contains("1 to 512"));
 }
 
 } // namespace TestJRPGBridgeTools

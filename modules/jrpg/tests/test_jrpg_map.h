@@ -50,6 +50,7 @@
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
 #include "modules/jrpg/editor/jrpg_autotile_importer.h"
+#include "modules/jrpg/editor/jrpg_map_editing.h"
 #include "modules/jrpg/editor/jrpg_project_setup.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 
@@ -166,6 +167,32 @@ TEST_CASE("[SceneTree][JRPG][Map] The map draws every layer: autotile shapes, wa
 	node->set_map_data(Ref<JRPGMapData>());
 	SceneTree::get_singleton()->process(0);
 	CHECK(ground->get_used_cells().is_empty());
+	memdelete(node);
+}
+
+TEST_CASE("[SceneTree][JRPG][Map] Painting a map: refusals, unchanged cells left out, applied directly without an editor") {
+	Ref<JRPGMapData> map;
+	map.instantiate();
+	map->set_size(Vector2i(4, 3));
+	JRPGMap *node = memnew(JRPGMap);
+	node->set_map_data(map);
+	int changed = -1;
+	String message;
+	CHECK(JRPGMapEditing::paint(node, JRPGMapData::LAYER_GROUND, Vector<Vector2i>({ Vector2i(0, 0), Vector2i(1, 0), Vector2i(1, 0) }), 5, changed, &message) == OK);
+	CHECK(changed == 2); // The repeated cell counts once.
+	CHECK(map->get_cell(JRPGMapData::LAYER_GROUND, Vector2i(1, 0)) == 5);
+	CHECK(JRPGMapEditing::paint(node, JRPGMapData::LAYER_GROUND, Vector<Vector2i>({ Vector2i(0, 0) }), 5, changed, &message) == OK);
+	CHECK(changed == 0); // Already so: no action.
+	CHECK(JRPGMapEditing::paint(node, JRPGMapData::LAYER_GROUND, Vector<Vector2i>({ Vector2i(2, 2), Vector2i(4, 0) }), 1, changed, &message) == ERR_PARAMETER_RANGE_ERROR);
+	CHECK(message.contains("outside the 4 x 3 map"));
+	CHECK(map->get_cell(JRPGMapData::LAYER_GROUND, Vector2i(2, 2)) == 0); // All or nothing.
+	CHECK(JRPGMapEditing::paint(node, 7, Vector<Vector2i>({ Vector2i() }), 1, changed, &message) == ERR_INVALID_PARAMETER);
+	CHECK(JRPGMapEditing::paint(node, 0, Vector<Vector2i>({ Vector2i() }), -2, changed, &message) == ERR_INVALID_PARAMETER);
+	CHECK(JRPGMapEditing::paint(nullptr, 0, Vector<Vector2i>({ Vector2i() }), 1, changed, &message) == ERR_UNCONFIGURED);
+	int map_id = 0;
+	String path;
+	CHECK(JRPGMapEditing::create_map("Huge", 1, Vector2i(600, 10), map_id, path, &message) == ERR_PARAMETER_RANGE_ERROR); // Refused before any file is written.
+	CHECK(path.is_empty());
 	memdelete(node);
 }
 
