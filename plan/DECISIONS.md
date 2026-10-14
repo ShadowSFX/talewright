@@ -380,3 +380,21 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   labels once and must never be committed unreviewed.
 - **Why:** keeps the fork's CI green so real regressions are visible, with the smallest upstream diff.
 - **Reversal:** revert ledger rows 1–2; the fork's own checks keep working locally.
+
+## D-028 — Fork CI: Linux jobs that upstream sizes break
+- **Context:** CI run 38489070426 (push of 5.2.1) failed two Linux jobs for size reasons, not code faults.
+  "Editor w/ Mono": the godot-cpp test archives ~1100 objects with one `ar` command (`sh -c`), and the fork's
+  workspace path `/home/runner/work/talewright/talewright/` (10 bytes longer per object than upstream's) made it
+  131 524 bytes, over Linux's 131 072-byte single-argument limit. "Editor with doubles and GCC sanitizers": with the
+  fork modules the unoptimized ASan+UBSan binary passes 2 GiB, and mold fails with an `.eh_frame` relocation out of
+  range by 512 KiB. Upstream's own binary sits just under that limit.
+- **Options:** rename the repository; disable the jobs; trim code; build godot-cpp from a shorter path and leave the
+  fork modules out of the one oversized job.
+- **Choice:** the last. The godot-cpp action moves its checkout to `$RUNNER_TEMP` (34-byte prefix, shorter than
+  upstream's 40) before building; the GCC double-precision sanitizer job passes
+  `module_claude_bridge_enabled=no module_jrpg_enabled=no module_mmo_enabled=no` (unknown module flags are ignored by
+  SCons until the module exists). Ledger rows 4–5.
+- **Why:** both jobs keep testing what they were built for (godot-cpp compatibility; double precision under GCC
+  sanitizers), and the fork modules stay covered by the clang ASan/UBSan and ThreadSanitizer jobs, which passed with
+  them in the same run.
+- **Reversal:** revert ledger rows 4–5; if upstream later shrinks that build, re-enable the fork modules in it.

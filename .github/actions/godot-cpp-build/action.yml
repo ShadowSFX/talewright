@@ -37,4 +37,8 @@ runs:
       shell: sh
       env:
         SCONS_CACHE: ${{ inputs.scons-cache }}
-      run: scons --directory=./godot-cpp/test "gdextension_dir=${{ github.workspace }}" ${{ inputs.scons-flags }}
+      # Talewright: build from the runner's temp directory. The fork's longer workspace path makes godot-cpp's single
+      # "ar" command exceed the kernel's 128 KiB argument limit (plan/UPSTREAM_PATCHES.md).
+      run: |
+        mv ./godot-cpp "$RUNNER_TEMP/godot-cpp"
+        scons --directory="$RUNNER_TEMP/godot-cpp/test" "gdextension_dir=${{ github.workspace }}" ${{ inputs.scons-flags }}

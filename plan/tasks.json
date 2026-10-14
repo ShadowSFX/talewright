@@ -114,7 +114,7 @@
       "dependencies": [
         "0"
       ],
-      "status": "done",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Vanilla editor + templates build",
@@ -123,7 +123,7 @@
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "children",
+      "commit": "",
       "notes": "Closed automatically when all children closed."
     },
     {
@@ -278,6 +278,31 @@
       ],
       "status": "done",
       "commit": "b1fb0940d7",
+      "notes": ""
+    },
+    {
+      "id": "1.8",
+      "parent": "1",
+      "title": "Fork CI: every Linux job green",
+      "description": "CI run 38489070426 failed 'Editor w/ Mono' (godot-cpp ar command over the 128 KiB argument limit because of the fork's longer workspace path) and 'Editor with doubles and GCC sanitizers' (ASan binary over 2 GiB, mold relocation out of range). Build godot-cpp from $RUNNER_TEMP and leave the fork modules out of the GCC double-precision sanitizer job only (D-028, ledger rows 4-5); then fix whatever the later steps of those jobs report (C# glue, unit tests, doc-test, project tests).",
+      "dependencies": [
+        "1.7"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Every job of the next CI run on origin/talewright that pushes these changes concludes success (verified with gh run view), or a failing job is shown to fail identically on upstream 4.7.2-stable and recorded",
+        "core_diff_check lists every changed upstream file; static_checks.py passes",
+        "The fork modules are still built and tested by the clang ASan/UBSan and ThreadSanitizer jobs"
+      ],
+      "test_strategy": "Push; gh run view <run> --json jobs; on failure download the job log with gh api --allow-escape-sequences and fix the cause.",
+      "files": [
+        ".github/actions/godot-cpp-build/action.yml",
+        ".github/workflows/linux_builds.yml",
+        "plan/UPSTREAM_PATCHES.md",
+        "plan/DECISIONS.md"
+      ],
+      "status": "in_progress",
+      "commit": "",
       "notes": ""
     },
     {
@@ -1474,7 +1499,7 @@
         "modules/jrpg/register_types.cpp",
         "modules/jrpg/config.py"
       ],
-      "commit": "pending",
+      "commit": "bebdd8b95a",
       "notes": "",
       "status": "done"
     },

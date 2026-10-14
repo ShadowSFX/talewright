@@ -50,6 +50,9 @@ jobs:
             cache-name: linux-editor-double-sanitizers
             target: editor
             # Debug symbols disabled as they're huge on this build and we hit the 14 GB limit for runners.
+            # Talewright: the fork modules are left out of this build only. With them, the unoptimized ASan binary
+            # passes 2 GiB and mold cannot link it (.eh_frame relocation out of range). The clang sanitizer and
+            # ThreadSanitizer builds still cover them (plan/UPSTREAM_PATCHES.md). Unknown module flags are ignored.
             scons-flags: >-
               dev_build=yes
               scu_build=yes
@@ -58,6 +61,9 @@ jobs:
               use_asan=yes
               use_ubsan=yes
               linker=mold
+              module_claude_bridge_enabled=no
+              module_jrpg_enabled=no
+              module_mmo_enabled=no
             bin: ./bin/godot.linuxbsd.editor.dev.double.x86_64.san
             proj-test: true
             free-space: true

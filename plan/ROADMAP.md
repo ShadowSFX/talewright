@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 139, in_progress: 0, done: 67, blocked: 0, deferred: 3 (of 209)
+**Totals:** pending: 139, in_progress: 2, done: 66, blocked: 0, deferred: 3 (of 210)
 
 ## [x] 0 Bootstrap and task system
 
@@ -15,7 +15,7 @@ Fork, local clone, working branch, persistent tracker, resume protocol, persiste
 - [x] **0.3** CLAUDE.md resume protocol, NOTICE and fork README (P1) _(deps: 0.2; commit: 12253dd0a5)_
 - [x] **0.4** Persist planning research reports (P1) _(deps: 0.2; commit: d611bf476c)_
 
-## [x] 1 Toolchain baseline
+## [~] 1 Toolchain baseline
 
 Reproducible builds and a recorded vanilla baseline before any engine change.
 
@@ -26,6 +26,7 @@ Reproducible builds and a recorded vanilla baseline before any engine change.
 - [x] **1.5** Plain general-purpose samples (P2) _(deps: 1.2, 1.4; commit: 51255adeae)_
 - [x] **1.6** Epic 0+1 review fixes (P1) _(commit: a6fbf412ba)_
 - [x] **1.7** Fork files pass upstream CI static checks (P1) _(commit: b1fb0940d7)_
+- [~] **1.8** Fork CI: every Linux job green (P1) _(deps: 1.7)_
 
 ## [x] 2 Research (Phase 1)
 
@@ -96,7 +97,7 @@ modules/jrpg with pure-logic core (no Node dependency), database, game state, RN
 - [x] **5.4** RNG, parameters, traits, formulas (P1) _(deps: 5.3)_
   - [x] **5.4.1** JRPGRandom (PCG32) (P1) _(commit: 00d2e575a7)_
   - [x] **5.4.2** Traits, effects, parameters, stat cache, EXP curve (P1) _(deps: 5.4.1; commit: d05cbf6650)_
-  - [x] **5.4.3** JRPGFormula (P1) _(deps: 5.4.2; commit: pending)_
+  - [x] **5.4.3** JRPGFormula (P1) _(deps: 5.4.2; commit: bebdd8b95a)_
 - [ ] **5.5** Game state core (P1) _(deps: 5.4)_
   - [ ] **5.5.1** JRPGGameState core (P1)
   - [ ] **5.5.2** Runtime actor state (P1) _(deps: 5.5.1)_
