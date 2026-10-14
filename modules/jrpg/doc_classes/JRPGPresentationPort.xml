@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGPresentationPort" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Where event commands ask the player something: messages, choices, numbers.
+	</brief_description>
+	<description>
+		Event commands that need the player (a message to read, choices, a number to enter) send requests through a presentation port, with [method JRPGInterpreter.present]. A request is a kind and its parameters; the kinds and parameters are those of the commands that send them.
+		The port keeps the requests in the order they were sent and shows the first one not yet answered, one at a time: requests from several events (an autorun and a parallel process, say) never show together. The presenter answers the shown request with [method reply], and the next one is shown at once. An interpreter that stops waiting (it was cleared, freed or moved on) withdraws its request; the presenter hides it if it was shown.
+		This class only keeps the requests: presenting them is a subclass's job. The local port draws windows on the running map; online, the network port sends the requests to the client. A script can present them by overriding [method _show] and [method _hide].
+		Authority: server for what is asked and the answers it takes; the presenter is the client.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="_hide" qualifiers="virtual">
+			<return type="void" />
+			<param index="0" name="id" type="int" />
+			<description>
+				Called when request [param id], shown, is withdrawn: take it away from the screen.
+			</description>
+		</method>
+		<method name="_show" qualifiers="virtual">
+			<return type="void" />
+			<param index="0" name="id" type="int" />
+			<param index="1" name="kind" type="StringName" />
+			<param index="2" name="params" type="Dictionary" />
+			<description>
+				Called when request [param id] of kind [param kind] with [param params] is to be shown. Call [method reply] when the player answers; it may be called at once.
+			</description>
+		</method>
+		<method name="get_shown_kind" qualifiers="const">
+			<return type="StringName" />
+			<description>
+				Returns the kind of the request shown, or an empty [StringName].
+			</description>
+		</method>
+		<method name="get_shown_params" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns a copy of the parameters of the request shown, or an empty [Dictionary].
+			</description>
+		</method>
+		<method name="get_shown_request" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the id of the request shown, or [code]0[/code].
+			</description>
+		</method>
+		<method name="get_waiting_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns how many requests wait for an answer, the shown one included.
+			</description>
+		</method>
+		<method name="has_request" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="id" type="int" />
+			<description>
+				Returns [code]true[/code] while request [param id] is kept: not yet answered, or answered and its answer not yet taken.
+			</description>
+		</method>
+		<method name="is_answered" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="id" type="int" />
+			<description>
+				Returns [code]true[/code] when request [param id] was answered and its answer not yet taken.
+			</description>
+		</method>
+		<method name="is_busy" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] while requests wait for an answer: the player answers rather than walks.
+			</description>
+		</method>
+		<method name="reply">
+			<return type="int" enum="Error" />
+			<param index="0" name="id" type="int" />
+			<param index="1" name="value" type="Variant" />
+			<description>
+				For the presenter: answers the shown request [param id] with [param value], then shows the next request. Only the shown request can be answered; another id returns [constant ERR_INVALID_PARAMETER].
+			</description>
+		</method>
+		<method name="send">
+			<return type="int" />
+			<param index="0" name="kind" type="StringName" />
+			<param index="1" name="params" type="Dictionary" />
+			<description>
+				Queues a request of kind [param kind] with [param params] and returns its id (1, 2, ...). It is shown now when no other request is.
+			</description>
+		</method>
+		<method name="take_reply">
+			<return type="Variant" />
+			<param index="0" name="id" type="int" />
+			<description>
+				Returns the answer to request [param id] and forgets the request; [code]null[/code] when it has no answer yet.
+			</description>
+		</method>
+		<method name="withdraw">
+			<return type="void" />
+			<param index="0" name="id" type="int" />
+			<description>
+				Forgets request [param id], whose interpreter no longer waits; if it was shown, it is hidden and the next request is shown.
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="request_answered">
+			<param index="0" name="id" type="int" />
+			<param index="1" name="value" type="Variant" />
+			<description>
+				Emitted when the shown request [param id] is answered with [param value].
+			</description>
+		</signal>
+		<signal name="request_hidden">
+			<param index="0" name="id" type="int" />
+			<description>
+				Emitted when the shown request [param id] is withdrawn.
+			</description>
+		</signal>
+		<signal name="request_shown">
+			<param index="0" name="id" type="int" />
+			<param index="1" name="kind" type="StringName" />
+			<param index="2" name="params" type="Dictionary" />
+			<description>
+				Emitted when request [param id] of kind [param kind] with [param params] is shown, before the presenter shows it.
+			</description>
+		</signal>
+	</signals>
+</class>

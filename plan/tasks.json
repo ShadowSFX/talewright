@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.3.3 Interpreter serialization and resume rules",
+  "last_completed": "9.4.1 Presentation port and interpreter requests (core)",
   "tasks": [
     {
       "id": "0",
@@ -4016,13 +4016,13 @@
         "plan/specs/06_save_format.md",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "36328d990c",
       "notes": "From 9.3.2 (D-061): the map's JRPGEventRunner (main interpreter, its owner/main_is_autorun, parallel processes keyed by event id + page or common event id) must be saved and restored with the interpreters; a resumed game currently starts the runner afresh."
     },
     {
       "id": "9.4",
       "title": "Presentation port + local port",
-      "description": "Port interface for message/choice/number/etc.; local implementation rendering through the epic 10 message system.",
+      "description": "Port interface for message/choice/number/etc.; local implementation rendering through the epic 10 message system. Split into 9.4.1 (core port and interpreter requests) and 9.4.2 (local port on the running map with the epic 10 windows, bridge check).",
       "parent": "9",
       "dependencies": [
         "9.3"
@@ -4030,10 +4030,59 @@
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Interpreter suspends on show_message and resumes when the local port replies (doctest with a fake presenter)",
-        "With the real message window: a test scene runs a 2-message event and advances it via bridge input"
+        "9.4.1 and 9.4.2 done"
       ],
       "test_strategy": "Doctests.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.4.1",
+      "parent": "9.4",
+      "title": "Presentation port and interpreter requests (core)",
+      "priority": 1,
+      "dependencies": [],
+      "description": "JRPGPresentationPort (core, RefCounted): requests (kind + parameters, spec 03) queued in the order sent, the first unanswered one shown to the presenter (C++ virtual + GDVIRTUAL _show/_hide, signals), reply() answers the shown request and shows the next, withdraw() removes a request whose interpreter stopped waiting (the presenter hides it if shown), is_busy(). JRPGInterpreter.present(kind, params) sends the request the first time the current command runs and returns true once the reply came (get_reply()); a request of another position, clear, start and restore withdraw the pending one; without a port the request is answered at once with null and one warning. JRPGEventRunner.set_port gives the port to its interpreters. A pending request is not saved: after loading, the command sends it again.",
+      "acceptance_criteria": [
+        "Doctest with a fake presenter: the interpreter suspends on a message request and resumes when the presenter replies; two interpreters' requests are shown one after the other in the order sent",
+        "A cleared interpreter withdraws its request (the presenter hides it); a game saved while a message waits shows it again after loading"
+      ],
+      "test_strategy": "Doctests [JRPG] (core).",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_presentation_port.h",
+        "modules/jrpg/core/jrpg_presentation_port.cpp",
+        "modules/jrpg/core/jrpg_interpreter.h",
+        "modules/jrpg/core/jrpg_interpreter.cpp",
+        "modules/jrpg/core/jrpg_event_runner.h",
+        "modules/jrpg/core/jrpg_event_runner.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGPresentationPort.xml",
+        "modules/jrpg/doc_classes/JRPGInterpreter.xml",
+        "modules/jrpg/doc_classes/JRPGEventRunner.xml",
+        "modules/jrpg/tests/test_jrpg_presentation_port.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "9.4.2",
+      "parent": "9.4",
+      "title": "Local port on the running map",
+      "priority": 1,
+      "dependencies": [
+        "9.4.1"
+      ],
+      "description": "JRPGLocalPort (runtime): shows message requests in a JRPGMessageWindow, choices in a JRPGChoiceWindow and number input in a JRPGNumberInputWindow on the scene manager's message layer, replying when the player finishes; JRPGSceneManager creates it, gives it to its event runner and keeps the player still while the port is busy. Request parameters follow spec 03 (text, face, speaker, background, placement; choices with default and cancel; digits).",
+      "acceptance_criteria": [
+        "Doctest [SceneTree]: an event's two messages show one after the other and the event ends after the second is read (simulated OK presses)",
+        "Bridge check: a test project's event with two messages is advanced by bridge input; evidence screenshots"
+      ],
+      "test_strategy": "Doctests [SceneTree]; jrpg_bridge_checks.py.",
+      "status": "pending",
       "files": [],
       "commit": "",
       "notes": ""

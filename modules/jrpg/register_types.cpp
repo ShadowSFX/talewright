@@ -62,6 +62,7 @@
 #include "modules/jrpg/core/jrpg_message_text.h"
 #include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_mover.h"
+#include "modules/jrpg/core/jrpg_presentation_port.h"
 #include "modules/jrpg/core/jrpg_random.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_sim_clock.h"
@@ -181,6 +182,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_ABSTRACT_CLASS(JRPGCommandRegistry); // Static methods only.
 		GDREGISTER_CLASS(JRPGInterpreter);
 		GDREGISTER_CLASS(JRPGEventRunner);
+		GDREGISTER_CLASS(JRPGPresentationPort);
 		GDREGISTER_CLASS(JRPGReferenceScanner);
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotile); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotileResolver);

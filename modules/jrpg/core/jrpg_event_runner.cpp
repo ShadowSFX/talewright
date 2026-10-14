@@ -39,6 +39,7 @@
 #include "jrpg_interpreter.h"
 #include "jrpg_map_data.h"
 #include "jrpg_misc_data.h"
+#include "jrpg_presentation_port.h"
 #include "jrpg_table.h"
 
 #include "core/object/class_db.h"
@@ -133,6 +134,18 @@ void JRPGEventRunner::clear() {
 	stuck_runs = 0;
 }
 
+void JRPGEventRunner::set_port(const Ref<JRPGPresentationPort> &p_port) {
+	port = p_port;
+	main->set_port(port);
+	for (const Process &process : parallels) {
+		process.interpreter->set_port(port);
+	}
+}
+
+Ref<JRPGPresentationPort> JRPGEventRunner::get_port() const {
+	return port;
+}
+
 void JRPGEventRunner::_refresh() {
 	if (refreshed && game_state->get_revision() == refreshed_revision) {
 		return; // At most once per change of what pages read.
@@ -170,6 +183,7 @@ void JRPGEventRunner::_refresh() {
 		}
 		if (process.interpreter.is_null()) {
 			process.interpreter.instantiate();
+			process.interpreter->set_port(port);
 		}
 	}
 	parallels = wanted;
@@ -406,6 +420,7 @@ void JRPGEventRunner::restore(const Dictionary &p_state) {
 		Process process;
 		process.owner = owner;
 		process.interpreter.instantiate();
+		process.interpreter->set_port(port);
 		if (_restore_run(entry, owner, process.interpreter, true)) {
 			parallels.push_back(process); // Kept by the next refresh while its page still runs in parallel.
 		}
@@ -417,6 +432,8 @@ void JRPGEventRunner::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("setup", "state", "map", "map_id"), &JRPGEventRunner::setup);
 	ClassDB::bind_method(D_METHOD("change_map", "map", "map_id"), &JRPGEventRunner::change_map);
 	ClassDB::bind_method(D_METHOD("clear"), &JRPGEventRunner::clear);
+	ClassDB::bind_method(D_METHOD("set_port", "port"), &JRPGEventRunner::set_port);
+	ClassDB::bind_method(D_METHOD("get_port"), &JRPGEventRunner::get_port);
 	ClassDB::bind_method(D_METHOD("step"), &JRPGEventRunner::step);
 	ClassDB::bind_method(D_METHOD("is_main_running"), &JRPGEventRunner::is_main_running);
 	ClassDB::bind_method(D_METHOD("get_main_interpreter"), &JRPGEventRunner::get_main_interpreter);

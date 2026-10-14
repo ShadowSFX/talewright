@@ -66,6 +66,18 @@
 				Returns the name of what runs it, used in warnings.
 			</description>
 		</method>
+		<method name="get_port" qualifiers="const">
+			<return type="JRPGPresentationPort" />
+			<description>
+				Returns the presentation port the interpreter asks the player through.
+			</description>
+		</method>
+		<method name="get_reply" qualifiers="const">
+			<return type="Variant" />
+			<description>
+				Returns the answer that made [method present] return [code]true[/code].
+			</description>
+		</method>
 		<method name="get_wait_left" qualifiers="const">
 			<return type="int" />
 			<description>
@@ -83,6 +95,15 @@
 			<param index="0" name="label" type="String" />
 			<description>
 				Goes on after the label [param label] (see [method JRPGEventCommand.get_label]) in the current list or a list around it. Returns [code]false[/code], with a warning, when there is no such label there; the run then goes on after the jump.
+			</description>
+		</method>
+		<method name="present">
+			<return type="bool" />
+			<param index="0" name="kind" type="StringName" />
+			<param index="1" name="params" type="Dictionary" />
+			<description>
+				For commands that ask the player. The first time the current command runs, sends a request of kind [param kind] with [param params] to the presentation port and returns [code]false[/code]: the command returns [constant JRPGEventCommand.EXECUTE_WAIT] and runs again at the next step. Once the player answered, returns [code]true[/code], and [method get_reply] gives the answer. Without a port the request is answered at once with [code]null[/code], with one warning.
+				A request is not saved with the game: after loading, the command runs again and asks again.
 			</description>
 		</method>
 		<method name="push_list">
@@ -107,6 +128,13 @@
 			<return type="Dictionary" />
 			<description>
 				Returns where the run is, for a save: [code]frames[/code], outermost first, each with the [code]index[/code] of its next command, [code]loop[/code], where its list comes from ([code]child[/code]: which child list of the command that pushed it, or [code]common_event[/code]: the common event called) and the [code]hash[/code] of its commands ([method JRPGCommandList.get_content_hash]); and [code]wait[/code], the steps left to wait. An idle interpreter has no frames. Lists are named by where they come from, never by object, so a save survives loading the map again.
+			</description>
+		</method>
+		<method name="set_port">
+			<return type="void" />
+			<param index="0" name="port" type="JRPGPresentationPort" />
+			<description>
+				Sets the presentation port the interpreter asks the player through. A request waiting on the previous port is withdrawn.
 			</description>
 		</method>
 		<method name="start">

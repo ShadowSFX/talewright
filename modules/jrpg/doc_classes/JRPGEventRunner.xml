@@ -38,6 +38,12 @@
 				Returns the parallel processes in the order they run, each a [Dictionary] with [code]event_id[/code] ([code]0[/code] for a common event), [code]common_event_id[/code] and [code]page[/code] (the page index, [code]-1[/code] for a common event).
 			</description>
 		</method>
+		<method name="get_port" qualifiers="const">
+			<return type="JRPGPresentationPort" />
+			<description>
+				Returns the presentation port the map's events ask the player through.
+			</description>
+		</method>
 		<method name="is_main_running" qualifiers="const">
 			<return type="bool" />
 			<description>
@@ -55,6 +61,13 @@
 			<return type="Dictionary" />
 			<description>
 				Returns the runs under way, for a save: [code]main[/code] (empty when the main interpreter is idle) and [code]parallels[/code], each run naming what it belongs to ([code]map_id[/code], [code]event_id[/code] and [code]page[/code], or [code]common_event_id[/code]) with the interpreter's state ([method JRPGInterpreter.serialize]); the main run also tells whether it is an [code]autorun[/code]. Parallel processes between two runs are left out: they start from the top anyway.
+			</description>
+		</method>
+		<method name="set_port">
+			<return type="void" />
+			<param index="0" name="port" type="JRPGPresentationPort" />
+			<description>
+				Sets the presentation port every interpreter of the runner asks the player through.
 			</description>
 		</method>
 		<method name="setup">

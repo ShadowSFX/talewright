@@ -36,6 +36,7 @@
 #include "jrpg_event_command.h"
 #include "jrpg_game_state.h"
 #include "jrpg_misc_data.h"
+#include "jrpg_presentation_port.h"
 #include "jrpg_table.h"
 
 #include "core/object/class_db.h"
@@ -52,6 +53,7 @@ void JRPGInterpreter::start(const Ref<JRPGCommandList> &p_list, const Ref<JRPGGa
 }
 
 void JRPGInterpreter::clear() {
+	_withdraw_request();
 	frames.clear();
 	wait_left = 0;
 	flow_changed = true; // From inside a command (a transfer that stops the map's processes): step() ends there.
@@ -127,6 +129,52 @@ void JRPGInterpreter::push_list(const Ref<JRPGCommandList> &p_list, bool p_loop)
 	frames.push_back(frame);
 }
 
+void JRPGInterpreter::_withdraw_request() {
+	if (request_id != 0 && port.is_valid()) {
+		port->withdraw(request_id);
+	}
+	request_id = 0;
+}
+
+void JRPGInterpreter::set_port(const Ref<JRPGPresentationPort> &p_port) {
+	if (port != p_port) {
+		_withdraw_request();
+		port = p_port;
+	}
+}
+
+Ref<JRPGPresentationPort> JRPGInterpreter::get_port() const {
+	return port;
+}
+
+bool JRPGInterpreter::present(const StringName &p_kind, const Dictionary &p_params) {
+	ERR_FAIL_COND_V_MSG(frames.is_empty(), true, "JRPGInterpreter: present() is for the command being run.");
+	const int depth = frames.size();
+	const int index = frames[depth - 1].index;
+	if (request_id != 0 && (depth != request_depth || index != request_index || !port->has_request(request_id))) {
+		_withdraw_request(); // Sent from another place of the run (or forgotten by the port): ask again.
+	}
+	if (request_id == 0) {
+		if (port.is_null()) {
+			if (!no_port_warned) {
+				no_port_warned = true;
+				WARN_PRINT(vformat("JRPG: %s asks the player (%s), but nothing presents requests (no presentation port); it goes on without an answer.", owner.is_empty() ? String("An event") : owner, p_kind));
+			}
+			reply = Variant();
+			return true;
+		}
+		request_depth = depth;
+		request_index = index;
+		request_id = port->send(p_kind, p_params); // May be answered at once.
+	}
+	if (!port->is_answered(request_id)) {
+		return false;
+	}
+	reply = port->take_reply(request_id);
+	request_id = 0;
+	return true;
+}
+
 Ref<JRPGEventCommand> JRPGInterpreter::_pusher(const Frame &p_parent) {
 	const int at = p_parent.index - 1;
 	return at >= 0 && at < p_parent.list->get_command_count() ? p_parent.list->get_command(at) : Ref<JRPGEventCommand>();
@@ -193,6 +241,7 @@ bool JRPGInterpreter::call_common_event(int p_id) {
 }
 
 void JRPGInterpreter::exit() {
+	_withdraw_request();
 	frames.clear();
 	wait_left = 0;
 	flow_changed = true;
@@ -296,6 +345,10 @@ bool JRPGInterpreter::restore(const Dictionary &p_state, const Ref<JRPGCommandLi
 	return true;
 }
 
+JRPGInterpreter::~JRPGInterpreter() {
+	_withdraw_request(); // A request nobody waits for would hold the port.
+}
+
 void JRPGInterpreter::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("start", "list", "state", "owner"), &JRPGInterpreter::start, DEFVAL(String()));
 	ClassDB::bind_method(D_METHOD("clear"), &JRPGInterpreter::clear);
@@ -313,6 +366,10 @@ void JRPGInterpreter::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_current_command"), &JRPGInterpreter::get_current_command);
 	ClassDB::bind_method(D_METHOD("get_depth"), &JRPGInterpreter::get_depth);
 	ClassDB::bind_method(D_METHOD("get_indexes"), &JRPGInterpreter::get_indexes);
+	ClassDB::bind_method(D_METHOD("set_port", "port"), &JRPGInterpreter::set_port);
+	ClassDB::bind_method(D_METHOD("get_port"), &JRPGInterpreter::get_port);
+	ClassDB::bind_method(D_METHOD("present", "kind", "params"), &JRPGInterpreter::present);
+	ClassDB::bind_method(D_METHOD("get_reply"), &JRPGInterpreter::get_reply);
 	ClassDB::bind_method(D_METHOD("serialize"), &JRPGInterpreter::serialize);
 	ClassDB::bind_method(D_METHOD("restore", "state", "root", "game_state", "owner"), &JRPGInterpreter::restore, DEFVAL(String()));
 

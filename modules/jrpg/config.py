@@ -56,6 +56,7 @@ def get_doc_classes():
         "JRPGMover",
         "JRPGNumberInputWindow",
         "JRPGPlayer",
+        "JRPGPresentationPort",
         "JRPGProjectSetup",
         "JRPGRandom",
         "JRPGRandomStreams",

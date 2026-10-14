@@ -38,6 +38,7 @@
 class JRPGCommandList;
 class JRPGEventCommand;
 class JRPGGameState;
+class JRPGPresentationPort;
 
 // Runs event commands (spec 03, "Interpreter"; task 9.3.1): a stack of frames, each a command list and the index of
 // the next command in it. A branch command pushes the child list it takes (push_list); when that list ends the
@@ -84,6 +85,16 @@ private:
 	bool flow_changed = false; // A command jumped, broke a loop, ended or cleared the run: the index it was at stays.
 	int runaway_steps = 0;
 	bool runaway_warned = false;
+	Ref<JRPGPresentationPort> port;
+	// The request the current command waits on (0: none) and where it was sent (frames, index of the last frame).
+	int request_id = 0;
+	int request_depth = 0;
+	int request_index = 0;
+	Variant reply;
+	bool no_port_warned = false;
+
+	// Withdraws the request a command waits on: the run moved on without it.
+	void _withdraw_request();
 
 	// The command that pushed the list of the frame above p_parent (the one before p_parent's index), or null.
 	static Ref<JRPGEventCommand> _pusher(const Frame &p_parent);
@@ -105,6 +116,17 @@ public:
 
 	// Runs one simulation step.
 	StepResult step();
+
+	// The port the interpreter asks the player through (spec 03); requests waiting on another port are withdrawn.
+	void set_port(const Ref<JRPGPresentationPort> &p_port);
+	Ref<JRPGPresentationPort> get_port() const;
+	// For commands that ask the player (spec 03, task 9.4.1): the first time the current command runs, sends request
+	// p_kind with p_params to the port and returns false (the command returns EXECUTE_WAIT and runs again); once the
+	// player answered, returns true and get_reply() gives the answer. Without a port the request is answered at once
+	// with null (one warning). A request is not saved: after loading, the command runs again and asks again.
+	bool present(const StringName &p_kind, const Dictionary &p_params);
+	// The answer present() returned true for.
+	Variant get_reply() const { return reply; }
 
 	// For commands. Pushes p_list: its commands run next, then the interpreter goes on after the current command;
 	// with p_loop the list starts again each time it ends.
@@ -137,6 +159,8 @@ public:
 	// interpreter idle, when the state cannot be read or the commands are no longer the saved ones (a list's hash
 	// differs, or a list cannot be found): the caller decides whether the run starts again or is dropped.
 	bool restore(const Dictionary &p_state, const Ref<JRPGCommandList> &p_root, const Ref<JRPGGameState> &p_game_state, const String &p_owner = String());
+
+	~JRPGInterpreter();
 };
 
 VARIANT_ENUM_CAST(JRPGInterpreter::StepResult);

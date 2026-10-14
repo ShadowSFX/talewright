@@ -41,6 +41,7 @@
 class JRPGCommandList;
 class JRPGGameState;
 class JRPGMapData;
+class JRPGPresentationPort;
 
 // The event processes of the current map (spec 03, "Kinds"; task 9.3.2.1): a main interpreter that runs autorun pages
 // (the map's events in event order, then autorun common events whose switch is on, in id order) and triggered events
@@ -79,6 +80,7 @@ private:
 	Ref<JRPGMapData> map;
 	int map_id = 0;
 	Ref<JRPGInterpreter> main;
+	Ref<JRPGPresentationPort> port; // Given to every interpreter.
 	Owner main_owner; // What runs on the main interpreter.
 	bool main_is_autorun = false;
 	Vector<Process> parallels;
@@ -115,6 +117,9 @@ public:
 	void change_map(const Ref<JRPGMapData> &p_map, int p_map_id);
 	// Stops everything.
 	void clear();
+	// The port the events ask the player through (task 9.4.1): every interpreter of the runner uses it.
+	void set_port(const Ref<JRPGPresentationPort> &p_port);
+	Ref<JRPGPresentationPort> get_port() const;
 	// Runs one simulation step of every process.
 	void step();
 	// An autorun or a triggered event runs, or an autorun page holds (it starts again at the next step): the player

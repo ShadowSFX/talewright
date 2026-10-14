@@ -1086,3 +1086,23 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Reversal:** `JRPGInterpreter::serialize/restore`, `JRPGEventRunner::serialize/restore`,
   `JRPGGameState::set_interpreters_source`, and the calls in `JRPGSceneManager::_begin`, `resume` and
   `_release_game_state`.
+
+## D-063 — The presentation port: one request shown at a time, asked by the command's position
+- **Context:** task 9.4.1 needs spec 03's presentation port: commands that ask the player must suspend the
+  interpreter until an answer, single-player through windows, online through the network (epic 19). Several
+  interpreters (an autorun, parallel processes) may ask at once; commands are shared data and keep no per-run state
+  (D-059); saves keep only positions (D-062).
+- **Options:** a port per interpreter or one per game; requests shown together, refused while busy, or queued; the
+  pending request kept by the command, by the interpreter, or saved with the game.
+- **Choice:** one `JRPGPresentationPort` (core) per game, given to every interpreter by the event runner. Requests
+  (kind + parameters) are queued in the order sent; the first unanswered one is shown (C++ virtual / script `_show`),
+  `reply` answers only the shown one and shows the next, `withdraw` forgets one (hiding it if shown). The interpreter
+  keeps the pending request with the position (frames, index) that sent it: `present(kind, params)` sends on the first
+  run of the command and returns true once answered (`get_reply`); clear, exit, start, restore, a new port and the
+  interpreter's destruction withdraw it. A pending request is not saved: after loading, the command runs again and
+  asks again. Without a port, a request is answered at once with null and one warning per interpreter.
+- **Why:** a single ordered queue keeps one window on screen and a deterministic order of dialogs (interpreters step
+  in a fixed order, D-061), and it maps directly onto one dialog at a time per player online (rAthena's model,
+  rathena_techniques D3); keeping the request with the interpreter's position keeps commands stateless and the
+  re-ask after loading free; withdrawing on destruction means a dropped process can never leave the port busy.
+- **Reversal:** `JRPGPresentationPort`, `JRPGInterpreter::present`, `JRPGEventRunner::set_port`.
