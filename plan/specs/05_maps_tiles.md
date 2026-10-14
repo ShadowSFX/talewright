@@ -58,6 +58,12 @@ Builds **internal** TileMapLayer children (`INTERNAL_MODE_FRONT`, like `scene/2d
 `map_data.layers` — split into below/above-characters by the per-tile overhead flag — and one internal `JRPGEvent`
 node per event, so the data stays the single source of truth and users can add any other nodes as children (D-006),
 including `JRPGEventAnchor` nodes that follow an event.
+Implementation (8.1.2): per data layer, two internal TileMapLayers (z 0 below characters, z 2 for tiles whose baked
+flags say overhead; characters use z 1); the tileset comes from the database (`JRPGDatabase::PROJECT_PATH`, through
+the resource cache so the editor's database tools edit the same object; `set_database` for tests and tools); a full
+build runs on entering the tree and on `layout_changed` or a change of the tileset entry (palette, baked flags, TileSet),
+deferred and coalesced; `cells_changed` re-resolves only the 3 × 3 blocks around the painted cells
+(`JRPGAutotileResolver.update_around`). Shadows and regions are not drawn by the map (editor overlays, 8.4).
 
 ## Tilesets and tile ids
 - `JRPGTilesetData` (database entry) references its Godot `TileSet` by `uid://` string (`tileset_uid`) and owns an

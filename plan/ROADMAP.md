@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 112, in_progress: 0, done: 123, blocked: 0, deferred: 3 (of 238)
+**Totals:** pending: 111, in_progress: 0, done: 124, blocked: 0, deferred: 3 (of 238)
 
 ## [x] 0 Bootstrap and task system
 
@@ -166,7 +166,7 @@ JRPGMap scenes, map editor canvas, cell cache, runtime map and movement.
 
 - [ ] **8.1** JRPGMap node + spike (P1)
   - [x] **8.1.1** Map data and map list (P1) _(commit: cab2cece50)_
-  - [ ] **8.1.2** JRPGMap node (P1) _(deps: 8.1.1)_
+  - [x] **8.1.2** JRPGMap node (P1) _(deps: 8.1.1; commit: pending)_
   - [ ] **8.1.3** Map scene spike (P1) _(deps: 8.1.2)_
 - [ ] **8.2** Map cell cache compiler (P1) _(deps: 8.1)_
 - [ ] **8.3** Map list and properties (P1) _(deps: 8.1)_

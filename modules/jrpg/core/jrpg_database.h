@@ -91,6 +91,8 @@ public:
 	void set_terms(const Ref<JRPGTermsData> &p_terms);
 	Ref<JRPGTermsData> get_terms() const { return terms; }
 
+	// Where a project keeps its database (set up by the editor's JRPG project setup).
+	static constexpr const char *PROJECT_PATH = "res://jrpg/database.tres";
 	// Data format version written by this build. Raise it together with a JRPGSchema migration step.
 	static constexpr int CURRENT_SCHEMA_VERSION = 1;
 	static constexpr int SCHEMA_UNSTAMPED = -1;

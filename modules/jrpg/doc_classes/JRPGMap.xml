@@ -4,13 +4,59 @@
 		The root node of a JRPG map scene.
 	</brief_description>
 	<description>
-		Holds the map's [JRPGMapData] as a built-in resource of the scene, so the map's edits follow the scene's undo history and save with it. Any other node can be added under it.
+		Holds the map's [JRPGMapData] as a built-in resource of the scene, so the map's edits follow the scene's undo history and save with it, and draws it: for each tile layer, two internal [TileMapLayer] nodes hold the tiles drawn below characters and the overhead tiles drawn above them. Autotile and wall cells show the shape [JRPGAutotileResolver] picks from their neighbors. Any other node can be added under the map.
 	</description>
 	<tutorials>
 	</tutorials>
+	<methods>
+		<method name="get_database" qualifiers="const">
+			<return type="JRPGDatabase" />
+			<description>
+				Returns the database the map's tileset comes from: the one given with [method set_database], or else the project's ([code]res://jrpg/database.tres[/code]).
+			</description>
+		</method>
+		<method name="get_rebuild_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns how many times the map was drawn in full (for diagnostics: painting cells must not cause it).
+			</description>
+		</method>
+		<method name="get_tile_layer" qualifiers="const">
+			<return type="TileMapLayer" />
+			<param index="0" name="layer" type="int" />
+			<param index="1" name="above" type="bool" />
+			<description>
+				Returns the internal [TileMapLayer] that draws [param layer]'s tiles below characters, or above them when [param above] is [code]true[/code] (tiles whose baked flags say overhead).
+			</description>
+		</method>
+		<method name="rebuild">
+			<return type="void" />
+			<description>
+				Draws every cell again. The map does this by itself when its size, tileset or arrays change, or when its tileset's palette or baked flags change; a paint only redraws the cells around it.
+			</description>
+		</method>
+		<method name="set_database">
+			<return type="void" />
+			<param index="0" name="database" type="JRPGDatabase" />
+			<description>
+				Draws the map with [param database]'s tilesets instead of the project's (tests and tools).
+			</description>
+		</method>
+	</methods>
 	<members>
 		<member name="map_data" type="JRPGMapData" setter="set_map_data" getter="get_map_data">
 			The map's data.
 		</member>
 	</members>
+	<constants>
+		<constant name="Z_BELOW" value="0">
+			The z index of tiles drawn below characters.
+		</constant>
+		<constant name="Z_CHARACTERS" value="1">
+			The z index characters use.
+		</constant>
+		<constant name="Z_ABOVE" value="2">
+			The z index of overhead tiles, drawn above characters.
+		</constant>
+	</constants>
 </class>

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "8.1.1 Map data and map list",
+  "last_completed": "8.1.2 JRPGMap node",
   "tasks": [
     {
       "id": "0",
@@ -2819,9 +2819,9 @@
         "Editing one cell updates its 3 x 3 neighbourhood only"
       ],
       "test_strategy": "Doctests.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
