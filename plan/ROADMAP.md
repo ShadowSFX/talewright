@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 88, in_progress: 0, done: 175, blocked: 0, deferred: 3 (of 266)
+**Totals:** pending: 89, in_progress: 0, done: 176, blocked: 0, deferred: 3 (of 268)
 
 ## [x] 0 Bootstrap and task system
 
@@ -203,6 +203,8 @@ JRPGMap scenes, map editor canvas, cell cache, runtime map and movement.
 Pages, conditions, triggers, command model with authority, interpreter with presentation port, slice commands, event editor.
 
 - [ ] **9.1** JRPGEvent + pages + conditions + triggers (P1)
+  - [x] **9.1.1** Event data and page selection (core) (P1) _(commit: pending)_
+  - [ ] **9.1.2** Event nodes on the map, page refresh, anchors, id repair on save (P1) _(deps: 9.1.1)_
 - [ ] **9.2** Command model + registry + authority + script commands (P1) _(deps: 9.1, 3.3)_
   - [ ] **9.2.1** Command storage benchmark (P1)
   - [ ] **9.2.2** Command model, registry, authority, script commands (P1) _(deps: 9.2.1)_
@@ -246,7 +248,7 @@ Window frame, selectable list, message system, screen stack. Built before epic 9
       - [x] **10.4.1.2.2** Epic 10 review: lists, choices, number and gold windows (P1) _(deps: 10.4.1.2.1; commit: df06a99e4b)_
       - [x] **10.4.1.2.3** Epic 10 review: message text and message window (P1) _(deps: 10.4.1.2.2; commit: 7b8a0c25ef)_
     - [x] **10.4.1.3** Epic 10 review: screen stack and checks (P1) _(deps: 10.4.1.2; commit: 6b6fb91483)_
-  - [x] **10.4.2** Close epic 10 (P1) _(deps: 10.4.1; commit: pending)_
+  - [x] **10.4.2** Close epic 10 (P1) _(deps: 10.4.1; commit: ef46ca51e3)_
 
 ## [ ] 11 Menu (slice)
 

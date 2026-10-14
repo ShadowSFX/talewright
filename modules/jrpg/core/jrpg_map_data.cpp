@@ -31,9 +31,12 @@
 
 #include "jrpg_map_data.h"
 
+#include "jrpg_event_data.h"
 #include "jrpg_schema.h"
 
 #include "core/object/class_db.h"
+#include "core/templates/hash_set.h"
+#include "core/variant/typed_array.h"
 
 template <typename T>
 T JRPGMapData::_fitted(const T &p_array, const char *p_what) const {
@@ -331,13 +334,112 @@ void JRPGMapData::set_next_event_id(int p_id) {
 }
 
 void JRPGMapData::set_events(const Array &p_events) {
-	events = p_events;
+	Array kept;
+	for (int i = 0; i < p_events.size(); i++) {
+		const Ref<JRPGEventData> event = p_events[i];
+		ERR_CONTINUE_MSG(event.is_null(), vformat("JRPGMapData \"%s\": events[%d] is not an event and is left out.", get_path(), i));
+		kept.push_back(event);
+	}
+	events = kept;
 	_stamp_version();
+	emit_signal(SNAME("events_changed"));
 	emit_changed();
 }
 
 PackedInt32Array JRPGMapData::get_event_ids() const {
-	return PackedInt32Array();
+	PackedInt32Array ids;
+	for (const Variant &entry : events) {
+		const Ref<JRPGEventData> event = entry;
+		if (event.is_valid()) {
+			ids.push_back(event->get_event_id());
+		}
+	}
+	return ids;
+}
+
+Ref<JRPGEventData> JRPGMapData::find_event(int p_id) const {
+	for (const Variant &entry : events) {
+		const Ref<JRPGEventData> event = entry;
+		if (event.is_valid() && event->get_event_id() == p_id) {
+			return event;
+		}
+	}
+	return Ref<JRPGEventData>();
+}
+
+Ref<JRPGEventData> JRPGMapData::add_event(const Vector2i &p_cell) {
+	Ref<JRPGEventData> event;
+	event.instantiate();
+	event->set_event_id(next_event_id);
+	event->set_display_name(vformat("Event %d", next_event_id));
+	event->set_cell(p_cell);
+	Ref<JRPGEventPage> page;
+	page.instantiate();
+	TypedArray<JRPGEventPage> pages;
+	pages.push_back(page);
+	event->set_pages(pages);
+	events.push_back(event);
+	next_event_id++;
+	_stamp_version();
+	emit_signal(SNAME("events_changed"));
+	emit_changed();
+	return event;
+}
+
+bool JRPGMapData::remove_event(int p_id) {
+	for (int i = 0; i < events.size(); i++) {
+		const Ref<JRPGEventData> event = events[i];
+		if (event.is_valid() && event->get_event_id() == p_id) {
+			events.remove_at(i);
+			_stamp_version();
+			emit_signal(SNAME("events_changed"));
+			emit_changed();
+			return true;
+		}
+	}
+	return false;
+}
+
+Array JRPGMapData::repair_event_ids() {
+	Array changes;
+	HashSet<int> taken;
+	int highest = 0;
+	for (const Variant &entry : events) {
+		const Ref<JRPGEventData> event = entry;
+		if (event.is_valid()) {
+			highest = MAX(highest, event->get_event_id());
+		}
+	}
+	int next = MAX(next_event_id, highest + 1);
+	for (int i = 0; i < events.size(); i++) {
+		const Ref<JRPGEventData> event = events[i];
+		if (event.is_null()) {
+			continue;
+		}
+		const int id = event->get_event_id();
+		if (id >= 1 && !taken.has(id)) {
+			taken.insert(id); // The first event with an id keeps it.
+			continue;
+		}
+		Dictionary change;
+		change["index"] = i;
+		change["old_id"] = id;
+		change["new_id"] = next;
+		changes.push_back(change);
+		event->set_event_id(next);
+		taken.insert(next);
+		next++;
+	}
+	const bool raised = next != next_event_id;
+	next_event_id = next;
+	if (!changes.is_empty() || raised) {
+		_stamp_version();
+		if (!changes.is_empty()) {
+			emit_signal(SNAME("events_changed"));
+		}
+		emit_changed();
+	}
+	return changes;
 }
 
 void JRPGMapData::_validate_property(PropertyInfo &p_property) const {
@@ -405,6 +507,11 @@ void JRPGMapData::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_next_event_id"), &JRPGMapData::get_next_event_id);
 	ClassDB::bind_method(D_METHOD("set_events", "events"), &JRPGMapData::set_events);
 	ClassDB::bind_method(D_METHOD("get_events"), &JRPGMapData::get_events);
+	ClassDB::bind_method(D_METHOD("get_event_ids"), &JRPGMapData::get_event_ids);
+	ClassDB::bind_method(D_METHOD("find_event", "id"), &JRPGMapData::find_event);
+	ClassDB::bind_method(D_METHOD("add_event", "cell"), &JRPGMapData::add_event);
+	ClassDB::bind_method(D_METHOD("remove_event", "id"), &JRPGMapData::remove_event);
+	ClassDB::bind_method(D_METHOD("repair_event_ids"), &JRPGMapData::repair_event_ids);
 
 	// Property order is load order: the size comes before the arrays it shapes.
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "schema_version", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR), "set_schema_version", "get_schema_version");
@@ -428,12 +535,14 @@ void JRPGMapData::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "encounter_steps", PROPERTY_HINT_RANGE, "1,999,1"), "set_encounter_steps", "get_encounter_steps");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "disable_dash"), "set_disable_dash", "is_disable_dash");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "next_event_id", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR), "set_next_event_id", "get_next_event_id");
-	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "events", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR), "set_events", "get_events");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "events", PROPERTY_HINT_ARRAY_TYPE, "JRPGEventData", PROPERTY_USAGE_NO_EDITOR), "set_events", "get_events");
 
 	// A cell edit (layer -1: regions or shadows), for views that update only the cells around it.
 	ADD_SIGNAL(MethodInfo("cells_changed", PropertyInfo(Variant::INT, "layer"), PropertyInfo(Variant::PACKED_INT32_ARRAY, "cells")));
 	// The size, tileset, scroll type or whole arrays changed: views build everything again.
 	ADD_SIGNAL(MethodInfo("layout_changed"));
+	// Events were added, removed, replaced or given new ids (an event's own changes come through its changed signal).
+	ADD_SIGNAL(MethodInfo("events_changed"));
 
 	BIND_ENUM_CONSTANT(SCROLL_NONE);
 	BIND_ENUM_CONSTANT(SCROLL_LOOP_VERTICAL);

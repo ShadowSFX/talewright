@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGEventPage" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		One page of a map event: its conditions, graphic, movement, priority and trigger.
+	</brief_description>
+	<description>
+		One page of a [JRPGEventData]. The page is the event's active page when all of its enabled conditions hold (two switches on, a variable at or above a number, one of the event's self switches on, an item held, an actor in the party) and no higher page qualifies; a page without conditions always qualifies. While it is active, it sets how the event looks (a character image with a facing and a frame, or a tile of the map's tileset), how it moves on its own, how it meets characters ([member priority]) and what starts it ([member trigger]).
+		Authority: server. Online, the zone decides which page is active.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="are_conditions_met" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="state" type="JRPGGameState" />
+			<param index="1" name="map_id" type="int" />
+			<param index="2" name="event_id" type="int" />
+			<description>
+				Returns [code]true[/code] when every enabled condition holds in [param state] for event [param event_id] of map [param map_id] (whose self switches it reads). A page without conditions always qualifies. The variable condition needs a number at or above [member variable_value]: a variable holding text never meets it.
+			</description>
+		</method>
+		<method name="get_self_switch_letter" qualifiers="static">
+			<return type="String" />
+			<param index="0" name="self_switch" type="int" enum="JRPGEventPage.SelfSwitch" />
+			<description>
+				Returns the letter, [code]"A"[/code] to [code]"D"[/code], of [param self_switch].
+			</description>
+		</method>
+		<method name="has_any_condition" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when at least one condition is enabled.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="actor_enabled" type="bool" setter="set_actor_enabled" getter="is_actor_enabled" default="false">
+			If [code]true[/code], the page needs actor [member actor_id] in the party.
+		</member>
+		<member name="actor_id" type="int" setter="set_actor_id" getter="get_actor_id" default="1">
+			The actor the actor condition needs in the party.
+		</member>
+		<member name="character" type="String" setter="set_character" getter="get_character" default="&quot;&quot;">
+			The character image ([code]uid://[/code] or [code]res://[/code] path) the event is drawn with while this page is active; empty for none.
+		</member>
+		<member name="direction" type="int" setter="set_direction" getter="get_direction" enum="JRPGSystemData.Direction" default="2">
+			The direction the event faces when the page becomes active.
+		</member>
+		<member name="direction_fix" type="bool" setter="set_direction_fix" getter="is_direction_fix" default="false">
+			If [code]true[/code], the event keeps its facing when it moves.
+		</member>
+		<member name="item_enabled" type="bool" setter="set_item_enabled" getter="is_item_enabled" default="false">
+			If [code]true[/code], the page needs item [member item_id] held by the party.
+		</member>
+		<member name="item_id" type="int" setter="set_item_id" getter="get_item_id" default="1">
+			The item the item condition needs (an item, not a weapon or an armor).
+		</member>
+		<member name="move_frequency" type="int" setter="set_move_frequency" getter="get_move_frequency" default="3">
+			How often the event moves on its own, from [constant MIN_FREQUENCY] to [constant MAX_FREQUENCY] (higher: more often).
+		</member>
+		<member name="move_speed" type="int" setter="set_move_speed" getter="get_move_speed" default="3">
+			How fast the event moves, from [constant MIN_SPEED] to [constant MAX_SPEED] (higher: faster).
+		</member>
+		<member name="movement_type" type="int" setter="set_movement_type" getter="get_movement_type" enum="JRPGEventPage.MovementType" default="0">
+			How the event moves on its own while the page is active.
+		</member>
+		<member name="pattern" type="int" setter="set_pattern" getter="get_pattern" default="0">
+			The frame of the character image shown when the event stands still.
+		</member>
+		<member name="priority" type="int" setter="set_priority" getter="get_priority" enum="JRPGEventPage.Priority" default="0">
+			How the event meets characters: below them (they walk over it), among them (it blocks them) or above them (they walk under it).
+		</member>
+		<member name="self_switch" type="int" setter="set_self_switch" getter="get_self_switch" enum="JRPGEventPage.SelfSwitch" default="0">
+			The self switch the self switch condition needs on.
+		</member>
+		<member name="self_switch_enabled" type="bool" setter="set_self_switch_enabled" getter="is_self_switch_enabled" default="false">
+			If [code]true[/code], the page needs the event's self switch [member self_switch] on.
+		</member>
+		<member name="stepping_animation" type="bool" setter="set_stepping_animation" getter="has_stepping_animation" default="false">
+			If [code]true[/code], the event's frames play even while it stands still.
+		</member>
+		<member name="switch1_enabled" type="bool" setter="set_switch1_enabled" getter="is_switch1_enabled" default="false">
+			If [code]true[/code], the page needs switch [member switch1_id] on.
+		</member>
+		<member name="switch1_id" type="int" setter="set_switch1_id" getter="get_switch1_id" default="1">
+			The first switch the page can need on.
+		</member>
+		<member name="switch2_enabled" type="bool" setter="set_switch2_enabled" getter="is_switch2_enabled" default="false">
+			If [code]true[/code], the page needs switch [member switch2_id] on.
+		</member>
+		<member name="switch2_id" type="int" setter="set_switch2_id" getter="get_switch2_id" default="1">
+			The second switch the page can need on.
+		</member>
+		<member name="through" type="bool" setter="set_through" getter="is_through" default="false">
+			If [code]true[/code], the event passes through terrain and other characters.
+		</member>
+		<member name="tile" type="int" setter="set_tile" getter="get_tile" default="0">
+			A tile of the map's tileset (its palette index) drawn as the event instead of a character image; [code]0[/code] for none.
+		</member>
+		<member name="trigger" type="int" setter="set_trigger" getter="get_trigger" enum="JRPGEventPage.Trigger" default="0">
+			What starts the page's commands.
+		</member>
+		<member name="variable_enabled" type="bool" setter="set_variable_enabled" getter="is_variable_enabled" default="false">
+			If [code]true[/code], the page needs variable [member variable_id] at or above [member variable_value].
+		</member>
+		<member name="variable_id" type="int" setter="set_variable_id" getter="get_variable_id" default="1">
+			The variable the variable condition reads.
+		</member>
+		<member name="variable_value" type="int" setter="set_variable_value" getter="get_variable_value" default="0">
+			The number the variable must reach (at or above it).
+		</member>
+		<member name="walking_animation" type="bool" setter="set_walking_animation" getter="has_walking_animation" default="true">
+			If [code]true[/code], the event's frames play while it moves.
+		</member>
+	</members>
+	<constants>
+		<constant name="SELF_SWITCH_A" value="0" enum="SelfSwitch">
+			Self switch A.
+		</constant>
+		<constant name="SELF_SWITCH_B" value="1" enum="SelfSwitch">
+			Self switch B.
+		</constant>
+		<constant name="SELF_SWITCH_C" value="2" enum="SelfSwitch">
+			Self switch C.
+		</constant>
+		<constant name="SELF_SWITCH_D" value="3" enum="SelfSwitch">
+			Self switch D.
+		</constant>
+		<constant name="MOVEMENT_FIXED" value="0" enum="MovementType">
+			The event does not move on its own.
+		</constant>
+		<constant name="MOVEMENT_RANDOM" value="1" enum="MovementType">
+			The event wanders at random.
+		</constant>
+		<constant name="MOVEMENT_APPROACH" value="2" enum="MovementType">
+			The event moves toward the player.
+		</constant>
+		<constant name="MOVEMENT_CUSTOM" value="3" enum="MovementType">
+			The event follows its own move route.
+		</constant>
+		<constant name="PRIORITY_BELOW" value="0" enum="Priority">
+			Below characters: they walk over the event (with a tile graphic, the tile's passability decides).
+		</constant>
+		<constant name="PRIORITY_SAME" value="1" enum="Priority">
+			Same as characters: the event blocks them and is drawn among them.
+		</constant>
+		<constant name="PRIORITY_ABOVE" value="2" enum="Priority">
+			Above characters: they walk under the event.
+		</constant>
+		<constant name="TRIGGER_ACTION" value="0" enum="Trigger">
+			The player presses OK facing the event, or standing on it when it can be walked over.
+		</constant>
+		<constant name="TRIGGER_PLAYER_TOUCH" value="1" enum="Trigger">
+			The player walks into the event, or onto it when it can be walked over (and as with the action button).
+		</constant>
+		<constant name="TRIGGER_EVENT_TOUCH" value="2" enum="Trigger">
+			The event's own movement reaches the player (and as with player touch).
+		</constant>
+		<constant name="TRIGGER_AUTORUN" value="3" enum="Trigger">
+			The page's commands start as soon as it becomes active, and the player waits for them.
+		</constant>
+		<constant name="TRIGGER_PARALLEL" value="4" enum="Trigger">
+			The page's commands run again and again while it is active, alongside everything else.
+		</constant>
+		<constant name="MIN_SPEED" value="1">
+			The slowest movement speed.
+		</constant>
+		<constant name="MAX_SPEED" value="6">
+			The fastest movement speed.
+		</constant>
+		<constant name="MIN_FREQUENCY" value="1">
+			The lowest movement frequency.
+		</constant>
+		<constant name="MAX_FREQUENCY" value="5">
+			The highest movement frequency.
+		</constant>
+	</constants>
+</class>

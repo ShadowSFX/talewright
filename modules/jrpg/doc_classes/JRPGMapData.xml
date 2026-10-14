@@ -10,10 +10,24 @@
 	<tutorials>
 	</tutorials>
 	<methods>
+		<method name="add_event">
+			<return type="JRPGEventData" />
+			<param index="0" name="cell" type="Vector2i" />
+			<description>
+				Adds a new event at [param cell] with the next id ([member next_event_id]), a name made from it and one page without conditions, and returns it. Emits [signal events_changed].
+			</description>
+		</method>
 		<method name="bump_revision">
 			<return type="void" />
 			<description>
 				Raises [member revision] by one. A [JRPGMap] whose cells or layout changed calls it when the editor saves its scene, so a game saved before can tell the map was edited.
+			</description>
+		</method>
+		<method name="find_event" qualifiers="const">
+			<return type="JRPGEventData" />
+			<param index="0" name="id" type="int" />
+			<description>
+				Returns the event with id [param id], or [code]null[/code].
 			</description>
 		</method>
 		<method name="get_cell" qualifiers="const">
@@ -29,6 +43,12 @@
 			<param index="0" name="cell" type="Vector2i" />
 			<description>
 				Returns the position of [param cell] in the layer, region and shadow arrays (row by row).
+			</description>
+		</method>
+		<method name="get_event_ids" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<description>
+				Returns the ids of the map's events, in the order they are stored.
 			</description>
 		</method>
 		<method name="get_layer" qualifiers="const">
@@ -89,6 +109,19 @@
 			<param index="1" name="values" type="PackedInt32Array" />
 			<description>
 				Writes shadow quarters (the low 4 bits of each value) to the cells at the given positions. Emits [signal cells_changed] with layer [constant CELLS_SHADOWS] and the cells written.
+			</description>
+		</method>
+		<method name="remove_event">
+			<return type="bool" />
+			<param index="0" name="id" type="int" />
+			<description>
+				Takes the event with id [param id] off the map and returns [code]true[/code]; returns [code]false[/code] when the map has no such event. The id is not given to a new event again.
+			</description>
+		</method>
+		<method name="repair_event_ids">
+			<return type="Array" />
+			<description>
+				Gives a new id to every event whose id an earlier event already has, or below 1 (copied events, hand edits), and raises [member next_event_id] above every id. Returns one dictionary [code]{index, old_id, new_id}[/code] per event changed; an empty array when every id was fine.
 			</description>
 		</method>
 		<method name="upgrade">
@@ -172,6 +205,11 @@
 			<param index="1" name="cells" type="PackedInt32Array" />
 			<description>
 				Emitted when cells of [param layer] ([constant CELLS_REGIONS] for regions, [constant CELLS_SHADOWS] for shadows) were painted. [param cells] holds the positions of the cells written.
+			</description>
+		</signal>
+		<signal name="events_changed">
+			<description>
+				Emitted when events are added, removed, replaced or given new ids. Changes inside one event come through its own [signal Resource.changed].
 			</description>
 		</signal>
 		<signal name="layout_changed">

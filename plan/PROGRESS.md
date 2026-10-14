@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 14:16 -0600
+- **Updated:** 2026-10-14 14:27 -0600
 - **Current task:** none
-- **Last completed:** 10.4.2 Close epic 10
-- **Next task:** 9.1 JRPGEvent + pages + conditions + triggers
-- **Done leaf tasks:** 132
+- **Last completed:** 9.1.1 Event data and page selection (core)
+- **Next task:** 9.1.2 Event nodes on the map, page refresh, anchors, id repair on save
+- **Done leaf tasks:** 133
 <!-- status:end -->
 
 ## Log
@@ -350,4 +350,7 @@
 | 2026-10-14 13:26 -0600 | 10.4.1.3 | started: Epic 10 review: screen stack and checks (containers: 10.4.1 pending->in_progress, 10.4 pending->in_progress, 10 pending->in_progress) |  |
 | 2026-10-14 13:37 -0600 | 10.4.1.3 | done: Epic 10 review: screen stack and checks — Epic 10 review screen stack and checks fixes (B1-3, B13, B14, B16, B17): faded push/pop/replace hold the lock from start to end and suspend the leaving screen first; pop frees after the fade and returns null unless keep; covered screens lose focus and mouse recursively and get back what they had (process mode included); a screen freeing itself is taken off and the one below activated; doctests count the script's signals via callable_mp_static and check the coroutine result; bridge checks: choices ignore the pointer, evidence only with --write-evidence, no golden from a missing screenshot; D-054 amended. Full 1620/1620, template 1506/1506, bridge 188/188 (repository untouched by a plain run), static checks pass (containers: 10.4.1 in_progress->done, 10.4 in_progress->pending, 10 in_progress->pending) | 6b6fb91483 |
 | 2026-10-14 13:38 -0600 | 10.4.2 | started: Close epic 10 (containers: 10.4 pending->in_progress, 10 pending->in_progress) |  |
-| 2026-10-14 14:16 -0600 | 10.4.2 | done: Close epic 10 — Epic 10 closed: review log plan/evidence/reviews/epic_10.md (40 findings, all fixed; drag/touch to epic 28, window color override to epic 24); plain_2d/plain_3d smoke ALL PASS with a rebuilt release template; core_diff_check 0 unlisted; full tests 1620/1620, release template 1506/1506; static checks pass; bridge checks 188/188. First push's CI (38625515777) failed in the MinGW template only (variable named far, a Windows macro); fixed with a rename and a static check (D-055); CI run 38628591521 green (20/20). (containers: 10.4 in_progress->done, 10 in_progress->done) | pending |
+| 2026-10-14 14:16 -0600 | 10.4.2 | done: Close epic 10 — Epic 10 closed: review log plan/evidence/reviews/epic_10.md (40 findings, all fixed; drag/touch to epic 28, window color override to epic 24); plain_2d/plain_3d smoke ALL PASS with a rebuilt release template; core_diff_check 0 unlisted; full tests 1620/1620, release template 1506/1506; static checks pass; bridge checks 188/188. First push's CI (38625515777) failed in the MinGW template only (variable named far, a Windows macro); fixed with a rename and a static check (D-055); CI run 38628591521 green (20/20). (containers: 10.4 in_progress->done, 10 in_progress->done) | ef46ca51e3 |
+| 2026-10-14 14:16 -0600 | - | imported 3 new / 1 updated tasks | |
+| 2026-10-14 14:16 -0600 | 9.1.1 | started: Event data and page selection (core) (containers: 9.1 pending->in_progress, 9 pending->in_progress) |  |
+| 2026-10-14 14:27 -0600 | 9.1.1 | done: Event data and page selection (core) — Core event data (D-056): JRPGEventPage (conditions: 2 switches, variable >= value with numbers only, self switch A-D, item held, actor in party; graphic: character image + direction + pattern or tile; movement type/speed/frequency; walking/stepping/direction fix/through; priority; trigger) and JRPGEventData (id, name, note, cell, up to 20 pages, find_active_page = highest page whose conditions hold, -1 for none). JRPGMapData: events validated, get_event_ids, find_event, add_event (ids in creation order, never reused), remove_event, repair_event_ids, events_changed. Defaults fingerprinted (D-029). Removed the duplicate 9.1.3 (runtime triggers are 9.6.2). Doctests: page-selection matrix, each condition kind, page limits, ids and repair, save/load round trip. JRPG 219/219, full 1625/1625, template 1511/1511, bridge 188/188, static checks pass. (containers: 9.1 in_progress->pending, 9 in_progress->pending) | pending |

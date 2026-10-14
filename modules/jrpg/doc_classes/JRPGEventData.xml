@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGEventData" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A map event: its id, place and pages.
+	</brief_description>
+	<description>
+		A map event, stored in its map's [JRPGMapData] (never a scene node, so tools and servers read it without a scene and copying nodes can never clone an id). It has an [member event_id] unique in its map, a [member display_name] and a [member note] for the author, the [member cell] where it starts and up to [constant MAX_PAGES] [JRPGEventPage]s. Its active page is the highest-numbered page whose conditions all hold ([method find_active_page]); when no page qualifies the event is absent from the map.
+		Authority: server. Online, the zone decides an event's page.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="find_active_page" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="state" type="JRPGGameState" />
+			<param index="1" name="map_id" type="int" />
+			<description>
+				Returns the index of the active page for the game state [param state] on map [param map_id]: the highest-numbered page whose conditions all hold, or [code]-1[/code] when none does.
+			</description>
+		</method>
+		<method name="get_page" qualifiers="const">
+			<return type="JRPGEventPage" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns the page at [param index].
+			</description>
+		</method>
+		<method name="get_page_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns how many pages the event has.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="cell" type="Vector2i" setter="set_cell" getter="get_cell" default="Vector2i(0, 0)">
+			The cell where the event stands when its map is entered.
+		</member>
+		<member name="display_name" type="String" setter="set_display_name" getter="get_display_name" default="&quot;&quot;">
+			A name for the author (the game never shows it).
+		</member>
+		<member name="event_id" type="int" setter="set_event_id" getter="get_event_id" default="0">
+			The event's id, unique in its map and given by [method JRPGMapData.add_event] in the order events are created.
+		</member>
+		<member name="note" type="String" setter="set_note" getter="get_note" default="&quot;&quot;">
+			Free notes for the author.
+		</member>
+		<member name="pages" type="JRPGEventPage[]" setter="set_pages" getter="get_pages" default="[]">
+			The event's pages, at most [constant MAX_PAGES]. Empty entries are left out.
+		</member>
+	</members>
+	<constants>
+		<constant name="MAX_PAGES" value="20">
+			The most pages an event can have.
+		</constant>
+	</constants>
+</class>

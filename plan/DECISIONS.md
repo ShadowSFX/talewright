@@ -921,3 +921,21 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   allowed because Godot defines `NOMINMAX` (`platform/windows/detect.py:425`).
 - **Why:** seconds per run, and it catches the whole class before CI does.
 - **Reversal:** `WINDOWS_MACROS` in `talewright/tools/static_checks.py`.
+
+## D-056 — Map events as data: ids, pages and their conditions
+- **Context:** task 9.1.1 needs the event data of spec 03 (events are data in `JRPGMapData`, not scene nodes). The help
+  leaves open how ids are given after a deletion, what the variable condition compares (its text says "greater
+  than", its screenshot "greater than or equal", RM-EVT-026), what a variable holding text does there, and whether
+  the item condition counts weapons and armors.
+- **Options:** reuse freed ids or never; `>` or `>=`; text compared as a number, an error, or never met.
+- **Choice:** `JRPGEventData` (id, name, note, cell, up to 20 `JRPGEventPage`s) lives in `JRPGMapData.events`; ids
+  come from `next_event_id` in creation order and are never given twice (a deleted event's self switches and saved
+  state can never land on a newer one); `repair_event_ids()` gives new ids to later duplicates and ids below 1 and
+  raises `next_event_id` above every id (the editor runs it on save, task 9.1.2). The active page is the highest
+  page whose enabled conditions all hold; a page without conditions always qualifies; no page: the event is absent.
+  The variable condition is "value >= number" (the screenshot), met only by numbers (int or float), never by text.
+  The item condition counts items only, as its picker in the help lists items. A page's graphic is a character image
+  string (as actors hold theirs) with a facing and a frame, or a tile palette index (0 = none). Commands come with
+  the command model (9.2), move routes with movement (9.6).
+- **Why:** stable ids keep saved games and self switches safe; data events serve servers without scenes (spec 03).
+- **Reversal:** `JRPGEventPage::are_conditions_met` holds the condition rules; `JRPGMapData::add_event` the ids.

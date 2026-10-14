@@ -39,6 +39,8 @@
 #include "core/templates/bit_field.h"
 #include "core/variant/binder_common.h" // IWYU pragma: keep (VARIANT_ENUM_CAST).
 
+class JRPGEventData;
+
 // One map's data (spec 05, "JRPGMapData"; D-006): a built-in sub-resource of the map scene, so edits follow the
 // scene's own undo history, and readable without nodes (JRPGMapFiles) by tools and servers. Tile layers hold palette
 // indexes of the map's tileset (0 = empty; an autotile cell holds its kind, the resolver picks the shape), one int per
@@ -96,7 +98,7 @@ private:
 	int encounter_steps = 30;
 	bool disable_dash = false;
 	int next_event_id = 1;
-	Array events; // JRPGEventData (spec 03), added by the event tasks.
+	Array events; // JRPGEventData (spec 03), in creation order.
 
 	int _cell_count() const { return size.x * size.y; }
 	void _fit_arrays();
@@ -177,13 +179,24 @@ public:
 	int get_encounter_steps() const { return encounter_steps; }
 	void set_disable_dash(bool p_disable);
 	bool is_disable_dash() const { return disable_dash; }
+	// The id the next new event gets: ids follow the order of creation and are never given twice (RM-EVT-019), so a
+	// saved self switch or event state never lands on a newer event.
 	void set_next_event_id(int p_id);
 	int get_next_event_id() const { return next_event_id; }
+	// The map's events (JRPGEventData; anything else is left out with an error).
 	void set_events(const Array &p_events);
 	Array get_events() const { return events; }
 	// The IDs of the map's events, which saved event states are checked against (JRPGGameState::prune_event_states).
-	// None until event data exists (task 9.1 defines JRPGEventData and reads its IDs here).
 	PackedInt32Array get_event_ids() const;
+	// The event with id p_id, or null.
+	Ref<JRPGEventData> find_event(int p_id) const;
+	// A new event at p_cell with the next id, a name from it and one page without conditions; emits events_changed.
+	Ref<JRPGEventData> add_event(const Vector2i &p_cell);
+	// Takes the event with id p_id off the map (its id is not given again); false when there is none.
+	bool remove_event(int p_id);
+	// Gives a new id to each event whose id is taken by an earlier event or below 1 (copies, hand edits, merges), and
+	// raises next_event_id above every id. Returns one {index, old_id, new_id} per event changed (empty: all fine).
+	Array repair_event_ids();
 
 	JRPGMapData();
 };

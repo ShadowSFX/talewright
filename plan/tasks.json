@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "10.4.2 Close epic 10",
+  "last_completed": "9.1.1 Event data and page selection (core)",
   "tasks": [
     {
       "id": "0",
@@ -3623,20 +3623,70 @@
     {
       "id": "9.1",
       "title": "JRPGEvent + pages + conditions + triggers",
-      "description": "JRPGEventData + JRPGEventPage as core data inside JRPGMapData (graphic as uid string); internal JRPGEvent nodes and JRPGEventAnchor; page selection/refresh, priority, triggers; duplicate event_id reassignment on save.",
+      "description": "JRPGEventData + JRPGEventPage as core data inside JRPGMapData (graphic as uid string); internal JRPGEvent nodes and JRPGEventAnchor; page selection/refresh, priority; trigger data on the page (detection at run time is 9.6.2, with the interpreter and the local port); duplicate event_id reassignment on save. Split into 9.1.1 (core data and page selection) and 9.1.2 (runtime event nodes, refresh, anchor, id repair on save).",
       "parent": "9",
       "dependencies": [],
       "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
-        "Page-selection doctest matrix (several pages qualify -> highest; each condition kind; refresh after switch change)",
-        "Duplicate event_id in saved data is reassigned on save with a warning",
-        "A JRPGEventAnchor follows its event when the event moves"
+        "9.1.1 and 9.1.2 done"
       ],
       "test_strategy": "Doctests.",
       "files": [],
       "commit": "",
       "notes": "JRPGMapData::get_event_ids() (added by 8.6.1.1, empty until now) must return the events' IDs: JRPGSceneManager::resume prunes saved event states with it."
+    },
+    {
+      "id": "9.1.1",
+      "parent": "9.1",
+      "title": "Event data and page selection (core)",
+      "priority": 1,
+      "dependencies": [],
+      "description": "Core resources JRPGEventData (event_id, display name, note, cell, pages up to 20) and JRPGEventPage (conditions: two switches, variable >= value, self switch A-D, item held, actor in party; graphic: character image path or uid with direction and pattern, or a tile palette index; autonomous movement type, speed 1-6, frequency 1-5; options walking, stepping, direction fix, through; priority below/same/above; trigger action/player touch/event touch/autorun/parallel). Commands and move routes come with 9.2 and 9.6. JRPGMapData: typed events, get_event_ids(), find_event(), add_event() from next_event_id, repair_event_ids() (duplicates and ids >= next_event_id reassigned, reported). Page selection in core: the highest page whose conditions all hold, none when no page qualifies (RM-EVT-004, RM-EVT-024..029). Schema stamps (D-029). Authority declared (spec 03 D-025 scopes noted for epic 19).",
+      "acceptance_criteria": [
+        "Page-selection doctest matrix: several pages qualify -> highest; each condition kind; no page -> none; a page without conditions always qualifies",
+        "repair_event_ids reassigns duplicates and reports them; get_event_ids returns the events' ids",
+        "Data round-trips through a saved map scene"
+      ],
+      "test_strategy": "Doctests (core, no nodes).",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_event_data.h",
+        "modules/jrpg/core/jrpg_event_data.cpp",
+        "modules/jrpg/core/jrpg_map_data.h",
+        "modules/jrpg/core/jrpg_map_data.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGEventData.xml",
+        "modules/jrpg/doc_classes/JRPGEventPage.xml",
+        "modules/jrpg/doc_classes/JRPGMapData.xml",
+        "modules/jrpg/tests/test_jrpg_event_data.h",
+        "modules/jrpg/tests/test_jrpg_core_regressions.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "9.1.2",
+      "parent": "9.1",
+      "title": "Event nodes on the map, page refresh, anchors, id repair on save",
+      "priority": 1,
+      "dependencies": [
+        "9.1.1"
+      ],
+      "description": "The running map builds an internal JRPGEvent node per event (sprite from the active page's graphic through JRPGCharacterSprite or a tile, cell and facing from JRPGEventState, z by priority, hidden without an active page or when erased); events with Same-as-characters priority block movement into their cell; the scene manager refreshes active pages when switches, variables, self switches, items or the party change (dirty flag, at most once per simulation step). JRPGEventAnchor (a Node2D with an event_id) follows its event. JRPGMap repairs duplicate event ids on the editor's pre-save with a warning naming them.",
+      "acceptance_criteria": [
+        "Changing a switch shows the event's new page within one step",
+        "A Same-priority event blocks the player; Below/Above do not",
+        "A JRPGEventAnchor follows its event when the event moves",
+        "Duplicate event_id in saved data is reassigned on save with a warning"
+      ],
+      "test_strategy": "Doctests (SceneTree) + bridge run of a map with events.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "9.2",
@@ -4430,7 +4480,7 @@
         "talewright/tools/static_checks.py",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "ef46ca51e3",
       "notes": "First push (6b6fb91483): CI run 38625515777 failed only in the Windows MinGW template: a doctest variable named far, a macro in MinGW's Windows headers. Fixed with a rename and a static check for such names (D-055)."
     },
     {
