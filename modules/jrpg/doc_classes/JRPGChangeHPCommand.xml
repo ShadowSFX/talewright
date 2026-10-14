@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGChangeHPCommand" inherits="JRPGActorAmountCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: raises or lowers the HP of an actor or the party.
+	</brief_description>
+	<description>
+		Changes the actors' HP by the amount, within 0 and their max HP. A decrease that would bring HP to 0 or below knocks the actor out only with [member allow_death]; otherwise HP stops at 1. Knocked-out actors are left as they are: [JRPGChangeStateCommand] or [JRPGRecoverAllCommand] revive them.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="allow_death" type="bool" setter="set_allow_death" getter="is_death_allowed" default="false">
+			A decrease may knock actors out (HP 0).
+		</member>
+	</members>
+</class>

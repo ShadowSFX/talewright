@@ -353,4 +353,111 @@ TEST_CASE("[JRPG][StateCommands] Change Items, Weapons and Armors: counts within
 	CHECK((weapons_copy->get_item_id() == 2 && weapons_copy->get_operation() == JRPGPartyAmountCommand::OPERATION_INCREASE));
 }
 
+template <typename T>
+static Ref<T> actor_amount(int p_actor, JRPGActorAmountCommand::Operation p_operation, int64_t p_amount) {
+	Ref<T> command;
+	command.instantiate();
+	command->set_actor_id(p_actor);
+	command->set_operation(p_operation);
+	command->set_amount(p_amount);
+	return command;
+}
+
+static Ref<JRPGChangeStateCommand> change_state(int p_actor, int p_state, bool p_remove = false) {
+	Ref<JRPGChangeStateCommand> command;
+	command.instantiate();
+	command->set_actor_id(p_actor);
+	command->set_state_id(p_state);
+	command->set_remove(p_remove);
+	return command;
+}
+
+TEST_CASE("[JRPG][StateCommands] Change HP: down to 1 unless death is allowed; knocked-out actors stay so") {
+	TestJRPGConditionalBranch::Game game;
+	const Ref<JRPGActorState> ondine = game.state->get_actor(1);
+	const int max_hp = ondine->get_max_hp();
+	REQUIRE(max_hp > 60);
+	ondine->set_hp(max_hp);
+	run(game.state, actor_amount<JRPGChangeHPCommand>(1, JRPGActorAmountCommand::OPERATION_DECREASE, 50));
+	CHECK(ondine->get_hp() == max_hp - 50);
+	run(game.state, actor_amount<JRPGChangeHPCommand>(1, JRPGActorAmountCommand::OPERATION_INCREASE, 9999));
+	CHECK(ondine->get_hp() == max_hp);
+	run(game.state, actor_amount<JRPGChangeHPCommand>(1, JRPGActorAmountCommand::OPERATION_DECREASE, 99999));
+	CHECK((ondine->get_hp() == 1 && !ondine->is_dead())); // Death not allowed: 1 HP.
+	const Ref<JRPGChangeHPCommand> deadly = actor_amount<JRPGChangeHPCommand>(1, JRPGActorAmountCommand::OPERATION_DECREASE, 5);
+	deadly->set_allow_death(true);
+	run(game.state, deadly);
+	CHECK((ondine->get_hp() == 0 && ondine->is_dead()));
+	run(game.state, actor_amount<JRPGChangeHPCommand>(1, JRPGActorAmountCommand::OPERATION_INCREASE, 50));
+	CHECK(ondine->is_dead()); // Not revived by Change HP.
+	CHECK(deadly->get_summary() == "Change HP: actor 1 - 5 (allow death)");
+
+	// The actor in a variable; an amount in a variable; the entire party.
+	ondine->recover_all();
+	game.state->set_variable(5, 1);
+	game.state->set_variable(6, 20);
+	const Ref<JRPGChangeHPCommand> from_variables = actor_amount<JRPGChangeHPCommand>(0, JRPGActorAmountCommand::OPERATION_DECREASE, 0);
+	from_variables->set_actor_is_variable(true);
+	from_variables->set_actor_variable_id(5);
+	from_variables->set_amount_is_variable(true);
+	from_variables->set_amount_variable_id(6);
+	run(game.state, from_variables);
+	CHECK(ondine->get_hp() == max_hp - 20);
+	CHECK(from_variables->get_summary() == "Change HP: actor in variable 5 - variable 6");
+	run(game.state, actor_amount<JRPGChangeHPCommand>(JRPGActorCommand::ENTIRE_PARTY, JRPGActorAmountCommand::OPERATION_INCREASE, 5));
+	CHECK(ondine->get_hp() == max_hp - 15);
+
+	WarningCounter counter;
+	ERR_PRINT_OFF;
+	run(game.state, actor_amount<JRPGChangeHPCommand>(9, JRPGActorAmountCommand::OPERATION_DECREASE, 5)); // Not in the database.
+	game.state->set_variable(5, "nobody");
+	run(game.state, from_variables); // No actor ID in the variable.
+	ERR_PRINT_ON;
+	CHECK((counter.warnings == 2 && ondine->get_hp() == max_hp - 15));
+}
+
+TEST_CASE("[JRPG][StateCommands] Change MP, Change TP, Change State and Recover All") {
+	TestJRPGConditionalBranch::Game game;
+	const Ref<JRPGActorState> ondine = game.state->get_actor(1);
+	ondine->recover_all();
+	const int max_mp = ondine->get_max_mp();
+	run(game.state, actor_amount<JRPGChangeMPCommand>(1, JRPGActorAmountCommand::OPERATION_DECREASE, 9999));
+	CHECK(ondine->get_mp() == 0);
+	run(game.state, actor_amount<JRPGChangeMPCommand>(1, JRPGActorAmountCommand::OPERATION_INCREASE, 5));
+	CHECK(ondine->get_mp() == MIN(5, max_mp));
+	run(game.state, actor_amount<JRPGChangeTPCommand>(1, JRPGActorAmountCommand::OPERATION_INCREASE, 150));
+	CHECK(ondine->get_tp() == 100);
+	run(game.state, actor_amount<JRPGChangeTPCommand>(1, JRPGActorAmountCommand::OPERATION_DECREASE, 30));
+	CHECK(ondine->get_tp() == 70);
+
+	run(game.state, change_state(1, 4));
+	CHECK(ondine->has_state(4));
+	run(game.state, change_state(1, 4, true));
+	CHECK_FALSE(ondine->has_state(4));
+	run(game.state, change_state(JRPGActorCommand::ENTIRE_PARTY, 1)); // Knockout for everyone.
+	CHECK((ondine->is_dead() && ondine->get_hp() == 0 && game.state->get_actor(2)->is_dead()));
+	run(game.state, change_state(1, 1, true));
+	CHECK((!ondine->is_dead() && ondine->get_hp() == 1)); // Revived with 1 HP.
+	run(game.state, change_state(1, 4));
+
+	Ref<JRPGRecoverAllCommand> recover;
+	recover.instantiate(); // The entire party by default.
+	run(game.state, recover);
+	CHECK((ondine->get_hp() == ondine->get_max_hp() && ondine->get_mp() == max_mp && !ondine->has_state(4)));
+	CHECK(!game.state->get_actor(2)->is_dead());
+	CHECK(recover->get_summary() == "Recover All: entire party");
+	CHECK(change_state(1, 4, true)->get_summary() == "Change State: actor 1 - state 4");
+	CHECK(change_state(1, 4)->get_id_parameters() == Dictionary({ { "actor_id", "actors" }, { "state_id", "states" } }));
+	CHECK(recover->get_id_parameters().is_empty()); // The entire party names no actor.
+
+	Ref<JRPGCommandList> copy;
+	copy.instantiate();
+	copy->set_data(commands({ change_state(2, 4, true), actor_amount<JRPGChangeTPCommand>(1, JRPGActorAmountCommand::OPERATION_DECREASE, 7) })->get_data());
+	const Ref<JRPGChangeStateCommand> state_copy = copy->get_command(0);
+	const Ref<JRPGChangeTPCommand> tp_copy = copy->get_command(1);
+	REQUIRE((state_copy.is_valid() && tp_copy.is_valid()));
+	CHECK((state_copy->get_actor_id() == 2 && state_copy->is_remove() && state_copy->get_state_id() == 4));
+	CHECK((tp_copy->get_amount() == 7 && tp_copy->get_operation() == JRPGActorAmountCommand::OPERATION_DECREASE));
+}
+
 } // namespace TestJRPGStateCommands

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGChangeTPCommand" inherits="JRPGActorAmountCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: raises or lowers the TP of an actor or the party.
+	</brief_description>
+	<description>
+		Changes the actors' TP by the amount, within 0 and 100.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+</class>

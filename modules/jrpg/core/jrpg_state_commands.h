@@ -33,8 +33,10 @@
 
 #include "jrpg_event_command.h"
 
+#include "core/templates/vector.h"
 #include "core/variant/binder_common.h" // IWYU pragma: keep (VARIANT_ENUM_CAST).
 
+class JRPGActorState;
 class JRPGFormula;
 class JRPGInterpreter;
 
@@ -338,6 +340,156 @@ public:
 	virtual String get_display_name() const override { return "Change Armors"; }
 };
 
+// The actors an actor command acts on (task 9.5.2.3): actor actor_id, or the entire party when it is 0; or the actor
+// whose ID variable actor_variable_id holds, when actor_is_variable. An actor the database lacks is skipped (one warning
+// per command); one not in the game yet is set up as it would be on joining.
+class JRPGActorCommand : public JRPGEventCommand {
+	GDCLASS(JRPGActorCommand, JRPGEventCommand);
+
+	int actor_id = 0;
+	bool actor_is_variable = false;
+	int actor_variable_id = 1;
+	mutable bool warned = false;
+
+protected:
+	static void _bind_methods();
+	// The actor states the command acts on now, in party order for the entire party.
+	Vector<Ref<JRPGActorState>> _targets(const JRPGInterpreter *p_interpreter) const;
+	String _target_text() const;
+
+public:
+	static constexpr int ENTIRE_PARTY = 0;
+
+	void set_actor_id(int p_id) { actor_id = p_id; }
+	int get_actor_id() const { return actor_id; }
+	void set_actor_is_variable(bool p_variable) { actor_is_variable = p_variable; }
+	bool is_actor_variable() const { return actor_is_variable; }
+	void set_actor_variable_id(int p_id) { actor_variable_id = p_id; }
+	int get_actor_variable_id() const { return actor_variable_id; }
+
+	virtual Category get_category() const override { return CATEGORY_ACTOR; }
+	virtual Authority get_authority() const override { return AUTHORITY_SERVER; }
+	virtual Dictionary get_id_parameters() const override;
+};
+
+// An actor command that changes a value by an amount: amount, or variable amount_variable_id's value when
+// amount_is_variable (an integer; a float is cut to one, text is 0), added on INCREASE, taken away on DECREASE.
+class JRPGActorAmountCommand : public JRPGActorCommand {
+	GDCLASS(JRPGActorAmountCommand, JRPGActorCommand);
+
+public:
+	enum Operation {
+		OPERATION_INCREASE,
+		OPERATION_DECREASE,
+	};
+
+private:
+	Operation operation = OPERATION_INCREASE;
+	int64_t amount = 1;
+	bool amount_is_variable = false;
+	int amount_variable_id = 1;
+
+protected:
+	static void _bind_methods();
+	// The signed change (positive: more), within the int range.
+	int _change(const JRPGInterpreter *p_interpreter) const;
+	String _amount_text() const;
+
+public:
+	void set_operation(Operation p_operation);
+	Operation get_operation() const { return operation; }
+	void set_amount(int64_t p_amount) { amount = p_amount; }
+	int64_t get_amount() const { return amount; }
+	void set_amount_is_variable(bool p_variable) { amount_is_variable = p_variable; }
+	bool is_amount_variable() const { return amount_is_variable; }
+	void set_amount_variable_id(int p_id) { amount_variable_id = p_id; }
+	int get_amount_variable_id() const { return amount_variable_id; }
+};
+
+// Change HP (RM-CMD-023; task 9.5.2.3, D-070): the actors' HP goes up or down within 0..max HP. A decrease knocks out
+// an actor whose HP reaches 0 only with allow_death; otherwise HP stops at 1. Knocked-out actors are left as they are
+// (Change State or Recover All revive them).
+// Authority (D-007): server.
+class JRPGChangeHPCommand : public JRPGActorAmountCommand {
+	GDCLASS(JRPGChangeHPCommand, JRPGActorAmountCommand);
+
+	bool allow_death = false;
+
+protected:
+	static void _bind_methods();
+
+public:
+	void set_allow_death(bool p_allow) { allow_death = p_allow; }
+	bool is_death_allowed() const { return allow_death; }
+
+	virtual StringName get_code() const override { return "change_hp"; }
+	virtual String get_display_name() const override { return "Change HP"; }
+	virtual String get_summary() const override;
+	virtual ExecuteResult execute(Object *p_context) override;
+};
+
+// Change MP (RM-CMD-024; task 9.5.2.3): the actors' MP goes up or down within 0..max MP.
+// Authority (D-007): server.
+class JRPGChangeMPCommand : public JRPGActorAmountCommand {
+	GDCLASS(JRPGChangeMPCommand, JRPGActorAmountCommand);
+
+public:
+	virtual StringName get_code() const override { return "change_mp"; }
+	virtual String get_display_name() const override { return "Change MP"; }
+	virtual String get_summary() const override;
+	virtual ExecuteResult execute(Object *p_context) override;
+};
+
+// Change TP (RM-CMD-025; task 9.5.2.3): the actors' TP goes up or down within 0..100.
+// Authority (D-007): server.
+class JRPGChangeTPCommand : public JRPGActorAmountCommand {
+	GDCLASS(JRPGChangeTPCommand, JRPGActorAmountCommand);
+
+public:
+	virtual StringName get_code() const override { return "change_tp"; }
+	virtual String get_display_name() const override { return "Change TP"; }
+	virtual String get_summary() const override;
+	virtual ExecuteResult execute(Object *p_context) override;
+};
+
+// Change State (RM-CMD-026; task 9.5.2.3, D-070): adds state state_id to the actors, or removes it (remove). Adding
+// state 1 knocks out; removing it revives with 1 HP (JRPGActorState::add_state, remove_state). The duration of an
+// added state is drawn from the game's misc random stream.
+// Authority (D-007): server.
+class JRPGChangeStateCommand : public JRPGActorCommand {
+	GDCLASS(JRPGChangeStateCommand, JRPGActorCommand);
+
+	bool remove = false;
+	int state_id = 1;
+
+protected:
+	static void _bind_methods();
+
+public:
+	void set_remove(bool p_remove) { remove = p_remove; }
+	bool is_remove() const { return remove; }
+	void set_state_id(int p_id) { state_id = p_id; }
+	int get_state_id() const { return state_id; }
+
+	virtual StringName get_code() const override { return "change_state"; }
+	virtual String get_display_name() const override { return "Change State"; }
+	virtual String get_summary() const override;
+	virtual Dictionary get_id_parameters() const override;
+	virtual ExecuteResult execute(Object *p_context) override;
+};
+
+// Recover All (RM-CMD-027; task 9.5.2.3): full HP and MP, every state removed, for the actors.
+// Authority (D-007): server.
+class JRPGRecoverAllCommand : public JRPGActorCommand {
+	GDCLASS(JRPGRecoverAllCommand, JRPGActorCommand);
+
+public:
+	virtual StringName get_code() const override { return "recover_all"; }
+	virtual String get_display_name() const override { return "Recover All"; }
+	virtual String get_summary() const override { return "Recover All: " + _target_text(); }
+	virtual ExecuteResult execute(Object *p_context) override;
+};
+
 VARIANT_ENUM_CAST(JRPGControlVariablesCommand::Operation);
 VARIANT_ENUM_CAST(JRPGControlVariablesCommand::OperandType);
 VARIANT_ENUM_CAST(JRPGControlVariablesCommand::GameData);
@@ -345,3 +497,4 @@ VARIANT_ENUM_CAST(JRPGControlVariablesCommand::ActorValue);
 VARIANT_ENUM_CAST(JRPGControlVariablesCommand::CharacterValue);
 VARIANT_ENUM_CAST(JRPGControlVariablesCommand::OtherValue);
 VARIANT_ENUM_CAST(JRPGPartyAmountCommand::Operation);
+VARIANT_ENUM_CAST(JRPGActorAmountCommand::Operation);

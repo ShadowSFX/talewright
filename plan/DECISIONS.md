@@ -1215,3 +1215,20 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** the bag first keeps what the player wears unless the event really needs more; discarding matches "take
   away" (returning it to the bag would undo the decrease).
 - **Reversal:** the command classes in `jrpg_state_commands.*`.
+
+## D-070 — Actor commands: Change HP, MP, TP, State; Recover All
+- **Context:** task 9.5.2.3 (RM-CMD-023..027). The help gives the actor choice (fixed, entire party, variable), the
+  operations and "Allow Death" (unchecked: HP stops at 1), but not what happens to knocked-out actors or to actors the
+  game has not used yet.
+- **Options:** Change HP revives a knocked-out actor (set_hp above 0 does) or leaves it; unused actors skipped or set
+  up.
+- **Choice:** abstract parents `JRPGActorCommand` (actor_id with 0 = entire party, or an actor ID read from a
+  variable; an actor the database lacks or a variable without an ID: nothing, one warning; unused actors set up via
+  ensure_actor as on joining) and `JRPGActorAmountCommand` (increase/decrease by a constant or a variable). Codes
+  `change_hp` (allow_death; without it HP stops at 1; knocked-out actors are skipped), `change_mp`, `change_tp`
+  (0..100), `change_state` (add/remove; adding state 1 knocks out, removing it revives with 1 HP; durations from the
+  misc stream), `recover_all`.
+- **Why:** reviving is what Change State and Recover All are for; leaving knocked-out actors alone keeps a "heal the
+  party" event from silently raising the dead. Setting up unused actors matches how the rest of the commands and
+  conditions treat database actors (D-066).
+- **Reversal:** `JRPGChangeHPCommand::execute` and `JRPGActorCommand::_targets`.

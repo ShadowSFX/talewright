@@ -207,6 +207,13 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGChangeItemsCommand);
 		GDREGISTER_CLASS(JRPGChangeWeaponsCommand);
 		GDREGISTER_CLASS(JRPGChangeArmorsCommand);
+		GDREGISTER_ABSTRACT_CLASS(JRPGActorCommand); // The parents of the actor commands.
+		GDREGISTER_ABSTRACT_CLASS(JRPGActorAmountCommand);
+		GDREGISTER_CLASS(JRPGChangeHPCommand);
+		GDREGISTER_CLASS(JRPGChangeMPCommand);
+		GDREGISTER_CLASS(JRPGChangeTPCommand);
+		GDREGISTER_CLASS(JRPGChangeStateCommand);
+		GDREGISTER_CLASS(JRPGRecoverAllCommand);
 		JRPGCommandRegistry::register_command(JRPGShowTextCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGShowChoicesCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGInputNumberCommand::get_class_static());
@@ -225,6 +232,11 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		JRPGCommandRegistry::register_command(JRPGChangeItemsCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGChangeWeaponsCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGChangeArmorsCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGChangeHPCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGChangeMPCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGChangeTPCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGChangeStateCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGRecoverAllCommand::get_class_static());
 		GDREGISTER_CLASS(JRPGReferenceScanner);
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotile); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotileResolver);

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.5.2.2 Change Gold, Items, Weapons, Armors",
+  "last_completed": "9.5.2.3 Change HP, MP, TP, State; Recover All",
   "tasks": [
     {
       "id": "0",
@@ -4248,9 +4248,9 @@
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
-      "commit": "",
-      "notes": "",
-      "status": "pending"
+      "commit": "children",
+      "notes": "Closed automatically when all children closed.",
+      "status": "done"
     },
     {
       "id": "9.5.2.1",
@@ -4305,7 +4305,7 @@
         "modules/jrpg/tests/test_jrpg_state_commands.h",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "e593120c66",
       "notes": ""
     },
     {
@@ -4320,9 +4320,23 @@
         "Allow death on and off; knockout added and removed; a missing actor is skipped with a warning"
       ],
       "test_strategy": "Doctests [JRPG].",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_state_commands.h",
+        "modules/jrpg/core/jrpg_state_commands.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGActorCommand.xml",
+        "modules/jrpg/doc_classes/JRPGActorAmountCommand.xml",
+        "modules/jrpg/doc_classes/JRPGChangeHPCommand.xml",
+        "modules/jrpg/doc_classes/JRPGChangeMPCommand.xml",
+        "modules/jrpg/doc_classes/JRPGChangeTPCommand.xml",
+        "modules/jrpg/doc_classes/JRPGChangeStateCommand.xml",
+        "modules/jrpg/doc_classes/JRPGRecoverAllCommand.xml",
+        "modules/jrpg/tests/test_jrpg_state_commands.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

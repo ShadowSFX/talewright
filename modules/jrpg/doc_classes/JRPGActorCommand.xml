@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGActorCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The base of the event commands that act on an actor or on the entire party.
+	</brief_description>
+	<description>
+		Picks the actors an actor command acts on: actor [member actor_id], or the entire party ([constant ENTIRE_PARTY]); or, with [member actor_is_variable], the actor whose ID variable [member actor_variable_id] holds. An actor the database lacks is skipped with one warning per command; an actor the game has not used yet is set up as it would be on joining.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="actor_id" type="int" setter="set_actor_id" getter="get_actor_id" default="0">
+			The actor, or [constant ENTIRE_PARTY].
+		</member>
+		<member name="actor_is_variable" type="bool" setter="set_actor_is_variable" getter="is_actor_variable" default="false">
+			The actor's ID is read from variable [member actor_variable_id].
+		</member>
+		<member name="actor_variable_id" type="int" setter="set_actor_variable_id" getter="get_actor_variable_id" default="1">
+			The variable holding the actor's ID.
+		</member>
+	</members>
+	<constants>
+		<constant name="ENTIRE_PARTY" value="0">
+			The [member actor_id] that stands for every party member.
+		</constant>
+	</constants>
+</class>

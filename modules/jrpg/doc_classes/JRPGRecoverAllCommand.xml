@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGRecoverAllCommand" inherits="JRPGActorCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: fully heals an actor or the party.
+	</brief_description>
+	<description>
+		Restores the actors' HP and MP to full and removes every state, knockout included ([method JRPGActorState.recover_all]).
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+</class>

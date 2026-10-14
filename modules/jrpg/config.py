@@ -10,6 +10,8 @@ def configure(env):
 
 def get_doc_classes():
     return [
+        "JRPGActorAmountCommand",
+        "JRPGActorCommand",
         "JRPGActorData",
         "JRPGActorState",
         "JRPGAnimationData",
@@ -22,7 +24,11 @@ def get_doc_classes():
         "JRPGBreakLoopCommand",
         "JRPGChangeArmorsCommand",
         "JRPGChangeGoldCommand",
+        "JRPGChangeHPCommand",
         "JRPGChangeItemsCommand",
+        "JRPGChangeMPCommand",
+        "JRPGChangeStateCommand",
+        "JRPGChangeTPCommand",
         "JRPGChangeWeaponsCommand",
         "JRPGCharacterSheet",
         "JRPGCharacterSprite",
@@ -78,6 +84,7 @@ def get_doc_classes():
         "JRPGProjectSetup",
         "JRPGRandom",
         "JRPGRandomStreams",
+        "JRPGRecoverAllCommand",
         "JRPGReferenceScanner",
         "JRPGSceneManager",
         "JRPGSelectableList",

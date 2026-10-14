@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGChangeStateCommand" inherits="JRPGActorCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: adds a state to an actor or the party, or removes it.
+	</brief_description>
+	<description>
+		Adds state [member state_id] to the actors, or removes it with [member remove] ([method JRPGActorState.add_state], [method JRPGActorState.remove_state]). Adding state 1 knocks the actors out; removing it revives them with 1 HP. A state an actor resists is not added. An added state's duration is drawn from the game's misc random stream.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="remove" type="bool" setter="set_remove" getter="is_remove" default="false">
+			Removes the state rather than adding it.
+		</member>
+		<member name="state_id" type="int" setter="set_state_id" getter="get_state_id" default="1">
+			The state.
+		</member>
+	</members>
+</class>

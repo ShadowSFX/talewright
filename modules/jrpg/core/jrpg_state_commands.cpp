@@ -40,6 +40,7 @@
 #include "jrpg_interpreter.h"
 #include "jrpg_random.h"
 #include "jrpg_system_data.h"
+#include "jrpg_table.h"
 
 #include "core/object/class_db.h"
 
@@ -628,4 +629,209 @@ void JRPGChangeItemsCommand::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_including_equipped"), &JRPGChangeItemsCommand::is_including_equipped);
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "item_id", PROPERTY_HINT_RANGE, "1,100000,1"), "set_item_id", "get_item_id");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "include_equipped"), "set_include_equipped", "is_including_equipped");
+}
+
+// Actor commands: Change HP, MP, TP, State; Recover All.
+
+Vector<Ref<JRPGActorState>> JRPGActorCommand::_targets(const JRPGInterpreter *p_interpreter) const {
+	Vector<Ref<JRPGActorState>> targets;
+	const Ref<JRPGGameState> state = p_interpreter->get_game_state();
+	int id = actor_id;
+	if (actor_is_variable) {
+		const Variant held = state->get_variable(actor_variable_id);
+		id = held.get_type() == Variant::INT ? int(CLAMP(int64_t(held), int64_t(-1), int64_t(INT32_MAX))) : -1;
+		if (id < 1) {
+			if (!warned) {
+				warned = true;
+				WARN_PRINT(vformat("JRPG: %s, %s: variable %d holds no actor ID; nothing changes.", who(p_interpreter), get_display_name(), actor_variable_id));
+			}
+			return targets;
+		}
+	}
+	if (id == ENTIRE_PARTY) {
+		for (const int member : state->get_party_members()) {
+			const Ref<JRPGActorState> actor = state->get_actor(member);
+			if (actor.is_valid()) {
+				targets.push_back(actor);
+			}
+		}
+		return targets;
+	}
+	const Ref<JRPGDatabase> db = state->get_database();
+	const Ref<JRPGTable> actors = db.is_valid() ? db->get_table(JRPGDatabase::TABLE_ACTORS) : Ref<JRPGTable>();
+	if (actors.is_null() || !actors->has_entry(id)) {
+		if (!warned) {
+			warned = true;
+			WARN_PRINT(vformat("JRPG: %s, %s: actor %d is not in the database; nothing changes.", who(p_interpreter), get_display_name(), id));
+		}
+		return targets;
+	}
+	const Ref<JRPGActorState> actor = state->ensure_actor(db, id); // As it would be on joining.
+	if (actor.is_valid()) {
+		targets.push_back(actor);
+	}
+	return targets;
+}
+
+String JRPGActorCommand::_target_text() const {
+	if (actor_is_variable) {
+		return vformat("actor in variable %d", actor_variable_id);
+	}
+	return actor_id == ENTIRE_PARTY ? String("entire party") : vformat("actor %d", actor_id);
+}
+
+Dictionary JRPGActorCommand::get_id_parameters() const {
+	Dictionary ids;
+	if (!actor_is_variable && actor_id != ENTIRE_PARTY) {
+		ids["actor_id"] = JRPGDatabase::get_table_name(JRPGDatabase::TABLE_ACTORS);
+	}
+	return ids;
+}
+
+void JRPGActorCommand::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_actor_id", "id"), &JRPGActorCommand::set_actor_id);
+	ClassDB::bind_method(D_METHOD("get_actor_id"), &JRPGActorCommand::get_actor_id);
+	ClassDB::bind_method(D_METHOD("set_actor_is_variable", "variable"), &JRPGActorCommand::set_actor_is_variable);
+	ClassDB::bind_method(D_METHOD("is_actor_variable"), &JRPGActorCommand::is_actor_variable);
+	ClassDB::bind_method(D_METHOD("set_actor_variable_id", "id"), &JRPGActorCommand::set_actor_variable_id);
+	ClassDB::bind_method(D_METHOD("get_actor_variable_id"), &JRPGActorCommand::get_actor_variable_id);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "actor_id", PROPERTY_HINT_RANGE, "0,100000,1"), "set_actor_id", "get_actor_id");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "actor_is_variable"), "set_actor_is_variable", "is_actor_variable");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "actor_variable_id", PROPERTY_HINT_RANGE, "1,100000,1"), "set_actor_variable_id", "get_actor_variable_id");
+	BIND_CONSTANT(ENTIRE_PARTY);
+}
+
+void JRPGActorAmountCommand::set_operation(Operation p_operation) {
+	ERR_FAIL_INDEX(int(p_operation), 2);
+	operation = p_operation;
+}
+
+int JRPGActorAmountCommand::_change(const JRPGInterpreter *p_interpreter) const {
+	int64_t value = amount;
+	if (amount_is_variable) {
+		const Variant held = p_interpreter->get_game_state()->get_variable(amount_variable_id);
+		value = held.get_type() == Variant::INT || held.get_type() == Variant::FLOAT ? int64_t(held) : 0;
+	}
+	value = CLAMP(value, int64_t(-INT32_MAX), int64_t(INT32_MAX));
+	return int(operation == OPERATION_INCREASE ? value : -value);
+}
+
+String JRPGActorAmountCommand::_amount_text() const {
+	return _target_text() + (operation == OPERATION_INCREASE ? " + " : " - ") + (amount_is_variable ? vformat("variable %d", amount_variable_id) : itos(amount));
+}
+
+void JRPGActorAmountCommand::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_operation", "operation"), &JRPGActorAmountCommand::set_operation);
+	ClassDB::bind_method(D_METHOD("get_operation"), &JRPGActorAmountCommand::get_operation);
+	ClassDB::bind_method(D_METHOD("set_amount", "amount"), &JRPGActorAmountCommand::set_amount);
+	ClassDB::bind_method(D_METHOD("get_amount"), &JRPGActorAmountCommand::get_amount);
+	ClassDB::bind_method(D_METHOD("set_amount_is_variable", "variable"), &JRPGActorAmountCommand::set_amount_is_variable);
+	ClassDB::bind_method(D_METHOD("is_amount_variable"), &JRPGActorAmountCommand::is_amount_variable);
+	ClassDB::bind_method(D_METHOD("set_amount_variable_id", "id"), &JRPGActorAmountCommand::set_amount_variable_id);
+	ClassDB::bind_method(D_METHOD("get_amount_variable_id"), &JRPGActorAmountCommand::get_amount_variable_id);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "operation", PROPERTY_HINT_ENUM, "Increase,Decrease"), "set_operation", "get_operation");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "amount"), "set_amount", "get_amount");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "amount_is_variable"), "set_amount_is_variable", "is_amount_variable");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "amount_variable_id", PROPERTY_HINT_RANGE, "1,100000,1"), "set_amount_variable_id", "get_amount_variable_id");
+	BIND_ENUM_CONSTANT(OPERATION_INCREASE);
+	BIND_ENUM_CONSTANT(OPERATION_DECREASE);
+}
+
+String JRPGChangeHPCommand::get_summary() const {
+	return "Change HP: " + _amount_text() + (allow_death && get_operation() == OPERATION_DECREASE ? " (allow death)" : "");
+}
+
+JRPGEventCommand::ExecuteResult JRPGChangeHPCommand::execute(Object *p_context) {
+	JRPGInterpreter *interpreter = Object::cast_to<JRPGInterpreter>(p_context);
+	ERR_FAIL_NULL_V(interpreter, EXECUTE_CONTINUE);
+	ERR_FAIL_COND_V(interpreter->get_game_state().is_null(), EXECUTE_CONTINUE);
+	const int change = _change(interpreter);
+	for (const Ref<JRPGActorState> &actor : _targets(interpreter)) {
+		if (actor->is_dead()) {
+			continue; // Change State or Recover All revive.
+		}
+		const int64_t hp = int64_t(actor->get_hp()) + change;
+		actor->set_hp(int(CLAMP(hp, allow_death ? int64_t(0) : int64_t(1), int64_t(INT32_MAX)))); // 0 knocks out.
+	}
+	return EXECUTE_CONTINUE;
+}
+
+void JRPGChangeHPCommand::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_allow_death", "allow"), &JRPGChangeHPCommand::set_allow_death);
+	ClassDB::bind_method(D_METHOD("is_death_allowed"), &JRPGChangeHPCommand::is_death_allowed);
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "allow_death"), "set_allow_death", "is_death_allowed");
+}
+
+String JRPGChangeMPCommand::get_summary() const {
+	return "Change MP: " + _amount_text();
+}
+
+JRPGEventCommand::ExecuteResult JRPGChangeMPCommand::execute(Object *p_context) {
+	JRPGInterpreter *interpreter = Object::cast_to<JRPGInterpreter>(p_context);
+	ERR_FAIL_NULL_V(interpreter, EXECUTE_CONTINUE);
+	ERR_FAIL_COND_V(interpreter->get_game_state().is_null(), EXECUTE_CONTINUE);
+	const int change = _change(interpreter);
+	for (const Ref<JRPGActorState> &actor : _targets(interpreter)) {
+		actor->gain_mp(change);
+	}
+	return EXECUTE_CONTINUE;
+}
+
+String JRPGChangeTPCommand::get_summary() const {
+	return "Change TP: " + _amount_text();
+}
+
+JRPGEventCommand::ExecuteResult JRPGChangeTPCommand::execute(Object *p_context) {
+	JRPGInterpreter *interpreter = Object::cast_to<JRPGInterpreter>(p_context);
+	ERR_FAIL_NULL_V(interpreter, EXECUTE_CONTINUE);
+	ERR_FAIL_COND_V(interpreter->get_game_state().is_null(), EXECUTE_CONTINUE);
+	const int change = _change(interpreter);
+	for (const Ref<JRPGActorState> &actor : _targets(interpreter)) {
+		actor->gain_tp(change);
+	}
+	return EXECUTE_CONTINUE;
+}
+
+String JRPGChangeStateCommand::get_summary() const {
+	return vformat("Change State: %s %s state %d", _target_text(), remove ? "-" : "+", state_id);
+}
+
+Dictionary JRPGChangeStateCommand::get_id_parameters() const {
+	Dictionary ids = JRPGActorCommand::get_id_parameters();
+	ids["state_id"] = JRPGDatabase::get_table_name(JRPGDatabase::TABLE_STATES);
+	return ids;
+}
+
+JRPGEventCommand::ExecuteResult JRPGChangeStateCommand::execute(Object *p_context) {
+	JRPGInterpreter *interpreter = Object::cast_to<JRPGInterpreter>(p_context);
+	ERR_FAIL_NULL_V(interpreter, EXECUTE_CONTINUE);
+	const Ref<JRPGGameState> state = interpreter->get_game_state();
+	ERR_FAIL_COND_V(state.is_null(), EXECUTE_CONTINUE);
+	for (const Ref<JRPGActorState> &actor : _targets(interpreter)) {
+		if (remove) {
+			actor->remove_state(state_id);
+		} else {
+			actor->add_state(state_id, state->get_random()->get_stream(JRPGRandomStreams::STREAM_MISC)); // Refused: resisted, unknown.
+		}
+	}
+	return EXECUTE_CONTINUE;
+}
+
+void JRPGChangeStateCommand::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_remove", "remove"), &JRPGChangeStateCommand::set_remove);
+	ClassDB::bind_method(D_METHOD("is_remove"), &JRPGChangeStateCommand::is_remove);
+	ClassDB::bind_method(D_METHOD("set_state_id", "id"), &JRPGChangeStateCommand::set_state_id);
+	ClassDB::bind_method(D_METHOD("get_state_id"), &JRPGChangeStateCommand::get_state_id);
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "remove"), "set_remove", "is_remove");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "state_id", PROPERTY_HINT_RANGE, "1,100000,1"), "set_state_id", "get_state_id");
+}
+
+JRPGEventCommand::ExecuteResult JRPGRecoverAllCommand::execute(Object *p_context) {
+	JRPGInterpreter *interpreter = Object::cast_to<JRPGInterpreter>(p_context);
+	ERR_FAIL_NULL_V(interpreter, EXECUTE_CONTINUE);
+	ERR_FAIL_COND_V(interpreter->get_game_state().is_null(), EXECUTE_CONTINUE);
+	for (const Ref<JRPGActorState> &actor : _targets(interpreter)) {
+		actor->recover_all();
+	}
+	return EXECUTE_CONTINUE;
 }
