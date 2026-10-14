@@ -35,6 +35,7 @@
 
 class Button;
 class ButtonGroup;
+class JRPGDatabaseView;
 class Label;
 class PanelContainer;
 class TabBar;
@@ -43,8 +44,7 @@ class Tree;
 // The JRPG workspace once a project is set up (task 6.3): section tabs (Map, Database) with the playtest actions on
 // the same row, then the section. Map: a Maps list and a tile palette on the left (Script editor layout:
 // HSplitContainer with a side list), a mode toolbar (2D editor pattern: flat buttons, a ButtonGroup for exclusive
-// modes, separators between groups) above the canvas area. Database: the project's tables with their entry counts,
-// opened in the Inspector until the database editor exists (task 6.4). Editor theme only.
+// modes, separators between groups) above the canvas area. Database: JRPGDatabaseView (task 6.4). Editor theme only.
 class JRPGWorkspaceShell : public VBoxContainer {
 	GDCLASS(JRPGWorkspaceShell, VBoxContainer);
 
@@ -90,15 +90,9 @@ private:
 	Label *canvas_body = nullptr;
 	Label *canvas_mark = nullptr;
 
-	Label *database_heading = nullptr;
-	Tree *table_tree = nullptr;
-	Button *open_button = nullptr;
-	Label *database_note = nullptr;
+	JRPGDatabaseView *database_view = nullptr;
 
 	void _on_tab_changed(int p_tab);
-	void _on_table_selected();
-	void _open_selected_table();
-	void _refresh_database();
 	void _update_theme();
 	Label *_make_note(const String &p_text);
 
@@ -113,8 +107,9 @@ public:
 	void select_section(Section p_section);
 	Section get_section() const;
 	MapMode get_map_mode() const;
-	// The rows of the Database section: [{name, entries, path}], entries -1 for System, Types and Terms.
+	// The rows of the Database section: [{name, entries, path, unsaved}], entries -1 for System, Types and Terms.
 	Array get_database_rows() const;
+	JRPGDatabaseView *get_database_view() const { return database_view; }
 	void refresh();
 
 	JRPGWorkspaceShell();

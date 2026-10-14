@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 21:04 -0600
+- **Updated:** 2026-10-13 21:31 -0600
 - **Current task:** none
-- **Last completed:** 6.3 Workspace shell
-- **Next task:** 6.4.1 Database window, tabs and entry list
-- **Done leaf tasks:** 67
+- **Last completed:** 6.4.1 Database window, tabs and entry list
+- **Next task:** 6.4.2 Entry form, undo, save, ID pickers
+- **Done leaf tasks:** 68
 <!-- status:end -->
 
 ## Log
@@ -179,4 +179,7 @@
 | 2026-10-13 21:03 -0600 | - | imported 0 new / 1 updated tasks | |
 | 2026-10-13 21:03 -0600 | 1.9 | done: Fork CI: templates compile the tests; clangd-tidy clean — CI run 38503265605 (commit 9ccf49e3bb) green on every job: templates compile the tests, clangd-tidy step clean (containers: 1 in_progress->done) | ee2c26277a |
 | 2026-10-13 21:04 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-13 21:04 -0600 | 6.3 | done: Workspace shell — JRPGWorkspaceShell (frontend-design; Godot patterns: main screen control, Script-editor HSplit side list, 2D-editor flat toolbar with ButtonGroup modes, TabBar sections): Map section (Maps tree + Palette with empty states, Tiles/Events/Regions modes, disabled Pencil/Rectangle/Fill/Eraser, canvas with message-window empty state sized to the canvas), Database section (tables with entry counts and files, Open in Inspector), Play From Start/Battle Test disabled with unlock tooltips; view shows intro until set up, shell after; bridge tools jrpg_workspace_state/jrpg_workspace_select; verified live: both sections shown, get_logs errors_only empty (0 errors/warnings); screenshots plan/evidence/jrpg/6.3-*; full suite passes (containers: 6 in_progress->pending) | pending |
+| 2026-10-13 21:04 -0600 | 6.3 | done: Workspace shell — JRPGWorkspaceShell (frontend-design; Godot patterns: main screen control, Script-editor HSplit side list, 2D-editor flat toolbar with ButtonGroup modes, TabBar sections): Map section (Maps tree + Palette with empty states, Tiles/Events/Regions modes, disabled Pencil/Rectangle/Fill/Eraser, canvas with message-window empty state sized to the canvas), Database section (tables with entry counts and files, Open in Inspector), Play From Start/Battle Test disabled with unlock tooltips; view shows intro until set up, shell after; bridge tools jrpg_workspace_state/jrpg_workspace_select; verified live: both sections shown, get_logs errors_only empty (0 errors/warnings); screenshots plan/evidence/jrpg/6.3-*; full suite passes (containers: 6 in_progress->pending) | ac59a59975 |
+| 2026-10-13 21:05 -0600 | 6.4.1 | started: Database window, tabs and entry list (containers: 6.4 pending->in_progress, 6 pending->in_progress) |  |
+| 2026-10-13 21:31 -0600 | - | imported 0 new / 2 updated tasks | |
+| 2026-10-13 21:31 -0600 | 6.4.1 | done: Database window, tabs and entry list — Database view: JRPGDatabaseView in the workspace (frontend-design; Godot patterns: section ItemList like Project Settings, ItemList entries drawing only visible rows, ConfirmationDialog+SpinBox, flat icon buttons, (*) unsaved marker) with tables + System/Types/Terms, ID-slot list '0001  Name', Change Maximum (warns with the exact references it cuts), Clear (confirm listing uses), Copy/Paste (same table), Save; JRPGDatabaseEditing authoring API (undo in GLOBAL_HISTORY, per-file unsaved tracking, save with FLAG_REPLACE_SUBRESOURCE_PATHS, reload-aware) saved by the editor's own saves and quit prompt via JRPGBootstrapPlugin; JRPGEntry.assign_from; bridge tools jrpg_db_list/set_maximum/clear/copy/paste/save/select (refuse breaking references unless allowed; show_dialog opens the editor dialog); verified live: dialogs, undo/redo, save diff, errors 0; 2 doctests (131 assertions); full suite 1481/1481 (containers: 6.4 in_progress->pending, 6 in_progress->pending) | pending |

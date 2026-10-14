@@ -1,0 +1,94 @@
+# 6.4.1 bridge verification (scratch project after jrpg_setup_project; skills grown to 10, items to 12 earlier)
+## jrpg_db_list table=skills from=7 count=4
+{
+  "table": "skills",
+  "maximum": 10,
+  "unsaved": false,
+  "entries": [
+    {
+      "id": 7,
+      "name": ""
+    },
+    {
+      "id": 8,
+      "name": "Guard"
+    },
+    {
+      "id": 9,
+      "name": ""
+    },
+    {
+      "id": 10,
+      "name": ""
+    }
+  ]
+}
+## jrpg_db_clear table=states id=2
+Entry 2 is still used; nothing was changed. Pass allow_broken_references=true to clear it anyway. Uses:
+Skill 2, effects[0].data_id: state 2
+Skill 8, effects[0].data_id: state 2
+## jrpg_db_set_maximum table=states maximum=1
+Entries past 1 are still used; nothing was changed. Pass allow_broken_references=true to remove them anyway. Uses:
+Skill 2, effects[0].data_id: state 2
+Skill 8, effects[0].data_id: state 2
+## jrpg_db_copy table=skills id=1
+{
+  "table": "skills",
+  "id": 1,
+  "name": "Attack"
+}
+## jrpg_db_paste table=items id=1
+Nothing to paste into items: copy an entry of the same table first (jrpg_db_copy).
+## jrpg_db_paste table=skills id=9
+{
+  "table": "skills",
+  "id": 9,
+  "name": "Attack"
+}
+## jrpg_db_list table=skills from=9 count=1
+{
+  "table": "skills",
+  "maximum": 10,
+  "unsaved": true,
+  "entries": [
+    {
+      "id": 9,
+      "name": "Attack"
+    }
+  ]
+}
+## editor_undo_redo action=undo
+{
+  "action": "undo",
+  "performed": true
+}
+## jrpg_db_list table=skills from=9 count=1
+{
+  "table": "skills",
+  "maximum": 10,
+  "unsaved": true,
+  "entries": [
+    {
+      "id": 9,
+      "name": ""
+    }
+  ]
+}
+## jrpg_db_save
+{
+  "saved": [
+    "res://jrpg/db/skills.tres"
+  ]
+}
+## get_logs errors_only=true
+{
+  "entries": [],
+  "last_seq": 0,
+  "counts": {
+    "entries": 0,
+    "errors": 0,
+    "warnings": 0,
+    "dropped": 0,
+    "last_seq": 0
+  }
+}

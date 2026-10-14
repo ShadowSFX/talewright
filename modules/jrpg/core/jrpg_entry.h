@@ -69,4 +69,7 @@ public:
 	// Resets every stored property to its class default in place (keeps this object, its ID and its scene-unique
 	// id), which is what "deleting" an entry means in an ID = slot table.
 	void reset_to_defaults();
+	// Copies every stored property of p_source (same class) into this entry in place, keeping this entry's ID and
+	// scene-unique id; arrays and dictionaries are copied, not shared. Used by paste and by undo.
+	void assign_from(const Ref<JRPGEntry> &p_source);
 };

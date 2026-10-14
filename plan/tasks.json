@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "6.3 Workspace shell",
+  "last_completed": "6.4.1 Database window, tabs and entry list",
   "tasks": [
     {
       "id": "0",
@@ -1834,7 +1834,7 @@
         "plan/evidence/jrpg/6.3-workspace-map.png",
         "plan/evidence/jrpg/6.3-workspace-database.png"
       ],
-      "commit": "pending",
+      "commit": "ac59a59975",
       "notes": ""
     },
     {
@@ -1866,10 +1866,31 @@
         "List operations via UI and bridge"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
-      "files": [],
-      "commit": "",
-      "notes": "",
-      "status": "pending"
+      "files": [
+        "modules/jrpg/core/jrpg_entry.h",
+        "modules/jrpg/core/jrpg_entry.cpp",
+        "modules/jrpg/doc_classes/JRPGEntry.xml",
+        "modules/jrpg/editor/jrpg_database_editing.h",
+        "modules/jrpg/editor/jrpg_database_editing.cpp",
+        "modules/jrpg/editor/jrpg_database_view.h",
+        "modules/jrpg/editor/jrpg_database_view.cpp",
+        "modules/jrpg/editor/jrpg_bootstrap_plugin.h",
+        "modules/jrpg/editor/jrpg_bootstrap_plugin.cpp",
+        "modules/jrpg/editor/jrpg_workspace_shell.h",
+        "modules/jrpg/editor/jrpg_workspace_shell.cpp",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/tests/test_jrpg_database_editing.h",
+        "plan/specs/02_database_model.md",
+        "talewright/docs/claude_bridge.md",
+        "plan/evidence/jrpg/6.4.1-bridge-db.txt",
+        "plan/evidence/jrpg/6.4.1-database-view.png",
+        "plan/evidence/jrpg/6.4.1-change-maximum-dialog.png",
+        "plan/evidence/jrpg/6.4.1-clear-dialog.png"
+      ],
+      "commit": "pending",
+      "notes": "Godot patterns followed: main-screen section (Project Settings section list as ItemList), ItemList entry list (draws only visible rows, scene/gui/item_list.cpp:1496-1530), ConfirmationDialog + SpinBox, flat toolbar buttons with editor icons, '(*)' unsaved marker like scene tabs. Self-review fixes before done: dialogs act on the entry they were opened for (a bridge select could change the selection under an open dialog); database undo actions pinned to GLOBAL_HISTORY (path-less new entries were routed to the open scene: editor/editor_undo_redo_manager.cpp:82-86); saves use FLAG_REPLACE_SUBRESOURCE_PATHS so new entries get file::Kind_id paths; entries are re-watched only on the table's own changed signal (not per keystroke).",
+      "status": "done"
     },
     {
       "id": "6.4.2",
@@ -1886,7 +1907,7 @@
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
       "commit": "",
-      "notes": "",
+      "notes": "From 6.4.1: build the form on JRPGDatabaseEditing (database_changed signal, unsaved tracking, save via JRPGBootstrapPlugin::save_external_data). Inspector edits of an entry with no path (added by Change Maximum, not saved yet) route to the open scene's undo history (editor/editor_undo_redo_manager.cpp:82-86): the embedded form must create its actions for GLOBAL_HISTORY. Unsaved marks follow 'changed' signals, so undoing back to the saved state still shows '(*)' (accepted; revisit if confusing). JRPGDatabaseView::form is the VBoxContainer that hosts the form (currently a hint + Open in Inspector).",
       "status": "pending"
     },
     {

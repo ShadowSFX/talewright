@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 130, in_progress: 0, done: 80, blocked: 0, deferred: 3 (of 213)
+**Totals:** pending: 129, in_progress: 0, done: 81, blocked: 0, deferred: 3 (of 213)
 
 ## [x] 0 Bootstrap and task system
 
@@ -113,9 +113,9 @@ Setup tool, managed addon, main-screen workspace, database editor, authoring API
 
 - [x] **6.1** Managed addon embedding (P1) _(commit: 554066373a)_
 - [x] **6.2** Set up JRPG Project tool (P1) _(deps: 6.1; commit: 895eec6a88)_
-- [x] **6.3** Workspace shell (P1) _(deps: 6.2; commit: pending)_
+- [x] **6.3** Workspace shell (P1) _(deps: 6.2; commit: ac59a59975)_
 - [ ] **6.4** Database editor framework (P1) _(deps: 6.3)_
-  - [ ] **6.4.1** Database window, tabs and entry list (P1)
+  - [x] **6.4.1** Database window, tabs and entry list (P1) _(commit: pending)_
   - [ ] **6.4.2** Entry form, undo, save, ID pickers (P1) _(deps: 6.4.1)_
 - [ ] **6.5** Database tab forms (slice) (P1) _(deps: 6.4)_
   - [ ] **6.5.1** Trait and effect editors (P1)

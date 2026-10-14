@@ -33,6 +33,8 @@
 
 #ifdef MODULE_CLAUDE_BRIDGE_ENABLED
 
+#include "jrpg_database_editing.h"
+#include "jrpg_database_view.h"
 #include "jrpg_managed_addon.h"
 #include "jrpg_project_setup.h"
 #include "jrpg_setup_dialog.h"
@@ -42,6 +44,8 @@
 
 #include "modules/claude_bridge/claude_bridge_registry.h"
 #include "modules/claude_bridge/claude_bridge_tools.h"
+#include "modules/jrpg/core/jrpg_reference_scanner.h"
+#include "modules/jrpg/core/jrpg_table.h"
 
 namespace {
 
@@ -122,6 +126,255 @@ void tool_workspace_select(const Dictionary &p_args, const Ref<ClaudeBridgeToolC
 	p_call->complete_data(workspace_state());
 }
 
+// Database tools (task 6.4.1): the same operations as the Database section, through JRPGDatabaseEditing (undoable in
+// the editor's history, saved with the editor's own saves or jrpg_db_save).
+
+JRPGDatabaseEditing *database_editing(const Ref<ClaudeBridgeToolCall> &p_call) {
+	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
+	if (!editing || editing->get_database().is_null()) {
+		p_call->fail("The project has no JRPG database: run jrpg_setup_project first.");
+		return nullptr;
+	}
+	return editing;
+}
+
+// The table named by "table", or null after failing the call.
+Ref<JRPGTable> database_table(JRPGDatabaseEditing *p_editing, const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call) {
+	const String name = p_args.get("table", "");
+	const Ref<JRPGTable> table = p_editing->get_table(name);
+	if (table.is_null()) {
+		p_call->fail(vformat("\"table\" must be one of: %s.", String(", ").join(JRPGDatabaseEditing::get_table_names())));
+	}
+	return table;
+}
+
+// The entry ID named by "id" (1 .. maximum), or 0 after failing the call.
+int database_id(const Ref<JRPGTable> &p_table, const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call) {
+	const int id = p_args.get("id", 0);
+	if (!p_table->has_entry(id)) {
+		p_call->fail(vformat("\"id\" must be between 1 and %d.", p_table->get_maximum()));
+		return 0;
+	}
+	return id;
+}
+
+// show_dialog: the Database section on p_table (and entry p_id), ready for its dialogs; null after failing the call.
+JRPGDatabaseView *database_view_on(const String &p_table, int p_id, const Ref<ClaudeBridgeToolCall> &p_call) {
+	JRPGWorkspaceShell *shell = JRPGWorkspaceShell::get_singleton();
+	if (!shell) {
+		p_call->fail("The JRPG workspace is not open: turn on the project setting jrpg/enabled.");
+		return nullptr;
+	}
+	EditorInterface::get_singleton()->set_main_screen_editor("JRPG");
+	shell->select_section(JRPGWorkspaceShell::SECTION_DATABASE);
+	JRPGDatabaseView *view = shell->get_database_view();
+	view->hide_dialogs();
+	view->refresh();
+	if (!view->select_table(p_table) || (p_id > 0 && !view->select_entry(p_id))) {
+		p_call->fail("The Database section could not show that entry.");
+		return nullptr;
+	}
+	return view;
+}
+
+PackedStringArray describe_uses(const Array &p_uses) {
+	PackedStringArray out;
+	for (const Variant &use : p_uses) {
+		out.push_back(JRPGReferenceScanner::describe(use));
+	}
+	return out;
+}
+
+Dictionary database_summary(JRPGDatabaseEditing *p_editing) {
+	Dictionary summary;
+	Array tables;
+	for (const String &name : JRPGDatabaseEditing::get_table_names()) {
+		const Ref<JRPGTable> table = p_editing->get_table(name);
+		Dictionary row;
+		row["table"] = name;
+		row["maximum"] = table.is_valid() ? table->get_maximum() : 0;
+		row["path"] = table.is_valid() ? table->get_path() : String();
+		row["unsaved"] = table.is_valid() && p_editing->is_unsaved(table);
+		tables.push_back(row);
+	}
+	summary["tables"] = tables;
+	summary["unsaved_paths"] = p_editing->get_unsaved_paths();
+	return summary;
+}
+
+void tool_db_list(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	if (!editing) {
+		return;
+	}
+	if (!p_args.has("table")) {
+		p_call->complete_data(database_summary(editing));
+		return;
+	}
+	const Ref<JRPGTable> table = database_table(editing, p_args, p_call);
+	if (table.is_null()) {
+		return;
+	}
+	Dictionary result;
+	result["table"] = p_args["table"];
+	result["maximum"] = table->get_maximum();
+	result["unsaved"] = editing->is_unsaved(table);
+	result["entries"] = editing->list_entries(p_args["table"], p_args.get("from", 1), CLAMP(int(p_args.get("count", 100)), 1, 1000));
+	p_call->complete_data(result);
+}
+
+void tool_db_set_maximum(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	const Ref<JRPGTable> table = editing ? database_table(editing, p_args, p_call) : Ref<JRPGTable>();
+	if (table.is_null()) {
+		return;
+	}
+	const String name = p_args["table"];
+	const int maximum = p_args.get("maximum", -1);
+	if (maximum < 0 || maximum > JRPGTable::MAX_ENTRIES) {
+		p_call->fail(vformat("\"maximum\" must be between 0 and %d.", JRPGTable::MAX_ENTRIES));
+		return;
+	}
+	// Same rule as the Change Maximum dialog: cutting referenced entries needs an explicit confirmation.
+	const PackedStringArray broken = describe_uses(editing->get_uses_beyond(name, maximum));
+	if (bool(p_args.get("show_dialog", false))) {
+		JRPGDatabaseView *view = database_view_on(name, 0, p_call);
+		if (view) {
+			view->popup_change_maximum(maximum);
+			Dictionary result;
+			result["dialog"] = "Change Maximum";
+			result["references_that_would_break"] = broken;
+			p_call->complete_data(result); // The user confirms or cancels in the editor.
+		}
+		return;
+	}
+	if (!broken.is_empty() && !bool(p_args.get("allow_broken_references", false))) {
+		p_call->fail(vformat("Entries past %d are still used; nothing was changed. Pass allow_broken_references=true to remove them anyway. Uses:\n%s", maximum, String("\n").join(broken)));
+		return;
+	}
+	const int before = table->get_maximum();
+	if (editing->set_maximum(name, maximum) != OK) {
+		p_call->fail("The maximum could not be changed; see the editor log.");
+		return;
+	}
+	Dictionary result;
+	result["table"] = name;
+	result["previous_maximum"] = before;
+	result["maximum"] = table->get_maximum();
+	result["broken_references"] = broken;
+	p_call->complete_data(result);
+}
+
+void tool_db_clear(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	const Ref<JRPGTable> table = editing ? database_table(editing, p_args, p_call) : Ref<JRPGTable>();
+	const int id = table.is_valid() ? database_id(table, p_args, p_call) : 0;
+	if (id == 0) {
+		return;
+	}
+	const String name = p_args["table"];
+	const PackedStringArray uses = describe_uses(editing->get_uses_of(name, id));
+	if (bool(p_args.get("show_dialog", false))) {
+		JRPGDatabaseView *view = database_view_on(name, id, p_call);
+		if (view) {
+			view->press_clear(); // Clears at once when nothing uses the entry, like the button.
+			Dictionary result;
+			result["dialog"] = uses.is_empty() ? String() : String("Clear Entry");
+			result["cleared"] = uses.is_empty();
+			result["references_that_would_break"] = uses;
+			p_call->complete_data(result);
+		}
+		return;
+	}
+	if (!uses.is_empty() && !bool(p_args.get("allow_broken_references", false))) {
+		p_call->fail(vformat("Entry %d is still used; nothing was changed. Pass allow_broken_references=true to clear it anyway. Uses:\n%s", id, String("\n").join(uses)));
+		return;
+	}
+	if (editing->clear_entry(name, id) != OK) {
+		p_call->fail("The entry could not be cleared; see the editor log.");
+		return;
+	}
+	Dictionary result;
+	result["table"] = name;
+	result["id"] = id;
+	result["references_to_empty_entry"] = uses;
+	p_call->complete_data(result);
+}
+
+void tool_db_copy_paste(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	const bool paste = p_userdata != nullptr;
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	const Ref<JRPGTable> table = editing ? database_table(editing, p_args, p_call) : Ref<JRPGTable>();
+	const int id = table.is_valid() ? database_id(table, p_args, p_call) : 0;
+	if (id == 0) {
+		return;
+	}
+	const String name = p_args["table"];
+	if (paste && !editing->can_paste(name)) {
+		p_call->fail(vformat("Nothing to paste into %s: copy an entry of the same table first (jrpg_db_copy).", name));
+		return;
+	}
+	if ((paste ? editing->paste_entry(name, id) : editing->copy_entry(name, id)) != OK) {
+		p_call->fail("The entry could not be copied or pasted; see the editor log.");
+		return;
+	}
+	Dictionary result;
+	result["table"] = name;
+	result["id"] = id;
+	result["name"] = table->get_entry(id)->get_entry_name();
+	p_call->complete_data(result);
+}
+
+void tool_db_save(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	if (!editing) {
+		return;
+	}
+	const PackedStringArray pending = editing->get_unsaved_paths();
+	const Error err = editing->save_all();
+	const PackedStringArray failed = editing->get_unsaved_paths();
+	if (err != OK) {
+		p_call->fail(vformat("Some database files could not be saved: %s.", String(", ").join(failed)));
+		return;
+	}
+	Dictionary result;
+	result["saved"] = pending;
+	p_call->complete_data(result);
+}
+
+void tool_db_select(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGWorkspaceShell *shell = JRPGWorkspaceShell::get_singleton();
+	if (!shell) {
+		p_call->fail("The JRPG workspace is not open: turn on the project setting jrpg/enabled (or run jrpg_setup_project).");
+		return;
+	}
+	EditorInterface::get_singleton()->set_main_screen_editor("JRPG");
+	shell->select_section(JRPGWorkspaceShell::SECTION_DATABASE);
+	JRPGDatabaseView *view = shell->get_database_view();
+	view->hide_dialogs(); // A dialog opened for another entry would hide the new selection.
+	view->refresh();
+	const String name = p_args.get("table", "actors");
+	if (!view->select_table(name)) {
+		p_call->fail(vformat("\"table\" must be one of: %s, system, types, terms.", String(", ").join(JRPGDatabaseEditing::get_table_names())));
+		return;
+	}
+	if (p_args.has("id") && !view->select_entry(p_args["id"])) {
+		p_call->fail(vformat("%s has no entry %d.", name, int(p_args["id"])));
+		return;
+	}
+	Dictionary result;
+	result["table"] = view->get_selected_table();
+	result["id"] = view->get_selected_entry();
+	p_call->complete_data(result);
+}
+
+Dictionary schema_property(const String &p_type, const String &p_description) {
+	Dictionary property;
+	property["type"] = p_type;
+	property["description"] = p_description;
+	return property;
+}
+
 Dictionary directory_schema() {
 	Dictionary directory;
 	directory["type"] = "string";
@@ -187,6 +440,98 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	select.destructive = false; // Only changes what the editor shows.
 	select.func = &tool_workspace_select;
 	r_mcp.register_tool(select);
+
+	const Dictionary table_property = schema_property("string", "Table name: actors, classes, skills, items, weapons, armors, enemies, troops, states, animations, tilesets or common_events.");
+	const Dictionary id_property = schema_property("integer", "Entry ID (1 = first entry).");
+	const Dictionary allow_property = schema_property("boolean", "Apply even when other data still points at the affected entries (default false: the call fails and lists them).");
+	const Dictionary dialog_property = schema_property("boolean", "Instead of applying, open the same confirmation dialog as the Database section's button, for the user to confirm in the editor (default false).");
+
+	ClaudeBridgeMCP::Tool list;
+	list.name = "jrpg_db_list";
+	list.title = "List JRPG database entries";
+	list.description = "Without \"table\": every table with its maximum, file and unsaved flag. With \"table\": its entries as {id, name} (IDs are slots; an empty name is an empty entry).";
+	Dictionary list_properties;
+	list_properties["table"] = table_property;
+	list_properties["from"] = schema_property("integer", "First ID (default 1).");
+	list_properties["count"] = schema_property("integer", "Number of entries (default 100, at most 1000).");
+	list.input_schema = ClaudeBridgeMCP::object_schema(list_properties);
+	list.func = &tool_db_list;
+	r_mcp.register_tool(list);
+
+	ClaudeBridgeMCP::Tool maximum;
+	maximum.name = "jrpg_db_set_maximum";
+	maximum.title = "Change a JRPG table's maximum";
+	maximum.description = "Sets how many entries a table has: growing adds empty entries at the end, shrinking removes the last ones (IDs never move). Undoable with the editor's Undo. Fails, listing the references, when removed entries are still used, unless allow_broken_references is true.";
+	Dictionary maximum_properties;
+	maximum_properties["table"] = table_property;
+	maximum_properties["maximum"] = schema_property("integer", vformat("New number of entries (0-%d).", JRPGTable::MAX_ENTRIES));
+	maximum_properties["allow_broken_references"] = allow_property;
+	maximum_properties["show_dialog"] = dialog_property;
+	maximum.input_schema = ClaudeBridgeMCP::object_schema(maximum_properties, PackedStringArray({ "table", "maximum" }));
+	maximum.read_only = false;
+	maximum.destructive = false; // Undoable; removing used entries needs allow_broken_references.
+	maximum.func = &tool_db_set_maximum;
+	r_mcp.register_tool(maximum);
+
+	Dictionary entry_properties;
+	entry_properties["table"] = table_property;
+	entry_properties["id"] = id_property;
+	const PackedStringArray entry_required({ "table", "id" });
+
+	ClaudeBridgeMCP::Tool clear;
+	clear.name = "jrpg_db_clear";
+	clear.title = "Clear a JRPG database entry";
+	clear.description = "Resets an entry to empty values; its ID stays. Undoable with the editor's Undo. Fails, listing the references, when other data still points at the entry, unless allow_broken_references is true.";
+	Dictionary clear_properties = entry_properties.duplicate();
+	clear_properties["allow_broken_references"] = allow_property;
+	clear_properties["show_dialog"] = dialog_property;
+	clear.input_schema = ClaudeBridgeMCP::object_schema(clear_properties, entry_required);
+	clear.read_only = false;
+	clear.destructive = false; // Undoable.
+	clear.func = &tool_db_clear;
+	r_mcp.register_tool(clear);
+
+	ClaudeBridgeMCP::Tool copy;
+	copy.name = "jrpg_db_copy";
+	copy.title = "Copy a JRPG database entry";
+	copy.description = "Copies an entry to the database clipboard (shared with the Database section's Copy button).";
+	copy.input_schema = ClaudeBridgeMCP::object_schema(entry_properties, entry_required);
+	copy.func = &tool_db_copy_paste;
+	r_mcp.register_tool(copy);
+
+	ClaudeBridgeMCP::Tool paste;
+	paste.name = "jrpg_db_paste";
+	paste.title = "Paste a JRPG database entry";
+	paste.description = "Replaces an entry with the copied one (same table only); the target keeps its ID. Undoable with the editor's Undo.";
+	paste.input_schema = ClaudeBridgeMCP::object_schema(entry_properties, entry_required);
+	paste.read_only = false;
+	paste.destructive = false; // Undoable.
+	paste.func = &tool_db_copy_paste;
+	paste.userdata = reinterpret_cast<void *>(1); // Non-null: paste.
+	r_mcp.register_tool(paste);
+
+	ClaudeBridgeMCP::Tool save;
+	save.name = "jrpg_db_save";
+	save.title = "Save the JRPG database";
+	save.description = "Saves every database file with unsaved changes (the editor also saves them with the scene and before running the project, and asks before quitting). Returns the saved paths.";
+	save.input_schema = ClaudeBridgeMCP::object_schema(Dictionary());
+	save.read_only = false;
+	save.destructive = false; // Writes only the files the editor already shows as changed.
+	save.func = &tool_db_save;
+	r_mcp.register_tool(save);
+
+	ClaudeBridgeMCP::Tool show;
+	show.name = "jrpg_db_select";
+	show.title = "Show a JRPG database entry";
+	show.description = "Opens the JRPG workspace's Database section on a table (or system, types, terms) and selects an entry. Returns the selection.";
+	Dictionary show_properties;
+	show_properties["table"] = schema_property("string", "Table name, or system, types or terms (default actors).");
+	show_properties["id"] = id_property;
+	show.input_schema = ClaudeBridgeMCP::object_schema(show_properties);
+	show.read_only = false;
+	show.destructive = false; // Only changes what the editor shows.
+	show.func = &tool_db_select;
+	r_mcp.register_tool(show);
 }
 
 } // namespace

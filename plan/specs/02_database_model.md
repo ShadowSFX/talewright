@@ -90,10 +90,22 @@ Full field lists per table follow the inventory slices (03/04/05). The vertical 
 ## Editing rules
 - The database editor edits one entry at a time through `EditorInspector` (never the whole table, to avoid huge
   inspectors); custom `EditorProperty`s for traits/effects/curves/ID pickers.
-- Undo: database edits use the global undo history (D-005, editor/editor_undo_redo_manager.cpp:81-101); the table
-  resource is marked edited and saved with "Save All".
-- External changes (files edited on disk while the editor runs) are reloaded through Godot's resource reload; the
-  database UI refreshes on the resource `changed` signal.
+- List operations (task 6.4.1, `JRPGDatabaseEditing`, shared by the workspace's Database section and the `jrpg_db_*`
+  bridge tools): Change Maximum, Clear, Copy, Paste. The clipboard holds a deep copy taken at copy time; paste only
+  into the same table; each paste gets its own arrays and dictionaries (`JRPGEntry.assign_from`). Change Maximum and
+  Clear list the references they would break (`JRPGReferenceScanner`) before confirming; the bridge refuses them
+  unless `allow_broken_references` is set.
+- Undo: database edits use the global undo history (D-005). Each action is created for `GLOBAL_HISTORY` with
+  `force_fixed_history()`: entries added by Change Maximum have no path until saved, and Godot routes path-less
+  resources to the open scene's history (editor/editor_undo_redo_manager.cpp:82-86).
+- Saving: changes are tracked per file (table, System, Types, Terms) through the resources' `changed` signals and
+  shown as "(*)" on the table. `JRPGBootstrapPlugin::save_external_data()` saves them with the editor's own saves
+  (scene save, Ctrl+S without a scene, before running: editor/editor_node.cpp:2525,3495,2603); quitting or reloading
+  asks first through `get_unsaved_status()` (editor/editor_node.cpp:3794). The Save button and `jrpg_db_save` save
+  them too. Only changed files are written.
+- External changes (files edited on disk while the editor runs) are reloaded through Godot's resource reload
+  (editor/editor_node.cpp:1291-1323); reloaded files lose their unsaved mark; the database UI refreshes on the
+  resources' `changed` signal.
 
 ## Reference scanner (task 5.6)
 Finds every use of an entry ID: other tables (traits, effects, learnings, drops, actions, members, equipment),
@@ -111,4 +123,5 @@ System start map (task 8.3) join the scanner when their data exists.
 - Dangling ID (points beyond the table or to a cleared entry) → runtime treats it as "none" and logs a warning once.
 - Duplicate scene-unique ids after copy/paste → the table re-assigns `<Kind>_<id>` on save.
 - Empty tables are valid; ID 1 may be cleared.
-- Very large tables (2000+ entries, RM-OTH-048): no hard cap; editor list is virtualized.
+- Very large tables (2000+ entries, RM-OTH-048): up to `JRPGTable.MAX_ENTRIES` (100000); the entry list is an
+  `ItemList`, which draws only the visible rows (scene/gui/item_list.cpp:1496-1530).

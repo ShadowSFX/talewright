@@ -31,11 +31,10 @@
 
 #include "jrpg_workspace_shell.h"
 
-#include "jrpg_project_setup.h"
+#include "jrpg_database_editing.h"
+#include "jrpg_database_view.h"
 
-#include "core/io/resource_loader.h"
 #include "core/object/callable_mp.h"
-#include "editor/editor_interface.h"
 #include "editor/editor_string_names.h"
 #include "editor/settings/editor_settings.h"
 #include "editor/themes/editor_scale.h"
@@ -101,77 +100,42 @@ void JRPGWorkspaceShell::_on_tab_changed(int p_tab) {
 		sections[i]->set_visible(i == p_tab);
 	}
 	if (p_tab == SECTION_DATABASE) {
-		_refresh_database();
+		database_view->refresh();
 	}
 }
 
 Array JRPGWorkspaceShell::get_database_rows() const {
 	Array rows;
-	if (!JRPGProjectSetup::is_project_set_up()) {
-		return rows;
-	}
-	const Ref<JRPGDatabase> db = ResourceLoader::load(JRPGProjectSetup::DATABASE_PATH);
+	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
+	const Ref<JRPGDatabase> db = editing ? editing->get_database() : Ref<JRPGDatabase>();
 	if (db.is_null()) {
 		return rows;
 	}
 	for (int kind = 0; kind < JRPGDatabase::TABLE_MAX; kind++) {
 		const Ref<JRPGTable> table = db->get_table(JRPGDatabase::TableKind(kind));
 		Dictionary row;
-		row["name"] = JRPGDatabase::get_table_name(JRPGDatabase::TableKind(kind)).capitalize();
+		row["name"] = JRPGDatabase::get_table_name(JRPGDatabase::TableKind(kind));
 		row["entries"] = table.is_valid() ? table->get_maximum() : 0;
 		row["path"] = table.is_valid() ? table->get_path() : String();
+		row["unsaved"] = table.is_valid() && editing->is_unsaved(table);
 		rows.push_back(row);
 	}
 	const Ref<Resource> singles[] = { db->get_system(), db->get_types(), db->get_terms() };
-	const char *const single_names[] = { "System", "Types", "Terms" };
+	const char *const single_names[] = { "system", "types", "terms" };
 	for (int i = 0; i < 3; i++) {
 		Dictionary row;
 		row["name"] = single_names[i];
 		row["entries"] = -1;
 		row["path"] = singles[i].is_valid() ? singles[i]->get_path() : String();
+		row["unsaved"] = singles[i].is_valid() && editing->is_unsaved(singles[i]);
 		rows.push_back(row);
 	}
 	return rows;
 }
 
-void JRPGWorkspaceShell::_refresh_database() {
-	table_tree->clear();
-	TreeItem *root = table_tree->create_item();
-	const Array rows = get_database_rows();
-	for (const Variant &v : rows) {
-		const Dictionary row = v;
-		TreeItem *item = table_tree->create_item(root);
-		item->set_text(0, row["name"]);
-		const int entries = row["entries"];
-		item->set_text(1, entries >= 0 ? itos(entries) : String(U"—"));
-		item->set_text_alignment(1, HORIZONTAL_ALIGNMENT_RIGHT);
-		item->set_text(2, row["path"]);
-		item->set_tooltip_text(2, row["path"]);
-		item->set_metadata(0, row["path"]);
-	}
-	database_heading->set_text(rows.is_empty() ? TTR("No database found") : vformat(TTR("Tables in %s"), JRPGProjectSetup::DATABASE_PATH));
-	open_button->set_disabled(table_tree->get_selected() == nullptr);
-}
-
-void JRPGWorkspaceShell::_on_table_selected() {
-	open_button->set_disabled(table_tree->get_selected() == nullptr);
-}
-
-void JRPGWorkspaceShell::_open_selected_table() {
-	TreeItem *item = table_tree->get_selected();
-	if (!item) {
-		return;
-	}
-	const String path = item->get_metadata(0);
-	const Ref<Resource> resource = path.is_empty() ? Ref<Resource>() : ResourceLoader::load(path);
-	if (resource.is_valid()) {
-		EditorInterface::get_singleton()->edit_resource(resource);
-	}
-}
-
 void JRPGWorkspaceShell::refresh() {
 	if (get_section() == SECTION_DATABASE) {
-		_refresh_database();
+		database_view->refresh();
 	}
 }
 
@@ -195,12 +159,11 @@ void JRPGWorkspaceShell::_update_theme() {
 	for (int i = 0; i < TOOL_MAX; i++) {
 		tool_buttons[i]->set_button_icon(get_editor_theme_icon(TOOL_ICONS[i]));
 	}
-	open_button->set_button_icon(get_editor_theme_icon(SNAME("EditorInspector")));
 
 	// Notes are the theme's read-only text color; the canvas is the darker editor surface; the message frame matches
 	// the workspace's empty state (the message-window motif of the JRPG tab).
 	const Color note_color = get_theme_color(SNAME("font_readonly_color"), EditorStringName(Editor));
-	for (Label *label : { maps_empty, palette_empty, database_note }) {
+	for (Label *label : { maps_empty, palette_empty }) {
 		label->add_theme_color_override(SceneStringName(font_color), note_color);
 	}
 	Ref<StyleBoxFlat> surface;
@@ -352,42 +315,11 @@ JRPGWorkspaceShell::JRPGWorkspaceShell() {
 	canvas_mark->set_accessibility_name(TTR("End of message"));
 	message_box->add_child(canvas_mark);
 
-	// Database section (the full editor is task 6.4).
-	VBoxContainer *database_section = memnew(VBoxContainer);
-	database_section->set_v_size_flags(SIZE_EXPAND_FILL);
-	database_section->set_visible(false);
-	add_child(database_section);
-	sections[SECTION_DATABASE] = database_section;
-	HFlowContainer *database_bar = memnew(HFlowContainer);
-	database_section->add_child(database_bar);
-	database_heading = memnew(Label);
-	database_heading->set_theme_type_variation("HeaderSmall");
-	database_heading->set_h_size_flags(SIZE_EXPAND_FILL);
-	database_bar->add_child(database_heading);
-	open_button = memnew(Button);
-	open_button->set_text(TTR("Open in Inspector"));
-	open_button->set_disabled(true);
-	open_button->connect(SceneStringName(pressed), callable_mp(this, &JRPGWorkspaceShell::_open_selected_table));
-	database_bar->add_child(open_button);
-	table_tree = memnew(Tree);
-	table_tree->set_columns(3);
-	table_tree->set_column_titles_visible(true);
-	table_tree->set_column_title(0, TTR("Table"));
-	table_tree->set_column_title(1, TTR("Entries"));
-	table_tree->set_column_title(2, TTR("File"));
-	table_tree->set_column_expand(1, false);
-	table_tree->set_column_custom_minimum_width(1, 80 * EDSCALE);
-	table_tree->set_column_clip_content(2, true);
-	table_tree->set_column_expand_ratio(2, 2); // Paths need more room than names.
-	table_tree->set_hide_root(true);
-	table_tree->set_select_mode(Tree::SELECT_ROW);
-	table_tree->set_v_size_flags(SIZE_EXPAND_FILL);
-	table_tree->set_accessibility_name(TTR("Database tables"));
-	table_tree->connect("item_selected", callable_mp(this, &JRPGWorkspaceShell::_on_table_selected));
-	table_tree->connect("item_activated", callable_mp(this, &JRPGWorkspaceShell::_open_selected_table));
-	database_section->add_child(table_tree);
-	database_note = _make_note(TTR("Select a table and open it in the Inspector to look through its entries. A full database editor comes next."));
-	database_section->add_child(database_note);
+	database_view = memnew(JRPGDatabaseView);
+	database_view->set_v_size_flags(SIZE_EXPAND_FILL);
+	database_view->set_visible(false);
+	add_child(database_view);
+	sections[SECTION_DATABASE] = database_view;
 }
 
 JRPGWorkspaceShell::~JRPGWorkspaceShell() {

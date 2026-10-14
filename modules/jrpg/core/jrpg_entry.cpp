@@ -83,6 +83,21 @@ void JRPGEntry::reset_to_defaults() {
 	emit_changed();
 }
 
+void JRPGEntry::assign_from(const Ref<JRPGEntry> &p_source) {
+	ERR_FAIL_COND_MSG(p_source.is_null() || p_source.ptr() == this, "JRPGEntry: assign_from needs another entry.");
+	ERR_FAIL_COND_MSG(p_source->get_class_name() != get_class_name(), vformat("JRPGEntry: cannot copy a %s into a %s.", p_source->get_class_name(), get_class_name()));
+	List<PropertyInfo> props;
+	get_property_list(&props);
+	for (const PropertyInfo &pi : props) {
+		if (!(pi.usage & PROPERTY_USAGE_STORAGE) || pi.name.begins_with("resource_") || pi.name == "script" || pi.name.begins_with("metadata/")) {
+			continue;
+		}
+		const Variant value = p_source->get(pi.name);
+		set(pi.name, (value.get_type() == Variant::ARRAY || value.get_type() == Variant::DICTIONARY) ? value.duplicate(true) : value);
+	}
+	emit_changed();
+}
+
 bool JRPGEntry::_set(const StringName &p_name, const Variant &p_value) {
 	return JRPGSchema::set_renamed(this, p_name, p_value);
 }
@@ -102,6 +117,7 @@ void JRPGEntry::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_note", "note"), &JRPGEntry::set_note);
 	ClassDB::bind_method(D_METHOD("get_note"), &JRPGEntry::get_note);
 	ClassDB::bind_method(D_METHOD("reset_to_defaults"), &JRPGEntry::reset_to_defaults);
+	ClassDB::bind_method(D_METHOD("assign_from", "source"), &JRPGEntry::assign_from);
 
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "id"), "", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_entry_name", "get_entry_name");
