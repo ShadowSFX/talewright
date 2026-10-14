@@ -31,6 +31,7 @@
 
 #include "jrpg_event_data.h"
 
+#include "jrpg_command_list.h"
 #include "jrpg_database.h" // IWYU pragma: keep (JRPGGameState returns Ref<JRPGDatabase> inline).
 #include "jrpg_event_state.h"
 #include "jrpg_game_state.h"
@@ -173,6 +174,15 @@ void JRPGEventPage::set_trigger(Trigger p_trigger) {
 	emit_changed();
 }
 
+void JRPGEventPage::set_commands(const Ref<JRPGCommandList> &p_commands) {
+	commands = p_commands;
+	emit_changed();
+}
+
+Ref<JRPGCommandList> JRPGEventPage::get_commands() const {
+	return commands;
+}
+
 String JRPGEventPage::get_self_switch_letter(SelfSwitch p_switch) {
 	ERR_FAIL_INDEX_V(int(p_switch), SELF_SWITCH_D + 1, String());
 	return String::chr('A' + int(p_switch));
@@ -278,6 +288,8 @@ void JRPGEventPage::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_priority"), &JRPGEventPage::get_priority);
 	ClassDB::bind_method(D_METHOD("set_trigger", "trigger"), &JRPGEventPage::set_trigger);
 	ClassDB::bind_method(D_METHOD("get_trigger"), &JRPGEventPage::get_trigger);
+	ClassDB::bind_method(D_METHOD("set_commands", "commands"), &JRPGEventPage::set_commands);
+	ClassDB::bind_method(D_METHOD("get_commands"), &JRPGEventPage::get_commands);
 	ClassDB::bind_method(D_METHOD("has_any_condition"), &JRPGEventPage::has_any_condition);
 	ClassDB::bind_method(D_METHOD("are_conditions_met", "state", "map_id", "event_id"), &JRPGEventPage::are_conditions_met);
 	ClassDB::bind_static_method("JRPGEventPage", D_METHOD("get_self_switch_letter", "self_switch"), &JRPGEventPage::get_self_switch_letter);
@@ -313,6 +325,7 @@ void JRPGEventPage::_bind_methods() {
 	ADD_GROUP("", "");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "priority", PROPERTY_HINT_ENUM, "Below Characters,Same as Characters,Above Characters"), "set_priority", "get_priority");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "trigger", PROPERTY_HINT_ENUM, "Action Button,Player Touch,Event Touch,Autorun,Parallel"), "set_trigger", "get_trigger");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "commands", PROPERTY_HINT_RESOURCE_TYPE, "JRPGCommandList"), "set_commands", "get_commands");
 
 	BIND_ENUM_CONSTANT(SELF_SWITCH_A);
 	BIND_ENUM_CONSTANT(SELF_SWITCH_B);

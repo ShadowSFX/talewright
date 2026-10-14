@@ -33,6 +33,9 @@
 		<member name="actor_id" type="int" setter="set_actor_id" getter="get_actor_id" default="1">
 			Actor checked by the actor HP condition.
 		</member>
+		<member name="commands" type="JRPGCommandList" setter="set_commands" getter="get_commands">
+			What the page runs when its conditions are met in battle; [code]null[/code] for no commands. Its sub-resource id follows the page's, so database files stay stable.
+		</member>
 		<member name="enemy_hp_bp" type="int" setter="set_enemy_hp_bp" getter="get_enemy_hp_bp" default="5000">
 			HP threshold in basis points of max HP for the enemy condition.
 		</member>

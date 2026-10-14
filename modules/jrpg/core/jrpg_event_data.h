@@ -38,6 +38,7 @@
 #include "core/variant/binder_common.h" // IWYU pragma: keep (VARIANT_ENUM_CAST).
 #include "core/variant/typed_array.h"
 
+class JRPGCommandList;
 class JRPGGameState;
 
 // One page of a map event (spec 03, RM-EVT-003, RM-EVT-022..043): when it is the event's active page (its appearance
@@ -114,6 +115,7 @@ private:
 
 	Priority priority = PRIORITY_BELOW;
 	Trigger trigger = TRIGGER_ACTION;
+	Ref<JRPGCommandList> commands; // Null: no commands.
 
 protected:
 	static void _bind_methods();
@@ -176,6 +178,9 @@ public:
 	Priority get_priority() const { return priority; }
 	void set_trigger(Trigger p_trigger);
 	Trigger get_trigger() const { return trigger; }
+	// What the page runs when it starts (task 9.2.2.3); null for none.
+	void set_commands(const Ref<JRPGCommandList> &p_commands);
+	Ref<JRPGCommandList> get_commands() const;
 
 	bool has_any_condition() const { return switch1_enabled || switch2_enabled || variable_enabled || self_switch_enabled || item_enabled || actor_enabled; }
 	// Whether every enabled condition holds in p_state for event p_event_id of map p_map_id (its self switches). A page

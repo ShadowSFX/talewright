@@ -34,11 +34,14 @@
 #include "core/object/ref_counted.h"
 
 class JRPGDatabase;
+class JRPGMapData;
 class JRPGMapList;
 
 // Finds every use of a database ID (plan/specs/02_database_model.md, "Reference scanner"): traits, effects,
 // learnings, drops, enemy actions, troop members and page conditions, actor classes and initial equipment, skill,
-// weapon and armor types, elements, animations and the system data (starting party, start map). A reference is a
+// weapon and armor types, elements, animations, the system data (starting party, start map) and the database-ID
+// parameters of event commands (JRPGEventCommand::get_id_parameters) in common events, troop pages and, through
+// collect_map_references, map events (task 9.2.2.3). A reference is a
 // Dictionary {source, source_id, path, target, target_id}: "source" and "target" are table names
 // (JRPGDatabase.get_table_name) or type lists ("elements", "skill_types", "weapon_types", "armor_types", "equip_types");
 // "maps" is the target of map ids, which the project's JRPGMapList holds; "system" is the source of System data
@@ -61,6 +64,11 @@ public:
 	// list) or was cleared ("problem": "blank", an entry or type without a name). Map references are judged only when
 	// a map list is given.
 	static Array find_dangling(const Ref<JRPGDatabase> &p_database, const Ref<JRPGMapList> &p_maps = Ref<JRPGMapList>());
+	// The references in the command lists of p_map's events: source "maps", source_id the map's id, path "event 3,
+	// page 1, commands[2].then_list[0].item_id". A map's data lives in its scene, which only tools that load scenes read.
+	static Array collect_map_references(const Ref<JRPGMapData> &p_map);
+	// The references of p_map's events whose target does not exist or was cleared, judged as find_dangling does.
+	static Array find_dangling_in_map(const Ref<JRPGDatabase> &p_database, const Ref<JRPGMapData> &p_map, const Ref<JRPGMapList> &p_maps = Ref<JRPGMapList>());
 	// "Skill 4, effects[1].data_id: state 12" — where a reference is, for reports.
 	static String describe(const Dictionary &p_reference);
 	// The table or type list that an integer property holding one ID points into ("classes", "elements"...), or an

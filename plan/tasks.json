@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.2.2.2 Script commands",
+  "last_completed": "9.2.2.3 Command lists on pages, troop pages and common events; reference scanning",
   "tasks": [
     {
       "id": "0",
@@ -3716,15 +3716,15 @@
         "9.1",
         "3.3"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Script subclass discovered and executed"
       ],
       "test_strategy": "Doctests.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "9.2.1",
@@ -3761,9 +3761,9 @@
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "files": [],
-      "commit": "",
+      "commit": "children",
       "notes": "D-058 (9.2.1 benchmark): JRPGCommandList stores commands packed (code, parameters, child lists) in one property and builds typed JRPGEventCommand objects when first run or edited; keep the typed API, pack again on save; content_hash over the packed data.",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "9.2.2.1",
@@ -3823,7 +3823,7 @@
         "modules/jrpg/tests/test_jrpg_script_commands.h",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "17d4aab673",
       "notes": ""
     },
     {
@@ -3840,9 +3840,25 @@
         "Command metadata declares which parameters are database IDs; JRPGReferenceScanner reports a dangling command parameter with its location"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_event_data.h",
+        "modules/jrpg/core/jrpg_event_data.cpp",
+        "modules/jrpg/core/jrpg_troop_data.h",
+        "modules/jrpg/core/jrpg_troop_data.cpp",
+        "modules/jrpg/core/jrpg_misc_data.h",
+        "modules/jrpg/core/jrpg_misc_data.cpp",
+        "modules/jrpg/core/jrpg_reference_scanner.h",
+        "modules/jrpg/core/jrpg_reference_scanner.cpp",
+        "modules/jrpg/doc_classes/JRPGEventPage.xml",
+        "modules/jrpg/doc_classes/JRPGTroopPage.xml",
+        "modules/jrpg/doc_classes/JRPGCommonEventData.xml",
+        "modules/jrpg/doc_classes/JRPGReferenceScanner.xml",
+        "modules/jrpg/tests/test_jrpg_command_references.h",
+        "modules/jrpg/tests/test_jrpg_core_regressions.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

@@ -1001,4 +1001,11 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   simulation step): the interpreter (9.3) gives the context, and a command that waits keeps checking for itself.
 - **Why:** no manifest to keep in sync; scripts look like any other command to lists, the editor and the server; the
   run-again contract keeps waiting commands self-contained and serializable (the interpreter only saves the index).
+- **Amended (task 9.2.2.3):** event pages, troop pages and common events hold their commands in a `commands` list
+  (none by default, so nothing extra is saved); lists in database tables take sub-resource ids from their owners
+  (`CommonEvent_12_Commands`, `Troop_4_Page1_Commands`) so the files stay stable. The reference scanner walks command
+  lists (child lists included, at most 64 levels deep) and reports each database-ID parameter (a list of IDs gives one
+  reference per ID) with a path such as `pages[0].commands[1].then_list[0].item_id`; map events, which live in map
+  scenes the core cannot load, are scanned per map (`collect_map_references`, `find_dangling_in_map`) by the tools
+  that load map data.
 - **Reversal:** `JRPGCommandRegistry::refresh_script_commands` and `JRPGEventCommand::execute`.

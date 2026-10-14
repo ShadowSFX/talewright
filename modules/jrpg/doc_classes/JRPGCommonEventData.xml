@@ -9,6 +9,9 @@
 	<tutorials>
 	</tutorials>
 	<members>
+		<member name="commands" type="JRPGCommandList" setter="set_commands" getter="get_commands">
+			What the common event runs; [code]null[/code] for no commands. Its sub-resource id follows the entry's, so database files stay stable.
+		</member>
 		<member name="switch_id" type="int" setter="set_switch_id" getter="get_switch_id" default="1">
 			Switch that must be on for an autorun or parallel common event to run.
 		</member>

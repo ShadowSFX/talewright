@@ -31,9 +31,22 @@
 
 #include "jrpg_troop_data.h"
 
+#include "jrpg_command_list.h"
 #include "jrpg_schema.h"
 
 #include "core/object/class_db.h"
+
+void JRPGTroopPage::set_commands(const Ref<JRPGCommandList> &p_commands) {
+	commands = p_commands;
+	if (commands.is_valid() && !get_scene_unique_id().is_empty()) {
+		commands->set_scene_unique_id(get_scene_unique_id() + "_Commands");
+	}
+	emit_changed();
+}
+
+Ref<JRPGCommandList> JRPGTroopPage::get_commands() const {
+	return commands;
+}
 
 void JRPGTroopPage::set_turn_end(bool p_enabled) {
 	turn_end = p_enabled;
@@ -143,6 +156,8 @@ void JRPGTroopPage::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_switch_id"), &JRPGTroopPage::get_switch_id);
 	ClassDB::bind_method(D_METHOD("set_span", "span"), &JRPGTroopPage::set_span);
 	ClassDB::bind_method(D_METHOD("get_span"), &JRPGTroopPage::get_span);
+	ClassDB::bind_method(D_METHOD("set_commands", "commands"), &JRPGTroopPage::set_commands);
+	ClassDB::bind_method(D_METHOD("get_commands"), &JRPGTroopPage::get_commands);
 	ClassDB::bind_method(D_METHOD("has_any_condition"), &JRPGTroopPage::has_any_condition);
 	ClassDB::bind_method(D_METHOD("matches_turn", "turn"), &JRPGTroopPage::matches_turn);
 
@@ -161,6 +176,7 @@ void JRPGTroopPage::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "switch_id", PROPERTY_HINT_RANGE, "1,9999,1,or_greater"), "set_switch_id", "get_switch_id");
 	ADD_GROUP("", "");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "span", PROPERTY_HINT_ENUM, "Battle,Turn,Moment"), "set_span", "get_span");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "commands", PROPERTY_HINT_RESOURCE_TYPE, "JRPGCommandList"), "set_commands", "get_commands");
 
 	BIND_ENUM_CONSTANT(SPAN_BATTLE);
 	BIND_ENUM_CONSTANT(SPAN_TURN);
@@ -199,6 +215,10 @@ void JRPGTroopData::assign_sub_resource_ids(const String &p_prefix) {
 		Ref<JRPGTroopPage> page = pages[i];
 		if (page.is_valid()) {
 			page->set_scene_unique_id(p_prefix + "_Page" + itos(i + 1));
+			const Ref<JRPGCommandList> commands = page->get_commands();
+			if (commands.is_valid()) {
+				commands->set_scene_unique_id(p_prefix + "_Page" + itos(i + 1) + "_Commands");
+			}
 		}
 	}
 }

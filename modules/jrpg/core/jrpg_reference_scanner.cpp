@@ -34,8 +34,11 @@
 #include "jrpg_actor_data.h"
 #include "jrpg_armor_data.h"
 #include "jrpg_class_data.h"
+#include "jrpg_command_list.h"
 #include "jrpg_database.h"
 #include "jrpg_enemy_data.h"
+#include "jrpg_event_data.h"
+#include "jrpg_map_data.h"
 #include "jrpg_map_list.h"
 #include "jrpg_state_data.h"
 #include "jrpg_traits.h"
@@ -160,6 +163,41 @@ struct Collector {
 	}
 };
 
+// The database-ID parameters of the commands of p_list and of their child lists (task 9.2.2.3). A parameter holding a
+// list of IDs gives one reference per ID. Nesting deeper than MAX_DEPTH is not visited (a malformed file).
+void add_commands(Collector &c, const String &p_path, const Ref<JRPGCommandList> &p_list, int p_depth = 0) {
+	static constexpr int MAX_DEPTH = 64;
+	if (p_list.is_null() || p_depth > MAX_DEPTH) {
+		return;
+	}
+	for (int i = 0; i < p_list->get_command_count(); i++) {
+		const Ref<JRPGEventCommand> command = p_list->get_command(i);
+		if (command.is_null()) {
+			continue;
+		}
+		const String at = vformat("%s[%d]", p_path, i);
+		for (const KeyValue<Variant, Variant> &kv : command->get_id_parameters()) {
+			const String parameter = kv.key;
+			const Variant value = command->get(parameter);
+			if (value.is_array()) {
+				const Array ids = value;
+				for (int k = 0; k < ids.size(); k++) {
+					c.add(vformat("%s.%s[%d]", at, parameter, k), kv.value, ids[k]);
+				}
+			} else if (value.get_type() == Variant::INT) {
+				c.add(at + "." + parameter, kv.value, value);
+			}
+		}
+		for (const String &list_name : command->get_child_list_names()) {
+			add_commands(c, at + "." + list_name, command->get(list_name), p_depth + 1);
+		}
+	}
+}
+
+// Dangling references among p_refs: their target is missing, beyond its table or list, or a map p_maps does not list
+// ("missing"), or an entry or type without a name ("blank").
+Array judge_dangling(const Ref<JRPGDatabase> &p_database, const Ref<JRPGMapList> &p_maps, const Array &p_refs);
+
 bool has_dual_wield(const Array &p_traits) {
 	for (const Variant &t : p_traits) {
 		if (t.get_type() == Variant::DICTIONARY && int(Dictionary(t).get("code", 0)) == JRPGTraits::TRAIT_SLOT_TYPE && int(Dictionary(t).get("data_id", 0)) == 1) {
@@ -250,7 +288,12 @@ void collect_entry(Collector &c, const Ref<JRPGDatabase> &p_database, const Ref<
 			if (page.is_valid() && page->is_actor_hp_enabled()) {
 				c.add(vformat("pages[%d].actor_id", i), table(JRPGDatabase::TABLE_ACTORS), page->get_actor_id());
 			}
+			if (page.is_valid()) {
+				add_commands(c, vformat("pages[%d].commands", i), page->get_commands());
+			}
 		}
+	} else if (const JRPGCommonEventData *common_event = Object::cast_to<JRPGCommonEventData>(p_entry.ptr())) {
+		add_commands(c, "commands", common_event->get_commands());
 	} else if (const JRPGStateData *state = Object::cast_to<JRPGStateData>(p_entry.ptr())) {
 		c.add_traits(state->get_traits());
 	}
@@ -316,7 +359,54 @@ bool target_exists(const Ref<JRPGDatabase> &p_database, const String &p_target, 
 	return false;
 }
 
+Array judge_dangling(const Ref<JRPGDatabase> &p_database, const Ref<JRPGMapList> &p_maps, const Array &p_refs) {
+	Array dangling;
+	for (const Variant &v : p_refs) {
+		Dictionary r = v;
+		bool blank = false;
+		if (String(r["target"]) == MAPS) {
+			if (p_maps.is_null() || p_maps->has_map(r["target_id"])) {
+				continue; // Not judged without a map list; a listed map always has a name.
+			}
+			r["problem"] = "missing";
+		} else if (!target_exists(p_database, r["target"], r["target_id"], blank)) {
+			r["problem"] = "missing";
+		} else if (blank) {
+			r["problem"] = "blank";
+		} else {
+			continue;
+		}
+		dangling.push_back(r);
+	}
+	return dangling;
+}
+
 } // namespace
+
+Array JRPGReferenceScanner::collect_map_references(const Ref<JRPGMapData> &p_map) {
+	ERR_FAIL_COND_V(p_map.is_null(), Array());
+	Collector c;
+	c.source = MAPS;
+	c.source_id = p_map->get_map_id();
+	for (const Variant &entry : p_map->get_events()) {
+		const Ref<JRPGEventData> event = entry;
+		if (event.is_null()) {
+			continue;
+		}
+		for (int page = 0; page < event->get_page_count(); page++) {
+			const Ref<JRPGEventPage> event_page = event->get_page(page);
+			if (event_page.is_valid()) {
+				add_commands(c, vformat("event %d, page %d, commands", event->get_event_id(), page + 1), event_page->get_commands());
+			}
+		}
+	}
+	return c.refs;
+}
+
+Array JRPGReferenceScanner::find_dangling_in_map(const Ref<JRPGDatabase> &p_database, const Ref<JRPGMapData> &p_map, const Ref<JRPGMapList> &p_maps) {
+	ERR_FAIL_COND_V(p_database.is_null(), Array());
+	return judge_dangling(p_database, p_maps, collect_map_references(p_map));
+}
 
 Array JRPGReferenceScanner::collect_references(const Ref<JRPGDatabase> &p_database) {
 	ERR_FAIL_COND_V_MSG(p_database.is_null(), Array(), "JRPGReferenceScanner: no database to scan.");
@@ -370,26 +460,7 @@ Array JRPGReferenceScanner::find_uses_from(const Ref<JRPGDatabase> &p_database, 
 }
 
 Array JRPGReferenceScanner::find_dangling(const Ref<JRPGDatabase> &p_database, const Ref<JRPGMapList> &p_maps) {
-	Array dangling;
-	const Array refs = collect_references(p_database);
-	for (const Variant &v : refs) {
-		Dictionary r = v;
-		bool blank = false;
-		if (String(r["target"]) == MAPS) {
-			if (p_maps.is_null() || p_maps->has_map(r["target_id"])) {
-				continue; // Not judged without a map list; a listed map always has a name.
-			}
-			r["problem"] = "missing";
-		} else if (!target_exists(p_database, r["target"], r["target_id"], blank)) {
-			r["problem"] = "missing";
-		} else if (blank) {
-			r["problem"] = "blank";
-		} else {
-			continue;
-		}
-		dangling.push_back(r);
-	}
-	return dangling;
+	return judge_dangling(p_database, p_maps, collect_references(p_database));
 }
 
 String JRPGReferenceScanner::get_id_target(const Object *p_object, const String &p_property) {
@@ -447,6 +518,8 @@ void JRPGReferenceScanner::_bind_methods() {
 	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("find_uses", "database", "target", "id"), &JRPGReferenceScanner::find_uses);
 	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("find_uses_from", "database", "target", "first_id"), &JRPGReferenceScanner::find_uses_from);
 	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("find_dangling", "database", "maps"), &JRPGReferenceScanner::find_dangling, DEFVAL(Ref<JRPGMapList>()));
+	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("collect_map_references", "map"), &JRPGReferenceScanner::collect_map_references);
+	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("find_dangling_in_map", "database", "map", "maps"), &JRPGReferenceScanner::find_dangling_in_map, DEFVAL(Ref<JRPGMapList>()));
 	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("describe", "reference"), &JRPGReferenceScanner::describe);
 	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("get_id_target", "object", "property"), &JRPGReferenceScanner::get_id_target);
 	ClassDB::bind_static_method("JRPGReferenceScanner", D_METHOD("get_target_names", "database", "target"), &JRPGReferenceScanner::get_target_names);

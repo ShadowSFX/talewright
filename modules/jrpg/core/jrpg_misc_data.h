@@ -110,6 +110,8 @@ public:
 
 // A common event: a command list callable from anywhere, or run automatically while a switch is on (RM-CEV-*). Its
 // command list joins with the event command model (epic 9).
+class JRPGCommandList;
+
 class JRPGCommonEventData : public JRPGEntry {
 	GDCLASS(JRPGCommonEventData, JRPGEntry);
 
@@ -123,6 +125,7 @@ public:
 private:
 	Trigger trigger = TRIGGER_NONE;
 	int switch_id = 1;
+	Ref<JRPGCommandList> commands; // Null: no commands.
 
 protected:
 	static void _bind_methods();
@@ -132,6 +135,10 @@ public:
 	Trigger get_trigger() const { return trigger; }
 	void set_switch_id(int p_id);
 	int get_switch_id() const { return switch_id; }
+	// What the common event runs (task 9.2.2.3); null for none. The list's sub-resource id follows the entry's.
+	void set_commands(const Ref<JRPGCommandList> &p_commands);
+	Ref<JRPGCommandList> get_commands() const;
+	void assign_sub_resource_ids(const String &p_prefix) override;
 };
 
 VARIANT_ENUM_CAST(JRPGTilesetData::EdgeMode);

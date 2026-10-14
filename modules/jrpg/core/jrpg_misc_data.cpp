@@ -31,6 +31,8 @@
 
 #include "jrpg_misc_data.h"
 
+#include "jrpg_command_list.h"
+
 #include "core/object/class_db.h"
 
 void JRPGAnimationData::set_effect(const String &p_effect) {
@@ -133,14 +135,35 @@ void JRPGCommonEventData::set_switch_id(int p_id) {
 	emit_changed();
 }
 
+void JRPGCommonEventData::set_commands(const Ref<JRPGCommandList> &p_commands) {
+	commands = p_commands;
+	if (commands.is_valid() && get_id() > 0) {
+		assign_sub_resource_ids(get_kind() + "_" + itos(get_id()));
+	}
+	emit_changed();
+}
+
+Ref<JRPGCommandList> JRPGCommonEventData::get_commands() const {
+	return commands;
+}
+
+void JRPGCommonEventData::assign_sub_resource_ids(const String &p_prefix) {
+	if (commands.is_valid()) {
+		commands->set_scene_unique_id(p_prefix + "_Commands");
+	}
+}
+
 void JRPGCommonEventData::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_trigger", "trigger"), &JRPGCommonEventData::set_trigger);
 	ClassDB::bind_method(D_METHOD("get_trigger"), &JRPGCommonEventData::get_trigger);
 	ClassDB::bind_method(D_METHOD("set_switch_id", "id"), &JRPGCommonEventData::set_switch_id);
 	ClassDB::bind_method(D_METHOD("get_switch_id"), &JRPGCommonEventData::get_switch_id);
+	ClassDB::bind_method(D_METHOD("set_commands", "commands"), &JRPGCommonEventData::set_commands);
+	ClassDB::bind_method(D_METHOD("get_commands"), &JRPGCommonEventData::get_commands);
 
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "trigger", PROPERTY_HINT_ENUM, "None,Autorun,Parallel"), "set_trigger", "get_trigger");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "switch_id", PROPERTY_HINT_RANGE, "1,9999,1,or_greater"), "set_switch_id", "get_switch_id");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "commands", PROPERTY_HINT_RESOURCE_TYPE, "JRPGCommandList"), "set_commands", "get_commands");
 
 	BIND_ENUM_CONSTANT(TRIGGER_NONE);
 	BIND_ENUM_CONSTANT(TRIGGER_AUTORUN);

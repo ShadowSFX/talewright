@@ -35,9 +35,11 @@
 
 #include "core/variant/typed_array.h"
 
-// A battle event page of a troop: when it may run and how often (RM-TRP-012..022). Its command list joins with the
-// event command model (epic 9). A page with no condition enabled never runs; when several pages qualify, the
-// lowest-numbered one runs.
+class JRPGCommandList;
+
+// A battle event page of a troop: when it may run, how often (RM-TRP-012..022) and what it runs (its command list,
+// task 9.2.2.3). A page with no condition enabled never runs; when several pages qualify, the lowest-numbered one
+// runs.
 class JRPGTroopPage : public Resource {
 	GDCLASS(JRPGTroopPage, Resource);
 
@@ -62,6 +64,7 @@ private:
 	bool switch_enabled = false;
 	int switch_id = 1;
 	Span span = SPAN_BATTLE;
+	Ref<JRPGCommandList> commands; // Null: no commands.
 
 protected:
 	static void _bind_methods();
@@ -95,6 +98,9 @@ public:
 	int get_switch_id() const { return switch_id; }
 	void set_span(Span p_span);
 	Span get_span() const { return span; }
+	// What the page runs; null for none. The list's sub-resource id follows the page's (stable .tres files).
+	void set_commands(const Ref<JRPGCommandList> &p_commands);
+	Ref<JRPGCommandList> get_commands() const;
 
 	bool has_any_condition() const { return turn_end || turn_enabled || enemy_hp_enabled || actor_hp_enabled || switch_enabled; }
 	// True on turns A + B * X (X = 0, 1, 2...); with B = 0 only on turn A (Talewright rule: B = 0 is undocumented).

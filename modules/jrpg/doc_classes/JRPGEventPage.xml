@@ -43,6 +43,9 @@
 		<member name="character" type="String" setter="set_character" getter="get_character" default="&quot;&quot;">
 			The character image ([code]uid://[/code] or [code]res://[/code] path) the event is drawn with while this page is active; empty for none.
 		</member>
+		<member name="commands" type="JRPGCommandList" setter="set_commands" getter="get_commands">
+			What the page runs when its trigger starts it; [code]null[/code] for no commands.
+		</member>
 		<member name="direction" type="int" setter="set_direction" getter="get_direction" enum="JRPGSystemData.Direction" default="2">
 			The direction the event faces when the page becomes active.
 		</member>

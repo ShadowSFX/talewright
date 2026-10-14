@@ -245,11 +245,11 @@ TEST_CASE("[JRPG][Regression] Stored defaults are frozen (finding 6)") {
 		{ "JRPGArmorData", "caa063d96dbbaa80864f8c2a12bb029a" },
 		{ "JRPGEnemyData", "9d0732244597c45a690b9798eec91b7c" },
 		{ "JRPGTroopData", "b7f85d71e5dace55a2d3bb34351fa042" },
-		{ "JRPGTroopPage", "d5fd0bf48028ab62be322f82607a3694" },
+		{ "JRPGTroopPage", "2f644cc86f25aadc4df78484da7348fb" }, // Task 9.2.2.3: commands (new, none by default).
 		{ "JRPGStateData", "740eb0929002c9c981fbad018a19adc1" },
 		{ "JRPGAnimationData", "b2705f889bea921662940c486a0dc070" },
 		{ "JRPGTilesetData", "cee13e2c69dae48bda048a577d28617f" },
-		{ "JRPGCommonEventData", "f3f9eb3cd9ed4cb32de3e29b5b0226d6" },
+		{ "JRPGCommonEventData", "19881aeea9f3e3f968d4ca72ed63c8bb" }, // Task 9.2.2.3: commands (new, none by default).
 		{ "JRPGSystemData", "72e29c773da78ec2d76569249d76cef4" },
 		{ "JRPGTypesData", "6b343d0d3b17f9138144183e3b8494d6" },
 		{ "JRPGTermsData", "6ec055fdd440c2afc9338d20a1ddb377" },
@@ -260,7 +260,7 @@ TEST_CASE("[JRPG][Regression] Stored defaults are frozen (finding 6)") {
 		{ "JRPGMapList", "5c0b0e581e8b80536101a25af5bc9c9c" }, // Epic 8 review A5.
 		{ "JRPGMapData", "a67392046cb3f5e08be7c58e7cd950d8" },
 		{ "JRPGEventData", "4e0a30e273eef5edc7c2997849b05c5f" }, // Task 9.1.1.
-		{ "JRPGEventPage", "b11509d7d7c05eaf175e714ff01cb9a9" },
+		{ "JRPGEventPage", "3cad2d21baed261dd8f10df3cf411b79" }, // Task 9.2.2.3: commands (new, none by default).
 	};
 	for (const auto &entry : frozen) {
 		const String fingerprint = defaults_fingerprint(entry[0]);
