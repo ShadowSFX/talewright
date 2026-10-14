@@ -80,6 +80,12 @@ by the editor. Exit codes: 0 ok, 1 the tool reported an error, 2 transport/proto
 | `game_wait` | Wait N game frames |
 | `game_call` | Call a method on a node in the game |
 | `game_logs` | The game's own log buffer (complete even when debugger output is rate-limited) |
+| `jrpg_setup_project` | Set up the JRPG project (same as Project > Tools > Set Up JRPG Project...): creates only what is missing and reports it; `show_report` also shows the report dialog |
+| `jrpg_addon_status` / `jrpg_addon_install` | State of the managed addon (`res://addons/talewright`) / install or upgrade it, keeping files the user changed |
+| `jrpg_workspace_state` / `jrpg_workspace_select` | The JRPG workspace (set up, open, current section and map mode, database tables) / show the Map or Database section |
+
+The `jrpg_*` tools come from the JRPG module through the bridge's tool registry (D-030): modules add tools without the
+bridge depending on them, and each module still builds alone.
 
 Notes on arguments and results:
 - **Values** that JSON cannot express use Godot literal strings, e.g. `"Vector2(10, 20)"`, `"Color(1, 0, 0, 1)"`.

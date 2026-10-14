@@ -72,6 +72,7 @@
 #include "modules/jrpg/editor/jrpg_project_setup.h"
 #include "modules/jrpg/editor/jrpg_setup_dialog.h"
 #include "modules/jrpg/editor/jrpg_workspace_plugin.h"
+#include "modules/jrpg/editor/jrpg_workspace_shell.h"
 #include "modules/jrpg/editor/jrpg_workspace_view.h"
 #endif // TOOLS_ENABLED
 
@@ -120,6 +121,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 	}
 #ifdef TOOLS_ENABLED
 	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) {
+		GDREGISTER_INTERNAL_CLASS(JRPGWorkspaceShell);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspaceView);
 		GDREGISTER_INTERNAL_CLASS(JRPGWorkspacePlugin);
 		GDREGISTER_INTERNAL_CLASS(JRPGBootstrapPlugin);

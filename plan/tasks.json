@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "1.9 Fork CI: templates compile the tests; clangd-tidy clean",
+  "last_completed": "6.3 Workspace shell",
   "tasks": [
     {
       "id": "0",
@@ -346,7 +346,7 @@
         "plan/DECISIONS.md"
       ],
       "status": "done",
-      "commit": "pending",
+      "commit": "ee2c26277a",
       "notes": "Fix committed in 9ccf49e3bb; CI run 38503265605 for that push green on every job."
     },
     {
@@ -1723,7 +1723,7 @@
       "dependencies": [
         "5"
       ],
-      "status": "in_progress",
+      "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
         "Setup idempotent",
@@ -1816,15 +1816,25 @@
       "dependencies": [
         "6.2"
       ],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Bridge screenshot shows the JRPG main screen with its tabs",
         "Switching every tab via the bridge leaves get_logs(errors_only) empty"
       ],
       "test_strategy": "Bridge screenshots.",
-      "files": [],
-      "commit": "",
+      "files": [
+        "modules/jrpg/editor/jrpg_workspace_shell.h",
+        "modules/jrpg/editor/jrpg_workspace_shell.cpp",
+        "modules/jrpg/editor/jrpg_workspace_view.h",
+        "modules/jrpg/editor/jrpg_workspace_view.cpp",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/register_types.cpp",
+        "talewright/docs/claude_bridge.md",
+        "plan/evidence/jrpg/6.3-workspace-map.png",
+        "plan/evidence/jrpg/6.3-workspace-database.png"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {

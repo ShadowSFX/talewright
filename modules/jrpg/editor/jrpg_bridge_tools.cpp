@@ -36,6 +36,9 @@
 #include "jrpg_managed_addon.h"
 #include "jrpg_project_setup.h"
 #include "jrpg_setup_dialog.h"
+#include "jrpg_workspace_shell.h"
+
+#include "editor/editor_interface.h"
 
 #include "modules/claude_bridge/claude_bridge_registry.h"
 #include "modules/claude_bridge/claude_bridge_tools.h"
@@ -76,6 +79,47 @@ void tool_setup_project(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall
 		return;
 	}
 	p_call->complete_data(report);
+}
+
+Dictionary workspace_state() {
+	Dictionary state;
+	JRPGWorkspaceShell *shell = JRPGWorkspaceShell::get_singleton();
+	state["project_set_up"] = JRPGProjectSetup::is_project_set_up();
+	state["workspace_open"] = shell != nullptr; // The JRPG tab exists (jrpg/enabled is on).
+	PackedStringArray sections;
+	for (int i = 0; i < JRPGWorkspaceShell::SECTION_MAX; i++) {
+		sections.push_back(JRPGWorkspaceShell::get_section_name(JRPGWorkspaceShell::Section(i)));
+	}
+	state["sections"] = sections;
+	if (shell) {
+		state["visible"] = shell->is_visible_in_tree();
+		state["section"] = JRPGWorkspaceShell::get_section_name(shell->get_section());
+		static const char *const modes[] = { "Tiles", "Events", "Regions" };
+		state["map_mode"] = modes[shell->get_map_mode()];
+		state["database_rows"] = shell->get_database_rows();
+	}
+	return state;
+}
+
+void tool_workspace_state(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	p_call->complete_data(workspace_state());
+}
+
+void tool_workspace_select(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	const String name = p_args.get("section", "");
+	const JRPGWorkspaceShell::Section section = JRPGWorkspaceShell::find_section(name);
+	if (section == JRPGWorkspaceShell::SECTION_MAX) {
+		p_call->fail("\"section\" must be \"Map\" or \"Database\".");
+		return;
+	}
+	JRPGWorkspaceShell *shell = JRPGWorkspaceShell::get_singleton();
+	if (!shell) {
+		p_call->fail("The JRPG workspace is not open: turn on the project setting jrpg/enabled (or run jrpg_setup_project).");
+		return;
+	}
+	EditorInterface::get_singleton()->set_main_screen_editor("JRPG");
+	shell->select_section(section);
+	p_call->complete_data(workspace_state());
 }
 
 Dictionary directory_schema() {
@@ -120,6 +164,29 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	setup.destructive = false; // Only adds what is missing.
 	setup.func = &tool_setup_project;
 	r_mcp.register_tool(setup);
+
+	ClaudeBridgeMCP::Tool state;
+	state.name = "jrpg_workspace_state";
+	state.title = "JRPG workspace state";
+	state.description = "Reports the JRPG workspace: whether the project is set up and the JRPG tab is open, the sections, the current section and map mode, and the database tables with their entry counts.";
+	state.input_schema = ClaudeBridgeMCP::object_schema(Dictionary());
+	state.func = &tool_workspace_state;
+	r_mcp.register_tool(state);
+
+	ClaudeBridgeMCP::Tool select;
+	select.name = "jrpg_workspace_select";
+	select.title = "Show a JRPG workspace section";
+	select.description = "Switches the editor to the JRPG main screen and shows a section (Map or Database). Returns the workspace state.";
+	Dictionary section_property;
+	section_property["type"] = "string";
+	section_property["enum"] = Array({ "Map", "Database" });
+	Dictionary select_properties;
+	select_properties["section"] = section_property;
+	select.input_schema = ClaudeBridgeMCP::object_schema(select_properties, PackedStringArray({ "section" }));
+	select.read_only = false;
+	select.destructive = false; // Only changes what the editor shows.
+	select.func = &tool_workspace_select;
+	r_mcp.register_tool(select);
 }
 
 } // namespace

@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 129, in_progress: 2, done: 79, blocked: 0, deferred: 3 (of 213)
+**Totals:** pending: 130, in_progress: 0, done: 80, blocked: 0, deferred: 3 (of 213)
 
 ## [x] 0 Bootstrap and task system
 
@@ -27,7 +27,7 @@ Reproducible builds and a recorded vanilla baseline before any engine change.
 - [x] **1.6** Epic 0+1 review fixes (P1) _(commit: a6fbf412ba)_
 - [x] **1.7** Fork files pass upstream CI static checks (P1) _(commit: b1fb0940d7)_
 - [x] **1.8** Fork CI: every Linux job green (P1) _(deps: 1.7; commit: 803d0e2f7c)_
-- [x] **1.9** Fork CI: templates compile the tests; clangd-tidy clean (P1) _(deps: 1.8; commit: pending)_
+- [x] **1.9** Fork CI: templates compile the tests; clangd-tidy clean (P1) _(deps: 1.8; commit: ee2c26277a)_
 
 ## [x] 2 Research (Phase 1)
 
@@ -107,13 +107,13 @@ modules/jrpg with pure-logic core (no Node dependency), database, game state, RN
 - [x] **5.6** Reference scanner (P2) _(deps: 5.5; commit: dbea2b98f0)_
 - [x] **5.7** Epic review: JRPG core (P1) _(deps: 5.6; commit: 7cfb5653ce)_
 
-## [~] 6 JRPG workspace and database editor
+## [ ] 6 JRPG workspace and database editor
 
 Setup tool, managed addon, main-screen workspace, database editor, authoring API.
 
 - [x] **6.1** Managed addon embedding (P1) _(commit: 554066373a)_
 - [x] **6.2** Set up JRPG Project tool (P1) _(deps: 6.1; commit: 895eec6a88)_
-- [~] **6.3** Workspace shell (P1) _(deps: 6.2)_
+- [x] **6.3** Workspace shell (P1) _(deps: 6.2; commit: pending)_
 - [ ] **6.4** Database editor framework (P1) _(deps: 6.3)_
   - [ ] **6.4.1** Database window, tabs and entry list (P1)
   - [ ] **6.4.2** Entry form, undo, save, ID pickers (P1) _(deps: 6.4.1)_

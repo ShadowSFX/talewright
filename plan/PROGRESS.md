@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 21:03 -0600
-- **Current task:** 6.3 Workspace shell
-- **Last completed:** 1.9 Fork CI: templates compile the tests; clangd-tidy clean
-- **Next task:** none ready (see `tasks.py next`)
-- **Done leaf tasks:** 66
+- **Updated:** 2026-10-13 21:04 -0600
+- **Current task:** none
+- **Last completed:** 6.3 Workspace shell
+- **Next task:** 6.4.1 Database window, tabs and entry list
+- **Done leaf tasks:** 67
 <!-- status:end -->
 
 ## Log
@@ -177,4 +177,6 @@
 | 2026-10-13 20:57 -0600 | 6.2 | done: Set up JRPG Project tool — JRPGProjectSetup (idempotent: folders, manifest + per-table files with original starter content, game_id, spec 01 jrpg_* actions keeping user maps, jrpg/enabled, managed addon) + Project > Tools > Set Up JRPG Project... with a report dialog (frontend-design: collapsed outcome sections with counts, compact nothing-changed and error variants) + workspace empty/ready states + jrpg_setup_project bridge tool (show_report); verified live: first run created 19 paths and 9 actions, kept the user's jrpg_ok (K), JRPG tab appeared; second run changed=false; screenshots in plan/evidence/jrpg/6.2-*; 2 doctests; full suite 1479/1479 (containers: 6 in_progress->pending) | 895eec6a88 |
 | 2026-10-13 20:58 -0600 | 6.3 | started: Workspace shell (containers: 6 pending->in_progress) |  |
 | 2026-10-13 21:03 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-13 21:03 -0600 | 1.9 | done: Fork CI: templates compile the tests; clangd-tidy clean — CI run 38503265605 (commit 9ccf49e3bb) green on every job: templates compile the tests, clangd-tidy step clean (containers: 1 in_progress->done) | pending |
+| 2026-10-13 21:03 -0600 | 1.9 | done: Fork CI: templates compile the tests; clangd-tidy clean — CI run 38503265605 (commit 9ccf49e3bb) green on every job: templates compile the tests, clangd-tidy step clean (containers: 1 in_progress->done) | ee2c26277a |
+| 2026-10-13 21:04 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 21:04 -0600 | 6.3 | done: Workspace shell — JRPGWorkspaceShell (frontend-design; Godot patterns: main screen control, Script-editor HSplit side list, 2D-editor flat toolbar with ButtonGroup modes, TabBar sections): Map section (Maps tree + Palette with empty states, Tiles/Events/Regions modes, disabled Pencil/Rectangle/Fill/Eraser, canvas with message-window empty state sized to the canvas), Database section (tables with entry counts and files, Open in Inspector), Play From Start/Battle Test disabled with unlock tooltips; view shows intro until set up, shell after; bridge tools jrpg_workspace_state/jrpg_workspace_select; verified live: both sections shown, get_logs errors_only empty (0 errors/warnings); screenshots plan/evidence/jrpg/6.3-*; full suite passes (containers: 6 in_progress->pending) | pending |
