@@ -38,7 +38,8 @@ and move on to the next ready task.
    `python talewright/tools/static_checks.py` (the CI static-check hooks on the files the next push brings, plus fork
    checks; needs `python -m pip install --user prek`) and review every file a hook rewrote — codespell's automatic
    fixes have renamed identifiers before (D-027). It also compiles every fork translation unit with clang's
-   diagnostics (`talewright/tools/clang_check.py`): MSVC accepts code that CI's clang builds reject (D-028), and runs
+   diagnostics (`talewright/tools/clang_check.py`): MSVC accepts code that CI's clang builds reject (D-028), and with
+   GCC through WSL (`talewright/tools/gcc_check.py`): GCC rejects code MSVC and clang accept (D-035), and runs
    CI's clangd-tidy on the changed C/C++ files (`python -m pip install --user clangd clangd-tidy`): every file,
    headers included, must include what it uses and nothing unused. A check that cannot run (tool missing) fails the
    script unless `--allow-skips` is given. CI fails on any push that skips this.
@@ -84,6 +85,8 @@ and move on to the next ready task.
 - JRPG core boundary (run before committing jrpg changes): `python modules/jrpg/tests/check_core_includes.py`.
 - Clang diagnostics on fork C++ (part of static_checks.py): `python talewright/tools/clang_check.py` — uses
   Visual Studio's clang-tidy and the `compile_commands.json` the `editor` build profile writes.
+- GCC diagnostics on fork C++ (part of static_checks.py): `python talewright/tools/gcc_check.py` — g++ in WSL
+  (`GCC_WSL_DISTRO` picks the distribution), editor and template defines, the module doctests included.
 - Tests: `bin/<editor binary> --test` (all) or `--test --test-case="*[JRPG]*"`; module tests live in
   `modules/<m>/tests/*.h` (auto-included when built with `tests=yes`, which `dev_mode=yes` enables).
 - Tracker: `python plan/tools/tasks.py validate|render|next|show <id>|start <id>|done <id> -m ..|block <id> -m ..|defer <id> -m ..|stamp|import <file>`.

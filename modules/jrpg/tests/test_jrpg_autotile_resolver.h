@@ -92,7 +92,7 @@ int rank(int p_reduced) {
 
 int shape(const PackedInt32Array &p_cells, const Vector2i &p_size, int p_x, int p_y, int p_flags) {
 	const int32_t index = p_cells[p_y * p_size.x + p_x];
-	const int kind = index > 0 && index < test_kinds().size() ? test_kinds()[index] : R::KIND_PLAIN;
+	const int kind = index > 0 && index < test_kinds().size() ? int(test_kinds()[index]) : int(R::KIND_PLAIN);
 	if (kind == R::KIND_PLAIN) {
 		return -1;
 	}

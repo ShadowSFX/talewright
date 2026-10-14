@@ -53,7 +53,7 @@ int wrap(int p_coord, int p_extent, bool p_loop) {
 }
 
 int kind_of(const PackedByteArray &p_kinds, int32_t p_index) {
-	return p_index > 0 && p_index < p_kinds.size() ? p_kinds[p_index] : JRPGAutotileResolver::KIND_PLAIN;
+	return p_index > 0 && p_index < p_kinds.size() ? int(p_kinds[p_index]) : int(JRPGAutotileResolver::KIND_PLAIN);
 }
 
 int mask_at(const int32_t *p_cells, const Vector2i &p_size, int p_x, int p_y, int p_flags) {
@@ -95,7 +95,8 @@ PackedByteArray JRPGAutotileResolver::get_palette_kinds(const Array &p_palette) 
 }
 
 BitField<JRPGAutotileResolver::Flags> JRPGAutotileResolver::get_flags(bool p_loop_horizontal, bool p_loop_vertical, JRPGTilesetData::EdgeMode p_edge_mode) {
-	return (p_loop_horizontal ? LOOP_HORIZONTAL : 0) | (p_loop_vertical ? LOOP_VERTICAL : 0) | (p_edge_mode == JRPGTilesetData::EDGE_BORDER ? EDGE_BORDER : 0);
+	// Ints, not enum and int mixed in one conditional (GCC's -Wextra rejects that).
+	return (p_loop_horizontal ? int(LOOP_HORIZONTAL) : 0) | (p_loop_vertical ? int(LOOP_VERTICAL) : 0) | (p_edge_mode == JRPGTilesetData::EDGE_BORDER ? int(EDGE_BORDER) : 0);
 }
 
 int JRPGAutotileResolver::get_neighbor_mask(const PackedInt32Array &p_cells, const Vector2i &p_size, const Vector2i &p_cell, BitField<Flags> p_flags) {

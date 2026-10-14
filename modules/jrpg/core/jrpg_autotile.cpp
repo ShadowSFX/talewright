@@ -94,7 +94,7 @@ Vector2i JRPGAutotile::get_blob_cell(int p_index) {
 }
 
 int JRPGAutotile::get_wall_mask(BitField<Neighbor> p_mask) {
-	return (p_mask.has_flag(NEIGHBOR_N) ? SIDE_N : 0) | (p_mask.has_flag(NEIGHBOR_E) ? SIDE_E : 0) | (p_mask.has_flag(NEIGHBOR_S) ? SIDE_S : 0) | (p_mask.has_flag(NEIGHBOR_W) ? SIDE_W : 0);
+	return (p_mask.has_flag(NEIGHBOR_N) ? int(SIDE_N) : 0) | (p_mask.has_flag(NEIGHBOR_E) ? int(SIDE_E) : 0) | (p_mask.has_flag(NEIGHBOR_S) ? int(SIDE_S) : 0) | (p_mask.has_flag(NEIGHBOR_W) ? int(SIDE_W) : 0);
 }
 
 Vector2i JRPGAutotile::get_wall_cell(BitField<Side> p_mask4) {

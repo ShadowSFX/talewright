@@ -165,7 +165,7 @@ Original generated assets, autotile importer and resolver, tileset flags.
 JRPGMap scenes, map editor canvas, cell cache, runtime map and movement.
 
 - [ ] **8.1** JRPGMap node + spike (P1)
-  - [x] **8.1.1** Map data and map list (P1) _(commit: pending)_
+  - [x] **8.1.1** Map data and map list (P1) _(commit: cab2cece50)_
   - [ ] **8.1.2** JRPGMap node (P1) _(deps: 8.1.1)_
   - [ ] **8.1.3** Map scene spike (P1) _(deps: 8.1.2)_
 - [ ] **8.2** Map cell cache compiler (P1) _(deps: 8.1)_

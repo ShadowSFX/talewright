@@ -223,6 +223,18 @@ def main() -> int:
             print(clang.stdout)
         ok &= clang.returncode == 0
 
+    # GCC's diagnostics (CI's Linux Mono and MinGW builds) through WSL: GCC warns where MSVC and clang do not (D-035).
+    gcc = subprocess.run([sys.executable, "talewright/tools/gcc_check.py"], cwd=root, capture_output=True, text=True)
+    last = (gcc.stdout.strip().splitlines() or [""])[-1]
+    if gcc.returncode == 2:
+        print("[SKIP] gcc diagnostics: " + last)
+        skipped.append("gcc diagnostics")
+    else:
+        print(("[PASS] " if gcc.returncode == 0 else "[FAIL] ") + "gcc diagnostics: " + last)
+        if gcc.returncode != 0:
+            print(gcc.stdout)
+        ok &= gcc.returncode == 0
+
     # CI analyzes each changed C/C++ file on its own with clangd (headers included).
     code, last = run_clangd_tidy(root, files)
     if code == 2:

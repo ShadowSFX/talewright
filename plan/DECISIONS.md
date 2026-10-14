@@ -498,3 +498,18 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   `talewright/tools/asset_gen/common.py` and scale the painters' fixed 48 px geometry (texture cell sizes in
   `tiles.py`, edge margins, furniture and character coordinates, template marks) by `TILE / 48` before regenerating;
   until then the generator draws for 48 px only (epic 7 review, part A finding 8).
+
+## D-035 — GCC diagnostics before every push (through WSL)
+- **Context:** the epic 7 push failed CI's GCC builds (Linux Mono editor and templates, Windows MinGW template): an
+  enum and a uint8_t in one conditional (`jrpg_autotile_resolver.cpp`, a doctest header) is a `-Wextra` warning in
+  GCC and an error under dev_mode's `-Werror`, while MSVC (local builds) and clang (clang_check.py, D-028) accept it.
+  Run 38541244575.
+- **Options:** rely on CI; install MinGW on Windows; compile the fork's units with GCC in WSL (Ubuntu with g++ is
+  installed on this machine).
+- **Choice:** `talewright/tools/gcc_check.py` runs `g++ -fsyntax-only` with Godot's GCC warnings
+  (SConstruct:962-1027) in WSL on every fork translation unit and on tests/test_main.cpp, with editor defines and
+  again with template defines (no TOOLS_ENABLED, editor-only code left out), and fails on any diagnostic in fork code
+  or any compile error; `static_checks.py` runs it (about 20 s), and a missing WSL/g++ is a skip that fails without
+  `--allow-skips`.
+- **Why:** catches GCC-only diagnostics before the push, the same way clang_check.py does for clang.
+- **Reversal:** remove the call from static_checks.py; CI still reports the failure after the push.
