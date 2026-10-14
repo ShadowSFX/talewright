@@ -96,8 +96,8 @@ TEST_CASE("[SceneTree][JRPG][MessageWindow] The codes lay the text out: colors, 
 	const Dictionary big = layout[3];
 	CHECK((Point2(big["position"]) == Point2(0, JRPGMessageWindow::DEFAULT_LINE_HEIGHT) && int(big["font_size"]) == JRPGMessageWindow::DEFAULT_FONT_SIZE + JRPGMessageWindow::FONT_SIZE_STEP));
 	CHECK(int(Dictionary(layout[4])["font_size"]) == 12);
-	const Dictionary far = layout[5];
-	CHECK((Point2(far["position"]) == Point2(300, 100) && int(far["first"]) == 15));
+	const Dictionary placed = layout[5]; // Not "far": MinGW's Windows headers define it as a macro.
+	CHECK((Point2(placed["position"]) == Point2(300, 100) && int(placed["first"]) == 15));
 	CHECK(window->get_total_characters() == 18);
 
 	// With a face, the text starts beside it; colors outside the palette change nothing.

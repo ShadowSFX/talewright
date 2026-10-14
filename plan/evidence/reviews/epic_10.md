@@ -59,3 +59,19 @@ finding below is marked with the task and fix as it lands.
 | 17 | low | Screen stack signals not checked (SIGNAL_WATCH cannot watch script signals; error lines in the log) | 10.4.1.3: the script's signals are counted through `callable_mp_static` callables (no SignalWatcher errors in the log); every push, pop, replace and clear is checked |
 | 18 | low | Name box label ignored the message font | 10.4.1.2.3: the name label takes the message font as well as its size. Same doctest |
 | 19 | low | Reveal cut inside grapheme clusters | 10.4.1.2.3: pieces count grapheme clusters (`TextServer::string_get_character_breaks`), and the reveal cuts at cluster ends. Same doctest (an e with a combining accent is one letter with a break-iterator text server) |
+
+## Close-out (10.4.2)
+
+- Fixes: 10.4.1.1 input and focus (e03f8a993a), 10.4.1.2.1 window, skin and data (629d4c5407), 10.4.1.2.2 lists,
+  choices, number and gold windows (df06a99e4b), 10.4.1.2.3 message text and message window (7b8a0c25ef), 10.4.1.3
+  screen stack and checks (6b6fb91483). All 40 findings fixed; parts deferred on purpose: drag/swipe scrolling and
+  mouse or touch on the number input (A13, epic 28 criterion), the game state's Change Window Color reaching windows
+  (A7, epic 24 note).
+- Goldens regenerated on purpose once (10.4.1.2.1: the scroll and pause marks moved into the padding), after a
+  visual check of the window, list and message images.
+- plain_2d/plain_3d smoke: ALL PASS with a rebuilt release template (`talewright/build_logs/smoke-20261014-133843.log`).
+- core_diff_check: 5 core paths changed, 0 unlisted.
+- Full test suite: 1620 cases, all pass; release template (`template-tests`): 1506 cases, all pass. One run of the
+  full suite earlier in 10.4.1.1 crashed in the upstream `[Image] Saving and loading` case (SIGSEGV) and passed in
+  every run since (not reproduced; watched).
+- Static checks: ALL PASS. Bridge checks: 188/188, and a plain run leaves the repository untouched.

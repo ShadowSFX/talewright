@@ -908,3 +908,16 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   after the fade and returns null unless asked to keep it. A screen that leaves the tree by itself is taken off and
   the one under it becomes active.
 - **Reversal:** the script is one file; another stack can replace the `Screens` node.
+
+## D-055 — No identifiers that Windows headers define as macros
+- **Context:** the epic 10 push (CI run 38625515777) failed in one job only, the Windows template built with MinGW:
+  a doctest named a variable `far`, which MinGW's Windows headers define as an empty macro (minwindef.h), and one of
+  the headers the test now included pulled them in there. The local MSVC build, clang check and WSL GCC check
+  (Linux headers) all accepted it.
+- **Options:** a MinGW cross build in WSL before each push (minutes, another toolchain to keep); rename and rely on
+  review; a static check on the fork's C++ for the names Windows headers turn into macros.
+- **Choice:** `static_checks.py` fails on fork C++ that uses `far`, `near`, `interface`, `small`, `IN`, `OUT`,
+  `ERROR` and the other Windows SDK macro names as identifiers (comments and literals ignored); `min` and `max` are
+  allowed because Godot defines `NOMINMAX` (`platform/windows/detect.py:425`).
+- **Why:** seconds per run, and it catches the whole class before CI does.
+- **Reversal:** `WINDOWS_MACROS` in `talewright/tools/static_checks.py`.

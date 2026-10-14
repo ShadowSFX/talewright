@@ -5,7 +5,9 @@ CI runs `prek run --files <changed files>` with the repository's .pre-commit-con
 hooks on the files a push would bring (default: everything that differs from origin/talewright, committed or not,
 plus untracked files), then the fork's own checks: Talewright license headers (Godot's copyright-headers hook skips
 the fork modules), ASCII-only narrow string literals (non-ASCII text goes in U"..." literals: String(const char *)
-reads Latin-1), EditorFileSystem only through jrpg_editor_file_system() (its singleton dangles once a test deletes it),
+reads Latin-1), no identifiers that Windows headers define as macros (far, near, ...: MinGW's builds see them, the
+local MSVC and Linux GCC checks do not), EditorFileSystem only through jrpg_editor_file_system() (its singleton dangles
+once a test deletes it),
 the jrpg core include boundary, the upstream-patch ledger, clang's diagnostics on the fork's
 C++ (talewright/tools/clang_check.py; skipped when clang-tidy or compile_commands.json is missing), and clangd-tidy on
 the changed C/C++ files, as CI's "Style checks via clangd-tidy" step runs it (every file analyzed on its own, so
@@ -30,6 +32,7 @@ import argparse
 import hashlib
 import io
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -42,6 +45,49 @@ CPP_SUFFIXES = (".h", ".hpp", ".cpp", ".inc")
 
 # Fork C++ must not use these without their standard header; the engine has portable equivalents.
 PORTABILITY = {"std::size(": "std_size( (core/typedefs.h)"}
+
+# Names the Windows SDK headers define as macros (minwindef.h, windef.h, rpcndr.h, objbase.h, wingdi.h, winnt.h).
+# MinGW builds include them where MSVC and the WSL GCC check do not, so `const Dictionary far` compiled everywhere
+# here and failed in CI's MinGW template (run 38625515777). min and max are left out: Godot defines NOMINMAX
+# (platform/windows/detect.py:425).
+WINDOWS_MACROS = (
+    "far near FAR NEAR interface small hyper pascal PASCAL cdecl CALLBACK DELETE IN OUT OPTIONAL ERROR TRANSPARENT"
+    " OPAQUE ABSOLUTE RELATIVE CONST VOID"
+).split()
+WINDOWS_MACRO_RE = re.compile(r"\b(" + "|".join(WINDOWS_MACROS) + r")\b")
+
+
+def code_only(text: str) -> str:
+    """text without comments and string or character literals (new lines kept, so line numbers stay)."""
+    out, i, n = [], 0, len(text)
+    while i < n:
+        if text.startswith("/*", i):
+            j = text.find("*/", i + 2)
+            j = n if j < 0 else j + 2
+            out.append("\n" * text.count("\n", i, j))
+            i = j
+        elif text.startswith("//", i):
+            j = text.find("\n", i)
+            i = n if j < 0 else j
+        elif text[i] in "\"'":
+            quote, j = text[i], i + 1
+            while j < n and text[j] != quote and text[j] != "\n":
+                j += 2 if text[j] == "\\" else 1
+            out.append(quote + quote)
+            i = j + 1
+        else:
+            out.append(text[i])
+            i += 1
+    return "".join(out)
+
+
+def windows_macro_names(text: str) -> list[tuple[int, str]]:
+    """(line, name) of each identifier in text that a Windows header defines as a macro."""
+    return [
+        (number, match.group(1))
+        for number, line in enumerate(code_only(text).splitlines(), 1)
+        for match in WINDOWS_MACRO_RE.finditer(line)
+    ]
 
 
 def non_ascii_narrow_literals(line: str) -> list[str]:
@@ -219,6 +265,17 @@ def main() -> int:
     for finding in literals:
         print("   ", finding)
     ok &= not literals
+
+    # Windows headers' macros as identifiers break MinGW builds only (CI's Windows GCC template).
+    macros = [
+        f"{f}:{number}: {name} is a macro in Windows headers; rename it"
+        for f in cpp
+        for number, name in windows_macro_names((root / f).read_text(encoding="utf-8"))
+    ]
+    print(("[PASS]" if not macros else "[FAIL]") + f" no Windows header macros as names ({len(cpp)} files)")
+    for finding in macros:
+        print("   ", finding)
+    ok &= not macros
 
     # EditorFileSystem's singleton outlives the object (editor/file_system/editor_file_system.cpp:3827-3833): after a
     # doctest deletes one, later tests read freed memory. Fork code asks jrpg_editor_file_system() or checks EditorNode.

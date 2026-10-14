@@ -4022,7 +4022,7 @@
       "dependencies": [
         "8"
       ],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Message advance end-to-end"
@@ -4200,7 +4200,7 @@
       "dependencies": [
         "10.3"
       ],
-      "status": "pending",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "10.4.1 and 10.4.2 done"
@@ -4405,7 +4405,7 @@
         "plan/evidence/reviews/epic_10.md",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "6b6fb91483",
       "notes": ""
     },
     {
@@ -4423,10 +4423,15 @@
         "CI green on the push"
       ],
       "test_strategy": "Smoke, checks, CI.",
-      "status": "pending",
-      "files": [],
+      "status": "in_progress",
+      "files": [
+        "plan/evidence/reviews/epic_10.md",
+        "modules/jrpg/tests/test_jrpg_message_window.h",
+        "talewright/tools/static_checks.py",
+        "plan/DECISIONS.md"
+      ],
       "commit": "",
-      "notes": ""
+      "notes": "First push (6b6fb91483): CI run 38625515777 failed only in the Windows MinGW template: a doctest variable named far, a macro in MinGW's Windows headers. Fixed with a rename and a static check for such names (D-055)."
     },
     {
       "id": "11",
