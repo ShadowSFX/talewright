@@ -811,3 +811,25 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   ourselves keeps the reveal, waits and positions exact and testable.
 - **Reversal:** `JRPGMessageWindow::_layout` (layout), `_advance` (reveal, waits), `_press` (skipping); the palette is
   `get_default_text_colors`.
+
+## D-053 — Choices, number input and the gold window
+- **Context:** task 10.2.2.2 needs Show Choices (RM-CMD-002: up to six choices, blank ones hidden, a default, cancel
+  mapped to a choice or its own branch, a window position), Input Number (RM-CMD-003: 1 to 8 digits) and the gold
+  window (RM-MSG-010). The help does not list every position or cancel option, nor how digits are changed, nor where
+  the windows go relative to the message.
+- **Choice:** `JRPGChoiceWindow` (a `JRPGSelectableList`) shows the non-blank choices, as wide as the widest, and
+  reports the index each had among those given; cancel is `CANCEL_DISALLOWED`, `CANCEL_BRANCH` (reported as -1) or a
+  choice index; left, middle or right; above a message in the lower part of the screen, below one at the top, at
+  the bottom without one (the `message_window` path). Choice text keeps its color, icon and size codes: list items
+  holding a backslash are drawn code by code. After a choice the window lets go of the focus, so a second press
+  chooses nothing. `JRPGNumberInputWindow`: up and down change the digit under the cursor (9 round to 0), left and
+  right move between digits (round at the ends), repeating while held; OK enters the number; no cancel; at the
+  right beside the message. `JRPGGoldWindow`: the amount and the unit (system label color) at the top right. Text
+  windows share the message window's font, size and line height (theme type `JRPGMessageWindow`); lists default to
+  the same 24-pixel size, and a class extending the list gets that size for its own type in the default theme,
+  because a theme with a default font size answers it for any type before a parent type's own
+  (`scene/resources/theme.cpp:670-672`). The interface sounds and the database moved from the list to `JRPGWindow`;
+  key repeats (RM-INP-004) moved to `JRPGInputReader` (shared by the list and the number input).
+- **Why:** the windows reuse the list and the window; the interpreter's presentation port (task 9.4) decides when to
+  show them (the reference shows choices as soon as the message text is out; the test scene asks for OK first).
+- **Reversal:** `JRPGChoiceWindow::_place` and `show_choices`, `JRPGNumberInputWindow::_process_input`.

@@ -72,9 +72,12 @@
 #include "modules/jrpg/core/jrpg_weapon_data.h"
 #include "modules/jrpg/runtime/jrpg_character_sheet.h"
 #include "modules/jrpg/runtime/jrpg_character_sprite.h"
+#include "modules/jrpg/runtime/jrpg_choice_window.h"
+#include "modules/jrpg/runtime/jrpg_gold_window.h"
 #include "modules/jrpg/runtime/jrpg_map.h"
 #include "modules/jrpg/runtime/jrpg_map_files.h"
 #include "modules/jrpg/runtime/jrpg_message_window.h"
+#include "modules/jrpg/runtime/jrpg_number_input_window.h"
 #include "modules/jrpg/runtime/jrpg_player.h"
 #include "modules/jrpg/runtime/jrpg_scene_manager.h"
 #include "modules/jrpg/runtime/jrpg_selectable_list.h"
@@ -181,6 +184,9 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGWindow);
 		GDREGISTER_CLASS(JRPGSelectableList);
 		GDREGISTER_CLASS(JRPGMessageWindow);
+		GDREGISTER_CLASS(JRPGChoiceWindow);
+		GDREGISTER_CLASS(JRPGNumberInputWindow);
+		GDREGISTER_CLASS(JRPGGoldWindow);
 		GDREGISTER_CLASS(JRPGGameState);
 	}
 #ifdef TOOLS_ENABLED

@@ -754,6 +754,7 @@ def run(checks: Checks) -> None:
     run_windows(c)
     run_lists(c)
     run_messages(c)
+    run_choices(c)
 
 
 # Windows (task 10.1.1) on a plain backdrop: open with a scroll mark, tinted with the pause mark, and three quarters open (its
@@ -1001,6 +1002,106 @@ def run_messages(c: Checks) -> None:
     c.check("JRPGMessageWindow: OK ends the message", busy is False, str(busy))
     compare_golden(
         c, "jrpg_message.png", shot.get("path", ""), "JRPGMessageWindow: the message matches the golden image"
+    )
+
+
+# A message with a face, then a choice of three beside it (task 10.2.2.2): OK reads the message, down and OK pick the
+# second choice, and the script keeps the index it got.
+CHOICE_SCENE = """[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui_checks/choice.gd" id="1_script"]
+
+[node name="ChoiceCheck" type="Control"]
+offset_right = 640.0
+offset_bottom = 360.0
+script = ExtResource("1_script")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+offset_right = 1152.0
+offset_bottom = 648.0
+color = Color(0.27, 0.43, 0.3, 1)
+
+[node name="Message" type="JRPGMessageWindow" parent="."]
+
+[node name="Choices" type="JRPGChoiceWindow" parent="."]
+message_window = NodePath("../Message")
+"""
+CHOICE_SCRIPT = r"""extends Control
+
+var choice := -9
+
+
+func _ready() -> void:
+	$Message.message_finished.connect(_on_message_read)
+	$Choices.choice_made.connect(_on_choice_made)
+	$Message.show_message("Two roads meet here.\nWhich way will you go?", load("res://faces/hero.png"), "Aria")
+
+
+func _on_message_read() -> void:
+	# The message stays on screen while the player chooses.
+	$Choices.show_choices(PackedStringArray(["North, to the hills", "East, along the river", "South, back home"]))
+
+
+func _on_choice_made(index: int) -> void:
+	choice = index
+	$Choices.close()
+	$Message.close()
+"""
+
+
+def run_choices(c: Checks) -> None:
+    (c.project / "ui_checks" / "choice.gd").write_text(CHOICE_SCRIPT, encoding="utf-8")
+    (c.project / "ui_checks" / "choice.tscn").write_text(CHOICE_SCENE, encoding="utf-8")
+    c.call("editor_rescan")
+    c.call("run_project", {"scene": "res://ui_checks/choice.tscn"})
+    connected = False
+    for _ in range(120):
+        if c.call("run_status").get("debugger_connected"):
+            connected = True
+            break
+        time.sleep(0.5)
+    c.check("JRPGChoiceWindow: the message and choice scene runs", connected)
+    if not connected:
+        c.call("stop_project")
+        return
+    root = "/root/ChoiceCheck"
+    waiting = False
+    for _ in range(40):
+        c.call("game_wait", {"frames": 10})
+        if c.call("game_call", {"path": f"{root}/Message", "method": "is_waiting_for_input"}).get("result"):
+            waiting = True
+            break
+    c.check("JRPGChoiceWindow: the message waits to be read", waiting)
+    c.call("game_input", {"action": "jrpg_ok"})  # Reads the message: the choices appear.
+    shown = False
+    for _ in range(20):
+        c.call("game_wait", {"frames": 6})
+        if c.call("game_call", {"path": f"{root}/Choices", "method": "is_open"}).get("result"):
+            shown = True
+            break
+    count = c.call("game_call", {"path": f"{root}/Choices", "method": "get_item_count"}).get("result")
+    c.check(
+        "JRPGChoiceWindow: OK reads the message and the three choices open", shown and count == 3, f"{shown} {count}"
+    )
+    c.call("game_wait", {"frames": 6})
+    shot = c.call("game_screenshot", {"include_image": False})
+    evidence = ROOT / "plan" / "evidence" / "jrpg" / "10.2.2.2-message-and-choice.png"
+    if shot.get("path"):
+        evidence.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(shot["path"], evidence)
+    c.call("game_input", {"action": "jrpg_down"})
+    c.call("game_wait", {"frames": 6})
+    c.call("game_input", {"action": "jrpg_ok"})
+    c.call("game_wait", {"frames": 6})
+    picked = c.call("game_node_get", {"path": root, "properties": ["choice"]})
+    c.call("stop_project")
+    c.check(
+        "JRPGChoiceWindow: the second choice gives index 1",
+        '"choice": 1' in json.dumps(picked),
+        json.dumps(picked)[:200],
+    )
+    compare_golden(
+        c, "jrpg_choices.png", shot.get("path", ""), "JRPGChoiceWindow: the message and choices match the golden image"
     )
 
 

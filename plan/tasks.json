@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "10.2.2.1 Message window: layout, letter by letter, waits, face, name box",
+  "last_completed": "10.2.2.2 Choice, number input and gold windows; message and choice end to end",
   "tasks": [
     {
       "id": "0",
@@ -4094,15 +4094,15 @@
       "dependencies": [
         "10.1"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Parser doctest; e2e advance"
       ],
       "test_strategy": "Doctests + bridge.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "10.2.1",
@@ -4134,9 +4134,9 @@
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "files": [],
-      "commit": "",
-      "notes": "",
-      "status": "pending"
+      "commit": "children",
+      "notes": "Closed automatically when all children closed.",
+      "status": "done"
     },
     {
       "id": "10.2.2.1",
@@ -4152,7 +4152,7 @@
       "test_strategy": "Doctests + bridge golden.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "8306884ccb",
       "notes": ""
     },
     {
@@ -4169,9 +4169,9 @@
         "A test scene shows a message with a face and then a 3-way choice; bridge input advances, picks choice 2 and the returned index is 1; screenshot as evidence"
       ],
       "test_strategy": "Doctests + bridge.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

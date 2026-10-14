@@ -66,10 +66,22 @@
 				Returns the size of one icon of the icon set, in pixels ([theme_item icon_size]).
 			</description>
 		</method>
+		<method name="get_last_sound" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the interface sound played last, a [enum JRPGSystemData.Sound] value, or [code]-1[/code]. It is recorded even when the System data has no sound for it.
+			</description>
+		</method>
 		<method name="get_open_rect" qualifiers="const">
 			<return type="Rect2" />
 			<description>
 				Returns the rectangle the window shows now: all of it when open, the band through its middle while it opens or closes.
+			</description>
+		</method>
+		<method name="get_sound_player" qualifiers="const">
+			<return type="AudioStreamPlayer" />
+			<description>
+				Returns the internal player of the interface sounds, made with the first sound played; [code]null[/code] before.
 			</description>
 		</method>
 		<method name="is_closed" qualifiers="const">
@@ -102,8 +114,18 @@
 				Starts opening the window over [constant OPEN_FRAMES] frames; [signal opened] is emitted when it is open. A window that is already open emits it at once.
 			</description>
 		</method>
+		<method name="play_sound">
+			<return type="void" />
+			<param index="0" name="sound" type="int" enum="JRPGSystemData.Sound" />
+			<description>
+				Plays one of the System data's interface sounds (cursor, OK, cancel, buzzer); silent when the database has none for it.
+			</description>
+		</method>
 	</methods>
 	<members>
+		<member name="database" type="JRPGDatabase" setter="set_database" getter="get_database">
+			The database whose System data gives the interface sounds. If [code]null[/code], the project's database is used.
+		</member>
 		<member name="frame_visible" type="bool" setter="set_frame_visible" getter="is_frame_visible" default="true">
 			If [code]true[/code], the back and the border are drawn. Message windows on a dimmed or transparent background draw neither.
 		</member>

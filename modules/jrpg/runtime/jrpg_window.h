@@ -33,7 +33,11 @@
 
 #include "scene/gui/container.h"
 
+#include "modules/jrpg/core/jrpg_system_data.h"
+
+class AudioStreamPlayer;
 class ImageTexture;
+class JRPGDatabase;
 class Texture2D;
 
 // A game window (task 10.1.1; RM-MNU-016, D-049): a back tinted by a tone and a nine-slice border over it, the
@@ -46,6 +50,8 @@ class Texture2D;
 // padding, frame_margin and icon_size), so a project theme or theme overrides replace it as for any control. The
 // built-in skin (the generated window images and icon set, embedded at build time) is added to Godot's default theme
 // the first time a window needs it, so it lives and dies with the default theme and its RenderingServer.
+// Windows play the interface sounds (cursor, OK, cancel, buzzer: RM-MNU-019) of the System data of their database (the
+// project's when none is set).
 // Authority (D-007): client. Windows only present what the game decides.
 class JRPGWindow : public Container {
 	GDCLASS(JRPGWindow, Container);
@@ -74,6 +80,9 @@ private:
 	bool frame_visible = true;
 
 	Ref<ImageTexture> toned_back; // The back with the tone added; null when the tone is zero.
+	Ref<JRPGDatabase> database; // Null: the project's (JRPGDatabase::PROJECT_PATH).
+	AudioStreamPlayer *sound_player = nullptr;
+	int last_sound = -1;
 
 	void _update_toned_back();
 	void _set_openness(double p_openness);
@@ -145,7 +154,17 @@ public:
 	int get_icon_size() const { return theme_cache.icon_size; }
 	Rect2 get_icon_region(int p_index) const;
 
+	void set_database(const Ref<JRPGDatabase> &p_database);
+	Ref<JRPGDatabase> get_database() const;
+	// Plays one of the System data's interface sounds (silent when the database has none).
+	void play_sound(JRPGSystemData::Sound p_sound);
+	// The sound played last (a JRPGSystemData::Sound), or -1.
+	int get_last_sound() const { return last_sound; }
+	// The internal player of the interface sounds ("Sounds"), made with the first sound played; null before.
+	AudioStreamPlayer *get_sound_player() const { return sound_player; }
+
 	virtual Size2 get_minimum_size() const override;
 
 	JRPGWindow();
+	~JRPGWindow(); // Out of line: JRPGDatabase is only declared here.
 };

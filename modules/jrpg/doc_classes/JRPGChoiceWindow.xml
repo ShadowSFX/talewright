@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGChoiceWindow" inherits="JRPGSelectableList" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The choice window: the choices beside the message window, the default one selected, cancel refused, a choice or a branch.
+	</brief_description>
+	<description>
+		Shows choices as Show Choices does: a [JRPGSelectableList] as wide as the widest choice, beside the message window named by [member message_window] (above a message in the lower part of the screen, below one at the top; at the bottom of the screen without a message), at the left, middle or right. Choices may hold control codes for colors, icons and sizes. Blank choices are not shown, and [signal choice_made] reports the index a choice had among those given. The cursor starts on the default choice. Cancel is refused ([constant CANCEL_DISALLOWED]), picks a choice, or is a branch of its own ([constant CANCEL_BRANCH]). After a choice the window lets go of the focus, so a second press chooses nothing.
+		Authority: client. Online, the server checks the index it receives.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_cancel_choice" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns what cancel does: [constant CANCEL_DISALLOWED], [constant CANCEL_BRANCH] or the index of the choice it picks.
+			</description>
+		</method>
+		<method name="get_placement" qualifiers="const">
+			<return type="int" enum="JRPGChoiceWindow.Placement" />
+			<description>
+				Returns where the window was placed by the last [method show_choices].
+			</description>
+		</method>
+		<method name="show_choices">
+			<return type="void" />
+			<param index="0" name="choices" type="PackedStringArray" />
+			<param index="1" name="default" type="int" default="0" />
+			<param index="2" name="cancel" type="int" default="-2" />
+			<param index="3" name="placement" type="int" enum="JRPGChoiceWindow.Placement" default="2" />
+			<param index="4" name="background" type="int" enum="JRPGMessageWindow.Background" default="0" />
+			<description>
+				Shows [param choices] with the cursor on [param default] (an index among the choices given). [param cancel] is [constant CANCEL_DISALLOWED], [constant CANCEL_BRANCH] or the index of the choice cancel picks. [param placement] puts the window at the left, middle or right; [param background] is the window frame or none. Opens the window and gives it the focus.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="message_window" type="NodePath" setter="set_message_window" getter="get_message_window" default="NodePath(&quot;&quot;)">
+			The message window the choices go beside. Empty: the bottom of the screen.
+		</member>
+	</members>
+	<signals>
+		<signal name="choice_made">
+			<param index="0" name="index" type="int" />
+			<description>
+				Emitted when the player chooses: [param index] is the choice's index among those given, or [constant CANCEL_BRANCH] when cancel is a branch of its own.
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="PLACEMENT_LEFT" value="0" enum="Placement">
+			At the left of the screen.
+		</constant>
+		<constant name="PLACEMENT_MIDDLE" value="1" enum="Placement">
+			In the middle of the screen.
+		</constant>
+		<constant name="PLACEMENT_RIGHT" value="2" enum="Placement">
+			At the right of the screen.
+		</constant>
+		<constant name="CANCEL_DISALLOWED" value="-2">
+			Cancel does nothing.
+		</constant>
+		<constant name="CANCEL_BRANCH" value="-1">
+			Cancel is a branch of its own; also the index [signal choice_made] reports for it.
+		</constant>
+		<constant name="MIN_WIDTH" value="96">
+			The narrowest the window gets, in pixels.
+		</constant>
+	</constants>
+</class>

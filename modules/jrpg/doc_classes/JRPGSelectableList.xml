@@ -6,7 +6,7 @@
 	<description>
 		Shows [member items] in [member columns] and rows inside a [JRPGWindow], with the skin's cursor on the [member selected] item. The list takes the player's input while it has focus: [code]jrpg_up[/code], [code]jrpg_down[/code], [code]jrpg_left[/code] and [code]jrpg_right[/code] move the cursor (left and right with two columns or more), going round at the ends on a fresh press only, so a held key stops at the end; a held direction repeats [constant REPEAT_DELAY_FRAMES] frames after the press, then every [constant REPEAT_INTERVAL_FRAMES] (at 60 frames a second). [code]jrpg_page_prev[/code] and [code]jrpg_page_next[/code] move a page of rows; [code]jrpg_ok[/code] chooses the item under the cursor ([signal item_chosen]; a disabled item only buzzes, [signal item_refused]); [code]jrpg_cancel[/code] backs out ([signal cancelled]). A key already held when the list gets the focus is not a press for it.
 		With the mouse, pointing at an item moves the cursor there, clicking the item under the cursor chooses it, the right button cancels and the wheel scrolls.
-		The cursor, OK, cancel and buzzer sounds come from the System data of [member database], the project's database when none is set.
+		The cursor, OK, cancel and buzzer sounds come from the System data of [member JRPGWindow.database], the project's database when none is set.
 		Authority: client. The list only reports what the player picks.
 	</description>
 	<tutorials>
@@ -61,30 +61,11 @@
 				Returns the text of the item [param index].
 			</description>
 		</method>
-		<method name="get_last_sound" qualifiers="const">
-			<return type="int" />
-			<description>
-				Returns the interface sound played last, a [enum JRPGSystemData.Sound] value, or [code]-1[/code]. It is recorded even when the System data has no sound for it.
-			</description>
-		</method>
-		<method name="get_sound_player" qualifiers="const">
-			<return type="AudioStreamPlayer" />
-			<description>
-				Returns the internal player of the interface sounds, made with the first sound played; [code]null[/code] before.
-			</description>
-		</method>
 		<method name="is_item_enabled" qualifiers="const">
 			<return type="bool" />
 			<param index="0" name="index" type="int" />
 			<description>
 				Returns [code]true[/code] if the item [param index] can be chosen.
-			</description>
-		</method>
-		<method name="play_sound">
-			<return type="void" />
-			<param index="0" name="sound" type="int" enum="JRPGSystemData.Sound" />
-			<description>
-				Plays one of the System data's interface sounds; silent when the database has none for it.
 			</description>
 		</method>
 		<method name="set_item_enabled">
@@ -102,9 +83,6 @@
 		</member>
 		<member name="columns" type="int" setter="set_columns" getter="get_columns" default="1">
 			How many items each row holds.
-		</member>
-		<member name="database" type="JRPGDatabase" setter="set_database" getter="get_database">
-			The database whose System data gives the interface sounds. If [code]null[/code], the project's database is used.
 		</member>
 		<member name="focus_mode" type="int" setter="set_focus_mode" getter="get_focus_mode" overrides="Control" enum="Control.FocusMode" default="2" />
 		<member name="items" type="Array" setter="set_items" getter="get_items" default="[]">
@@ -160,6 +138,9 @@
 		</constant>
 		<constant name="ICON_SIZE" value="32">
 			The largest size an item's icon is drawn at, in pixels.
+		</constant>
+		<constant name="DEFAULT_FONT_SIZE" value="24">
+			The default [theme_item font_size], the same as message windows.
 		</constant>
 	</constants>
 	<theme_items>

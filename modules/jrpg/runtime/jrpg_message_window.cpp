@@ -393,7 +393,7 @@ void JRPGMessageWindow::_notification(int p_what) {
 		} break;
 		case NOTIFICATION_INTERNAL_PROCESS: {
 			if (has_focus()) {
-				input_reader.update();
+				input_reader.update(get_process_delta_time());
 				if (input_reader.is_fresh(JRPGInputReader::ACTION_OK) || input_reader.is_fresh(JRPGInputReader::ACTION_CANCEL)) {
 					_press();
 				}

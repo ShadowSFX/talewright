@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGGoldWindow" inherits="JRPGWindow" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The gold window: the party's gold and the currency unit.
+	</brief_description>
+	<description>
+		Shows the party's [member gold] with the [member currency_unit] after it, at the top right of the screen, as a message's [code]\$[/code] code asks for ([signal JRPGMessageWindow.gold_window_requested]) and menus show it.
+		Authority: client. It shows the gold the game state holds (the server's, online).
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="show_gold">
+			<return type="void" />
+			<param index="0" name="gold" type="int" />
+			<param index="1" name="unit" type="String" />
+			<description>
+				Shows [param gold] and [param unit] at the top right of the screen, opening the window.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="currency_unit" type="String" setter="set_currency_unit" getter="get_currency_unit" default="&quot;&quot;">
+			The currency unit, shown after the amount in the system label color.
+		</member>
+		<member name="gold" type="int" setter="set_gold" getter="get_gold" default="0">
+			The amount shown; never below 0.
+		</member>
+	</members>
+	<constants>
+		<constant name="WIDTH" value="240">
+			The window's width, in pixels.
+		</constant>
+		<constant name="UNIT_COLOR" value="16">
+			The text color of the currency unit, in [method JRPGMessageWindow.get_default_text_colors].
+		</constant>
+	</constants>
+</class>

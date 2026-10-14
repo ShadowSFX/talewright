@@ -39,8 +39,13 @@ class InputEvent;
 // (Input's state, so presses made from code count too) or arrived as a GUI event while the window had focus (a tap
 // shorter than a frame). A key already down when the focus comes in is not new: it belongs to whatever gave the focus.
 // Projects without the JRPG actions (not set up) read none, without an error each frame.
+// A held action repeats (RM-INP-004): on the press, again REPEAT_DELAY_FRAMES frames later, then every
+// REPEAT_INTERVAL_FRAMES (at 60 frames a second, counted in time).
 class JRPGInputReader {
 public:
+	static constexpr int REPEAT_DELAY_FRAMES = 24;
+	static constexpr int REPEAT_INTERVAL_FRAMES = 6;
+
 	enum Action {
 		ACTION_UP,
 		ACTION_DOWN,
@@ -58,9 +63,11 @@ public:
 
 	// Forgets pending presses and takes what is down now as not new (call when focus comes in).
 	void reset();
-	// Reads the actions once a frame.
-	void update();
+	// Reads the actions once a frame, p_delta seconds after the last read.
+	void update(double p_delta);
 	bool is_fresh(Action p_action) const { return fresh[p_action]; }
+	// A new press, or a repeat of a held one.
+	bool is_repeated(Action p_action) const { return repeated[p_action]; }
 	bool is_down(Action p_action) const { return was_pressed[p_action]; }
 	// For gui_input: whether p_event is one of the actions (the window then accepts it, so the viewport's ui_*
 	// navigation never moves the focus away); a press is kept for the next update() when p_keep_press.
@@ -70,4 +77,7 @@ private:
 	bool was_pressed[ACTION_MAX] = {};
 	bool pressed_event[ACTION_MAX] = {};
 	bool fresh[ACTION_MAX] = {};
+	bool repeated[ACTION_MAX] = {};
+	double held_time[ACTION_MAX] = {};
+	double next_repeat[ACTION_MAX] = {};
 };

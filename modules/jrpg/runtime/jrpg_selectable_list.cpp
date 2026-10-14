@@ -31,19 +31,16 @@
 
 #include "jrpg_selectable_list.h"
 
+#include "jrpg_message_window.h"
+
 #include "core/input/input_event.h"
-#include "core/io/resource_loader.h"
-#include "core/io/resource_uid.h"
 #include "core/object/class_db.h"
-#include "scene/audio/audio_stream_player.h"
+#include "scene/resources/font.h"
 #include "scene/resources/text_line.h"
 #include "scene/theme/theme_db.h"
-#include "servers/audio/audio_server.h"
-#include "servers/audio/audio_stream.h"
 #include "servers/rendering/rendering_server.h"
 
-#include "modules/jrpg/core/jrpg_audio_cue.h"
-#include "modules/jrpg/core/jrpg_database.h"
+#include "modules/jrpg/core/jrpg_message_text.h"
 
 void JRPGSelectableList::ensure_default_theme() {
 	ThemeDB *themes = ThemeDB::get_singleton();
@@ -53,6 +50,7 @@ void JRPGSelectableList::ensure_default_theme() {
 		return;
 	}
 	theme->set_block_signals(true); // As JRPGWindow::ensure_default_skin: nothing has read these yet.
+	theme->set_font_size(SNAME("font_size"), type, DEFAULT_FONT_SIZE);
 	theme->set_constant(SNAME("item_height"), type, DEFAULT_ITEM_HEIGHT);
 	theme->set_constant(SNAME("column_spacing"), type, DEFAULT_COLUMN_SPACING);
 	theme->set_constant(SNAME("cursor_margin"), type, DEFAULT_CURSOR_MARGIN);
@@ -63,18 +61,20 @@ void JRPGSelectableList::ensure_default_theme() {
 
 void JRPGSelectableList::_update_theme_item_cache() {
 	ensure_default_theme();
+	// A theme with a default font size answers it for any type (scene/resources/theme.cpp:670-672), so a class
+	// extending the list (choices) would get that size before reaching the list's own: its type gets the list's size.
+	ThemeDB *themes = ThemeDB::get_singleton();
+	const Ref<Theme> theme = themes ? themes->get_default_theme() : Ref<Theme>();
+	if (theme.is_valid() && get_class_name() != get_class_static() && !theme->has_font_size_nocheck(SceneStringName(font_size), get_class_name())) {
+		theme->set_block_signals(true);
+		theme->set_font_size(SceneStringName(font_size), get_class_name(), DEFAULT_FONT_SIZE);
+		theme->set_block_signals(false);
+	}
 	JRPGWindow::_update_theme_item_cache();
 }
 
 bool JRPGSelectableList::_needs_process() const {
 	return has_focus();
-}
-
-Ref<JRPGDatabase> JRPGSelectableList::get_database() const {
-	if (database.is_valid()) {
-		return database;
-	}
-	return ResourceLoader::exists(JRPGDatabase::PROJECT_PATH) ? JRPGDatabase::load_database(JRPGDatabase::PROJECT_PATH) : Ref<JRPGDatabase>();
 }
 
 void JRPGSelectableList::set_items(const Array &p_items) {
@@ -196,39 +196,6 @@ int JRPGSelectableList::get_item_at_position(const Point2 &p_position) const {
 	return -1;
 }
 
-void JRPGSelectableList::play_sound(JRPGSystemData::Sound p_sound) {
-	ERR_FAIL_INDEX(int(p_sound), JRPGSystemData::SOUND_MAX);
-	last_sound = p_sound;
-	const Ref<JRPGDatabase> db = get_database();
-	const Ref<JRPGSystemData> system = db.is_valid() ? db->get_system() : Ref<JRPGSystemData>();
-	const Ref<JRPGAudioCue> cue = system.is_valid() ? system->get_sound(p_sound) : Ref<JRPGAudioCue>();
-	if (cue.is_null() || cue->is_empty()) {
-		return; // The project chose no sound.
-	}
-	const String path = ResourceUID::ensure_path(cue->get_stream());
-	const Ref<AudioStream> stream = ResourceLoader::exists(path) ? ResourceLoader::load(path) : Ref<Resource>();
-	if (stream.is_null()) {
-		WARN_PRINT_ONCE(vformat("JRPG: the interface sound %s cannot be loaded; it stays silent.", path));
-		return;
-	}
-	if (!sound_player) {
-		// Made with the first sound: a player needs the audio server from its creation
-		// (scene/audio/audio_stream_player_internal.cpp:365), which tools and tests may not have.
-		if (!AudioServer::get_singleton()) {
-			return;
-		}
-		sound_player = memnew(AudioStreamPlayer);
-		sound_player->set_name("Sounds");
-		sound_player->set_max_polyphony(4); // A cursor sound may start before the last one ends.
-		add_child(sound_player, false, INTERNAL_MODE_FRONT);
-	}
-	// Volume and pitch follow the cue; pan waits for the audio system (task 29), as for map music.
-	sound_player->set_volume_linear(CLAMP(cue->get_volume(), 0, 100) / 100.0);
-	sound_player->set_pitch_scale(MAX(cue->get_pitch(), 1) / 100.0);
-	sound_player->set_stream(stream);
-	sound_player->play();
-}
-
 void JRPGSelectableList::_select_by_player(int p_index) {
 	if (p_index < 0 || p_index >= items.size() || p_index == selected) {
 		return;
@@ -322,9 +289,8 @@ void JRPGSelectableList::_cancel() {
 }
 
 void JRPGSelectableList::_process_input(double p_delta) {
-	input_reader.update();
+	input_reader.update(p_delta);
 	if (!is_open() || !is_visible_in_tree()) {
-		held = -1;
 		return;
 	}
 	if (input_reader.is_fresh(JRPGInputReader::ACTION_OK)) {
@@ -341,26 +307,12 @@ void JRPGSelectableList::_process_input(double p_delta) {
 		return;
 	}
 	for (int move = 0; move < MOVE_COUNT; move++) {
-		if (input_reader.is_fresh(JRPGInputReader::Action(move))) {
-			held = move;
-			held_time = 0;
-			next_repeat = REPEAT_DELAY_FRAMES / 60.0;
-			_move_cursor(JRPGInputReader::Action(move), true); // A fresh press wraps round at the ends.
+		const JRPGInputReader::Action action = JRPGInputReader::Action(move);
+		if (input_reader.is_repeated(action)) {
+			// A fresh press wraps round at the ends; repeats stop there.
+			_move_cursor(action, input_reader.is_fresh(action));
 			return;
 		}
-	}
-	if (held < 0) {
-		return;
-	}
-	if (!input_reader.is_down(JRPGInputReader::Action(held))) {
-		held = -1;
-		return;
-	}
-	held_time += p_delta;
-	// Frame counts at 60 a second; a hair of tolerance so 24 steps of 1/60 s reach 24 frames.
-	while (held_time + CMP_EPSILON >= next_repeat) {
-		_move_cursor(JRPGInputReader::Action(held), false); // Repeats stop at the ends.
-		next_repeat += REPEAT_INTERVAL_FRAMES / 60.0;
 	}
 }
 
@@ -406,6 +358,60 @@ void JRPGSelectableList::gui_input(const Ref<InputEvent> &p_event) {
 	}
 }
 
+void JRPGSelectableList::_draw_coded_text(const String &p_text, const Rect2 &p_area, const Color &p_color, bool p_enabled) {
+	// Text with control codes (choices): colors, icons and sizes; the codes that act over time do nothing here.
+	const Ref<Font> font = theme_cache.font;
+	if (font.is_null()) {
+		return;
+	}
+	const PackedColorArray palette = JRPGMessageWindow::get_default_text_colors();
+	const Ref<Texture2D> icons = get_icon_set_texture();
+	real_t x = p_area.position.x;
+	int size = theme_cache.font_size;
+	Color color = p_color;
+	for (const Variant &entry : JRPGMessageText::parse(p_text)) {
+		const Dictionary op = entry;
+		switch (int(op.get("op", -1))) {
+			case JRPGMessageText::OP_TEXT: {
+				const String run = op.get("text", "");
+				const real_t ascent = font->get_ascent(size);
+				const real_t baseline = p_area.position.y + (p_area.size.y - font->get_height(size)) / 2 + ascent;
+				const real_t room = p_area.get_end().x - x;
+				if (room <= 0) {
+					return; // Past the item's end.
+				}
+				draw_string(font, Point2(x, baseline), run, HORIZONTAL_ALIGNMENT_LEFT, room, size, color, TextServer::JUSTIFICATION_NONE);
+				x += font->get_string_size(run, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x;
+			} break;
+			case JRPGMessageText::OP_ICON: {
+				const Rect2 region = get_icon_region(op.get("index", 0));
+				const real_t side = MIN(real_t(ICON_SIZE), p_area.size.y - 4);
+				if (icons.is_valid() && region.has_area() && x + side <= p_area.get_end().x) {
+					draw_texture_rect_region(icons, Rect2(x, p_area.position.y + (p_area.size.y - side) / 2, side, side), region, Color(1, 1, 1, p_color.a));
+				}
+				x += side + 4;
+			} break;
+			case JRPGMessageText::OP_COLOR: {
+				const int index = op.get("index", 0);
+				if (p_enabled && index >= 0 && index < palette.size()) {
+					color = palette[index]; // A disabled item keeps its dimmed color.
+				}
+			} break;
+			case JRPGMessageText::OP_FONT_BIGGER: {
+				size = MIN(size + JRPGMessageWindow::FONT_SIZE_STEP, JRPGMessageWindow::MAX_FONT_SIZE);
+			} break;
+			case JRPGMessageText::OP_FONT_SMALLER: {
+				size = MAX(size - JRPGMessageWindow::FONT_SIZE_STEP, JRPGMessageWindow::MIN_FONT_SIZE);
+			} break;
+			case JRPGMessageText::OP_FONT_SIZE: {
+				size = CLAMP(int(op.get("size", size)), JRPGMessageWindow::MIN_FONT_SIZE, JRPGMessageWindow::MAX_FONT_SIZE);
+			} break;
+			default:
+				break;
+		}
+	}
+}
+
 void JRPGSelectableList::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_FOCUS_ENTER: {
@@ -414,7 +420,6 @@ void JRPGSelectableList::_notification(int p_what) {
 			queue_redraw();
 		} break;
 		case NOTIFICATION_FOCUS_EXIT: {
-			held = -1;
 			_update_process();
 			queue_redraw();
 		} break;
@@ -455,9 +460,14 @@ void JRPGSelectableList::_notification(int p_what) {
 					right->add_string(right_text, theme_cache.font, theme_cache.font_size);
 					right->draw(ci, Point2(end - right->get_size().x, rect.position.y + (rect.size.y - right->get_size().y) / 2), color);
 				}
+				const String text = item.get("text", "");
+				if (text.contains_char('\\')) {
+					_draw_coded_text(text, Rect2(x, rect.position.y, end - x, rect.size.y), color, bool(item.get("enabled", true)));
+					continue;
+				}
 				Ref<TextLine> line;
 				line.instantiate();
-				line->add_string(item.get("text", ""), theme_cache.font, theme_cache.font_size);
+				line->add_string(text, theme_cache.font, theme_cache.font_size);
 				line->set_width(MAX(real_t(0), end - x - (right.is_valid() ? right->get_size().x + 8 : 0)));
 				line->set_text_overrun_behavior(TextServer::OVERRUN_TRIM_ELLIPSIS);
 				line->draw(ci, Point2(x, rect.position.y + (rect.size.y - line->get_size().y) / 2), color);
@@ -483,13 +493,8 @@ void JRPGSelectableList::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_top_row"), &JRPGSelectableList::get_top_row);
 	ClassDB::bind_method(D_METHOD("set_cancellable", "cancellable"), &JRPGSelectableList::set_cancellable);
 	ClassDB::bind_method(D_METHOD("is_cancellable"), &JRPGSelectableList::is_cancellable);
-	ClassDB::bind_method(D_METHOD("set_database", "database"), &JRPGSelectableList::set_database);
-	ClassDB::bind_method(D_METHOD("get_database"), &JRPGSelectableList::get_database);
 	ClassDB::bind_method(D_METHOD("get_item_rect", "index"), &JRPGSelectableList::get_item_rect);
 	ClassDB::bind_method(D_METHOD("get_item_at_position", "position"), &JRPGSelectableList::get_item_at_position);
-	ClassDB::bind_method(D_METHOD("play_sound", "sound"), &JRPGSelectableList::play_sound);
-	ClassDB::bind_method(D_METHOD("get_last_sound"), &JRPGSelectableList::get_last_sound);
-	ClassDB::bind_method(D_METHOD("get_sound_player"), &JRPGSelectableList::get_sound_player);
 	ClassDB::bind_static_method("JRPGSelectableList", D_METHOD("ensure_default_theme"), &JRPGSelectableList::ensure_default_theme);
 
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "items", PROPERTY_HINT_ARRAY_TYPE, "Dictionary"), "set_items", "get_items");
@@ -497,7 +502,6 @@ void JRPGSelectableList::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "selected", PROPERTY_HINT_RANGE, "-1,9999,1"), "set_selected", "get_selected");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "top_row", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NONE), "set_top_row", "get_top_row");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "cancellable"), "set_cancellable", "is_cancellable");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "database", PROPERTY_HINT_RESOURCE_TYPE, "JRPGDatabase"), "set_database", "get_database");
 
 	ADD_SIGNAL(MethodInfo("cursor_moved", PropertyInfo(Variant::INT, "index")));
 	ADD_SIGNAL(MethodInfo("item_chosen", PropertyInfo(Variant::INT, "index")));
@@ -510,6 +514,7 @@ void JRPGSelectableList::_bind_methods() {
 	BIND_CONSTANT(DEFAULT_COLUMN_SPACING);
 	BIND_CONSTANT(DEFAULT_CURSOR_MARGIN);
 	BIND_CONSTANT(ICON_SIZE);
+	BIND_CONSTANT(DEFAULT_FONT_SIZE);
 
 	BIND_THEME_ITEM(Theme::DATA_TYPE_FONT, JRPGSelectableList, font);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_FONT_SIZE, JRPGSelectableList, font_size);

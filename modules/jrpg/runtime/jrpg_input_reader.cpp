@@ -57,13 +57,26 @@ void JRPGInputReader::reset() {
 		was_pressed[action] = is_pressed(Action(action));
 		pressed_event[action] = false;
 		fresh[action] = false;
+		repeated[action] = false;
 	}
 }
 
-void JRPGInputReader::update() {
+void JRPGInputReader::update(double p_delta) {
 	for (int action = 0; action < ACTION_MAX; action++) {
 		const bool down = is_pressed(Action(action));
 		fresh[action] = pressed_event[action] || (down && !was_pressed[action]);
+		repeated[action] = fresh[action];
+		if (fresh[action]) {
+			held_time[action] = 0;
+			next_repeat[action] = REPEAT_DELAY_FRAMES / 60.0;
+		} else if (down) {
+			held_time[action] += p_delta;
+			// A hair of tolerance, so 24 steps of 1/60 s reach 24 frames.
+			if (held_time[action] + CMP_EPSILON >= next_repeat[action]) {
+				repeated[action] = true;
+				next_repeat[action] += REPEAT_INTERVAL_FRAMES / 60.0;
+			}
+		}
 		was_pressed[action] = down;
 		pressed_event[action] = false;
 	}

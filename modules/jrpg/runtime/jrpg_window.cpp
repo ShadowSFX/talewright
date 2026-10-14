@@ -34,10 +34,18 @@
 #include "jrpg_default_skin.gen.h"
 
 #include "core/io/image.h"
+#include "core/io/resource_loader.h"
+#include "core/io/resource_uid.h"
 #include "core/object/class_db.h"
+#include "scene/audio/audio_stream_player.h"
 #include "scene/resources/image_texture.h"
 #include "scene/theme/theme_db.h"
+#include "servers/audio/audio_server.h"
+#include "servers/audio/audio_stream.h"
 #include "servers/rendering/rendering_server.h"
+
+#include "modules/jrpg/core/jrpg_audio_cue.h"
+#include "modules/jrpg/core/jrpg_database.h"
 
 void JRPGWindow::ensure_default_skin() {
 	ThemeDB *themes = ThemeDB::get_singleton();
@@ -201,6 +209,50 @@ Ref<Texture2D> JRPGWindow::get_back_texture() const {
 	return toned_back.is_valid() ? Ref<Texture2D>(toned_back) : theme_cache.back;
 }
 
+void JRPGWindow::set_database(const Ref<JRPGDatabase> &p_database) {
+	database = p_database;
+}
+
+Ref<JRPGDatabase> JRPGWindow::get_database() const {
+	if (database.is_valid()) {
+		return database;
+	}
+	return ResourceLoader::exists(JRPGDatabase::PROJECT_PATH) ? JRPGDatabase::load_database(JRPGDatabase::PROJECT_PATH) : Ref<JRPGDatabase>();
+}
+
+void JRPGWindow::play_sound(JRPGSystemData::Sound p_sound) {
+	ERR_FAIL_INDEX(int(p_sound), JRPGSystemData::SOUND_MAX);
+	last_sound = p_sound;
+	const Ref<JRPGDatabase> db = get_database();
+	const Ref<JRPGSystemData> system = db.is_valid() ? db->get_system() : Ref<JRPGSystemData>();
+	const Ref<JRPGAudioCue> cue = system.is_valid() ? system->get_sound(p_sound) : Ref<JRPGAudioCue>();
+	if (cue.is_null() || cue->is_empty()) {
+		return; // The project chose no sound.
+	}
+	const String path = ResourceUID::ensure_path(cue->get_stream());
+	const Ref<AudioStream> stream = ResourceLoader::exists(path) ? ResourceLoader::load(path) : Ref<Resource>();
+	if (stream.is_null()) {
+		WARN_PRINT_ONCE(vformat("JRPG: the interface sound %s cannot be loaded; it stays silent.", path));
+		return;
+	}
+	if (!sound_player) {
+		// Made with the first sound: a player needs the audio server from its creation
+		// (scene/audio/audio_stream_player_internal.cpp:365), which tools and tests may not have.
+		if (!AudioServer::get_singleton()) {
+			return;
+		}
+		sound_player = memnew(AudioStreamPlayer);
+		sound_player->set_name("Sounds");
+		sound_player->set_max_polyphony(4); // A cursor sound may start before the last one ends.
+		add_child(sound_player, false, INTERNAL_MODE_FRONT);
+	}
+	// Volume and pitch follow the cue; pan waits for the audio system (task 29), as for map music.
+	sound_player->set_volume_linear(CLAMP(cue->get_volume(), 0, 100) / 100.0);
+	sound_player->set_pitch_scale(MAX(cue->get_pitch(), 1) / 100.0);
+	sound_player->set_stream(stream);
+	sound_player->play();
+}
+
 Size2 JRPGWindow::get_minimum_size() const {
 	Size2 minimum;
 	for (int i = 0; i < get_child_count(false); i++) { // Internal children are the window's own parts (a name box).
@@ -309,6 +361,11 @@ void JRPGWindow::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_cursor_texture"), &JRPGWindow::get_cursor_texture);
 	ClassDB::bind_method(D_METHOD("get_arrows_texture"), &JRPGWindow::get_arrows_texture);
 	ClassDB::bind_static_method("JRPGWindow", D_METHOD("ensure_default_skin"), &JRPGWindow::ensure_default_skin);
+	ClassDB::bind_method(D_METHOD("set_database", "database"), &JRPGWindow::set_database);
+	ClassDB::bind_method(D_METHOD("get_database"), &JRPGWindow::get_database);
+	ClassDB::bind_method(D_METHOD("play_sound", "sound"), &JRPGWindow::play_sound);
+	ClassDB::bind_method(D_METHOD("get_last_sound"), &JRPGWindow::get_last_sound);
+	ClassDB::bind_method(D_METHOD("get_sound_player"), &JRPGWindow::get_sound_player);
 
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3I, "tone"), "set_tone", "get_tone");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "openness", PROPERTY_HINT_RANGE, "0,1,0.01"), "set_openness", "get_openness");
@@ -316,6 +373,7 @@ void JRPGWindow::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "scroll_down_visible"), "set_scroll_down_visible", "is_scroll_down_visible");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "pause_visible"), "set_pause_visible", "is_pause_visible");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "frame_visible"), "set_frame_visible", "is_frame_visible");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "database", PROPERTY_HINT_RESOURCE_TYPE, "JRPGDatabase"), "set_database", "get_database");
 
 	ADD_SIGNAL(MethodInfo("opened"));
 	ADD_SIGNAL(MethodInfo("closed"));
@@ -338,4 +396,7 @@ void JRPGWindow::_bind_methods() {
 
 JRPGWindow::JRPGWindow() {
 	set_mouse_filter(MOUSE_FILTER_STOP); // A window takes the clicks on it (they do not reach the map below).
+}
+
+JRPGWindow::~JRPGWindow() {
 }

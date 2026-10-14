@@ -34,11 +34,7 @@
 #include "jrpg_input_reader.h"
 #include "jrpg_window.h"
 
-#include "modules/jrpg/core/jrpg_system_data.h"
-
-class AudioStreamPlayer;
 class Font;
-class JRPGDatabase;
 
 // A window listing items to choose from (task 10.1.2; RM-MNU-017, RM-MNU-019, RM-INP-004, RM-TST-015, RM-TST-016,
 // D-050): items in columns and rows, a cursor drawn from the window skin, and the game's controls. The list takes input
@@ -53,12 +49,13 @@ class JRPGSelectableList : public JRPGWindow {
 	GDCLASS(JRPGSelectableList, JRPGWindow);
 
 public:
-	static constexpr int REPEAT_DELAY_FRAMES = 24;
-	static constexpr int REPEAT_INTERVAL_FRAMES = 6;
+	static constexpr int REPEAT_DELAY_FRAMES = JRPGInputReader::REPEAT_DELAY_FRAMES;
+	static constexpr int REPEAT_INTERVAL_FRAMES = JRPGInputReader::REPEAT_INTERVAL_FRAMES;
 	static constexpr int DEFAULT_ITEM_HEIGHT = 36;
 	static constexpr int DEFAULT_COLUMN_SPACING = 8;
 	static constexpr int DEFAULT_CURSOR_MARGIN = 8; // The cursor image's nine-slice margins.
 	static constexpr int ICON_SIZE = 32;
+	static constexpr int DEFAULT_FONT_SIZE = 24; // As message windows.
 
 private:
 	static constexpr int MOVE_COUNT = JRPGInputReader::ACTION_RIGHT + 1; // The reader's four moves come first.
@@ -68,13 +65,6 @@ private:
 	int selected = -1;
 	int top_row = 0;
 	bool cancellable = true;
-	Ref<JRPGDatabase> database; // Null: the project's (JRPGDatabase::PROJECT_PATH).
-
-	AudioStreamPlayer *sound_player = nullptr;
-	int last_sound = -1;
-	int held = -1; // The move held for repeats (a JRPGInputReader action up to ACTION_RIGHT), or -1.
-	double held_time = 0;
-	double next_repeat = 0;
 	JRPGInputReader input_reader;
 
 	struct ThemeCache {
@@ -97,6 +87,7 @@ private:
 	void _cancel();
 	void _select_by_player(int p_index);
 	void _process_input(double p_delta);
+	void _draw_coded_text(const String &p_text, const Rect2 &p_area, const Color &p_color, bool p_enabled);
 
 protected:
 	void _notification(int p_what);
@@ -131,20 +122,11 @@ public:
 	int get_top_row() const { return top_row; }
 	void set_cancellable(bool p_cancellable) { cancellable = p_cancellable; }
 	bool is_cancellable() const { return cancellable; }
-	void set_database(const Ref<JRPGDatabase> &p_database) { database = p_database; }
-	Ref<JRPGDatabase> get_database() const;
 
 	// Where item p_index is drawn, in the list's own coordinates.
 	Rect2 get_item_rect(int p_index) const;
 	// The item at p_position (the list's coordinates), or -1.
 	int get_item_at_position(const Point2 &p_position) const;
-
-	// Plays one of the System data's interface sounds (silent when the database has none).
-	void play_sound(JRPGSystemData::Sound p_sound);
-	// The sound played last (a JRPGSystemData::Sound), or -1.
-	int get_last_sound() const { return last_sound; }
-	// The internal player of the interface sounds ("Sounds"), made with the first sound played; null before.
-	AudioStreamPlayer *get_sound_player() const { return sound_player; }
 
 	JRPGSelectableList();
 };

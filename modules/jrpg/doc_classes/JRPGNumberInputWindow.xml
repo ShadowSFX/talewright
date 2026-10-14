@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGNumberInputWindow" inherits="JRPGWindow" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The number input window: 1 to 8 digits, changed one at a time.
+	</brief_description>
+	<description>
+		Asks for a number as Input Number does. [code]jrpg_up[/code] and [code]jrpg_down[/code] change the digit under the cursor (9 goes round to 0 and back), [code]jrpg_left[/code] and [code]jrpg_right[/code] move between digits (round at the ends), repeating while held; [code]jrpg_ok[/code] enters the number ([signal number_entered]). There is no cancel. The window sits at the right, beside the message window named by [member message_window].
+		Authority: client. Online, the server checks the number against the digits it asked for.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_cursor" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the digit under the cursor, 0 being the leftmost.
+			</description>
+		</method>
+		<method name="get_digit" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="digit" type="int" />
+			<description>
+				Returns the digit at [param digit], 0 being the leftmost.
+			</description>
+		</method>
+		<method name="get_digits" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns how many digits the number has.
+			</description>
+		</method>
+		<method name="get_value" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the number shown.
+			</description>
+		</method>
+		<method name="is_active" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] from [method start] until the number is entered.
+			</description>
+		</method>
+		<method name="start">
+			<return type="void" />
+			<param index="0" name="digits" type="int" />
+			<param index="1" name="value" type="int" default="0" />
+			<description>
+				Starts entering a number of [param digits] digits (1 to [constant MAX_DIGITS]), showing [param value] (cut to those digits; below 0 gives 0). Opens the window and gives it the focus.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="focus_mode" type="int" setter="set_focus_mode" getter="get_focus_mode" overrides="Control" enum="Control.FocusMode" default="2" />
+		<member name="message_window" type="NodePath" setter="set_message_window" getter="get_message_window" default="NodePath(&quot;&quot;)">
+			The message window the number input goes beside. Empty: the bottom of the screen.
+		</member>
+	</members>
+	<signals>
+		<signal name="number_entered">
+			<param index="0" name="value" type="int" />
+			<description>
+				Emitted when the player enters the number [param value].
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="MAX_DIGITS" value="8">
+			The most digits a number can have.
+		</constant>
+		<constant name="DIGIT_WIDTH" value="28">
+			The width of each digit's cell, in pixels.
+		</constant>
+	</constants>
+</class>
