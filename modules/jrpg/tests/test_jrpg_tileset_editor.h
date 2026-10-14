@@ -91,15 +91,15 @@ TEST_CASE("[JRPG][TilesetEditor] A click cycles, toggles or steps the flag of it
 	CHECK(JRPGEditorPropertyTiles::side_at(Rect2(), Vector2()) == -1);
 
 	int frames = 0;
-	CHECK(JRPGTileSheetDialog::guess_kind(Vector2i(8, 6), frames) == JRPGAutotileImporter::SHEET_AUTOTILE);
+	CHECK(JRPGAutotileImporter::guess_kind(Vector2i(8, 6), frames) == JRPGAutotileImporter::SHEET_AUTOTILE);
 	CHECK(frames == 1);
-	CHECK(JRPGTileSheetDialog::guess_kind(Vector2i(24, 6), frames) == JRPGAutotileImporter::SHEET_AUTOTILE);
+	CHECK(JRPGAutotileImporter::guess_kind(Vector2i(24, 6), frames) == JRPGAutotileImporter::SHEET_AUTOTILE);
 	CHECK(frames == 3);
-	CHECK(JRPGTileSheetDialog::guess_kind(Vector2i(4, 4), frames) == JRPGAutotileImporter::SHEET_WALL);
-	CHECK(JRPGTileSheetDialog::guess_kind(Vector2i(8, 4), frames) == JRPGAutotileImporter::SHEET_PLAIN); // Not a wall.
-	CHECK(JRPGTileSheetDialog::guess_kind(Vector2i(8, 8), frames) == JRPGAutotileImporter::SHEET_PLAIN);
+	CHECK(JRPGAutotileImporter::guess_kind(Vector2i(4, 4), frames) == JRPGAutotileImporter::SHEET_WALL);
+	CHECK(JRPGAutotileImporter::guess_kind(Vector2i(8, 4), frames) == JRPGAutotileImporter::SHEET_PLAIN); // Not a wall.
+	CHECK(JRPGAutotileImporter::guess_kind(Vector2i(8, 8), frames) == JRPGAutotileImporter::SHEET_PLAIN);
 	CHECK(frames == 1);
-	CHECK(JRPGTileSheetDialog::guess_kind(Vector2i(0, 6), frames) == JRPGAutotileImporter::SHEET_PLAIN);
+	CHECK(JRPGAutotileImporter::guess_kind(Vector2i(0, 6), frames) == JRPGAutotileImporter::SHEET_PLAIN);
 }
 
 String save_sheet(const String &p_name, const Vector2i &p_tiles) {

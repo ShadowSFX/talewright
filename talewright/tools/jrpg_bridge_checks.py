@@ -6,8 +6,9 @@ actions of the global history, D-005) and setup on a real project folder. This s
 starts the editor on it with the Claude bridge, and checks:
   - setup: a first run creates the JRPG data, a second run changes nothing (task 6.2 criterion);
   - undo/redo round trips: every database tool's change is undone exactly (the data matches the state before) and
-    redone exactly (it matches the state after), through the editor's own Undo and Redo;
-  - saving: jrpg_db_save leaves nothing unsaved.
+    redone exactly (it matches the state after), through the editor's own Undo and Redo, the tileset tools included
+    (task 7.3.3: a new TileSet, two generated sheets, tile flags);
+  - saving: jrpg_db_save leaves nothing unsaved and bakes the tile flags.
 
 Usage (from the repository root, after building the editor):
     python talewright/tools/jrpg_bridge_checks.py [--keep] [--project DIR]
@@ -31,6 +32,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bridge  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
+SHEETS = {  # Generated CC0 sheets (talewright/assets/LICENSES.md) the tileset checks import.
+    "grass.png": ROOT / "talewright" / "assets" / "generated" / "autotiles" / "grass.png",
+    "outdoor.png": ROOT / "talewright" / "assets" / "generated" / "tiles" / "outdoor.png",
+}
 PROJECT_GODOT = """config_version=5
 
 [application]
@@ -77,6 +82,21 @@ class Checks:
     def entries(self, table: str) -> list[Any]:
         entries: list[Any] = self.call("jrpg_db_list", {"table": table, "count": 1000})["entries"]
         return entries
+
+    def refused(self, tool: str, args: dict[str, Any]) -> bool:
+        try:
+            self.call(tool, args)
+        except bridge.BridgeError:
+            return True
+        return False
+
+    def wait_for_file(self, relative: str, timeout: float = 90.0) -> bool:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if (self.project / relative).is_file():
+                return True
+            time.sleep(0.5)
+        return False
 
     def undo(self) -> None:
         self.call("editor_undo_redo", {"action": "undo"})
@@ -181,10 +201,60 @@ def run(checks: Checks) -> None:
         lambda: c.call("jrpg_db_generate_curve", {"id": 1, "param": "Attack", "level_1": 10, "level_99": 400}),
     )
 
-    # Saving leaves nothing unsaved.
+    # Tilesets (task 7.3.3): the tileset form's Create TileSet, Add Sheet and flag overlay, through their tools.
+    path = "res://jrpg/tilesets/checks.tres"
+    created = c.call("jrpg_tileset_create", {"id": 1, "path": path})
+    c.check(
+        "jrpg_tileset_create: points the tileset at the new TileSet",
+        created["tileset_path"] == path and str(created["tileset_uid"]).startswith("uid://"),
+        json.dumps(created)[:300],
+    )
+    c.check("jrpg_tileset_create: never replaces a file", c.refused("jrpg_tileset_create", {"id": 2, "path": path}))
+    c.check(
+        "the sheets are imported",
+        all(c.wait_for_file(f"tiles/{name}.import") for name in SHEETS),
+        "no .import files",
+    )
+
+    def tileset() -> tuple[Any, Any]:
+        return c.record("tilesets", 1)["palette"], c.call("jrpg_tileset_flags", {"id": 1})["tiles"]
+
+    c.round_trip(
+        "jrpg_tileset_add_sheet (an autotile)",
+        tileset,
+        lambda: c.call("jrpg_tileset_add_sheet", {"id": 1, "image": "res://tiles/grass.png"}),
+    )
+    c.round_trip(
+        "jrpg_tileset_add_sheet (plain tiles)",
+        tileset,
+        lambda: c.call("jrpg_tileset_add_sheet", {"id": 1, "image": "res://tiles/outdoor.png", "name": "Props"}),
+    )
+    c.round_trip(
+        "jrpg_tileset_set_flag (the passage of an autotile kind)",
+        tileset,
+        lambda: c.call("jrpg_tileset_set_flag", {"id": 1, "index": 1, "flag": "pass", "value": "blocked"}),
+    )
+    c.round_trip(
+        "jrpg_tileset_set_flag (entry sides of two tiles)",
+        tileset,
+        lambda: c.call(
+            "jrpg_tileset_set_flag", {"id": 1, "indexes": [2, 3], "flag": "no_entry", "value": ["north", "east"]}
+        ),
+    )
+
+    # Saving leaves nothing unsaved, bakes the tile flags and writes the TileSet.
     c.call("jrpg_db_save")
     unsaved = c.call("jrpg_db_list")["unsaved_paths"]
     c.check("jrpg_db_save: nothing is left unsaved", unsaved == [], json.dumps(unsaved))
+    flags = c.call("jrpg_tileset_flags", {"id": 1, "count": 1})
+    baked = c.record("tilesets", 1)["flags"]
+    c.check(
+        "jrpg_db_save: bakes the tile flags",
+        flags["bake_up_to_date"] is True and str(baked).startswith("PackedInt32Array(0, 1"),
+        str(baked)[:120],
+    )
+    saved = (c.project / "jrpg" / "tilesets" / "checks.tres").read_text(encoding="utf-8")
+    c.check("jrpg_db_save: saves the TileSet with its flag layers", "jrpg_pass" in saved and "jrpg_no_entry" in saved)
 
 
 def main() -> int:
@@ -200,6 +270,9 @@ def main() -> int:
         shutil.rmtree(project)
     project.mkdir(parents=True)
     (project / "project.godot").write_text(PROJECT_GODOT, encoding="utf-8")
+    (project / "tiles").mkdir()
+    for name, source in SHEETS.items():
+        shutil.copyfile(source, project / "tiles" / name)
     log = (ROOT / "talewright" / "build_logs" / "jrpg_bridge_checks_editor.log").open("w", encoding="utf-8")
     editor = subprocess.Popen(
         [str(bridge.EDITOR), "--editor", "--single-window", "--path", str(project)],

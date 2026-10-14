@@ -34,7 +34,6 @@
 #include "jrpg_database_editing.h"
 
 #include "core/input/input_event.h"
-#include "core/io/file_access.h"
 #include "core/io/image.h"
 #include "core/io/resource_loader.h"
 #include "core/object/callable_mp.h"
@@ -102,19 +101,6 @@ String kind_label(const String &p_kind) {
 
 // JRPGTileSheetDialog
 
-JRPGAutotileImporter::SheetKind JRPGTileSheetDialog::guess_kind(const Vector2i &p_cells, int &r_frames) {
-	r_frames = 1;
-	if (p_cells.y == JRPGAutotile::BLOB_ROWS && p_cells.x > 0 && p_cells.x % JRPGAutotile::BLOB_COLUMNS == 0) {
-		r_frames = p_cells.x / JRPGAutotile::BLOB_COLUMNS;
-		return JRPGAutotileImporter::SHEET_AUTOTILE;
-	}
-	// 8 x 4 tiles may be a wall with two frames or 32 plain tiles; plain sheets are the likelier.
-	if (p_cells == Vector2i(JRPGAutotile::WALL_COLUMNS, JRPGAutotile::WALL_ROWS)) {
-		return JRPGAutotileImporter::SHEET_WALL;
-	}
-	return JRPGAutotileImporter::SHEET_PLAIN;
-}
-
 void JRPGTileSheetDialog::open(int p_tileset_id, const String &p_path, const Vector2i &p_image_size, const Vector2i &p_tile_size) {
 	tileset_id = p_tileset_id;
 	image_path = p_path;
@@ -123,7 +109,7 @@ void JRPGTileSheetDialog::open(int p_tileset_id, const String &p_path, const Vec
 	image_label->set_text(vformat(TTR("%s (%d x %d pixels)"), p_path.get_file(), p_image_size.x, p_image_size.y));
 	int guessed_frames = 1;
 	const Vector2i cells = tile_size.x > 0 && tile_size.y > 0 ? image_size / tile_size : Vector2i();
-	kind->select(guess_kind(cells, guessed_frames));
+	kind->select(JRPGAutotileImporter::guess_kind(cells, guessed_frames));
 	frames->set_value(guessed_frames);
 	name->set_text(p_path.get_file().get_basename().capitalize());
 	error->hide();
@@ -497,16 +483,9 @@ void JRPGEditorPropertyTiles::_create_tileset() {
 	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
 	const JRPGEntry *entry = Object::cast_to<JRPGEntry>(get_edited_object());
 	ERR_FAIL_COND(!editing || !entry);
-	String base = entry->get_entry_name().to_snake_case().validate_filename();
-	if (base.is_empty()) {
-		base = vformat("tileset_%d", entry->get_id());
-	}
-	String path = "res://jrpg/tilesets/" + base + ".tres";
-	for (int n = 2; FileAccess::exists(path); n++) {
-		path = vformat("res://jrpg/tilesets/%s_%d.tres", base, n);
-	}
+	const String path = editing->suggest_tileset_path(entry->get_id());
 	String message;
-	if (editing->create_tileset(entry->get_id(), path, DEFAULT_TILE_SIZE, &message) != OK) {
+	if (editing->create_tileset(entry->get_id(), path, JRPGDatabaseEditing::DEFAULT_TILE_SIZE, &message) != OK) {
 		toast(message, EditorToaster::SEVERITY_ERROR);
 		return;
 	}
@@ -564,7 +543,7 @@ void JRPGEditorPropertyTiles::update_property() {
 	list->clear();
 	const Vector2i tile = tileset->get_tile_size();
 	// Pixel art at a whole zoom near 48 editor pixels, unfiltered.
-	const int zoom = MAX(1, int(Math::floor(DEFAULT_TILE_SIZE * EDSCALE / MAX(1, tile.y))));
+	const int zoom = MAX(1, int(Math::floor(JRPGDatabaseEditing::DEFAULT_TILE_SIZE * EDSCALE / MAX(1, tile.y))));
 	list->set_fixed_icon_size(tile * zoom);
 	if (placeholder.is_null() || placeholder->get_size() != Size2(tile)) {
 		Ref<Image> image = Image::create_empty(MAX(1, tile.x), MAX(1, tile.y), false, Image::FORMAT_RGBA8);
@@ -632,7 +611,7 @@ JRPGEditorPropertyTiles::JRPGEditorPropertyTiles() {
 	no_tileset->add_child(no_tileset_label);
 	create_button = memnew(Button);
 	create_button->set_text(TTR("Create TileSet"));
-	create_button->set_tooltip_text(vformat(TTR("Creates a TileSet of %d x %d pixel tiles in res://jrpg/tilesets/ and uses it here."), DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE));
+	create_button->set_tooltip_text(vformat(TTR("Creates a TileSet of %d x %d pixel tiles in res://jrpg/tilesets/ and uses it here."), JRPGDatabaseEditing::DEFAULT_TILE_SIZE, JRPGDatabaseEditing::DEFAULT_TILE_SIZE));
 	create_button->set_h_size_flags(SIZE_SHRINK_BEGIN);
 	create_button->connect(SceneStringName(pressed), callable_mp(this, &JRPGEditorPropertyTiles::_create_tileset));
 	no_tileset->add_child(create_button);

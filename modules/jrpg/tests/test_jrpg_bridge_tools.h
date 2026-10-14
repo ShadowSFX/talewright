@@ -35,16 +35,24 @@
 
 #if defined(TOOLS_ENABLED) && defined(MODULE_CLAUDE_BRIDGE_ENABLED)
 
+#include "core/io/dir_access.h"
+#include "core/io/image.h"
 #include "core/io/json.h"
+#include "core/io/resource_saver.h"
+#include "scene/resources/2d/tile_set.h"
+#include "scene/resources/image_texture.h"
 #include "tests/test_macros.h"
+#include "tests/test_utils.h"
 
 #include "modules/claude_bridge/claude_bridge_mcp.h"
 #include "modules/claude_bridge/claude_bridge_registry.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_database.h"
+#include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
 #include "modules/jrpg/editor/jrpg_database_editing.h"
 #include "modules/jrpg/editor/jrpg_project_setup.h"
+#include "modules/jrpg/editor/jrpg_tile_flags.h"
 
 namespace TestJRPGBridgeTools {
 
@@ -88,7 +96,7 @@ struct Bridge {
 
 TEST_CASE("[JRPG][BridgeTools] The database tools are registered") {
 	Bridge bridge;
-	for (const char *name : { "jrpg_db_list", "jrpg_db_get", "jrpg_db_set", "jrpg_db_create", "jrpg_db_set_maximum", "jrpg_db_clear", "jrpg_db_copy", "jrpg_db_paste", "jrpg_db_generate_curve", "jrpg_db_save", "jrpg_addon_install" }) {
+	for (const char *name : { "jrpg_db_list", "jrpg_db_get", "jrpg_db_set", "jrpg_db_create", "jrpg_db_set_maximum", "jrpg_db_clear", "jrpg_db_copy", "jrpg_db_paste", "jrpg_db_generate_curve", "jrpg_db_save", "jrpg_addon_install", "jrpg_tileset_flags", "jrpg_tileset_set_flag", "jrpg_tileset_create", "jrpg_tileset_add_sheet" }) {
 		CHECK_MESSAGE(bridge.mcp.has_tool(name), name);
 	}
 }
@@ -183,6 +191,108 @@ TEST_CASE("[JRPG][BridgeTools] Generating a parameter curve") {
 	CHECK(bridge.failed);
 	bridge.call("jrpg_db_generate_curve", R"({"id":1,"param":9,"level_1":1,"level_99":2})");
 	CHECK(bridge.failed);
+}
+
+TEST_CASE("[SceneTree][JRPG][BridgeTools] Reading and setting tile flags") {
+	Bridge bridge;
+	// A TileSet outside res:// (tests write no project files), set up through the authoring API the tools share.
+	const String folder = TestUtils::get_temp_path("jrpg_bridge_tileset");
+	if (DirAccess::exists(folder)) {
+		Ref<DirAccess> da = DirAccess::open(folder);
+		REQUIRE(da->erase_contents_recursive() == OK);
+	}
+	bridge.call("jrpg_tileset_flags", R"({"id":1})");
+	CHECK(bridge.failed);
+	CHECK(bridge.text.contains("has no TileSet"));
+	REQUIRE(bridge.editing->create_tileset(1, folder.path_join("field.tres"), 48) == OK);
+	Ref<Image> image = Image::create_empty(8 * 48, 7 * 48, false, Image::FORMAT_RGBA8); // A blob sheet over a plain row.
+	image->fill(Color(0.4, 0.6, 0.3));
+	const String sheet = folder.path_join("grass.tres");
+	REQUIRE(ResourceSaver::save(ImageTexture::create_from_image(image->get_region(Rect2i(0, 0, 8 * 48, 6 * 48))), sheet) == OK);
+	PackedInt32Array indexes;
+	REQUIRE(bridge.editing->add_tile_sheet(1, sheet, JRPGAutotileImporter::SHEET_AUTOTILE, 1, "Grass", indexes) == OK);
+	const String props = folder.path_join("props.tres");
+	REQUIRE(ResourceSaver::save(ImageTexture::create_from_image(image->get_region(Rect2i(0, 6 * 48, 2 * 48, 48))), props) == OK);
+	REQUIRE(bridge.editing->add_tile_sheet(1, props, JRPGAutotileImporter::SHEET_PLAIN, 1, "Props", indexes) == OK);
+	const Ref<TileSet> tileset = bridge.editing->get_tileset_of(1);
+	const Ref<JRPGTilesetData> data = bridge.entry(JRPGDatabase::TABLE_TILESETS, 1);
+
+	Dictionary flags = bridge.call("jrpg_tileset_flags", R"({"id":1})");
+	REQUIRE_FALSE(bridge.failed);
+	CHECK(int(flags["palette_size"]) == 3);
+	CHECK(Array(flags["tile_size"]) == Array({ 48.0, 48.0 })); // Numbers come back through JSON.
+	const Dictionary grass = Array(flags["tiles"])[0];
+	CHECK(String(grass["kind"]) == "autotile");
+	CHECK(String(grass["pass"]) == "open");
+	CHECK(Array(grass["no_entry"]).is_empty());
+	CHECK_FALSE(bool(grass["bush"]));
+	CHECK(int(grass["terrain_tag"]) == 0);
+	CHECK_FALSE(grass.has("mixed"));
+	CHECK(Array(bridge.call("jrpg_tileset_flags", R"({"id":1,"from":2,"count":1})")["tiles"]).size() == 1);
+
+	// Every kind of value, by name and by number.
+	Dictionary set = bridge.call("jrpg_tileset_set_flag", R"({"id":1,"index":1,"flag":"pass","value":"blocked"})");
+	REQUIRE_FALSE(bridge.failed);
+	CHECK(bool(set["undoable"]));
+	CHECK(String(Dictionary(Array(set["tiles"])[0])["pass"]) == "blocked");
+	for (int word : JRPGTileFlags::get_tile_words(tileset, data->get_palette()[0])) {
+		CHECK(JRPGTilesetData::get_pass_mode(word) == JRPGTilesetData::PASS_BLOCKED); // Every shape.
+	}
+	bridge.call("jrpg_tileset_set_flag", R"({"id":1,"indexes":[2,3,2],"flag":"no_entry","value":["South","west"]})");
+	REQUIRE_FALSE(bridge.failed);
+	CHECK(JRPGTilesetData::get_no_entry(JRPGTileFlags::get_entry_flags(tileset, data->get_palette()[2])) == (4 | 8));
+	bridge.call("jrpg_tileset_set_flag", R"({"id":1,"index":2,"flag":"no_exit","value":5})");
+	bridge.call("jrpg_tileset_set_flag", R"({"id":1,"index":"2","flag":"bush","value":true})");
+	bridge.call("jrpg_tileset_set_flag", R"({"id":1,"index":2,"flag":"terrain_tag","value":12.0})");
+	REQUIRE_FALSE(bridge.failed);
+	flags = bridge.call("jrpg_tileset_flags", R"({"id":1})");
+	const Dictionary prop = Array(flags["tiles"])[1];
+	CHECK(Array(prop["no_entry"]) == Array({ "south", "west" }));
+	CHECK(Array(prop["no_exit"]) == Array({ "north", "south" }));
+	CHECK(bool(prop["bush"]));
+	CHECK(int(prop["terrain_tag"]) == 12);
+	CHECK_FALSE(bool(flags["bake_up_to_date"])); // Baked when the database is saved.
+	JRPGTileFlags::rebake(tileset, data);
+	CHECK(bool(bridge.call("jrpg_tileset_flags", R"({"id":1})")["bake_up_to_date"]));
+	// A kind with one shape painted differently is reported as mixed.
+	TileData *shape = Object::cast_to<TileSetAtlasSource>(tileset->get_source(Dictionary(data->get_palette()[0])["source_id"]).ptr())->get_tile_data(Vector2i(3, 2), 0);
+	JRPGTileFlags::write_tile(tileset, shape, 0);
+	CHECK(bool(Dictionary(Array(bridge.call("jrpg_tileset_flags", R"({"id":1,"count":1})")["tiles"])[0])["mixed"]));
+
+	// Refusals change nothing and say why.
+	const int before = JRPGTileFlags::get_entry_flags(tileset, data->get_palette()[1]);
+	const char *refused[][2] = {
+		{ R"({"id":1,"index":2,"flag":"slippery","value":true})", "must be one of: pass, no_entry" },
+		{ R"({"id":1,"index":2,"flag":"pass","value":"closed"})", "open, blocked or transparent" },
+		{ R"({"id":1,"index":2,"flag":"pass","value":3})", "open, blocked or transparent" },
+		{ R"({"id":1,"index":2,"flag":"no_entry","value":["up"]})", "a list of sides" },
+		{ R"({"id":1,"index":2,"flag":"terrain_tag","value":16})", "0-15" },
+		{ R"({"id":1,"index":2,"flag":"bush","value":"yes"})", "true or false" },
+		{ R"({"id":1,"index":9,"flag":"bush","value":true})", "no palette index 9 (1 to 3)" },
+		{ R"({"id":1,"flag":"bush","value":true})", "Give \"index\" or \"indexes\"" },
+		{ R"({"id":1,"indexes":[2,"x"],"flag":"bush","value":true})", "must be a list of palette indexes" },
+		{ R"({"id":99,"index":2,"flag":"bush","value":false})", "between 1 and" },
+		{ R"({"id":2,"index":1,"flag":"bush","value":false})", "has no TileSet" },
+	};
+	for (const auto &pair : refused) {
+		bridge.call("jrpg_tileset_set_flag", pair[0]);
+		CHECK_MESSAGE(bridge.failed, pair[0]);
+		CHECK_MESSAGE(bridge.text.contains(pair[1]), bridge.text);
+	}
+	CHECK(JRPGTileFlags::get_entry_flags(tileset, data->get_palette()[1]) == before);
+
+	// Creating and adding sheets take project paths only.
+	bridge.call("jrpg_tileset_create", R"({"id":2,"path":"C:/elsewhere/cave.tres"})");
+	CHECK(bridge.failed);
+	CHECK(bridge.text.contains("res:// path"));
+	bridge.call("jrpg_tileset_create", R"({"id":1,"path":"res://../outside.tres"})");
+	CHECK(bridge.failed);
+	bridge.call("jrpg_tileset_add_sheet", R"({"id":1,"image":"res://missing.png"})");
+	CHECK(bridge.failed);
+	CHECK(bridge.text.contains("image the project has imported"));
+	bridge.call("jrpg_tileset_add_sheet", R"({"id":2,"image":"res://missing.png"})");
+	CHECK(bridge.text.contains("has no TileSet"));
+	CHECK(data->get_palette().size() == 3);
 }
 
 } // namespace TestJRPGBridgeTools

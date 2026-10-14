@@ -530,6 +530,20 @@ Ref<TileSet> JRPGDatabaseEditing::get_tileset_of(int p_tileset_id) {
 	return JRPGTileFlags::load_tileset(_get_tileset_data(p_tileset_id, &message));
 }
 
+String JRPGDatabaseEditing::suggest_tileset_path(int p_tileset_id) {
+	String message;
+	const Ref<JRPGTilesetData> data = _get_tileset_data(p_tileset_id, &message);
+	String base = data.is_valid() ? data->get_entry_name().to_snake_case().validate_filename() : String();
+	if (base.is_empty()) {
+		base = vformat("tileset_%d", p_tileset_id);
+	}
+	String path = "res://jrpg/tilesets/" + base + ".tres";
+	for (int n = 2; FileAccess::exists(path); n++) {
+		path = vformat("res://jrpg/tilesets/%s_%d.tres", base, n);
+	}
+	return path;
+}
+
 void JRPGDatabaseEditing::_write_tile_words(const Ref<TileSet> &p_tileset, const Array &p_entries, const Array &p_words) {
 	ERR_FAIL_COND(p_tileset.is_null() || p_entries.size() != p_words.size());
 	for (int i = 0; i < p_entries.size(); i++) {

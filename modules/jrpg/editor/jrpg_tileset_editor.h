@@ -74,11 +74,9 @@ protected:
 	void _notification(int p_what);
 
 public:
-	// Opens the dialog for the image at p_path (p_image_size pixels), guessing the layout from its size.
+	// Opens the dialog for the image at p_path (p_image_size pixels), guessing the layout from its size
+	// (JRPGAutotileImporter::guess_kind).
 	void open(int p_tileset_id, const String &p_path, const Vector2i &p_image_size, const Vector2i &p_tile_size);
-	// The layout an image of p_cells tiles most likely has: an autotile sheet when its size fits one (r_frames side by
-	// side), a wall sheet at exactly 4 x 4 tiles, a sheet of plain tiles otherwise.
-	static JRPGAutotileImporter::SheetKind guess_kind(const Vector2i &p_cells, int &r_frames);
 
 	JRPGTileSheetDialog();
 };
@@ -94,7 +92,6 @@ class JRPGEditorPropertyTiles : public EditorProperty {
 	GDCLASS(JRPGEditorPropertyTiles, EditorProperty);
 
 	static constexpr int SIDES = 4; // North, east, south, west: bits 1, 2, 4, 8 of a side mask.
-	static constexpr int DEFAULT_TILE_SIZE = 48; // Pixels (D-034), for a TileSet created here.
 	static inline int last_mode = JRPGTileFlags::FIELD_PASS; // Kept when another tileset is opened.
 
 	VBoxContainer *container = nullptr;

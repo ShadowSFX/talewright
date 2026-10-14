@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "7.3.2.2 Tileset form with flag overlays",
+  "last_completed": "7.3.3 Tileset bridge tools",
   "tasks": [
     {
       "id": "0",
@@ -2532,7 +2532,7 @@
       "dependencies": [
         "7.2"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Every flag round-trips TileSet custom data -> baked word -> decoded flags, with the bit layout of spec 05",
@@ -2541,8 +2541,8 @@
       ],
       "test_strategy": "Doctests + bridge.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "7.3.1",
@@ -2617,26 +2617,27 @@
       "test_strategy": "Doctests + bridge (editor_ui_act) + screenshot.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "4d026f244e",
       "notes": ""
     },
     {
       "id": "7.3.3",
       "parent": "7.3",
       "title": "Tileset bridge tools",
-      "description": "Bridge tools jrpg_tileset_flags (read a tileset's palette with decoded flags and staleness) and jrpg_tileset_set_flag (set a flag of a palette entry, undoable), on the same authoring API as the tab (D-012).",
+      "description": "Bridge tools on the tileset authoring API (D-012): jrpg_tileset_flags (a tileset's palette with decoded flags, mixed shapes and bake staleness), jrpg_tileset_set_flag (one flag on palette entries, undoable), and the form's other features, jrpg_tileset_create (Create TileSet) and jrpg_tileset_add_sheet (Add Sheet, layout guessed as in the dialog, undoable). Undo/redo checked end to end in talewright/tools/jrpg_bridge_checks.py.",
       "dependencies": [
         "7.3.2"
       ],
       "priority": 1,
       "acceptance_criteria": [
         "Overlay editing toggles a flag on a tile through the bridge and the change is visible in a screenshot",
-        "Tool-level doctests"
+        "Tool-level doctests",
+        "jrpg_bridge_checks.py round-trips set_flag and add_sheet through undo and redo"
       ],
       "test_strategy": "Doctests + bridge.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
@@ -2661,7 +2662,7 @@
     {
       "id": "7.5",
       "title": "Import authoring tools",
-      "description": "Bridge tools: import tileset/character/face/enemy images.",
+      "description": "Bridge tools: import character, face and enemy images (tileset sheets are imported by jrpg_tileset_create / jrpg_tileset_add_sheet, task 7.3.3).",
       "parent": "7",
       "dependencies": [
         "7.3"
@@ -2669,7 +2670,7 @@
       "status": "pending",
       "priority": 2,
       "acceptance_criteria": [
-        "Claude imports a tileset via bridge"
+        "Claude imports a character sheet, a face set and an enemy image via the bridge"
       ],
       "test_strategy": "Bridge.",
       "files": [],

@@ -1,0 +1,25 @@
+# 7.3.3 bridge verification: tileset tools (create, add sheets, set flags, read flags) and the form showing them
+## jrpg_tileset_create (default path from the name)
+   {"id": 2, "name": "Cave", "tileset_path": "res://jrpg/tilesets/cave.tres", "tile_size": [48, 48], "palette_size": 0, "bake_up_to_date": false, "undoable": true}
+## jrpg_tileset_add_sheet: layout guessed from the size
+   {"id": 2, "name": "Cave", "tileset_path": "res://jrpg/tilesets/cave.tres", "tile_size": [48, 48], "palette_size": 1, "bake_up_to_date": false, "sheet": {"kind": "autotile", "frames": 1, "name": "Grass", "indexes": [1]}, "undoable": true}
+   {"id": 2, "name": "Cave", "tileset_path": "res://jrpg/tilesets/cave.tres", "tile_size": [48, 48], "palette_size": 2, "bake_up_to_date": false, "sheet": {"kind": "wall", "frames": 1, "name": "Stone Wall", "indexes": [2]}, "undoable": true}
+   {"id": 2, "name": "Cave", "tileset_path": "res://jrpg/tilesets/cave.tres", "tile_size": [48, 48], "palette_size": 3, "bake_up_to_date": false, "sheet": {"kind": "autotile", "frames": 3, "name": "Pond", "indexes": [3]}, "undoable": true}
+## the form before
+  screenshot: plan/evidence/jrpg/7.3.3-before.png
+## jrpg_tileset_set_flag: block the grass kind; the stone wall cannot be entered from the north or east
+   {"id": 2, "name": "Cave", "tileset_path": "res://jrpg/tilesets/cave.tres", "tile_size": [48, 48], "palette_size": 3, "bake_up_to_date": false, "undoable": true}
+   tile {"index": 1, "kind": "autotile", "name": "Grass", "pass": "blocked", "no_entry": [], "no_exit": [], "overhead": false, "ladder": false, "bush": false, "counter": false, "damage": false, "terrain_tag": 0}
+   {"id": 2, "name": "Cave", "tileset_path": "res://jrpg/tilesets/cave.tres", "tile_size": [48, 48], "palette_size": 3, "bake_up_to_date": false, "undoable": true}
+   tile {"index": 2, "kind": "wall", "name": "Stone Wall", "pass": "open", "no_entry": ["north", "east"], "no_exit": [], "overhead": false, "ladder": false, "bush": false, "counter": false, "damage": false, "terrain_tag": 0}
+  screenshot: plan/evidence/jrpg/7.3.3-passage-after-tool.png
+## a refused value names what fits and changes nothing
+"value" for terrain_tag must be a whole number 0-15.
+## editor undo of the last tool action, then jrpg_tileset_flags
+   {"id": 2, "name": "Cave", "tileset_path": "res://jrpg/tilesets/cave.tres", "tile_size": [48, 48], "palette_size": 3, "bake_up_to_date": false}
+   tile {"index": 1, "kind": "autotile", "name": "Grass", "pass": "blocked", "no_entry": [], "no_exit": [], "overhead": false, "ladder": false, "bush": false, "counter": false, "damage": false, "terrain_tag": 0}
+   tile {"index": 2, "kind": "wall", "name": "Stone Wall", "pass": "open", "no_entry": [], "no_exit": [], "overhead": false, "ladder": false, "bush": false, "counter": false, "damage": false, "terrain_tag": 0}
+   tile {"index": 3, "kind": "autotile", "name": "Pond", "pass": "open", "no_entry": [], "no_exit": [], "overhead": false, "ladder": false, "bush": false, "counter": false, "damage": false, "terrain_tag": 0}
+## errors
+    "errors": 0,
+    "warnings": 0,

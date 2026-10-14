@@ -40,16 +40,21 @@
 #include "jrpg_managed_addon.h"
 #include "jrpg_project_setup.h"
 #include "jrpg_setup_dialog.h"
+#include "jrpg_tile_flags.h"
 #include "jrpg_trait_editor.h"
 #include "jrpg_workspace_shell.h"
 
 #include "core/io/json.h"
+#include "core/io/resource_loader.h"
 #include "core/object/class_db.h"
 #include "editor/editor_interface.h"
+#include "scene/resources/2d/tile_set.h"
+#include "scene/resources/texture.h"
 
 #include "modules/claude_bridge/claude_bridge_registry.h"
 #include "modules/claude_bridge/claude_bridge_tools.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
+#include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
@@ -157,26 +162,32 @@ JRPGDatabaseEditing *database_editing(const Ref<ClaudeBridgeToolCall> &p_call) {
 	return editing;
 }
 
-// A whole-number argument: an integer, a float without a fraction or a string of digits (review finding 19); false
-// after failing the call.
+// A whole number: an integer, a float without a fraction or a string of digits (review finding 19).
+bool whole_number(const Variant &p_value, int64_t &r_value) {
+	if (p_value.get_type() == Variant::INT) {
+		r_value = p_value;
+		return true;
+	}
+	if (p_value.get_type() == Variant::FLOAT) {
+		const double d = p_value;
+		if (Math::is_finite(d) && d == Math::floor(d) && Math::abs(d) < 9.0e15) {
+			r_value = int64_t(d);
+			return true;
+		}
+	} else if (p_value.get_type() == Variant::STRING && String(p_value).strip_edges().is_valid_int()) {
+		r_value = String(p_value).strip_edges().to_int();
+		return true;
+	}
+	return false;
+}
+
+// A whole-number argument; false after failing the call.
 bool int_arg(const Dictionary &p_args, const String &p_key, int64_t p_default, const Ref<ClaudeBridgeToolCall> &p_call, int64_t &r_value) {
 	if (!p_args.has(p_key)) {
 		r_value = p_default;
 		return true;
 	}
-	const Variant v = p_args[p_key];
-	if (v.get_type() == Variant::INT) {
-		r_value = v;
-		return true;
-	}
-	if (v.get_type() == Variant::FLOAT) {
-		const double d = v;
-		if (Math::is_finite(d) && d == Math::floor(d) && Math::abs(d) < 9.0e15) {
-			r_value = int64_t(d);
-			return true;
-		}
-	} else if (v.get_type() == Variant::STRING && String(v).strip_edges().is_valid_int()) {
-		r_value = String(v).strip_edges().to_int();
+	if (whole_number(p_args[p_key], r_value)) {
 		return true;
 	}
 	p_call->fail(vformat("\"%s\" must be a whole number.", p_key));
@@ -874,6 +885,301 @@ void tool_db_select(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p
 	p_call->complete_data(result);
 }
 
+// Tileset tools (task 7.3.3): the tileset form's operations (spec 05, "Tile flags"), through JRPGDatabaseEditing.
+
+const char *SIDE_KEYS[] = { "north", "east", "south", "west" };
+const char *PASS_KEYS[] = { "open", "blocked", "transparent" };
+
+Array side_list(int p_mask) {
+	Array sides;
+	for (int side = 0; side < 4; side++) {
+		if (p_mask & (1 << side)) {
+			sides.push_back(SIDE_KEYS[side]);
+		}
+	}
+	return sides;
+}
+
+String field_keys() {
+	PackedStringArray keys;
+	for (int i = 0; i < JRPGTileFlags::FIELD_MAX; i++) {
+		keys.push_back(JRPGTileFlags::get_field(JRPGTileFlags::Field(i)).key);
+	}
+	return String(", ").join(keys);
+}
+
+// One palette entry as the tools report it, its flags decoded from its first shape (what the bake reads).
+Dictionary describe_tile(const Ref<TileSet> &p_tileset, const Dictionary &p_entry, int p_index) {
+	Dictionary tile;
+	tile["index"] = p_index;
+	tile["kind"] = p_entry.get("kind", "plain");
+	tile["name"] = p_entry.get("name", "");
+	if (!JRPGTileFlags::has_entry_tile(p_tileset, p_entry)) {
+		tile["missing"] = true; // Its tile is not in the TileSet (a removed atlas source).
+		return tile;
+	}
+	const PackedInt32Array words = JRPGTileFlags::get_tile_words(p_tileset, p_entry);
+	const int word = words[0];
+	tile["pass"] = PASS_KEYS[MIN(int(JRPGTilesetData::get_pass_mode(word)), 2)];
+	tile["no_entry"] = side_list(JRPGTilesetData::get_no_entry(word));
+	tile["no_exit"] = side_list(JRPGTilesetData::get_no_exit(word));
+	for (int f = JRPGTileFlags::FIELD_OVERHEAD; f <= JRPGTileFlags::FIELD_DAMAGE; f++) {
+		const JRPGTileFlags::FieldInfo &field = JRPGTileFlags::get_field(JRPGTileFlags::Field(f));
+		tile[field.key] = (word & field.mask) != 0;
+	}
+	tile["terrain_tag"] = JRPGTilesetData::get_terrain_tag(word);
+	for (const int other : words) {
+		if (other != word) {
+			tile["mixed"] = true; // The kind's shapes differ (painted one by one in Godot's TileSet editor).
+			break;
+		}
+	}
+	return tile;
+}
+
+// The tileset named by "id" and its TileSet, or null after failing the call.
+Ref<TileSet> tileset_of(JRPGDatabaseEditing *p_editing, const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, int &r_id) {
+	r_id = database_id(p_editing->get_table("tilesets"), p_args, p_call);
+	if (!r_id) {
+		return Ref<TileSet>();
+	}
+	const Ref<TileSet> tileset = p_editing->get_tileset_of(r_id);
+	if (tileset.is_null()) {
+		const Ref<JRPGTilesetData> data = p_editing->get_record("tilesets", r_id);
+		const String uid = data->get_tileset_uid();
+		p_call->fail(vformat("Tileset %d has no TileSet%s: create one with jrpg_tileset_create, or point its tileset_uid at one with jrpg_db_set.", r_id, uid.is_empty() ? String() : vformat(" (%s does not load)", uid)));
+	}
+	return tileset;
+}
+
+Dictionary tileset_summary(JRPGDatabaseEditing *p_editing, int p_id, const Ref<TileSet> &p_tileset) {
+	const Ref<JRPGTilesetData> data = p_editing->get_record("tilesets", p_id);
+	Dictionary result;
+	result["id"] = p_id;
+	result["name"] = data->get_entry_name();
+	result["tileset_uid"] = data->get_tileset_uid();
+	result["tileset_path"] = p_tileset->get_path();
+	result["tile_size"] = Array({ p_tileset->get_tile_size().x, p_tileset->get_tile_size().y });
+	result["palette_size"] = data->get_palette().size();
+	// The flags maps and servers read are baked when the database is saved (jrpg_db_save, or the editor's saves).
+	result["bake_up_to_date"] = !JRPGTileFlags::is_stale(p_tileset, data);
+	return result;
+}
+
+void tool_tileset_flags(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	if (!editing) {
+		return;
+	}
+	int id = 0;
+	const Ref<TileSet> tileset = tileset_of(editing, p_args, p_call, id);
+	int64_t from = 1;
+	int64_t count = 200;
+	if (tileset.is_null() || !int_arg(p_args, "from", 1, p_call, from) || !int_arg(p_args, "count", 200, p_call, count)) {
+		return;
+	}
+	const Array palette = Ref<JRPGTilesetData>(editing->get_record("tilesets", id))->get_palette();
+	Array tiles;
+	for (int64_t index = MAX(from, int64_t(1)); index <= palette.size() && index < MAX(from, int64_t(1)) + MAX(count, int64_t(0)); index++) {
+		tiles.push_back(describe_tile(tileset, palette[index - 1], int(index)));
+	}
+	Dictionary result = tileset_summary(editing, id, tileset);
+	result["tiles"] = tiles;
+	p_call->complete_data(result);
+}
+
+// The value of p_field from a JSON value: a name or number for the passage, sides as names or a mask, booleans, or
+// a tag; -1 when it does not fit.
+int flag_value(JRPGTileFlags::Field p_field, const Variant &p_value) {
+	int64_t number = -1;
+	const bool numeric = p_value.get_type() != Variant::BOOL && whole_number(p_value, number);
+	switch (p_field) {
+		case JRPGTileFlags::FIELD_PASS:
+			for (int i = 0; i < 3; i++) {
+				if (p_value.get_type() == Variant::STRING && String(p_value).strip_edges().to_lower() == PASS_KEYS[i]) {
+					return i;
+				}
+			}
+			return numeric && number >= 0 && number <= 2 ? int(number) : -1;
+		case JRPGTileFlags::FIELD_NO_ENTRY:
+		case JRPGTileFlags::FIELD_NO_EXIT: {
+			if (p_value.get_type() == Variant::ARRAY) {
+				int mask = 0;
+				for (const Variant &side : Array(p_value)) {
+					int bit = -1;
+					for (int i = 0; i < 4; i++) {
+						if (side.get_type() == Variant::STRING && String(side).strip_edges().to_lower() == SIDE_KEYS[i]) {
+							bit = 1 << i;
+						}
+					}
+					if (bit < 0) {
+						return -1;
+					}
+					mask |= bit;
+				}
+				return mask;
+			}
+			return numeric && number >= 0 && number <= 15 ? int(number) : -1;
+		}
+		case JRPGTileFlags::FIELD_TERRAIN_TAG:
+			return numeric && number >= 0 && number <= 15 ? int(number) : -1;
+		default:
+			if (p_value.get_type() == Variant::BOOL) {
+				return bool(p_value) ? 1 : 0;
+			}
+			return numeric && (number == 0 || number == 1) ? int(number) : -1;
+	}
+}
+
+void tool_tileset_set_flag(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	if (!editing) {
+		return;
+	}
+	int id = 0;
+	const Ref<TileSet> tileset = tileset_of(editing, p_args, p_call, id);
+	if (tileset.is_null()) {
+		return;
+	}
+	PackedInt32Array indexes;
+	if (p_args.has("index")) {
+		int64_t index = 0;
+		if (!int_arg(p_args, "index", 0, p_call, index)) {
+			return;
+		}
+		indexes.push_back(int(CLAMP(index, int64_t(INT32_MIN), int64_t(INT32_MAX))));
+	}
+	if (p_args.has("indexes")) {
+		const Variant list = p_args["indexes"];
+		bool valid = list.get_type() == Variant::ARRAY;
+		for (const Variant &v : valid ? Array(list) : Array()) {
+			int64_t index = 0;
+			valid = valid && whole_number(v, index);
+			indexes.push_back(int(CLAMP(index, int64_t(INT32_MIN), int64_t(INT32_MAX))));
+		}
+		if (!valid) {
+			p_call->fail("\"indexes\" must be a list of palette indexes (whole numbers, 1 = the first tile).");
+			return;
+		}
+	}
+	if (indexes.is_empty()) {
+		p_call->fail("Give \"index\" or \"indexes\": the palette indexes to change (1 = the first tile; jrpg_tileset_flags lists them).");
+		return;
+	}
+	const String key = String(p_args.get("flag", "")).strip_edges().to_lower();
+	JRPGTileFlags::Field field = JRPGTileFlags::FIELD_MAX;
+	for (int i = 0; i < JRPGTileFlags::FIELD_MAX; i++) {
+		if (key == JRPGTileFlags::get_field(JRPGTileFlags::Field(i)).key) {
+			field = JRPGTileFlags::Field(i);
+		}
+	}
+	if (field == JRPGTileFlags::FIELD_MAX) {
+		p_call->fail(vformat("\"flag\" must be one of: %s.", field_keys()));
+		return;
+	}
+	const int value = flag_value(field, p_args.get("value", Variant()));
+	if (value < 0) {
+		const char *expected = field == JRPGTileFlags::FIELD_PASS ? "open, blocked or transparent (or 0-2)" : (field == JRPGTileFlags::FIELD_NO_ENTRY || field == JRPGTileFlags::FIELD_NO_EXIT) ? "a list of sides (north, east, south, west; [] for none) or a mask 0-15"
+				: field == JRPGTileFlags::FIELD_TERRAIN_TAG																																		? "a whole number 0-15"
+																																																: "true or false";
+		p_call->fail(vformat("\"value\" for %s must be %s.", key, expected));
+		return;
+	}
+	const JRPGTileFlags::FieldInfo &info = JRPGTileFlags::get_field(field);
+	String message;
+	if (editing->set_tile_flags(id, indexes, info.mask, value << info.shift, &message) != OK) {
+		p_call->fail(message + " Nothing was changed.");
+		return;
+	}
+	const Array palette = Ref<JRPGTilesetData>(editing->get_record("tilesets", id))->get_palette();
+	Array tiles;
+	HashSet<int> listed;
+	for (const int index : indexes) {
+		if (!listed.has(index)) {
+			listed.insert(index);
+			tiles.push_back(describe_tile(tileset, palette[index - 1], index));
+		}
+	}
+	Dictionary result = tileset_summary(editing, id, tileset);
+	result["tiles"] = tiles;
+	result["undoable"] = true;
+	p_call->complete_data(result);
+}
+
+void tool_tileset_create(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	if (!editing) {
+		return;
+	}
+	const int id = database_id(editing->get_table("tilesets"), p_args, p_call);
+	int64_t tile_size = JRPGDatabaseEditing::DEFAULT_TILE_SIZE;
+	if (!id || !int_arg(p_args, "tile_size", JRPGDatabaseEditing::DEFAULT_TILE_SIZE, p_call, tile_size)) {
+		return;
+	}
+	String path = editing->suggest_tileset_path(id);
+	if (p_args.has("path")) {
+		path = ClaudeBridgeTools::validate_res_path(p_args["path"]);
+		if (path.is_empty()) {
+			p_call->fail("\"path\" must be a res:// path inside the project.");
+			return;
+		}
+	}
+	String message;
+	if (editing->create_tileset(id, path, int(CLAMP(tile_size, int64_t(0), int64_t(INT32_MAX))), &message) != OK) {
+		p_call->fail(message);
+		return;
+	}
+	Dictionary result = tileset_summary(editing, id, editing->get_tileset_of(id));
+	result["undoable"] = true; // Choosing the TileSet; the file stays.
+	p_call->complete_data(result);
+}
+
+void tool_tileset_add_sheet(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	JRPGDatabaseEditing *editing = database_editing(p_call);
+	if (!editing) {
+		return;
+	}
+	int id = 0;
+	const Ref<TileSet> tileset = tileset_of(editing, p_args, p_call, id);
+	if (tileset.is_null()) {
+		return;
+	}
+	const String image = ClaudeBridgeTools::validate_res_path(p_args.get("image", ""));
+	const Ref<Texture2D> texture = !image.is_empty() && ResourceLoader::exists(image) ? ResourceLoader::load(image) : Ref<Resource>();
+	if (texture.is_null()) {
+		p_call->fail("\"image\" must be the res:// path of an image the project has imported (after adding files, editor_rescan imports them).");
+		return;
+	}
+	const Vector2i tile = tileset->get_tile_size();
+	int guessed_frames = 1;
+	const JRPGAutotileImporter::SheetKind guessed = JRPGAutotileImporter::guess_kind(tile.x > 0 && tile.y > 0 ? Vector2i(texture->get_size()) / tile : Vector2i(), guessed_frames);
+	JRPGAutotileImporter::SheetKind kind = guessed;
+	if (p_args.has("kind") && !JRPGAutotileImporter::kind_from_name(p_args["kind"], kind)) {
+		p_call->fail("\"kind\" must be plain, autotile or wall.");
+		return;
+	}
+	int64_t frames = 1;
+	if (!int_arg(p_args, "frames", kind == guessed ? guessed_frames : 1, p_call, frames)) {
+		return;
+	}
+	const String name = p_args.get("name", image.get_file().get_basename().capitalize());
+	PackedInt32Array indexes;
+	String message;
+	if (editing->add_tile_sheet(id, image, kind, int(CLAMP(frames, int64_t(0), int64_t(64))), name, indexes, &message) != OK) {
+		p_call->fail(message + " Nothing was changed.");
+		return;
+	}
+	Dictionary added;
+	added["kind"] = JRPGAutotileImporter::get_kind_name(kind);
+	added["frames"] = int(frames);
+	added["name"] = name.strip_edges();
+	added["indexes"] = Variant(indexes);
+	Dictionary result = tileset_summary(editing, id, tileset);
+	result["sheet"] = added;
+	result["undoable"] = true;
+	p_call->complete_data(result);
+}
+
 Dictionary schema_property(const String &p_type, const String &p_description) {
 	Dictionary property;
 	property["type"] = p_type;
@@ -1083,6 +1389,70 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	save.destructive = true; // Writes files: as saving scenes, not undoable (talewright/docs/claude_bridge.md, annotations).
 	save.func = &tool_db_save;
 	r_mcp.register_tool(save);
+
+	const Dictionary tileset_id = schema_property("integer", "Tileset ID in the database (1 = first tileset).");
+
+	ClaudeBridgeMCP::Tool tile_flags;
+	tile_flags.name = "jrpg_tileset_flags";
+	tile_flags.title = "Read a tileset's tile flags";
+	tile_flags.description = "Lists a tileset's palette (the tiles maps use; an autotile or wall kind is one entry) with each tile's flags as the tileset form shows them: pass (open, blocked, transparent), no_entry and no_exit sides (north, east, south, west), overhead, ladder, bush, counter, damage and terrain_tag (0-15). A kind whose shapes carry different flags is marked mixed (the first shape's are shown); a tile its TileSet lacks is marked missing. bake_up_to_date tells whether the flags baked for maps match (the database save bakes them).";
+	Dictionary tile_flags_properties;
+	tile_flags_properties["id"] = tileset_id;
+	tile_flags_properties["from"] = schema_property("integer", "First palette index (default 1).");
+	tile_flags_properties["count"] = schema_property("integer", "How many tiles (default 200).");
+	tile_flags.input_schema = ClaudeBridgeMCP::object_schema(tile_flags_properties, PackedStringArray({ "id" }));
+	tile_flags.func = &tool_tileset_flags;
+	r_mcp.register_tool(tile_flags);
+
+	ClaudeBridgeMCP::Tool set_flag;
+	set_flag.name = "jrpg_tileset_set_flag";
+	set_flag.title = "Set a tile flag";
+	set_flag.description = "Sets one flag of palette tiles, as a click on the tileset form's overlay does: an autotile or wall kind changes on all its shapes; the tiles' other flags stay. flag is one of pass, no_entry, no_exit, overhead, ladder, bush, counter, damage, terrain_tag; value is open/blocked/transparent for pass, a list of sides (or a 0-15 mask) for no_entry and no_exit, true/false for the switches, 0-15 for terrain_tag. One undoable action; the TileSet is saved with the database (jrpg_db_save). Returns the changed tiles.";
+	Dictionary set_flag_properties;
+	set_flag_properties["id"] = tileset_id;
+	set_flag_properties["index"] = schema_property("integer", "Palette index (1 = first tile).");
+	Dictionary index_list = schema_property("array", "Several palette indexes at once.");
+	index_list["items"] = schema_property("integer", "Palette index.");
+	set_flag_properties["indexes"] = index_list;
+	set_flag_properties["flag"] = schema_property("string", "pass, no_entry, no_exit, overhead, ladder, bush, counter, damage or terrain_tag.");
+	Dictionary flag_value_schema;
+	flag_value_schema["description"] = "The flag's new value (see the tool description).";
+	set_flag_properties["value"] = flag_value_schema;
+	set_flag.input_schema = ClaudeBridgeMCP::object_schema(set_flag_properties, PackedStringArray({ "id", "flag", "value" }));
+	set_flag.read_only = false;
+	set_flag.destructive = false; // Undoable.
+	set_flag.func = &tool_tileset_set_flag;
+	r_mcp.register_tool(set_flag);
+
+	ClaudeBridgeMCP::Tool tileset_create;
+	tileset_create.name = "jrpg_tileset_create";
+	tileset_create.title = "Create a tileset's TileSet";
+	tileset_create.description = "Creates a TileSet file for a tileset and points the tileset at it, as Create TileSet in the tileset form: square tiles of tile_size pixels (default 48) with the jrpg_* tile flag layers, at path (default res://jrpg/tilesets/<tileset name>.tres). An existing file is never replaced. Choosing the TileSet is undoable; the file stays.";
+	Dictionary tileset_create_properties;
+	tileset_create_properties["id"] = tileset_id;
+	tileset_create_properties["path"] = schema_property("string", "res:// path of the new .tres or .res file.");
+	tileset_create_properties["tile_size"] = schema_property("integer", "Tile width and height in pixels, 8-512 (default 48).");
+	tileset_create.input_schema = ClaudeBridgeMCP::object_schema(tileset_create_properties, PackedStringArray({ "id" }));
+	tileset_create.read_only = false;
+	tileset_create.destructive = true; // Writes a file (talewright/docs/claude_bridge.md, annotations).
+	tileset_create.func = &tool_tileset_create;
+	r_mcp.register_tool(tileset_create);
+
+	ClaudeBridgeMCP::Tool add_sheet;
+	add_sheet.name = "jrpg_tileset_add_sheet";
+	add_sheet.title = "Add a tile sheet to a tileset";
+	add_sheet.description = "Brings the tiles of an image into a tileset's TileSet and palette, as Add Sheet in the tileset form: plain tiles (each tile that shows anything), an autotile (8 x 6 tiles per frame) or a wall (4 x 4 tiles per frame), laid out as talewright/docs/autotile_template.md shows. Without kind, the layout is guessed from the image size as the form does. One undoable action. Returns the tileset and the sheet added (its kind, frames, name and palette indexes).";
+	Dictionary add_sheet_properties;
+	add_sheet_properties["id"] = tileset_id;
+	add_sheet_properties["image"] = schema_property("string", "res:// path of an imported image.");
+	add_sheet_properties["kind"] = schema_property("string", "plain, autotile or wall (default: guessed from the size).");
+	add_sheet_properties["frames"] = schema_property("integer", "Animation frames side by side, autotile and wall sheets only (default: guessed, else 1).");
+	add_sheet_properties["name"] = schema_property("string", "Name of the tiles (default: from the file name).");
+	add_sheet.input_schema = ClaudeBridgeMCP::object_schema(add_sheet_properties, PackedStringArray({ "id", "image" }));
+	add_sheet.read_only = false;
+	add_sheet.destructive = false; // Undoable.
+	add_sheet.func = &tool_tileset_add_sheet;
+	r_mcp.register_tool(add_sheet);
 
 	ClaudeBridgeMCP::Tool show;
 	show.name = "jrpg_db_select";

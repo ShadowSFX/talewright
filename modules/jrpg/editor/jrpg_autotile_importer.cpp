@@ -97,6 +97,29 @@ String JRPGAutotileImporter::get_kind_name(SheetKind p_kind) {
 	}
 }
 
+bool JRPGAutotileImporter::kind_from_name(const String &p_name, SheetKind &r_kind) {
+	for (const SheetKind kind : { SHEET_PLAIN, SHEET_AUTOTILE, SHEET_WALL }) {
+		if (p_name.strip_edges().to_lower() == get_kind_name(kind)) {
+			r_kind = kind;
+			return true;
+		}
+	}
+	return false;
+}
+
+JRPGAutotileImporter::SheetKind JRPGAutotileImporter::guess_kind(const Vector2i &p_cells, int &r_frames) {
+	r_frames = 1;
+	if (p_cells.y == JRPGAutotile::BLOB_ROWS && p_cells.x > 0 && p_cells.x % JRPGAutotile::BLOB_COLUMNS == 0) {
+		r_frames = p_cells.x / JRPGAutotile::BLOB_COLUMNS;
+		return SHEET_AUTOTILE;
+	}
+	// 8 x 4 tiles may be a wall with two frames or 32 plain tiles; plain sheets are the likelier.
+	if (p_cells == Vector2i(JRPGAutotile::WALL_COLUMNS, JRPGAutotile::WALL_ROWS)) {
+		return SHEET_WALL;
+	}
+	return SHEET_PLAIN;
+}
+
 Error JRPGAutotileImporter::import_sheet(const Ref<TileSet> &p_tileset, const Ref<Texture2D> &p_texture, SheetKind p_kind, int p_frames, const String &p_name, const Ref<JRPGTilesetData> &p_data, PackedInt32Array &r_indexes, String &r_error) {
 	r_indexes.clear();
 	if (p_tileset.is_null() || p_texture.is_null() || p_data.is_null()) {

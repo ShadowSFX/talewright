@@ -66,6 +66,11 @@ public:
 	static Dictionary import_sheet_bind(const Ref<TileSet> &p_tileset, const Ref<Texture2D> &p_texture, SheetKind p_kind, int p_frames, const String &p_name, const Ref<JRPGTilesetData> &p_data);
 	// "plain", "autotile" or "wall": the palette entry's kind.
 	static String get_kind_name(SheetKind p_kind);
+	// The kind named p_name (get_kind_name), false when there is none.
+	static bool kind_from_name(const String &p_name, SheetKind &r_kind);
+	// The layout an image of p_cells tiles most likely has: an autotile sheet when its size fits one (r_frames side by
+	// side), a wall sheet at exactly 4 x 4 tiles, a sheet of plain tiles otherwise.
+	static SheetKind guess_kind(const Vector2i &p_cells, int &r_frames);
 };
 
 VARIANT_ENUM_CAST(JRPGAutotileImporter::SheetKind);

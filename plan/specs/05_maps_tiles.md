@@ -84,7 +84,8 @@ the bake stale. `JRPGDatabaseEditing::save_all` bakes every stale tileset again 
 tileset tab edited are listed as unsaved (`mark_unsaved`) and saved with the database.
 Authoring (7.3.2): `JRPGDatabaseEditing.set_tile_flags / add_tile_sheet / create_tileset`, one undoable action each,
 shared by the tileset form (`JRPGEditorPropertyTiles`: the palette as a grid with the chosen flag drawn over each
-tile) and the bridge tools (7.3.3).
+tile) and the bridge tools `jrpg_tileset_flags`, `jrpg_tileset_set_flag`, `jrpg_tileset_create` and
+`jrpg_tileset_add_sheet` (7.3.3).
 Documented behavior this reproduces: entry permission per side for one-way edges (RM-TIL-008) and overhead tiles
 that never block (RM-TIL-007); the separate no-exit mask is a Talewright addition.
 

@@ -116,6 +116,10 @@ public:
 
 	// Tilesets (spec 05). The TileSet of tileset p_tileset_id: the file its tileset_uid names, or null.
 	Ref<TileSet> get_tileset_of(int p_tileset_id);
+	static constexpr int DEFAULT_TILE_SIZE = 48; // Pixels (D-034): a new TileSet's tiles.
+	// Where a new TileSet for tileset p_tileset_id goes: res://jrpg/tilesets/<its name in snake_case>.tres (or
+	// tileset_<id>), with _2, _3... when that file exists.
+	String suggest_tileset_path(int p_tileset_id);
 	// Sets the bits p_mask of the tile flags (JRPGTilesetData.pack_flags layout) to p_value on the palette entries
 	// p_indexes (1-based) of tileset p_tileset_id, on every tile each entry stands for; the other bits keep each tile's
 	// own value. One undoable action (none when nothing changes); the TileSet is saved with the database, which bakes
