@@ -55,6 +55,7 @@ class JRPGInterpreter : public RefCounted {
 public:
 	static constexpr int MAX_COMMANDS_PER_STEP = 10000;
 	static constexpr int MAX_JUMPS_PER_STEP = 1000;
+	static constexpr int MAX_DEPTH = 100; // Frames (lists inside lists, common event calls) past which calls are skipped.
 	// Steps in a row that spend the whole budget before a warning (one second of a loop that never waits).
 	static constexpr int RUNAWAY_WARNING_STEPS = 60;
 
@@ -104,6 +105,10 @@ public:
 	// Goes on after the label p_label in the current list or an enclosing one; false, with a warning, when there is
 	// none.
 	bool jump_to_label(const String &p_label);
+	// Runs common event p_id's commands next (Common Event, RM-CMD-016), then goes on after the current command; false,
+	// with a warning, when the database has no such common event or the frames are MAX_DEPTH deep (a common event that
+	// calls itself).
+	bool call_common_event(int p_id);
 	// Ends the run (Exit Event Processing).
 	void exit();
 	// Waits p_steps simulation steps after the current one before the next command.

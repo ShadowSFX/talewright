@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.3.1 Interpreter frames, waits, labels, budgets",
+  "last_completed": "9.3.2.1 Common event calls and event processes (core)",
   "tasks": [
     {
       "id": "0",
@@ -3903,7 +3903,7 @@
         "modules/jrpg/tests/test_jrpg_interpreter.h",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "b20ded8360",
       "notes": ""
     },
     {
@@ -3913,12 +3913,59 @@
       "dependencies": [
         "9.3.1"
       ],
-      "description": "Common event calls, autorun and parallel processes (one interpreter each), autorun blocking, stuck-autorun detection.",
+      "description": "Common event calls, autorun and parallel processes (one interpreter each), autorun blocking, stuck-autorun detection. Split into 9.3.2.1 (core: common event calls, JRPGEventRunner with the main interpreter and parallel processes, stuck autorun detection) and 9.3.2.2 (runtime: the scene manager steps the runner; the player waits while the main interpreter runs).",
       "acceptance_criteria": [
-        "Doctests: common event call/return, two parallel processes interleave deterministically, autorun blocks player input, a never-ending autorun is reported once"
+        "9.3.2.1 and 9.3.2.2 done"
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.3.2.1",
+      "parent": "9.3.2",
+      "title": "Common event calls and event processes (core)",
+      "priority": 1,
+      "dependencies": [],
+      "description": "JRPGInterpreter::call_common_event (the common event's list runs, then the caller goes on; depth limit with a warning). JRPGEventRunner (core): for the current map's data and game state, a main interpreter that runs autorun pages (map events in event order, then autorun common events whose switch is on, in id order) and triggered events (start_event, used by 9.6.2), and one interpreter per parallel page and parallel common event, restarted when they end; processes follow the game state (pages picked again when its revision changes; erased events stop); a fixed order each step (main, then map parallels in event order, then common parallels in id order); an autorun that restarts again and again without waiting or changing the game state is reported once.",
+      "acceptance_criteria": [
+        "Doctests: common event call/return; two parallel processes interleave deterministically; a never-ending autorun is reported once",
+        "A parallel or autorun page stops when its conditions no longer hold"
+      ],
+      "test_strategy": "Doctests [JRPG] (core, no nodes).",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_interpreter.h",
+        "modules/jrpg/core/jrpg_interpreter.cpp",
+        "modules/jrpg/core/jrpg_event_runner.h",
+        "modules/jrpg/core/jrpg_event_runner.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGInterpreter.xml",
+        "modules/jrpg/doc_classes/JRPGEventRunner.xml",
+        "modules/jrpg/tests/test_jrpg_event_runner.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "9.3.2.2",
+      "parent": "9.3.2",
+      "title": "Event processes on the running map",
+      "priority": 1,
+      "dependencies": [
+        "9.3.2.1"
+      ],
+      "description": "JRPGSceneManager builds a JRPGEventRunner for each map it enters and steps it every simulation step (after the transfer step, before the player moves); while the main interpreter runs (an autorun or a triggered event) the player does not move; map processes stop when the map changes.",
+      "acceptance_criteria": [
+        "Doctest: autorun blocks player input until it ends",
+        "Processes of the old map stop on a transfer"
+      ],
+      "test_strategy": "Doctests [SceneTree].",
       "status": "pending",
       "files": [],
       "commit": "",

@@ -17,6 +17,13 @@
 				Leaves the innermost running loop (and any list inside it); the list around it goes on after the loop command. Returns [code]false[/code], with nothing changed, when no loop is running.
 			</description>
 		</method>
+		<method name="call_common_event">
+			<return type="bool" />
+			<param index="0" name="id" type="int" />
+			<description>
+				Runs the commands of common event [param id] next, then goes on after the current command. Returns [code]false[/code], with a warning, when the common event does not exist or [constant MAX_DEPTH] frames already run (a common event that calls itself).
+			</description>
+		</method>
 		<method name="clear">
 			<return type="void" />
 			<description>
@@ -124,6 +131,9 @@
 		</constant>
 		<constant name="MAX_JUMPS_PER_STEP" value="1000">
 			The most loop restarts and jumps one step makes.
+		</constant>
+		<constant name="MAX_DEPTH" value="100">
+			How many frames deep (lists inside lists and common event calls) a common event can still be called: deeper calls are skipped with a warning, which ends a common event that calls itself.
 		</constant>
 		<constant name="RUNAWAY_WARNING_STEPS" value="60">
 			Steps in a row that spend their whole budget before a warning: a loop that never waits.

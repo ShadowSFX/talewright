@@ -49,6 +49,7 @@
 #include "modules/jrpg/core/jrpg_equip_data.h"
 #include "modules/jrpg/core/jrpg_event_command.h"
 #include "modules/jrpg/core/jrpg_event_data.h"
+#include "modules/jrpg/core/jrpg_event_runner.h"
 #include "modules/jrpg/core/jrpg_event_state.h"
 #include "modules/jrpg/core/jrpg_formula.h"
 #include "modules/jrpg/core/jrpg_game_state.h"
@@ -179,6 +180,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGCommandList);
 		GDREGISTER_ABSTRACT_CLASS(JRPGCommandRegistry); // Static methods only.
 		GDREGISTER_CLASS(JRPGInterpreter);
+		GDREGISTER_CLASS(JRPGEventRunner);
 		GDREGISTER_CLASS(JRPGReferenceScanner);
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotile); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotileResolver);

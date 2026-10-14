@@ -1027,3 +1027,25 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** frames match the tree storage (D-007, D-058) and make saving a position a list of indexes (9.3.3); lookups
   when jumping need no index to keep in sync with edits; spreading runaway loops over steps never freezes the game.
 - **Reversal:** `JRPGInterpreter::step`, `jump_to_label` and the budget constants.
+
+## D-061 — Event processes: one main interpreter, parallel interpreters, autorun holds
+- **Context:** task 9.3.2.1 needs common event calls and the processes of a map (spec 03, "Kinds"). The help says an
+  autorun stops the player while its conditions hold and a parallel event runs alongside play, but not in which order
+  processes run within a frame, when a parallel process stops, or what happens to an autorun that never waits.
+- **Options:** processes owned by the runtime nodes (JRPGEvent) or by a core object; order by event id or by stored
+  order; "the player waits" meaning the main interpreter is mid-run, or also that an autorun page holds.
+- **Choice:** `JRPGEventRunner` (core, RefCounted) per map: one main interpreter for autoruns (the map's events in
+  their stored order, then autorun common events with their switch on, in id order) and triggered events
+  (`start_event`), and one interpreter per parallel page and parallel common event, started again when it ends. Pages
+  are picked again when the game state's revision changes; a process whose page changed starts afresh, one that no
+  longer holds stops at once (mid-wait included). Erasing an event does not change the revision, so erased events are
+  checked every step. Each step runs main, then the map's parallels in stored order, then common parallels in id
+  order. `is_main_running` (the player waits; `start_event` refuses) is true while the main interpreter runs or an
+  autorun page holds, so an autorun that ends within its step still holds the player. An autorun that starts and ends
+  in the same step without changing the revision, 60 runs in a row, is warned about once per page.
+  `JRPGInterpreter::call_common_event` pushes the common event's list as a frame (missing id: warning, the run goes
+  on); calls at 100 frames deep are skipped with a warning.
+- **Why:** core ownership lets the zone server run the same processes without nodes (D-007); stored order is what
+  the author sees in the event list and keeps a step deterministic; holding the player while an autorun page holds
+  matches the documented behavior even for autoruns that end at once.
+- **Reversal:** `JRPGEventRunner::step`, `_refresh`, `is_main_running`, and `JRPGInterpreter::MAX_DEPTH`.

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGEventRunner" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Runs the current map's autorun, triggered and parallel events.
+	</brief_description>
+	<description>
+		Runs the event processes of one map. A main interpreter runs one thing at a time: an autorun page (the map's events in their stored order, then autorun common events whose switch is on, in ID order) or an event started by a trigger ([method start_event]). Each parallel page, and each parallel common event whose switch is on, has its own interpreter, started again whenever it ends.
+		Pages are picked again whenever the game state's revision changes: a process whose page or switch no longer holds stops, even while it waits, and an erased event runs nothing. Every [method step] runs the main interpreter first, then the map's parallel processes in their stored order, then the parallel common events in ID order, so the result is the same on every machine.
+		An autorun that keeps starting again without waiting or changing anything leaves the player stuck; it is reported once, with a warning, after [constant STUCK_AUTORUN_RUNS] such runs in a row. While [method is_main_running] is [code]true[/code], the player waits.
+		Authority: server. Online, the zone steps the runner of each map.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="clear">
+			<return type="void" />
+			<description>
+				Stops every process.
+			</description>
+		</method>
+		<method name="get_main_interpreter" qualifiers="const">
+			<return type="JRPGInterpreter" />
+			<description>
+				Returns the interpreter that runs autoruns and triggered events.
+			</description>
+		</method>
+		<method name="get_parallel_processes" qualifiers="const">
+			<return type="Array" />
+			<description>
+				Returns the parallel processes in the order they run, each a [Dictionary] with [code]event_id[/code] ([code]0[/code] for a common event), [code]common_event_id[/code] and [code]page[/code] (the page index, [code]-1[/code] for a common event).
+			</description>
+		</method>
+		<method name="is_main_running" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] while an autorun or a triggered event runs, or while an autorun page holds (it starts again at the next step): the player waits.
+			</description>
+		</method>
+		<method name="setup">
+			<return type="void" />
+			<param index="0" name="state" type="JRPGGameState" />
+			<param index="1" name="map" type="JRPGMapData" />
+			<param index="2" name="map_id" type="int" />
+			<description>
+				Runs the events of [param map] (ID [param map_id]) under the game state [param state]. Anything running before stops.
+			</description>
+		</method>
+		<method name="start_event">
+			<return type="bool" />
+			<param index="0" name="event_id" type="int" />
+			<description>
+				Runs the active page of event [param event_id] on the main interpreter, as a trigger does. Returns [code]false[/code], with nothing started, when the main interpreter is busy (see [method is_main_running]), the event does not exist or was erased, or its page has no commands.
+			</description>
+		</method>
+		<method name="step">
+			<return type="void" />
+			<description>
+				Runs one simulation step of every process.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="STUCK_AUTORUN_RUNS" value="60">
+			Runs in a row of an autorun that neither waited nor changed the game state before it is reported.
+		</constant>
+	</constants>
+</class>

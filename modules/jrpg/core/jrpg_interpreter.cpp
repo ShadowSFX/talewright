@@ -35,6 +35,8 @@
 #include "jrpg_database.h" // IWYU pragma: keep (JRPGGameState returns Ref<JRPGDatabase> inline).
 #include "jrpg_event_command.h"
 #include "jrpg_game_state.h"
+#include "jrpg_misc_data.h"
+#include "jrpg_table.h"
 
 #include "core/object/class_db.h"
 
@@ -155,6 +157,24 @@ bool JRPGInterpreter::jump_to_label(const String &p_label) {
 	return false;
 }
 
+bool JRPGInterpreter::call_common_event(int p_id) {
+	ERR_FAIL_COND_V_MSG(frames.is_empty(), false, "JRPGInterpreter: nothing is running to call a common event from.");
+	const String who = owner.is_empty() ? String("An event") : owner;
+	const Ref<JRPGDatabase> db = game_state.is_valid() ? game_state->get_database() : Ref<JRPGDatabase>();
+	const Ref<JRPGTable> table = db.is_valid() ? db->get_table(JRPGDatabase::TABLE_COMMON_EVENTS) : Ref<JRPGTable>();
+	if (table.is_null() || !table->has_entry(p_id)) {
+		WARN_PRINT(vformat("JRPG: %s calls common event %d, which the database does not have; it goes on.", who, p_id));
+		return false;
+	}
+	if (frames.size() >= MAX_DEPTH) {
+		WARN_PRINT(vformat("JRPG: %s calls common event %d %d lists deep (a common event that calls itself?); the call is skipped.", who, p_id, MAX_DEPTH));
+		return false;
+	}
+	const Ref<JRPGCommonEventData> common_event = table->get_entry(p_id);
+	push_list(common_event.is_valid() ? common_event->get_commands() : Ref<JRPGCommandList>());
+	return true;
+}
+
 void JRPGInterpreter::exit() {
 	frames.clear();
 	wait_left = 0;
@@ -191,6 +211,7 @@ void JRPGInterpreter::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("push_list", "list", "loop"), &JRPGInterpreter::push_list, DEFVAL(false));
 	ClassDB::bind_method(D_METHOD("break_loop"), &JRPGInterpreter::break_loop);
 	ClassDB::bind_method(D_METHOD("jump_to_label", "label"), &JRPGInterpreter::jump_to_label);
+	ClassDB::bind_method(D_METHOD("call_common_event", "id"), &JRPGInterpreter::call_common_event);
 	ClassDB::bind_method(D_METHOD("exit"), &JRPGInterpreter::exit);
 	ClassDB::bind_method(D_METHOD("wait_steps", "steps"), &JRPGInterpreter::wait_steps);
 	ClassDB::bind_method(D_METHOD("get_wait_left"), &JRPGInterpreter::get_wait_left);
@@ -203,5 +224,6 @@ void JRPGInterpreter::_bind_methods() {
 	BIND_ENUM_CONSTANT(STEP_YIELDED);
 	BIND_CONSTANT(MAX_COMMANDS_PER_STEP);
 	BIND_CONSTANT(MAX_JUMPS_PER_STEP);
+	BIND_CONSTANT(MAX_DEPTH);
 	BIND_CONSTANT(RUNAWAY_WARNING_STEPS);
 }

@@ -35,6 +35,7 @@ def get_doc_classes():
         "JRPGEventCommand",
         "JRPGEventData",
         "JRPGEventPage",
+        "JRPGEventRunner",
         "JRPGEventState",
         "JRPGFormula",
         "JRPGFormulaBattler",
