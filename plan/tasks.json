@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "10.2.2.2 Choice, number input and gold windows; message and choice end to end",
+  "last_completed": "10.3 Screen stack (GDScript managed addon)",
   "tasks": [
     {
       "id": "0",
@@ -4171,7 +4171,7 @@
       "test_strategy": "Doctests + bridge.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "1277a95165",
       "notes": ""
     },
     {
@@ -4182,14 +4182,14 @@
       "dependencies": [
         "10.2"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "All embedded scripts parse"
       ],
       "test_strategy": "Doctest.",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

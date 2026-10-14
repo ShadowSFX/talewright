@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 91, in_progress: 0, done: 164, blocked: 0, deferred: 3 (of 258)
+**Totals:** pending: 90, in_progress: 0, done: 165, blocked: 0, deferred: 3 (of 258)
 
 ## [x] 0 Bootstrap and task system
 
@@ -236,8 +236,8 @@ Window frame, selectable list, message system, screen stack. Built before epic 9
   - [x] **10.2.1** Control-code parser and text layout (P1) _(commit: 5a4eaa96c8)_
   - [x] **10.2.2** Message window, choices, number input, gold window (P1) _(deps: 10.2.1)_
     - [x] **10.2.2.1** Message window: layout, letter by letter, waits, face, name box (P1) _(commit: 8306884ccb)_
-    - [x] **10.2.2.2** Choice, number input and gold windows; message and choice end to end (P1) _(deps: 10.2.2.1; commit: pending)_
-- [ ] **10.3** Screen stack (GDScript managed addon) (P1) _(deps: 10.2)_
+    - [x] **10.2.2.2** Choice, number input and gold windows; message and choice end to end (P1) _(deps: 10.2.2.1; commit: 1277a95165)_
+- [x] **10.3** Screen stack (GDScript managed addon) (P1) _(deps: 10.2; commit: pending)_
 - [ ] **10.4** Epic review: messages/UI (P1) _(deps: 10.3)_
 
 ## [ ] 11 Menu (slice)

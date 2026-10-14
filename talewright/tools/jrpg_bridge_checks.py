@@ -122,6 +122,18 @@ class Checks:
             time.sleep(0.5)
         return False
 
+    def wait_for_node(self, path: str, timeout: float = 30.0) -> bool:
+        """Waits until the running game has the node at path: the debugger connects before the main scene is in the
+        tree, so a call made as soon as it connects can miss the scene's nodes."""
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            try:
+                self.call("game_node_get", {"path": path, "properties": ["name"]})
+                return True
+            except bridge.BridgeError:
+                time.sleep(0.25)
+        return False
+
     def wait_for_import(self, relative: str, timeout: float = 90.0) -> bool:
         """Waits until the editor has imported res://<relative> (it writes the uid into the .import file)."""
         deadline = time.monotonic() + timeout
@@ -713,6 +725,7 @@ def run(checks: Checks) -> None:
             connected = True
             break
         time.sleep(0.5)
+    connected = connected and c.wait_for_node("/root/Game")
     shown = c.call("game_call", {"path": "/root/Game", "method": "get_map_id"}).get("result") if connected else None
     c.check("jrpg_play_from_start: the running game shows the start map", shown == strokes_map, str(shown))
     c.call("stop_project")
@@ -828,6 +841,7 @@ def run_windows(c: Checks) -> None:
             connected = True
             break
         time.sleep(0.5)
+    connected = connected and c.wait_for_node("/root/WindowCheck")
     c.check("JRPGWindow: the window scene runs", connected)
     if not connected:
         c.call("stop_project")
@@ -905,6 +919,7 @@ def run_lists(c: Checks) -> None:
             connected = True
             break
         time.sleep(0.5)
+    connected = connected and c.wait_for_node("/root/ListCheck/List")
     c.check("JRPGSelectableList: the list scene runs", connected)
     if not connected:
         c.call("stop_project")
@@ -976,6 +991,7 @@ def run_messages(c: Checks) -> None:
             connected = True
             break
         time.sleep(0.5)
+    connected = connected and c.wait_for_node("/root/MessageCheck/Message")
     c.check("JRPGMessageWindow: the message scene runs", connected)
     if not connected:
         c.call("stop_project")
@@ -1060,6 +1076,7 @@ def run_choices(c: Checks) -> None:
             connected = True
             break
         time.sleep(0.5)
+    connected = connected and c.wait_for_node("/root/ChoiceCheck/Message")
     c.check("JRPGChoiceWindow: the message and choice scene runs", connected)
     if not connected:
         c.call("stop_project")
@@ -1152,6 +1169,10 @@ def main() -> int:
         print(f"[FAIL] {e}")
     finally:
         if not args.keep:
+            try:
+                checks.call("stop_project")  # A check that failed mid-run may leave the game running.
+            except bridge.BridgeError:
+                pass
             editor.kill()
             editor.wait(timeout=30)
             time.sleep(1.0)

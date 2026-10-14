@@ -1,3 +1,9 @@
 [gd_scene format=3 uid="uid://mtd5kj4crdd4"]
 
+[ext_resource type="Script" path="../ui/screen_stack.gd" id="1_screens"]
+
 [node name="Game" type="JRPGSceneManager"]
+
+[node name="Screens" type="CanvasLayer" parent="."]
+layer = 10
+script = ExtResource("1_screens")

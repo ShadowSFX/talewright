@@ -833,3 +833,20 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** the windows reuse the list and the window; the interpreter's presentation port (task 9.4) decides when to
   show them (the reference shows choices as soon as the message text is out; the test scene asks for OK first).
 - **Reversal:** `JRPGChoiceWindow::_place` and `show_choices`, `JRPGNumberInputWindow::_process_input`.
+
+## D-054 — The screen stack (managed addon)
+- **Context:** task 10.3 needs the scene stack that menus, shops, save and battle screens run on (D-004: screens are
+  GDScript and scenes in the managed addon). Godot has no screen stack; `SceneTree::change_scene_to_*` replaces the
+  whole scene and would drop the running game (D-041).
+- **Options:** change scenes; a C++ node; a GDScript `CanvasLayer` in the addon game scene.
+- **Choice:** `JRPGScreenStack` (`addons/talewright/ui/screen_stack.gd`, a `CanvasLayer` named `Screens`, layer 10, in
+  the addon's game scene, referenced by a relative path so the addon works in any folder,
+  `scene/resources/resource_format_text.cpp:509-511`): `push`, `pop` (`keep` to take the screen back), `replace`,
+  `clear`, `top`, `count`; the screens under the top one get `PROCESS_MODE_DISABLED` (their windows read no input)
+  and give up the focus, which they get back when they are on top again; a new screen focuses its first control that
+  takes the focus; optional `_on_screen_activated` / `_on_screen_suspended` hooks. Push, pop and replace fade through
+  black (`fade_seconds`, 0.15 s each way) unless `fade` is false; callers await them. A doctest parses every embedded
+  addon script with the GDScript parser and runs the stack from its embedded source.
+- **Why:** screens are project-editable scripts and scenes (D-004) and the map, the game state and music keep running
+  under them.
+- **Reversal:** the script is one file; another stack can replace the `Screens` node.
