@@ -34,6 +34,7 @@
 #include "claude_bridge_auth.h"
 #include "claude_bridge_registry.h"
 #include "claude_bridge_tools.h"
+#include "claude_bridge_ui_tools.h"
 
 #include "core/config/project_settings.h"
 #include "core/io/dir_access.h"
@@ -674,6 +675,7 @@ void ClaudeBridgePlugin::_register_tools() {
 	status.userdata = this;
 	mcp.register_tool(status);
 	ClaudeBridgeTools::register_editor_tools(mcp, this);
+	ClaudeBridgeUI::register_tools(mcp); // editor_ui_find / editor_ui_act (D-031).
 	_register_game_tools();
 	ClaudeBridgeRegistry::register_provided_tools(mcp); // Tools of other modules (JRPG database, maps...; D-030).
 	// Write tools default to destructiveHint=true; these are undoable or only affect transient state.

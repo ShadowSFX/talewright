@@ -444,3 +444,28 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   Tools stay narrow (one per authoring operation) and validate their arguments like the bridge's own tools.
 - **Why:** explicit, reviewable tool surface; modules stay optional; no new upstream patch.
 - **Reversal:** drop the registry and register tools from the bridge with its own `#ifdef MODULE_JRPG_ENABLED`.
+
+## D-031 — The bridge can operate editor controls like a user
+- **Context:** editor UI tasks (database view, entry form, trait/effect dialogs; later the map and event editors) must
+  be verified through the bridge, but its tools only read state, take screenshots and call authoring APIs. Dialogs,
+  buttons, typing in the form and picking from lists could not be exercised (tasks 6.4.1 and 6.4.2 needed tool
+  options such as `show_dialog` just to see a dialog, and typing in the form stayed unverified).
+- **Options:** one-off "show this dialog" options per tool; OS-level mouse/keyboard injection into the editor window
+  (`DisplayServer`/`Input` events: coordinates, focus and timing make it fragile); tools that find editor controls and
+  act on them through their own signals and setters, the way a click or keystroke would.
+- **Choice:** `editor_ui_find` (visible controls under the editor root or a given path, matched by text, tooltip,
+  class or accessibility name; returns paths, classes, texts, states) and `editor_ui_act` (press a button, toggle,
+  set a LineEdit/TextEdit/SpinBox value and submit, select an OptionButton/ItemList/Tree/TabBar item by text or
+  index, activate a list item as a double-click would, confirm or cancel a dialog). Only visible, enabled controls
+  inside the editor's own windows are reachable, so the tools can do no more than a user at the editor.
+- **Why:** robust (no coordinates), general (every future editor UI is testable), and narrow compared with the
+  rejected "call any bound method" tool of D-030: it reaches what the user can already click, nothing else.
+- **Reversal:** remove the two tools; UI checks fall back to screenshots and authoring-API calls.
+
+## D-032 — Collapse effect values
+- **Context:** the Collapse Effect trait (RM-TRT-025) picks how a defeated enemy disappears; the public help names
+  only the Boss option.
+- **Choice:** Talewright's own list, stored as the trait's data_id: 0 Normal (fades out), 1 Boss (long effect with
+  the Boss Collapse sounds), 2 Instant (vanishes at once), 3 Stays (remains on screen). `JRPGTraits::CollapseEffect`.
+- **Why:** covers the documented Boss case plus the common needs; the battle scene (epic 11) implements them.
+- **Reversal:** renumbering needs a `JRPGSchema` migration of saved traits.

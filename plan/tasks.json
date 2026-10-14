@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "6.4.2 Entry form, undo, save, ID pickers",
+  "last_completed": "6.5.0 Bridge: editor UI interaction tools",
   "tasks": [
     {
       "id": "0",
@@ -1931,7 +1931,7 @@
         "plan/evidence/jrpg/6.4.2-entry-form-actor.png",
         "plan/evidence/jrpg/6.4.2-entry-form-skill.png"
       ],
-      "commit": "pending",
+      "commit": "25423f20df",
       "notes": "Godot patterns followed: embedded EditorInspector like the Import dock (editor/docks/import_dock.cpp:794-799), EditorInspectorPlugin + EditorProperty with a searchable OptionButton like EditorPropertyEnum (editor/inspector/editor_properties.cpp:944-1010). Typing in the form uses EditorInspector's own undo actions; their routing to the global history follows from entries always having file::Kind_id paths (editor/editor_undo_redo_manager.cpp:82-90) and was verified live only through the bridge's jrpg_db_set + editor_undo_redo (no bridge tool types into editor controls). Equipment slots (PackedInt32Array) and trait/effect lists still use the generic editors: per-tab tasks 6.5.x.",
       "status": "done"
     },
@@ -1954,11 +1954,35 @@
       "notes": ""
     },
     {
+      "id": "6.5.0",
+      "parent": "6.5",
+      "title": "Bridge: editor UI interaction tools",
+      "description": "editor_ui_find / editor_ui_act (D-031): find visible editor controls by text, tooltip, class or accessibility name and act on them like a user (press, toggle, type and submit, set values, select and activate list/tree/tab items, confirm or cancel dialogs), for verifying editor UI.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "The Database view's Change Maximum dialog can be opened, filled and confirmed and an entry renamed by typing in the form, all through the bridge",
+        "Only visible, enabled controls inside editor windows are reachable; doctests for the finder and actions"
+      ],
+      "test_strategy": "SceneTree doctests on a test control tree + live bridge run against the Database view.",
+      "files": [
+        "modules/claude_bridge/claude_bridge_ui_tools.h",
+        "modules/claude_bridge/claude_bridge_ui_tools.cpp",
+        "modules/claude_bridge/tests/test_claude_bridge_ui_tools.h",
+        "talewright/docs/claude_bridge.md"
+      ],
+      "status": "done",
+      "commit": "pending",
+      "notes": "Live run (plan/evidence/jrpg/6.5.0-bridge-editor-ui.txt): Change Maximum opened, set and confirmed through the dialog; entry selected in the list; name typed into the form's EditorPropertyText; undo/redo of that inspector edit (confirms the 6.4.2 form edits land in the global history); Save pressed; refusals for disabled buttons, unknown actions and paths outside the editor. editor_ui_act keeps MCP's destructive hint: it reaches anything a user can click."
+    },
+    {
       "id": "6.5.1",
       "parent": "6.5",
       "title": "Trait and effect editors",
       "description": "Custom inspector editors for packed traits/effects (add/edit/remove dialogs by tab).",
-      "dependencies": [],
+      "dependencies": [
+        "6.5.0"
+      ],
       "priority": 1,
       "acceptance_criteria": [
         "Edit traits/effects via UI; undo works"

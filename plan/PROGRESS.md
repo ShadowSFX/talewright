@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 21:50 -0600
+- **Updated:** 2026-10-13 22:02 -0600
 - **Current task:** none
-- **Last completed:** 6.4.2 Entry form, undo, save, ID pickers
+- **Last completed:** 6.5.0 Bridge: editor UI interaction tools
 - **Next task:** 6.5.1 Trait and effect editors
-- **Done leaf tasks:** 69
+- **Done leaf tasks:** 70
 <!-- status:end -->
 
 ## Log
@@ -185,4 +185,8 @@
 | 2026-10-13 21:31 -0600 | 6.4.1 | done: Database window, tabs and entry list — Database view: JRPGDatabaseView in the workspace (frontend-design; Godot patterns: section ItemList like Project Settings, ItemList entries drawing only visible rows, ConfirmationDialog+SpinBox, flat icon buttons, (*) unsaved marker) with tables + System/Types/Terms, ID-slot list '0001  Name', Change Maximum (warns with the exact references it cuts), Clear (confirm listing uses), Copy/Paste (same table), Save; JRPGDatabaseEditing authoring API (undo in GLOBAL_HISTORY, per-file unsaved tracking, save with FLAG_REPLACE_SUBRESOURCE_PATHS, reload-aware) saved by the editor's own saves and quit prompt via JRPGBootstrapPlugin; JRPGEntry.assign_from; bridge tools jrpg_db_list/set_maximum/clear/copy/paste/save/select (refuse breaking references unless allowed; show_dialog opens the editor dialog); verified live: dialogs, undo/redo, save diff, errors 0; 2 doctests (131 assertions); full suite 1481/1481 (containers: 6.4 in_progress->pending, 6 in_progress->pending) | 8c57162b56 |
 | 2026-10-13 21:32 -0600 | 6.4.2 | started: Entry form, undo, save, ID pickers (containers: 6.4 pending->in_progress, 6 pending->in_progress) |  |
 | 2026-10-13 21:50 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-13 21:50 -0600 | 6.4.2 | done: Entry form, undo, save, ID pickers — Entry form: embedded EditorInspector in the Database view (name first; engine resource_* properties hidden from inspectors), JRPGInspectorPlugin with JRPGEditorPropertyID searchable ID pickers ('0001  Adventurer'; None, Normal Attack where allowed, missing IDs kept) for the main Inspector too; JRPGReferenceScanner.get_id_target/get_target_names/get_target_label (scalar ID table shared with the scanner); new entries take file::Kind_id paths at once so inspector undo stays global; JRPGDatabaseEditing get_record/set_record_properties (all-or-nothing, one undo action); bridge tools jrpg_db_get/jrpg_db_set (JSON whole numbers kept as ints); verified live: rename -> 1-line .tres diff, undo + save -> no diff, refused call changes nothing, errors 0; 3 new doctests; full suite 1484/1484 (containers: 6.4 in_progress->done, 6 in_progress->pending) | pending |
+| 2026-10-13 21:50 -0600 | 6.4.2 | done: Entry form, undo, save, ID pickers — Entry form: embedded EditorInspector in the Database view (name first; engine resource_* properties hidden from inspectors), JRPGInspectorPlugin with JRPGEditorPropertyID searchable ID pickers ('0001  Adventurer'; None, Normal Attack where allowed, missing IDs kept) for the main Inspector too; JRPGReferenceScanner.get_id_target/get_target_names/get_target_label (scalar ID table shared with the scanner); new entries take file::Kind_id paths at once so inspector undo stays global; JRPGDatabaseEditing get_record/set_record_properties (all-or-nothing, one undo action); bridge tools jrpg_db_get/jrpg_db_set (JSON whole numbers kept as ints); verified live: rename -> 1-line .tres diff, undo + save -> no diff, refused call changes nothing, errors 0; 3 new doctests; full suite 1484/1484 (containers: 6.4 in_progress->done, 6 in_progress->pending) | 25423f20df |
+| 2026-10-13 21:53 -0600 | - | imported 1 new / 1 updated tasks | |
+| 2026-10-13 21:53 -0600 | 6.5.0 | started: Bridge: editor UI interaction tools (containers: 6.5 pending->in_progress, 6 pending->in_progress) |  |
+| 2026-10-13 22:02 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 22:02 -0600 | 6.5.0 | done: Bridge: editor UI interaction tools — Bridge editor UI tools (D-031): editor_ui_find (visible controls/dialogs by text, tooltip, placeholder, accessibility name, list items, class; scoped by path) and editor_ui_act (press, toggle, set_text, submit, set_value, select, activate, confirm, cancel through each control's own signals; containers act through their inner control; hidden, disabled and read-only controls refuse); doctest 56 assertions; verified live on the Database view: Change Maximum dialog filled and confirmed, name typed in the form, undo/redo, Save pressed, errors 0; full suite 1485/1485 (containers: 6.5 in_progress->pending, 6 in_progress->pending) | pending |

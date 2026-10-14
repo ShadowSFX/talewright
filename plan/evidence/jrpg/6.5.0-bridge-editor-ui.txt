@@ -1,0 +1,52 @@
+# 6.5.0 bridge verification: editor controls used like a user (scratch project, Database section)
+## editor_ui_find text='Change Maximum' class=Button
+{
+ "matches": [
+  {
+   "path": "@EditorNode@19509/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/JRPGWorkspace/JRPGWorkspaceShell/JRPGDatabase/@HSplitContainer@19867/@HSplitContainer@19872/@VBoxContainer@19873/@HBoxContainer@19874/@Button@19876",
+   "class": "Button",
+   "text": "Change Maximum...",
+   "tooltip": "Adds empty entries at the end, or removes the last ones. IDs never move.",
+   "disabled": false
+  }
+ ],
+ "open_dialogs": []
+}
+## editor_ui_act press (Change Maximum...)
+open_dialogs: ['Change Maximum']
+## editor_ui_act set_value 9 on the dialog's SpinBox; the dialog's texts
+  "value": 9.0,
+      "text": "Number of entries in Items:",
+      "text": "Entries 10 to 10 are removed.",
+## editor_ui_act confirm
+  "open_dialogs": []
+}
+## jrpg_db_list table=items (maximum)
+  "maximum": 9,
+## editor_ui_act select '0002' in the entry list
+  "picked": {
+    "index": 1,
+    "text": "0002"
+  },
+## type a name into the form's Name field (editor_ui_act set_text on the EditorProperty)
+  "text": "Dew Drop",
+## jrpg_db_get table=items id=2 (name) and the entry list
+    "name": "Dew Drop",
+      "name": "Dew Drop"
+## editor_undo_redo undo (the inspector's own action, global history)
+  "performed": true
+    "name": "",
+## editor_undo_redo redo
+  "performed": true
+    "name": "Dew Drop",
+## press the Database section's Save button
+  "disabled": false,
+  "unsaved_paths": []
+}
+## refusals: a disabled button, an unknown action, a path outside the editor
+The button is disabled. Nothing was done.
+Unknown action: use press, toggle, set_text, submit, set_value, select, activate, confirm or cancel. Nothing was done.
+No editor control at that path (paths come from editor_ui_find). Nothing was done.
+## get_logs errors_only=true
+    "errors": 0,
+    "warnings": 0,
