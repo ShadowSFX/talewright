@@ -65,6 +65,7 @@ class JRPGDatabaseEditing : public Object {
 	void _watch_all();
 	void _on_manifest_changed();
 	void _mark_saved(const HashSet<String> &p_files);
+	void _rebake_tilesets();
 	bool _is_database_file(const Ref<Resource> &p_resource) const;
 	void _on_resource_changed(ObjectID p_owner, ObjectID p_emitter);
 
@@ -126,9 +127,14 @@ public:
 	bool has_unsaved_changes() const { return !unsaved.is_empty(); }
 	PackedStringArray get_unsaved_paths() const;
 	bool is_unsaved(const Ref<Resource> &p_resource) const;
+	// Saves every unsaved file. Tilesets whose flag table no longer matches their TileSet are baked again first
+	// (JRPGTileFlags, spec 05), so the saved database never disagrees with the tiles.
 	Error save_all();
 	// Files reloaded from disk by the editor (EditorFileSystem "resources_reload") hold no unsaved changes any more.
 	void forget_unsaved(const PackedStringArray &p_paths);
+	// A file the database tools changed outside the database files, such as a TileSet whose tile flags the tileset
+	// form edited: it is listed as unsaved and saved with the database.
+	void mark_unsaved(const Ref<Resource> &p_resource);
 
 	JRPGDatabaseEditing();
 	~JRPGDatabaseEditing();

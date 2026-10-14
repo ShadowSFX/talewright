@@ -34,6 +34,7 @@
 #include "jrpg_curve_editor.h"
 #include "jrpg_list_editors.h"
 #include "jrpg_project_setup.h"
+#include "jrpg_tile_flags.h"
 #include "jrpg_trait_editor.h"
 
 #include "core/io/file_access.h"
@@ -41,10 +42,12 @@
 #include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
 #include "editor/editor_undo_redo_manager.h"
+#include "scene/resources/2d/tile_set.h"
 #include "scene/resources/packed_scene.h"
 
 #include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_database.h"
+#include "modules/jrpg/core/jrpg_misc_data.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 
 JRPGDatabaseEditing *JRPGDatabaseEditing::singleton = nullptr;
@@ -635,7 +638,30 @@ bool JRPGDatabaseEditing::is_unsaved(const Ref<Resource> &p_resource) const {
 	return false;
 }
 
+void JRPGDatabaseEditing::_rebake_tilesets() {
+	const Ref<JRPGTable> tilesets = database.is_valid() ? database->get_table(JRPGDatabase::TABLE_TILESETS) : Ref<JRPGTable>();
+	if (tilesets.is_null()) {
+		return;
+	}
+	for (int id = 1; id <= tilesets->get_maximum(); id++) {
+		const Ref<JRPGTilesetData> data = tilesets->get_entry(id);
+		const Ref<TileSet> tileset = JRPGTileFlags::load_tileset(data);
+		if (tileset.is_valid()) {
+			JRPGTileFlags::rebake(tileset, data); // A change marks the tilesets table unsaved, so it is saved below.
+		}
+	}
+}
+
+void JRPGDatabaseEditing::mark_unsaved(const Ref<Resource> &p_resource) {
+	ERR_FAIL_COND(p_resource.is_null());
+	if (!is_unsaved(p_resource)) {
+		unsaved.push_back(p_resource);
+		emit_signal(SNAME("database_changed"));
+	}
+}
+
 Error JRPGDatabaseEditing::save_all() {
+	_rebake_tilesets();
 	Error result = OK;
 	LocalVector<Ref<Resource>> failed;
 	HashSet<String> saved_files;

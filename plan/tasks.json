@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "7.2 Autotile template + importer",
+  "last_completed": "7.3.1 Tile flag layers, bake and staleness",
   "tasks": [
     {
       "id": "0",
@@ -2521,13 +2521,13 @@
       ],
       "test_strategy": "Doctests.",
       "files": [],
-      "commit": "pending",
+      "commit": "76f6d02a50",
       "notes": ""
     },
     {
       "id": "7.3",
       "title": "JRPGTileset + flags + tileset tab",
-      "description": "Tile flags as TileSet custom data layers (jrpg_pass, jrpg_no_entry, jrpg_no_exit, jrpg_overhead, ladder, bush, counter, damage, terrain tag; spec 05) baked into JRPGTilesetData.flags on save with a staleness hash; tileset DB tab with overlay editing.",
+      "description": "Tile flags as TileSet custom data layers (jrpg_pass, jrpg_no_entry, jrpg_no_exit, jrpg_overhead, ladder, bush, counter, damage, terrain tag; spec 05) baked into JRPGTilesetData.flags on save with a staleness hash; tileset DB tab with overlay editing. Split into 7.3.1-7.3.3. Godot's own TileSet editor can paint the same custom data layers (editor/scene/2d/tiles/tile_set_atlas_source_editor.cpp:825-857); the tab adds the JRPG overlays.",
       "parent": "7",
       "dependencies": [
         "7.2"
@@ -2540,6 +2540,61 @@
         "Overlay editing toggles a flag on a tile through the bridge and the change is visible in a screenshot"
       ],
       "test_strategy": "Doctests + bridge.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "7.3.1",
+      "parent": "7.3",
+      "title": "Tile flag layers, bake and staleness",
+      "description": "JRPGTileFlags (editor): creates the jrpg_* custom data layers on a TileSet, reads and writes a palette entry's flags (all shapes of an autotile or wall kind), bakes one word per palette index into JRPGTilesetData.flags with a hash of the source data; the database save rebakes stale tilesets and saves the TileSets the tab edited.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Every flag round-trips TileSet custom data -> baked word -> decoded flags, with the bit layout of spec 05",
+        "Editing a flag marks the bake stale and the next save rebuilds it"
+      ],
+      "test_strategy": "Doctests.",
+      "status": "done",
+      "files": [],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "7.3.2",
+      "parent": "7.3",
+      "title": "Tileset tab with flag overlays",
+      "description": "The Database section's tileset form: the TileSet picker, the palette as a grid of tiles with the selected flag drawn over each (passage, four-direction passage, overhead, ladder, bush, counter, damage, terrain tag), a click or Enter toggles or cycles it as one undoable action; adding sheets through JRPGAutotileImporter.",
+      "dependencies": [
+        "7.3.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Overlay editing toggles a flag on a tile, undoable, and the change is visible in a screenshot",
+        "Uses the editor theme; frontend-design skill applied after citing the Godot patterns followed"
+      ],
+      "test_strategy": "Doctests + bridge (editor_ui_act) + screenshot.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "7.3.3",
+      "parent": "7.3",
+      "title": "Tileset bridge tools",
+      "description": "Bridge tools jrpg_tileset_flags (read a tileset's palette with decoded flags and staleness) and jrpg_tileset_set_flag (set a flag of a palette entry, undoable), on the same authoring API as the tab (D-012).",
+      "dependencies": [
+        "7.3.2"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Overlay editing toggles a flag on a tile through the bridge and the change is visible in a screenshot",
+        "Tool-level doctests"
+      ],
+      "test_strategy": "Doctests + bridge.",
+      "status": "pending",
       "files": [],
       "commit": "",
       "notes": ""

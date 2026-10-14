@@ -41,6 +41,7 @@ def get_doc_classes():
         "JRPGSystemData",
         "JRPGTable",
         "JRPGTermsData",
+        "JRPGTileFlags",
         "JRPGTilesetData",
         "JRPGTroopData",
         "JRPGTroopPage",

@@ -82,6 +82,7 @@
 #include "modules/jrpg/editor/jrpg_project_setup.h"
 #include "modules/jrpg/editor/jrpg_setup_dialog.h"
 #include "modules/jrpg/editor/jrpg_system_editors.h"
+#include "modules/jrpg/editor/jrpg_tile_flags.h"
 #include "modules/jrpg/editor/jrpg_trait_editor.h"
 #include "modules/jrpg/editor/jrpg_workspace_plugin.h"
 #include "modules/jrpg/editor/jrpg_workspace_shell.h"
@@ -159,6 +160,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_INTERNAL_CLASS(JRPGBootstrapPlugin);
 		GDREGISTER_CLASS(JRPGManagedAddon);
 		GDREGISTER_CLASS(JRPGAutotileImporter);
+		GDREGISTER_CLASS(JRPGTileFlags);
 		GDREGISTER_CLASS(JRPGProjectSetup);
 		GDREGISTER_INTERNAL_CLASS(JRPGSetupDialog);
 		EditorPlugins::add_by_type<JRPGBootstrapPlugin>();

@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 01:38 -0600
+- **Updated:** 2026-10-14 01:47 -0600
 - **Current task:** none
-- **Last completed:** 7.2 Autotile template + importer
-- **Next task:** 7.3 JRPGTileset + flags + tileset tab
-- **Done leaf tasks:** 88
+- **Last completed:** 7.3.1 Tile flag layers, bake and staleness
+- **Next task:** 7.3.2 Tileset tab with flag overlays
+- **Done leaf tasks:** 89
 <!-- status:end -->
 
 ## Log
@@ -237,4 +237,7 @@
 | 2026-10-14 01:21 -0600 | 7.1.2.3 | done: Generated icon set and window skin — 64-icon set (32x32, 16 per row; items, weapons, armors, elements, states, buffs/debuffs, misc; index table in talewright/docs/assets.md generated from the code) and window skin (96x96 nine-slice frame with 16 px margins, 48x48 cursor, four 16x16 marks), noted on task 10.1; deterministic (38 images match manifest); evidence plan/evidence/assets/7.1.2.3-icons-and-window.png (containers: 7.1.2 in_progress->done, 7.1 in_progress->pending, 7 in_progress->pending) | df03e168d4 |
 | 2026-10-14 01:26 -0600 | 7.1.3 | done: Synthesized SFX and BGM — Synthesized original audio (asset_gen/audio.py, numpy; Ogg Vorbis via soundfile in 4096-frame blocks): 16 SFX (cursor, decision, cancel, buzzer, equip, save, load, heal, hit, slash, magic, item_get, door, step, escape, miss), 4 looping BGM tracks (title, field, battle, dungeon; whole bars, circular echo, seam jump <= 0.002) and a victory ME; .ogg.import sidecars with the oggvorbisstr loop/bpm/beat settings; PCM hashes in the manifest (59 files match); verified in Godot headless: all 21 import with correct lengths and loop flags, a looping track wraps past its end, an effect stops; evidence plan/evidence/assets/7.1.3-audio-check.txt. Perceived musical quality not verified (no listening). (containers: 7.1 pending->done) | 7eea0185c4 |
 | 2026-10-14 01:28 -0600 | 7.2 | started: Autotile template + importer (containers: 7 pending->in_progress) |  |
-| 2026-10-14 01:38 -0600 | 7.2 | done: Autotile template + importer — Core JRPGAutotile (reduce_mask, 256->47 blob index table and inverse, blob/wall sheet cells; bound + documented) and editor JRPGAutotileImporter (sheet -> atlas source with 47 blob / 16 wall tiles, animation frames as tile animation columns with one-block separation, terrain sets/peering bits so Godot's painter works, palette entries {kind,name,source_id,atlas_coords,alternative,frames}; plain sheets one entry per visible tile; wrong sizes and non-square tilesets refused without changes); talewright/docs/autotile_template.md tables checked against the enumeration by a doctest; guide sheets talewright/assets/generated/templates/; generator no longer rewrites unchanged files (Ogg serials). Doctests 706 assertions; evidence plan/evidence/jrpg/7.2-autotile-tests.txt (containers: 7 in_progress->pending) | pending |
+| 2026-10-14 01:38 -0600 | 7.2 | done: Autotile template + importer — Core JRPGAutotile (reduce_mask, 256->47 blob index table and inverse, blob/wall sheet cells; bound + documented) and editor JRPGAutotileImporter (sheet -> atlas source with 47 blob / 16 wall tiles, animation frames as tile animation columns with one-block separation, terrain sets/peering bits so Godot's painter works, palette entries {kind,name,source_id,atlas_coords,alternative,frames}; plain sheets one entry per visible tile; wrong sizes and non-square tilesets refused without changes); talewright/docs/autotile_template.md tables checked against the enumeration by a doctest; guide sheets talewright/assets/generated/templates/; generator no longer rewrites unchanged files (Ogg serials). Doctests 706 assertions; evidence plan/evidence/jrpg/7.2-autotile-tests.txt (containers: 7 in_progress->pending) | 76f6d02a50 |
+| 2026-10-14 01:39 -0600 | - | imported 3 new / 1 updated tasks | |
+| 2026-10-14 01:39 -0600 | 7.3.1 | started: Tile flag layers, bake and staleness (containers: 7.3 pending->in_progress, 7 pending->in_progress) |  |
+| 2026-10-14 01:47 -0600 | 7.3.1 | done: Tile flag layers, bake and staleness — JRPGTileFlags (editor): jrpg_* TileSet custom data layers, read/write in the spec 05 word layout, palette-entry flags over all autotile/wall shapes, bake per palette index with a SHA-256 staleness hash; JRPGDatabaseEditing::save_all rebakes stale tilesets and mark_unsaved saves edited TileSets with the database. Doctests: every flag round-trips (5 bits x 16 sides x 3 pass modes), staleness after flag and palette edits, save persists the rebake. Docs + spec 05 updated. (containers: 7.3 in_progress->pending, 7 in_progress->pending) | pending |

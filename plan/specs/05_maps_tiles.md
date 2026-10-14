@@ -77,6 +77,11 @@ On save/import of a tileset the editor **bakes** these into `JRPGTilesetData.fla
 palette index) so core code never reads a TileSet: bits 0–1 pass mode, 2–5 no-entry N/E/S/W, 6–9 no-exit N/E/S/W,
 10 overhead, 11 ladder, 12 bush, 13 counter, 14 damage, 16–19 terrain tag; other bits reserved (0). The baked table
 carries a hash of the TileSet's custom data so a stale bake is detected and rebuilt in the editor.
+Implementation (7.3.1, `JRPGTileFlags`, editor): word 0 is the empty cell (0); an autotile or wall entry's flags are
+written to all its shapes together and read from its first shape; the hash (`flags_hash`, SHA-256) covers each palette
+index with its source id, atlas coordinates, alternative and word, so a changed flag or a changed palette both make
+the bake stale. `JRPGDatabaseEditing::save_all` bakes every stale tileset again before saving, and TileSets the
+tileset tab edited are listed as unsaved (`mark_unsaved`) and saved with the database.
 Documented behavior this reproduces: entry permission per side for one-way edges (RM-TIL-008) and overhead tiles
 that never block (RM-TIL-007); the separate no-exit mask is a Talewright addition.
 

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGTileFlags" inherits="RefCounted" api_type="editor" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Editor helpers that author JRPG tile flags on a TileSet and bake them into a JRPG tileset.
+	</brief_description>
+	<description>
+		Tile flags (passage, four-direction passage, overhead, ladder, bush, counter, damage floor and terrain tag) are authored as custom data layers of the Godot [TileSet] named [code]jrpg_pass[/code], [code]jrpg_no_entry[/code], [code]jrpg_no_exit[/code], [code]jrpg_overhead[/code], [code]jrpg_ladder[/code], [code]jrpg_bush[/code], [code]jrpg_counter[/code], [code]jrpg_damage[/code] and [code]jrpg_terrain_tag[/code], so the TileSet editor can paint them as well. The database tools then bake them into [member JRPGTilesetData.flags], one word per palette index in the [method JRPGTilesetData.pack_flags] layout, so game code and servers read the flags without loading a TileSet.
+		A bake records the hash of what it was made from in [member JRPGTilesetData.flags_hash]. When a tile flag or the palette changes, the bake is stale ([method is_stale]); saving the database bakes every stale tileset again.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="ensure_layers" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="tileset" type="TileSet" />
+			<description>
+				Adds the [code]jrpg_*[/code] custom data layers that [param tileset] does not have yet and returns how many were added.
+			</description>
+		</method>
+		<method name="get_entry_flags" qualifiers="static">
+			<return type="int" />
+			<param index="0" name="tileset" type="TileSet" />
+			<param index="1" name="entry" type="Dictionary" />
+			<description>
+				Returns the flag word of a palette [param entry] (a dictionary of [member JRPGTilesetData.palette]), read from its first tile, or [code]0[/code] when the tile does not exist.
+			</description>
+		</method>
+		<method name="is_stale" qualifiers="static">
+			<return type="bool" />
+			<param index="0" name="tileset" type="TileSet" />
+			<param index="1" name="data" type="JRPGTilesetData" />
+			<description>
+				Returns [code]true[/code] when [member JRPGTilesetData.flags] of [param data] no longer matches the tile flags of [param tileset] or the palette of [param data].
+			</description>
+		</method>
+		<method name="rebake" qualifiers="static">
+			<return type="bool" />
+			<param index="0" name="tileset" type="TileSet" />
+			<param index="1" name="data" type="JRPGTilesetData" />
+			<description>
+				Bakes the flags of [param data] again from [param tileset] when they are stale. Returns [code]true[/code] when [param data] changed.
+			</description>
+		</method>
+		<method name="set_entry_flags" qualifiers="static">
+			<return type="int" enum="Error" />
+			<param index="0" name="tileset" type="TileSet" />
+			<param index="1" name="entry" type="Dictionary" />
+			<param index="2" name="flags" type="int" />
+			<description>
+				Writes the flag word [param flags] to every tile a palette [param entry] stands for: one tile for a plain entry, every shape of an autotile or wall entry. Adds the custom data layers when they are missing. Returns [constant ERR_DOES_NOT_EXIST] when none of the entry's tiles exists.
+			</description>
+		</method>
+	</methods>
+</class>
