@@ -6,6 +6,13 @@ against spec 05, D-005, D-006, D-011, D-012, D-031, D-034 and the RM-TIL/RM-AST 
 (tasks 7.1, 7.2, 7.4): 9 findings, none high. Part B: tile flags, tileset form, bridge tools (tasks 7.3, 7.5): 14
 findings, none high.
 
+**All 23 findings fixed or answered** (2026-10-14): part A in 7.6.1, part B in 7.6.2. Evidence:
+`plan/evidence/jrpg/7.6.2-*` (corrected overlay, no-op edits, save and bake through the bridge) and the end-to-end
+checks (`talewright/tools/jrpg_bridge_checks.py`, 74/74, undo/redo of every tileset and image tool with the TileSet's
+layout compared). Close-out (7.6.3): plain_2d/plain_3d smoke ALL PASS with a rebuilt release template
+(`talewright/build_logs/smoke-20261014-031648.log`), core_diff_check 0 unlisted, full test suite (1532 cases) and
+static checks (now including the generated-assets check) pass, pushed with CI watched.
+
 ## Part A (fixed in 7.6.1)
 
 Confirmed fine by the reviewer: the mask math is consistent across the generator, `JRPGAutotile`, the importer's

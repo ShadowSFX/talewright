@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "7.6.2 Review fixes: tile flags, tileset form, bridge tools",
+  "last_completed": "7.6.3 Epic 7 close-out",
   "tasks": [
     {
       "id": "0",
@@ -2365,7 +2365,7 @@
       "dependencies": [
         "6"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Assets deterministic",
@@ -2373,8 +2373,8 @@
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "7.1",
@@ -2686,15 +2686,15 @@
         "7.5",
         "7.4"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Findings fixed"
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "7.6.1",
@@ -2729,7 +2729,7 @@
       "test_strategy": "Doctests + jrpg_bridge_checks.py + bridge.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "133cb6e076",
       "notes": ""
     },
     {
@@ -2745,9 +2745,9 @@
         "Smoke ALL PASS, 0 unlisted core paths, pushed with CI green"
       ],
       "test_strategy": "Epic gate.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {
