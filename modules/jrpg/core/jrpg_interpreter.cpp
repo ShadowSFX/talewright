@@ -127,6 +127,19 @@ void JRPGInterpreter::push_list(const Ref<JRPGCommandList> &p_list, bool p_loop)
 	frames.push_back(frame);
 }
 
+Ref<JRPGEventCommand> JRPGInterpreter::_pusher(const Frame &p_parent) {
+	const int at = p_parent.index - 1;
+	return at >= 0 && at < p_parent.list->get_command_count() ? p_parent.list->get_command(at) : Ref<JRPGEventCommand>();
+}
+
+Ref<JRPGCommandList> JRPGInterpreter::_common_event_commands(int p_id, bool &r_exists) const {
+	const Ref<JRPGDatabase> db = game_state.is_valid() ? game_state->get_database() : Ref<JRPGDatabase>();
+	const Ref<JRPGTable> table = db.is_valid() ? db->get_table(JRPGDatabase::TABLE_COMMON_EVENTS) : Ref<JRPGTable>();
+	r_exists = table.is_valid() && table->has_entry(p_id);
+	const Ref<JRPGCommonEventData> common_event = r_exists ? Ref<JRPGCommonEventData>(table->get_entry(p_id)) : Ref<JRPGCommonEventData>();
+	return common_event.is_valid() ? common_event->get_commands() : Ref<JRPGCommandList>();
+}
+
 bool JRPGInterpreter::break_loop() {
 	for (int i = frames.size() - 1; i >= 0; i--) {
 		if (frames[i].loop) {
@@ -160,9 +173,9 @@ bool JRPGInterpreter::jump_to_label(const String &p_label) {
 bool JRPGInterpreter::call_common_event(int p_id) {
 	ERR_FAIL_COND_V_MSG(frames.is_empty(), false, "JRPGInterpreter: nothing is running to call a common event from.");
 	const String who = owner.is_empty() ? String("An event") : owner;
-	const Ref<JRPGDatabase> db = game_state.is_valid() ? game_state->get_database() : Ref<JRPGDatabase>();
-	const Ref<JRPGTable> table = db.is_valid() ? db->get_table(JRPGDatabase::TABLE_COMMON_EVENTS) : Ref<JRPGTable>();
-	if (table.is_null() || !table->has_entry(p_id)) {
+	bool exists = false;
+	const Ref<JRPGCommandList> commands = _common_event_commands(p_id, exists);
+	if (!exists) {
 		WARN_PRINT(vformat("JRPG: %s calls common event %d, which the database does not have; it goes on.", who, p_id));
 		return false;
 	}
@@ -170,8 +183,12 @@ bool JRPGInterpreter::call_common_event(int p_id) {
 		WARN_PRINT(vformat("JRPG: %s calls common event %d %d lists deep (a common event that calls itself?); the call is skipped.", who, p_id, MAX_DEPTH));
 		return false;
 	}
-	const Ref<JRPGCommonEventData> common_event = table->get_entry(p_id);
-	push_list(common_event.is_valid() ? common_event->get_commands() : Ref<JRPGCommandList>());
+	if (commands.is_valid()) {
+		Frame frame;
+		frame.list = commands;
+		frame.common_event_id = p_id;
+		frames.push_back(frame);
+	}
 	return true;
 }
 
@@ -201,6 +218,84 @@ PackedInt32Array JRPGInterpreter::get_indexes() const {
 	return indexes;
 }
 
+Dictionary JRPGInterpreter::serialize() const {
+	Array saved;
+	for (int f = 0; f < frames.size(); f++) {
+		const Frame &frame = frames[f];
+		// Which child list of the command that pushed it the list is; -1 for the first frame, a call, or a list a
+		// command pushed that is none of its own (a save cannot find it again: the run restarts or is dropped).
+		int child = -1;
+		const Ref<JRPGEventCommand> pusher = f > 0 && frame.common_event_id == 0 ? _pusher(frames[f - 1]) : Ref<JRPGEventCommand>();
+		const PackedStringArray names = pusher.is_valid() ? pusher->get_child_list_names() : PackedStringArray();
+		for (int i = 0; i < names.size() && child < 0; i++) {
+			if (Ref<JRPGCommandList>(pusher->get(names[i])) == frame.list) {
+				child = i;
+			}
+		}
+		Dictionary entry;
+		entry["index"] = frame.index;
+		entry["loop"] = frame.loop;
+		entry["child"] = child;
+		entry["common_event"] = frame.common_event_id;
+		entry["hash"] = frame.list->get_content_hash();
+		saved.push_back(entry);
+	}
+	Dictionary state;
+	state["frames"] = saved;
+	state["wait"] = wait_left;
+	return state;
+}
+
+bool JRPGInterpreter::restore(const Dictionary &p_state, const Ref<JRPGCommandList> &p_root, const Ref<JRPGGameState> &p_game_state, const String &p_owner) {
+	clear();
+	game_state = p_game_state;
+	owner = p_owner;
+	const Variant saved = p_state.get("frames", Variant());
+	const Variant wait = p_state.get("wait", Variant());
+	if (p_root.is_null() || saved.get_type() != Variant::ARRAY || wait.get_type() != Variant::INT || int64_t(wait) < 0 || int64_t(wait) > INT32_MAX) {
+		return false;
+	}
+	Vector<Frame> loaded;
+	for (const Variant &entry_value : Array(saved)) {
+		if (entry_value.get_type() != Variant::DICTIONARY) {
+			return false;
+		}
+		const Dictionary entry = entry_value;
+		const Variant index = entry.get("index", Variant());
+		const Variant loop = entry.get("loop", Variant());
+		const Variant child = entry.get("child", Variant());
+		const Variant common_event = entry.get("common_event", Variant());
+		const Variant hash = entry.get("hash", Variant());
+		if (index.get_type() != Variant::INT || loop.get_type() != Variant::BOOL || child.get_type() != Variant::INT || common_event.get_type() != Variant::INT || hash.get_type() != Variant::INT) {
+			return false;
+		}
+		Frame frame;
+		frame.loop = loop;
+		if (loaded.is_empty()) {
+			frame.list = p_root;
+		} else if (int64_t(common_event) > 0 && int64_t(common_event) <= INT32_MAX) {
+			bool exists = false;
+			frame.list = _common_event_commands(int(common_event), exists);
+			frame.common_event_id = int(common_event);
+		} else if (int64_t(child) >= 0 && int64_t(child) <= INT32_MAX) {
+			const Ref<JRPGEventCommand> command = _pusher(loaded[loaded.size() - 1]);
+			const PackedStringArray names = command.is_valid() ? command->get_child_list_names() : PackedStringArray();
+			if (int64_t(child) >= names.size()) {
+				return false;
+			}
+			frame.list = command->get(names[int(child)]);
+		}
+		if (frame.list.is_null() || frame.list->get_content_hash() != int64_t(hash) || int64_t(index) < 0 || int64_t(index) > frame.list->get_command_count()) {
+			return false; // Not found, or not the saved commands any more.
+		}
+		frame.index = int(index);
+		loaded.push_back(frame);
+	}
+	frames = loaded;
+	wait_left = int(wait);
+	return true;
+}
+
 void JRPGInterpreter::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("start", "list", "state", "owner"), &JRPGInterpreter::start, DEFVAL(String()));
 	ClassDB::bind_method(D_METHOD("clear"), &JRPGInterpreter::clear);
@@ -218,6 +313,8 @@ void JRPGInterpreter::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_current_command"), &JRPGInterpreter::get_current_command);
 	ClassDB::bind_method(D_METHOD("get_depth"), &JRPGInterpreter::get_depth);
 	ClassDB::bind_method(D_METHOD("get_indexes"), &JRPGInterpreter::get_indexes);
+	ClassDB::bind_method(D_METHOD("serialize"), &JRPGInterpreter::serialize);
+	ClassDB::bind_method(D_METHOD("restore", "state", "root", "game_state", "owner"), &JRPGInterpreter::restore, DEFVAL(String()));
 
 	BIND_ENUM_CONSTANT(STEP_FINISHED);
 	BIND_ENUM_CONSTANT(STEP_WAITING);

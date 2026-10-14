@@ -36,6 +36,7 @@
 #include "core/object/ref_counted.h"
 #include "core/templates/hash_set.h"
 #include "core/templates/vector.h"
+#include "core/variant/dictionary.h"
 
 class JRPGCommandList;
 class JRPGGameState;
@@ -49,7 +50,7 @@ class JRPGMapData;
 // Every step runs the main interpreter first, then the map's parallel processes in event order, then the common ones in
 // id order, so the result is the same on every machine. An autorun that keeps starting again without waiting or
 // changing anything (the game cannot go on) is reported once. While the main interpreter runs, the player waits
-// (is_main_running).
+// (is_main_running). Its runs are saved with the game and go on after loading (serialize, restore; task 9.3.3).
 // Pure logic: the runtime steps it with the game's simulation steps; online, the zone does.
 // Authority (D-007): server.
 class JRPGEventRunner : public RefCounted {
@@ -60,10 +61,17 @@ public:
 	static constexpr int STUCK_AUTORUN_RUNS = 60;
 
 private:
-	struct Process {
-		int event_id = 0; // 0 for a common event.
-		int common_event_id = 0;
+	// What a run belongs to: page page_index of event event_id of map map_id, or common event common_event_id. The main
+	// interpreter may run an event of the map the player left (the event moved the player).
+	struct Owner {
+		int map_id = 0;
+		int event_id = 0;
 		int page_index = -1;
+		int common_event_id = 0;
+		bool operator==(const Owner &p_other) const { return map_id == p_other.map_id && event_id == p_other.event_id && page_index == p_other.page_index && common_event_id == p_other.common_event_id; }
+	};
+	struct Process {
+		Owner owner;
 		Ref<JRPGInterpreter> interpreter;
 	};
 
@@ -71,8 +79,8 @@ private:
 	Ref<JRPGMapData> map;
 	int map_id = 0;
 	Ref<JRPGInterpreter> main;
+	Owner main_owner; // What runs on the main interpreter.
 	bool main_is_autorun = false;
-	String main_key; // What runs on the main interpreter (its owner name), for the stuck check.
 	Vector<Process> parallels;
 	uint64_t refreshed_revision = 0;
 	bool refreshed = false;
@@ -80,9 +88,18 @@ private:
 	int stuck_runs = 0;
 	HashSet<String> stuck_reported;
 
+	// "Map 3, event 7, page 1" or "Common event 2": in warnings, and the key of the stuck check.
+	String _owner_name(const Owner &p_owner) const;
+	// The commands p_owner runs, or null when it does not exist (any more) or belongs to another map.
+	Ref<JRPGCommandList> _owner_commands(const Owner &p_owner) const;
+	static Dictionary _save_run(const Owner &p_owner, const Ref<JRPGInterpreter> &p_interpreter);
+	static bool _read_owner(const Dictionary &p_run, Owner &r_owner);
+	// Goes on with p_run on p_interpreter; false, with a warning, when it cannot (p_restarts: the run starts again from
+	// the top rather than being dropped).
+	bool _restore_run(const Dictionary &p_run, const Owner &p_owner, const Ref<JRPGInterpreter> &p_interpreter, bool p_restarts);
 	void _refresh();
-	// The commands and owner name of the autorun to run next (the map's events, then common events), if any.
-	bool _find_autorun(Ref<JRPGCommandList> &r_commands, String &r_owner) const;
+	// The autorun to run next (the map's events, then common events), if any.
+	bool _find_autorun(Owner &r_owner) const;
 	bool _start_next_autorun();
 	void _step_main();
 
@@ -109,6 +126,16 @@ public:
 	bool start_event(int p_event_id);
 	// The parallel processes, in the order they run: [{event_id, common_event_id, page}].
 	Array get_parallel_processes() const;
+
+	// The runs under way, for a save (spec 03 and 06, task 9.3.3): {main: {map_id, event_id, page, common_event_id,
+	// interpreter, autorun} or empty, parallels: [{map_id, event_id, page, common_event_id, interpreter}]} (processes
+	// between runs are left out: they start from the top anyway).
+	Dictionary serialize() const;
+	// Goes on with the runs of p_state (as serialize() wrote it), after setup() and change_map() for the map the game
+	// continues on. A run whose commands changed since the save (spec 03): an autorun or a parallel process starts its
+	// page again from the top, a triggered event's run is dropped (the event can be triggered again); a run whose event,
+	// page or common event is gone, or that belongs to another map, is dropped. One warning each.
+	void restore(const Dictionary &p_state);
 
 	JRPGEventRunner();
 };

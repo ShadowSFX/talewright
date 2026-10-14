@@ -1058,3 +1058,31 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   its own process): the step ends there instead of indexing a cleared frame stack.
 - **Reversal:** `JRPGEventRunner::step`, `_refresh`, `is_main_running`, `change_map`, `JRPGInterpreter::MAX_DEPTH`, and
   the runner calls in `JRPGSceneManager::_simulation_step` and `_enter`.
+
+## D-062 — Saving and resuming event runs
+- **Context:** task 9.3.3 needs spec 03's serializable interpreter state and resume rules. The interpreter keeps
+  object references to lists; a save must name lists so that they are found again after the map scene and the
+  database are loaded from their files, and the save is a plain Dictionary (spec 06, no objects).
+- **Options:** a full path of child indexes from the page per frame, or one step per frame (relative to the parent
+  frame); the runs kept in the game state at every step, written by an explicit "prepare save" call, or pulled by
+  `serialize()` from the running game; strict validation in `deserialize()` or lenient checks when the game goes on.
+- **Choice:** a save names each frame's list by where it came from: `common_event` (recorded when a call pushes it),
+  or `child`, which of `get_child_list_names()` of the command that pushed it holds it; between steps that command is
+  always the one before the parent frame's index (the interpreter moves past a command as soon as it runs), so
+  `child` is computed when saving, at no cost per push. The first frame is the owner's list. Every frame stores its list's `get_content_hash()`; any mismatch,
+  unreadable value or missing list makes `restore` fail. `JRPGEventRunner.serialize()` saves the main run with its
+  owner (map, event, page or common event) and `autorun`, and each running parallel process; `restore` applies
+  spec 03: autorun and parallel runs that fail start again from the top (the runner starts them as usual), a
+  triggered run is dropped (it can be triggered again), runs of another map or of a missing owner are dropped, one
+  warning each. The game state saves an `interpreters` section; while a game runs, `serialize()` takes it from an
+  interpreters source callable the scene manager sets to its runner, and the manager hands the state its last runs
+  when it stops running it (another game, or freed). `deserialize()` checks only that the section is a Dictionary:
+  bad runs are warned about when the game goes on, never fatal for loading the rest of the save.
+- **Why:** one step per frame needs no path bookkeeping beyond what pushing already knows, and checking every frame's
+  hash catches edits anywhere in the page (a page's hash covers its child lists). Pulling the runs at serialize time
+  keeps every save current without a hook the save command could forget. Lenient checks follow spec 03 (a stale run
+  restarts or is dropped, the save still loads). A main run of an event of the map the player left (it moved the
+  player) cannot be resumed after loading, since the core cannot load that map: it is dropped with a warning.
+- **Reversal:** `JRPGInterpreter::serialize/restore`, `JRPGEventRunner::serialize/restore`,
+  `JRPGGameState::set_interpreters_source`, and the calls in `JRPGSceneManager::_begin`, `resume` and
+  `_release_game_state`.

@@ -107,12 +107,15 @@ private:
 		int events_map_id = 0; // The map the event states belong to (the current map).
 		int64_t events_map_revision = 0;
 		RBMap<int, Ref<JRPGEventState>> events; // By event ID.
+
+		Dictionary interpreters; // The event runs saved or loaded (JRPGEventRunner.serialize, task 9.3.3).
 	};
 
 	Data data;
 	Ref<JRPGDatabase> database; // Set by start_new_game() and attach_database(); not saved.
 	Ref<JRPGRandomStreams> random;
 	Ref<JRPGSimClock> clock;
+	Callable interpreters_source; // Gives the running game's event runs to serialize(); not saved.
 	uint64_t revision = 0;
 
 	void _changed() { revision++; }
@@ -254,6 +257,16 @@ public:
 
 	Ref<JRPGRandomStreams> get_random() const { return random; }
 	Ref<JRPGSimClock> get_clock() const { return clock; }
+
+	// The event runs under way (spec 03 and 06, task 9.3.3; as JRPGEventRunner.serialize writes them). serialize()
+	// saves what the interpreters source returns when one is set and still valid (the running game's event runner,
+	// set by JRPGSceneManager), else the runs set or loaded last; get_interpreters() returns the latter, which a
+	// loaded game goes on with. deserialize() only checks that the section is a Dictionary: the runner checks each run
+	// when it goes on with it (a run it cannot read or that the commands no longer match is warned about, not fatal).
+	void set_interpreters(const Dictionary &p_interpreters);
+	Dictionary get_interpreters() const;
+	void set_interpreters_source(const Callable &p_source);
+	Callable get_interpreters_source() const { return interpreters_source; }
 
 	Dictionary serialize() const;
 	// Replaces the state with p_data. Malformed data, another format or a newer format version leave the state

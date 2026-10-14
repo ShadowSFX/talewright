@@ -554,7 +554,22 @@ Dictionary JRPGGameState::serialize() const {
 	}
 	events_state["events"] = events;
 	d["events_state"] = events_state;
+
+	const Variant runs = interpreters_source.is_valid() ? interpreters_source.call() : Variant(data.interpreters);
+	d["interpreters"] = runs.get_type() == Variant::DICTIONARY ? Dictionary(runs).duplicate(true) : Dictionary();
 	return d;
+}
+
+void JRPGGameState::set_interpreters(const Dictionary &p_interpreters) {
+	data.interpreters = p_interpreters.duplicate(true);
+}
+
+Dictionary JRPGGameState::get_interpreters() const {
+	return data.interpreters.duplicate(true);
+}
+
+void JRPGGameState::set_interpreters_source(const Callable &p_source) {
+	interpreters_source = p_source;
 }
 
 Error JRPGGameState::_parse(const Dictionary &p_data, Data &r_data, Dictionary &r_random, int64_t &r_clock_steps) {
@@ -755,6 +770,10 @@ Error JRPGGameState::_parse(const Dictionary &p_data, Data &r_data, Dictionary &
 			r_data.events[state->get_event_id()] = state;
 		}
 	}
+
+	v = Dictionary();
+	JRPG_LOAD_CHECK(read(p_data, "interpreters", Variant::DICTIONARY, v), "event runs");
+	r_data.interpreters = Dictionary(v).duplicate(true);
 	return OK;
 }
 
@@ -864,6 +883,10 @@ void JRPGGameState::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("get_random"), &JRPGGameState::get_random);
 	ClassDB::bind_method(D_METHOD("get_clock"), &JRPGGameState::get_clock);
+	ClassDB::bind_method(D_METHOD("set_interpreters", "interpreters"), &JRPGGameState::set_interpreters);
+	ClassDB::bind_method(D_METHOD("get_interpreters"), &JRPGGameState::get_interpreters);
+	ClassDB::bind_method(D_METHOD("set_interpreters_source", "source"), &JRPGGameState::set_interpreters_source);
+	ClassDB::bind_method(D_METHOD("get_interpreters_source"), &JRPGGameState::get_interpreters_source);
 	ClassDB::bind_method(D_METHOD("serialize"), &JRPGGameState::serialize);
 	ClassDB::bind_method(D_METHOD("deserialize", "data"), &JRPGGameState::deserialize);
 

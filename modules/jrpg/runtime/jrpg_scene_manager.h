@@ -116,6 +116,8 @@ private:
 	// The map p_transfer goes to, created from its scene but not yet shown; null with the reason when the scene's root
 	// turns out not to be a JRPGMap.
 	JRPGMap *_instantiate_map(const Transfer &p_transfer, String &r_reason);
+	// The running game's state stops taking its event runs from this manager's runner.
+	void _release_game_state();
 	// Makes p_state the running game.
 	void _begin(const Ref<JRPGGameState> &p_state);
 	// Shows p_transfer's map (p_instance when it was created already, or one created from its scene) with the player.
@@ -159,7 +161,8 @@ public:
 	// Continues p_state (a loaded game, its database attached or attached now): shows its map at its player position.
 	// Saved states of events the map no longer has are dropped, and a map edited since the save is warned about once
 	// (spec 06). When the saved map or position no longer exists, the game continues at the System start position
-	// with one warning.
+	// with one warning. The event runs saved with the game go on (JRPGEventRunner.restore, task 9.3.3); while the game
+	// runs, the state's serialize() saves the runner's runs.
 	Error resume(const Ref<JRPGGameState> &p_state);
 	// Moves the player to p_cell of map p_map_id facing p_direction (a JRPGSystemData::Direction or DIRECTION_RETAIN),
 	// through p_fade. A map the list lacks, a scene that cannot load or is not a map, or a cell outside the map leaves

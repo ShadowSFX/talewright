@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.3.2.2 Event processes on the running map",
+  "last_completed": "9.3.3 Interpreter serialization and resume rules",
   "tasks": [
     {
       "id": "0",
@@ -3869,15 +3869,15 @@
       "dependencies": [
         "9.2"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "All children done"
       ],
       "test_strategy": "Doctests.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "9.3.1",
@@ -3981,7 +3981,7 @@
         "modules/jrpg/tests/test_jrpg_event_processes.h",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "16e84343af",
       "notes": ""
     },
     {
@@ -3998,9 +3998,25 @@
       ],
       "test_strategy": "Doctests [JRPG]; build dev_mode clean; upstream suite unchanged.",
       "priority": 1,
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_interpreter.h",
+        "modules/jrpg/core/jrpg_interpreter.cpp",
+        "modules/jrpg/core/jrpg_event_runner.h",
+        "modules/jrpg/core/jrpg_event_runner.cpp",
+        "modules/jrpg/core/jrpg_game_state.h",
+        "modules/jrpg/core/jrpg_game_state.cpp",
+        "modules/jrpg/runtime/jrpg_scene_manager.h",
+        "modules/jrpg/runtime/jrpg_scene_manager.cpp",
+        "modules/jrpg/doc_classes/JRPGEventRunner.xml",
+        "modules/jrpg/doc_classes/JRPGGameState.xml",
+        "modules/jrpg/doc_classes/JRPGInterpreter.xml",
+        "modules/jrpg/tests/test_jrpg_event_resume.h",
+        "plan/specs/03_events_interpreter.md",
+        "plan/specs/06_save_format.md",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
       "notes": "From 9.3.2 (D-061): the map's JRPGEventRunner (main interpreter, its owner/main_is_autorun, parallel processes keyed by event id + page or common event id) must be saved and restored with the interpreters; a resumed game currently starts the runner afresh."
     },
     {

@@ -66,10 +66,14 @@ public:
 	};
 
 private:
+	// A frame's list is the one the run started with (the first frame), common event common_event_id's (a call), or
+	// a child list of the command that pushed it: between steps that command is always the one before the parent
+	// frame's index (step() moves past a command as soon as it has run), which is how a save names it (spec 03).
 	struct Frame {
 		Ref<JRPGCommandList> list;
 		int index = 0;
 		bool loop = false;
+		int common_event_id = 0;
 	};
 
 	Vector<Frame> frames;
@@ -80,6 +84,10 @@ private:
 	bool flow_changed = false; // A command jumped, broke a loop, ended or cleared the run: the index it was at stays.
 	int runaway_steps = 0;
 	bool runaway_warned = false;
+
+	// The command that pushed the list of the frame above p_parent (the one before p_parent's index), or null.
+	static Ref<JRPGEventCommand> _pusher(const Frame &p_parent);
+	Ref<JRPGCommandList> _common_event_commands(int p_id, bool &r_exists) const;
 
 protected:
 	static void _bind_methods();
@@ -121,6 +129,14 @@ public:
 	int get_depth() const { return frames.size(); }
 	// The index of the next command in each frame, outermost first (where the run is).
 	PackedInt32Array get_indexes() const;
+
+	// Where the run is, for a save (spec 03, task 9.3.3): {frames: [{index, loop, child, common_event, hash}], wait};
+	// each frame's list is named by where it comes from, and hash is its content hash. No frames when idle.
+	Dictionary serialize() const;
+	// Goes on from p_state (as serialize() wrote it) with p_root as the list the run started with. False, leaving the
+	// interpreter idle, when the state cannot be read or the commands are no longer the saved ones (a list's hash
+	// differs, or a list cannot be found): the caller decides whether the run starts again or is dropped.
+	bool restore(const Dictionary &p_state, const Ref<JRPGCommandList> &p_root, const Ref<JRPGGameState> &p_game_state, const String &p_owner = String());
 };
 
 VARIANT_ENUM_CAST(JRPGInterpreter::StepResult);

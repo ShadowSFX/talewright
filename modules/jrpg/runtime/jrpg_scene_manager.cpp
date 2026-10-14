@@ -145,12 +145,22 @@ JRPGMap *JRPGSceneManager::_instantiate_map(const Transfer &p_transfer, String &
 	return created;
 }
 
+void JRPGSceneManager::_release_game_state() {
+	if (game_state.is_valid()) {
+		// The state keeps the runs it had, without asking a runner that now runs another game.
+		game_state->set_interpreters(event_runner->serialize());
+		game_state->set_interpreters_source(Callable());
+	}
+}
+
 void JRPGSceneManager::_begin(const Ref<JRPGGameState> &p_state) {
+	_release_game_state();
 	game_state = p_state;
 	database = p_state->get_database(); // The game runs with it; its maps draw with it.
 	transferring = false; // A new or loaded game ends any transfer under way.
 	pending = Transfer();
 	event_runner->setup(p_state, Ref<JRPGMapData>(), 0); // And every event process: the map entered next starts them.
+	p_state->set_interpreters_source(callable_mp(event_runner.ptr(), &JRPGEventRunner::serialize)); // Saves are current.
 	_set_fade(0);
 	set_process_internal(true); // The game loop.
 	refresh_player_character();
@@ -215,6 +225,10 @@ Error JRPGSceneManager::resume(const Ref<JRPGGameState> &p_state) {
 			WARN_PRINT(vformat("JRPG: map %d was edited since this game was saved (revision %d, now %d); events whose data changed start from their data.", place.map_id, saved_revision, map_data->get_revision()));
 		}
 	}
+	// The event runs under way when the game was saved go on (task 9.3.3); the state then saves the runner's.
+	const Dictionary runs = game_state->get_interpreters();
+	game_state->set_interpreters(Dictionary());
+	event_runner->restore(runs);
 	return OK;
 }
 
@@ -494,6 +508,7 @@ void JRPGSceneManager::_notification(int p_what) {
 				memdelete(player);
 			}
 			player = nullptr;
+			_release_game_state();
 		} break;
 		case NOTIFICATION_INTERNAL_PROCESS: {
 			_run_simulation(get_process_delta_time());

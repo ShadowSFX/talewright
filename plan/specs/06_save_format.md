@@ -22,8 +22,9 @@ since the save (actors, party members, inventory, and each actor's class, skills
 warning,
 `system: {save_enabled, menu_enabled, encounters_enabled, formation_enabled, window_tone (only when set by an event),
 music: {battle/victory/defeat → {stream, volume, pitch, pan}} (only overrides), timer: {working, steps}}` (vehicle
-music joins with vehicles), `screen: {tint, pictures, weather}`, `audio: {bgm, bgs, saved bgm}`, `interpreters: [spec
-03 serialized state for the map autorun/parallel processes and the current event, with list hashes]`,
+music joins with vehicles), `screen: {tint, pictures, weather}`, `audio: {bgm, bgs, saved bgm}`, `interpreters: {main,
+parallels}` (spec 03 serialized runs of the map's autorun/triggered event and parallel processes, with list hashes;
+`JRPGEventRunner.serialize`, task 9.3.3),
 `rng: {stream name → {state, inc}}` (spec 04 streams), `clock: simulation steps`, `events_state: {map_id,
 map_revision, events: [JRPGEventState]}` for the current map (other maps start from their data when entered).
 The save writer adds `saved_at` (UTC ISO-8601) to the file header; `serialize()` never reads the wall clock, so the

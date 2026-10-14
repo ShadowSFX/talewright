@@ -59,6 +59,12 @@ parameters are its exported properties. `JRPGPluginRegistry` lists enabled plugi
   wait_data, local temp variables}`. `list_ref` addresses the list by its owner (map 3 / event 7 / page 1 through
   `JRPGMapData`; common event 12; troop 4 / page 2) plus the child path, never by object pointer, so saving
   mid-event works and survives reloading the map scene (spec 06).
+  As built (task 9.3.3, D-062): the owner lives in `JRPGEventRunner.serialize()` runs (`map_id, event_id, page,
+  common_event_id`, plus `autorun` for the main run); `JRPGInterpreter.serialize()` gives
+  `{frames: [{index, loop, child, common_event, hash}], wait}`, where each frame below the first names its list by
+  step from its parent (`child`: which child list of the command before the parent's index; `common_event`: the
+  common event a call pushed) — the child path, one step per frame. Waiting commands keep no extra data (they run
+  again, D-059); local temp variables do not exist yet.
 - **Resume after content changes:** on load each frame's `list_hash` is compared with the current list. If any frame
   differs (a command was inserted, a page added or reordered, a common event edited), the saved position is no
   longer meaningful: an autorun or parallel interpreter restarts its page from the top; the interpreter of a

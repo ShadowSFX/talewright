@@ -93,6 +93,22 @@
 				Runs [param list] next, then goes on after the current command. With [param loop], the list starts again each time it ends. An empty branch ([code]null[/code]) does nothing.
 			</description>
 		</method>
+		<method name="restore">
+			<return type="bool" />
+			<param index="0" name="state" type="Dictionary" />
+			<param index="1" name="root" type="JRPGCommandList" />
+			<param index="2" name="game_state" type="JRPGGameState" />
+			<param index="3" name="owner" type="String" default="&quot;&quot;" />
+			<description>
+				Goes on from [param state] (as [method serialize] wrote it) with [param root] as the list the run started with, [param game_state] as the game state and [param owner] naming it in warnings. Returns [code]false[/code], leaving the interpreter idle, when the state cannot be read, a list cannot be found or its commands are no longer the saved ones; the caller decides whether the run starts again or is dropped.
+			</description>
+		</method>
+		<method name="serialize" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns where the run is, for a save: [code]frames[/code], outermost first, each with the [code]index[/code] of its next command, [code]loop[/code], where its list comes from ([code]child[/code]: which child list of the command that pushed it, or [code]common_event[/code]: the common event called) and the [code]hash[/code] of its commands ([method JRPGCommandList.get_content_hash]); and [code]wait[/code], the steps left to wait. An idle interpreter has no frames. Lists are named by where they come from, never by object, so a save survives loading the map again.
+			</description>
+		</method>
 		<method name="start">
 			<return type="void" />
 			<param index="0" name="list" type="JRPGCommandList" />

@@ -44,6 +44,19 @@
 				Returns [code]true[/code] while an autorun or a triggered event runs, or while an autorun page holds (it starts again at the next step): the player waits.
 			</description>
 		</method>
+		<method name="restore">
+			<return type="void" />
+			<param index="0" name="state" type="Dictionary" />
+			<description>
+				Goes on with the runs of [param state], as [method serialize] wrote it, after [method setup] and [method change_map] for the map the game continues on. A run whose commands changed since the save starts its page again from the top when it is an autorun or a parallel process, and is dropped when an event's trigger started it (the event can be triggered again). A run whose event, page or common event no longer exists, or that belongs to another map, is dropped. Each case prints one warning; unreadable data is warned about and never trusted.
+			</description>
+		</method>
+		<method name="serialize" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns the runs under way, for a save: [code]main[/code] (empty when the main interpreter is idle) and [code]parallels[/code], each run naming what it belongs to ([code]map_id[/code], [code]event_id[/code] and [code]page[/code], or [code]common_event_id[/code]) with the interpreter's state ([method JRPGInterpreter.serialize]); the main run also tells whether it is an [code]autorun[/code]. Parallel processes between two runs are left out: they start from the top anyway.
+			</description>
+		</method>
 		<method name="setup">
 			<return type="void" />
 			<param index="0" name="state" type="JRPGGameState" />

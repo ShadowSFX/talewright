@@ -5,7 +5,7 @@
 	</brief_description>
 	<description>
 		Holds the switches, variables, self switches, the party with its gold, steps and inventory, the actor states, the player's position, the current map's event states, system flags (save, menu, encounter and formation access, window tone, battle music, timer), the [JRPGRandomStreams] and the [JRPGSimClock] of a game.
-		[method serialize] converts the state to a [Dictionary] of plain values in a canonical form: saving, loading and saving again gives an equal [Dictionary] with the same bytes. [method deserialize] checks the whole input before changing anything.
+		[method serialize] converts the state to a [Dictionary] of plain values in a canonical form: saving, loading and saving again gives an equal [Dictionary] with the same bytes. [method deserialize] checks the whole input before changing anything; the saved event runs only for their shape, since [method JRPGEventRunner.restore] checks each run when the game goes on with it (see [method set_interpreters_source]).
 		Online, zone servers hold the authoritative state of each character and of the world; clients keep a copy to show their own event pages and never send it back.
 	</description>
 	<tutorials>
@@ -154,6 +154,18 @@
 			<return type="int" />
 			<description>
 				Returns the party's gold.
+			</description>
+		</method>
+		<method name="get_interpreters" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns the event runs set with [method set_interpreters] or loaded with [method deserialize] (a loaded game goes on with them, see [method JRPGEventRunner.restore]).
+			</description>
+		</method>
+		<method name="get_interpreters_source" qualifiers="const">
+			<return type="Callable" />
+			<description>
+				Returns the callable that gives the running game's event runs to [method serialize].
 			</description>
 		</method>
 		<method name="get_item_count" qualifiers="const">
@@ -405,6 +417,20 @@
 			<param index="0" name="gold" type="int" />
 			<description>
 				Sets the party's gold, kept between 0 and [constant MAX_GOLD].
+			</description>
+		</method>
+		<method name="set_interpreters">
+			<return type="void" />
+			<param index="0" name="interpreters" type="Dictionary" />
+			<description>
+				Sets the event runs to save when no interpreters source is set (see [method set_interpreters_source]), as [method JRPGEventRunner.serialize] writes them.
+			</description>
+		</method>
+		<method name="set_interpreters_source">
+			<return type="void" />
+			<param index="0" name="source" type="Callable" />
+			<description>
+				Sets a callable that returns the event runs under way ([method JRPGEventRunner.serialize]); [method serialize] calls it while it is valid, so a save always holds the current runs. [JRPGSceneManager] sets it for the game it runs and clears it, keeping the last runs, when it stops running that game.
 			</description>
 		</method>
 		<method name="set_menu_enabled">
