@@ -78,8 +78,11 @@ JRPGWorkspaceShell::Section JRPGWorkspaceShell::find_section(const String &p_nam
 
 void JRPGWorkspaceShell::select_section(Section p_section) {
 	ERR_FAIL_INDEX(int(p_section), SECTION_MAX);
-	tabs->set_current_tab(p_section); // Emits tab_changed only when the tab changes.
-	_on_tab_changed(p_section);
+	if (tabs->get_current_tab() == p_section) {
+		_on_tab_changed(p_section); // Shown again: refreshed once.
+	} else {
+		tabs->set_current_tab(p_section); // Emits tab_changed, which refreshes it (review finding 33).
+	}
 }
 
 JRPGWorkspaceShell::Section JRPGWorkspaceShell::get_section() const {

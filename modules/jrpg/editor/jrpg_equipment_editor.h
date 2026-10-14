@@ -36,8 +36,8 @@
 class GridContainer;
 class JRPGActorData;
 class JRPGDatabase;
+class JRPGPicker;
 class Label;
-class OptionButton;
 
 // An actor's initial equipment slots (RM-ACT-*): slot i has equipment type i + 1 (Types, "Weapon", "Shield"...).
 namespace JRPGEquipmentSlots {
@@ -48,6 +48,8 @@ PackedStringArray get_slot_names(const Ref<JRPGDatabase> &p_database, int p_coun
 bool is_weapon_slot(const Ref<JRPGDatabase> &p_database, const JRPGActorData *p_actor, int p_slot);
 // What slot p_slot offers, as [{id, text}]: None, then every weapon, or the armors of the slot's equipment type.
 Array get_choices(const Ref<JRPGDatabase> &p_database, const JRPGActorData *p_actor, int p_slot);
+// The text of p_id in slot p_slot, as get_choices words it, or "0012 (not for this slot)". Looks up one entry.
+String get_choice_text(const Ref<JRPGDatabase> &p_database, const JRPGActorData *p_actor, int p_slot, int p_id);
 
 } // namespace JRPGEquipmentSlots
 
@@ -57,9 +59,13 @@ class JRPGEditorPropertyEquipment : public EditorProperty {
 
 	GridContainer *grid = nullptr;
 	Vector<Label *> labels;
-	Vector<OptionButton *> pickers;
+	Vector<JRPGPicker *> pickers;
 
 	void _slot_selected(int p_index, int p_slot);
+	// The pickers ask for their choices when they open and for their label on every database change, so a Dual Wield
+	// trait added to the actor or its class turns slot 2 into a weapon slot at once (review finding 24).
+	Array _slot_choices(int p_slot);
+	String _slot_text(int64_t p_id, int p_slot);
 
 protected:
 	virtual void _set_read_only(bool p_read_only) override;

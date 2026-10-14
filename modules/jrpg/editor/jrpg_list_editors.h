@@ -37,6 +37,7 @@
 class Button;
 class GridContainer;
 class JRPGDatabase;
+class JRPGPicker;
 class Label;
 class Tree;
 
@@ -95,6 +96,19 @@ enum FieldType {
 	FIELD_BOOL,
 };
 
+// How a field is entered when another field of the row decides it (Field::shape_key): an enemy action's two values are
+// a turn pattern, an HP or MP band, a state, a level or a switch depending on its condition (RM-ENM-013..018).
+struct Shape {
+	const char *label = ""; // Empty: this field is not used and is hidden.
+	FieldType type = FIELD_INT; // FIELD_INT or FIELD_ID.
+	int min = 0;
+	int max = 0;
+	int default_value = 0; // Set when the deciding field changes.
+	const char *target = ""; // FIELD_ID.
+	bool percent = false; // Stored in basis points (10000 = 100%), entered in percent.
+	const char *suffix = "";
+};
+
 struct Field {
 	const char *key = "";
 	const char *label = "";
@@ -108,6 +122,11 @@ struct Field {
 	int max = 0;
 	int default_value = 0;
 	bool in_list = true;
+	// When set, shapes[row[shape_key]] replaces the label, type, range and target above (none for unknown values).
+	const char *shape_key = "";
+	Vector<Shape> shapes;
+	// When set, the list shows this text in the field's column (a condition together with its values).
+	String (*describe)(const Dictionary &p_row, const Ref<JRPGDatabase> &p_database) = nullptr;
 };
 
 struct Spec {
@@ -121,10 +140,10 @@ struct Spec {
 
 // The spec of p_property of p_object (learnings of a class...), or null.
 const Spec *find_spec(const Object *p_object, const String &p_property);
+// The shape p_field takes in p_row, or null (no shapes, or an unknown value of the deciding field).
+const Shape *get_shape(const Field &p_field, const Dictionary &p_row);
 // The table or type list a FIELD_ID points into for p_row.
 String get_target(const Field &p_field, const Dictionary &p_row);
-// "0003  Fire" style text of an ID ("None" for 0, "0012 (missing)" beyond the list).
-String id_text(const String &p_target, int p_id, const Ref<JRPGDatabase> &p_database);
 String format_field(const Field &p_field, const Dictionary &p_row, const Ref<JRPGDatabase> &p_database);
 Dictionary make_default(const Spec &p_spec);
 
@@ -136,10 +155,21 @@ class JRPGRecordDialog : public ConfirmationDialog {
 
 	const JRPGRecordSpecs::Spec *spec = nullptr;
 	GridContainer *grid = nullptr;
-	Vector<Control *> controls; // One per field, in spec order.
+	Vector<Label *> labels; // One per field, in spec order.
+	Vector<Control *> controls; // The control of each field: SpinBox, JRPGPicker, OptionButton, LineEdit or CheckBox.
+	Vector<JRPGPicker *> shape_pickers; // A shaped field's picker when its shape is an ID (else null).
+	Vector<bool> touched; // Fields the user changed: the others keep their stored value exactly (review finding 26).
+	bool updating = false; // Set while the dialog fills its controls.
 	Dictionary original;
 
-	void _fill_id_choices(int p_field, int p_select);
+	const JRPGRecordSpecs::Shape *_shape(int p_field) const;
+	String _target(int p_field) const;
+	Array _id_choices(int p_field) const;
+	String _id_text(int64_t p_id, int p_field) const;
+	void _set_field(int p_field, const Variant &p_value, bool p_stored);
+	Variant _get_field(int p_field) const;
+	void _apply_shapes();
+	void _touched(int p_field);
 	void _field_changed(int p_field);
 
 public:

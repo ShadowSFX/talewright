@@ -194,6 +194,15 @@ void JRPGDatabaseEditing::_on_resource_changed(ObjectID p_owner, ObjectID p_emit
 		_watch_table(table);
 	} else if (emitter.is_valid()) {
 		_watch_nested(emitter, owner, NESTED_DEPTH);
+		if (table.is_valid()) {
+			// One entry (or something inside one) changed, not the table: lists update that row only (review finding 27).
+			const Ref<JRPGEntry> entry = emitter;
+			for (int kind = 0; kind < JRPGDatabase::TABLE_MAX; kind++) {
+				if (database->get_table(JRPGDatabase::TableKind(kind)) == table) {
+					emit_signal(SNAME("entry_changed"), JRPGDatabase::get_table_name(JRPGDatabase::TableKind(kind)), entry.is_valid() ? entry->get_id() : 0);
+				}
+			}
+		}
 	}
 	emit_signal(SNAME("database_changed"));
 }
@@ -701,6 +710,9 @@ void JRPGDatabaseEditing::forget_unsaved(const PackedStringArray &p_paths) {
 
 void JRPGDatabaseEditing::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("database_changed"));
+	// Emitted just before database_changed when the change is inside one entry of a table (p_id 0: inside a
+	// sub-resource of an entry, whose name did not change).
+	ADD_SIGNAL(MethodInfo("entry_changed", PropertyInfo(Variant::STRING, "table"), PropertyInfo(Variant::INT, "id")));
 }
 
 JRPGDatabaseEditing::JRPGDatabaseEditing() {

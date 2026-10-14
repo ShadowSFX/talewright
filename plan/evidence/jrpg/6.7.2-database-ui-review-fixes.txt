@@ -1,0 +1,59 @@
+# 6.7.2 bridge verification: review findings 5, 24, 25, 27, 33 (scratch project)
+## finding 5: a maximum typed without Enter is the one applied, and its warning is shown while typing
+items maximum: 13
+   Label | Number of entries in Items: | None | None
+   Label | Entries 11 to 13 are removed. | None | None
+   Button | Remove Entries | None | None
+   Button | Cancel | None | None
+items maximum: 10
+items maximum: 13
+## finding 5: typing then Enter in the same frame applies a larger maximum at once
+items maximum: 15
+## finding 5: typing then Enter in the same frame for a cut shows its warning first; OK then cuts
+items maximum: 13
+   Label | Number of entries in Items: | None | None
+   Label | Entries 10 to 13 are removed. | None | None
+   Button | Remove Entries | None | None
+   Button | Cancel | None | None
+items maximum: 9
+## finding 27: renaming an entry updates its row in place; the selection stays
+  row: ['0003  Smelling Salts'] | selected: [2]
+## finding 24: equipment pickers follow a Dual Wield trait added in the same form
+   0001  Short Sword | items: 1
+   0001 (not for this slot) | items: 1
+   None | items: 1
+   0001  Leather Vest | items: 1
+   None | items: 1
+  after adding Dual Wield:
+   0001  Short Sword | items: 1
+   0001  Short Sword | items: 1
+   None | items: 1
+   0001  Leather Vest | items: 1
+   None | items: 1
+  (choices are listed when a picker opens: doctest "A picker lists its choices only when opened"; the bridge opens pickers once its press goes through pressed(), 6.7.3)
+## finding 25: enemy action conditions in their units; the State condition picks a state
+  rows: ['0001  Attack | HP 0% to 50.5% | 5', '0001  Attack | Turn 2, then every 3 | 4']
+  HP condition:
+   Label | Skill | None | None
+   JRPGPicker | 0001  Attack | None | ['0001  Attack']
+   Label | Condition | None | None
+   OptionButton | HP | None | ['Always', 'Turn', 'HP', 'MP', 'State', 'Party Level', 'Switch']
+   Label | HP From | None | None
+   SpinBox | None | 0.0 | None
+   Label | HP To | None | None
+   SpinBox | None | 51.0 | None
+   Label | Rating | None | None
+   SpinBox | None | 5.0 | None
+  after choosing State:
+   Label | Skill | None | None
+   JRPGPicker | 0001  Attack | None | ['0001  Attack']
+   Label | Condition | None | None
+   OptionButton | State | None | ['Always', 'Turn', 'HP', 'MP', 'State', 'Party Level', 'Switch']
+   Label | State | None | None
+   JRPGPicker | 0001  Knocked Out | None | ['0001  Knocked Out']
+   Label | Rating | None | None
+   SpinBox | None | 5.0 | None
+{'skill_id': 1, 'condition_type': 2, 'param1': 0, 'param2': 5050, 'rating': 5}
+## errors
+    "errors": 0,
+    "warnings": 0,

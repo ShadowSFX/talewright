@@ -32,6 +32,7 @@
 #pragma once
 
 #include "core/templates/hash_map.h"
+#include "core/templates/hash_set.h"
 #include "scene/gui/box_container.h"
 
 class Button;
@@ -83,11 +84,19 @@ class JRPGDatabaseView : public VBoxContainer {
 
 	HashMap<String, int> selected_ids; // Per table, like the tabs of a database window; entry 1 at first.
 	bool refresh_queued = false;
+	// The entry list is built once per table and then updated row by row while only entries change.
+	String built_table;
+	HashSet<int> changed_rows;
+	bool entry_change = false; // entry_changed came just before database_changed.
+	bool entries_stale = true;
 
 	String _selected_table() const;
 	int _selected_entry() const;
+	void _on_entry_changed(const String &p_table, int p_id);
+	void _on_database_changed();
 	void _queue_refresh();
 	void _refresh_tables();
+	void _set_row(int p_index, int p_id, const String &p_name);
 	void _refresh_entries();
 	void _update_buttons();
 	Ref<Resource> _selected_record() const;

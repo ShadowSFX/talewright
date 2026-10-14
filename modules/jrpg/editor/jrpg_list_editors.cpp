@@ -32,11 +32,13 @@
 #include "jrpg_list_editors.h"
 
 #include "jrpg_database_editing.h"
+#include "jrpg_picker.h"
 
 #include "core/object/callable_mp.h"
 #include "editor/editor_string_names.h"
 #include "editor/gui/editor_toaster.h"
 #include "editor/themes/editor_scale.h"
+#include "scene/gui/box_container.h"
 #include "scene/gui/button.h"
 #include "scene/gui/check_box.h"
 #include "scene/gui/grid_container.h"
@@ -247,6 +249,57 @@ Field enum_field(const char *p_key, const char *p_label, const Vector<const char
 	return f;
 }
 
+Shape shape(const char *p_label, int p_min, int p_max, int p_default, const char *p_suffix = "") {
+	Shape s;
+	s.label = p_label;
+	s.min = p_min;
+	s.max = p_max;
+	s.default_value = p_default;
+	s.suffix = p_suffix;
+	return s;
+}
+
+Shape percent_shape(const char *p_label, int p_default) {
+	Shape s = shape(p_label, 0, 10000, p_default);
+	s.percent = true;
+	return s;
+}
+
+Shape id_shape(const char *p_label, const char *p_target) {
+	Shape s = shape(p_label, 1, 0, 1);
+	s.type = FIELD_ID;
+	s.target = p_target;
+	return s;
+}
+
+String percent_text(int64_t p_basis_points) {
+	return (p_basis_points % 100 == 0 ? itos(p_basis_points / 100) : String::num(double(p_basis_points) / 100.0, 2)) + "%";
+}
+
+// "HP 0% to 50%", "Turn 2, then every 3": an enemy action's condition with its values, for the list.
+String describe_condition(const Dictionary &p_row, const Ref<JRPGDatabase> &p_database) {
+	const int64_t a = p_row.get("param1", 0);
+	const int64_t b = p_row.get("param2", 0);
+	const int condition = p_row.get("condition_type", 0);
+	switch (condition) {
+		case JRPGEnemyData::CONDITION_ALWAYS:
+			return TTR("Always");
+		case JRPGEnemyData::CONDITION_TURN:
+			return b > 0 ? vformat(TTR("Turn %d, then every %d"), a, b) : vformat(TTR("Turn %d"), a);
+		case JRPGEnemyData::CONDITION_HP:
+			return vformat(TTR("HP %s to %s"), percent_text(a), percent_text(b));
+		case JRPGEnemyData::CONDITION_MP:
+			return vformat(TTR("MP %s to %s"), percent_text(a), percent_text(b));
+		case JRPGEnemyData::CONDITION_STATE:
+			return vformat(TTR("State %s"), JRPGPicker::id_text(p_database, "states", a));
+		case JRPGEnemyData::CONDITION_PARTY_LEVEL:
+			return vformat(TTR("Party Level %d or above"), a);
+		case JRPGEnemyData::CONDITION_SWITCH:
+			return vformat(TTR("Switch %04d is on"), a);
+	}
+	return vformat(TTR("Unknown condition (%d)"), condition);
+}
+
 // Lists stored in spec 02's "Packed nested lists".
 Vector<Spec> build_specs() {
 	Vector<Spec> specs;
@@ -275,17 +328,29 @@ Vector<Spec> build_specs() {
 	drops.fields.push_back(field("denominator", TTRC("Chance: 1 in"), FIELD_INT, 1, 1000, 1));
 	specs.push_back(drops);
 
-	// Enemy action patterns {skill_id, condition_type, param1, param2, rating} (RM-ENM-009); HP and MP conditions
-	// are basis points.
+	// Enemy action patterns {skill_id, condition_type, param1, param2, rating} (RM-ENM-010..018): what the two values
+	// mean depends on the condition (review finding 25); HP and MP bands are stored in basis points.
 	Spec actions;
 	actions.object_class = "JRPGEnemyData";
 	actions.property = "actions";
 	actions.noun = TTRC("Action");
 	actions.empty_text = TTRC("No actions. Add the skills this enemy uses and when it uses them.");
 	actions.fields.push_back(id_field("skill_id", TTRC("Skill"), "skills", 1, 1));
-	actions.fields.push_back(enum_field("condition_type", TTRC("Condition"), { TTRC("Always"), TTRC("Turn"), TTRC("HP"), TTRC("MP"), TTRC("State"), TTRC("Party Level"), TTRC("Switch") }, JRPGEnemyData::CONDITION_ALWAYS));
-	actions.fields.push_back(field("param1", TTRC("Value A"), FIELD_INT, 0, 10000, 0));
-	actions.fields.push_back(field("param2", TTRC("Value B"), FIELD_INT, 0, 10000, 0));
+	Field condition = enum_field("condition_type", TTRC("Condition"), { TTRC("Always"), TTRC("Turn"), TTRC("HP"), TTRC("MP"), TTRC("State"), TTRC("Party Level"), TTRC("Switch") }, JRPGEnemyData::CONDITION_ALWAYS);
+	condition.describe = &describe_condition;
+	actions.fields.push_back(condition);
+	Field first = field("param1", TTRC("Value A"), FIELD_INT, 0, 10000, 0);
+	Field second = field("param2", TTRC("Value B"), FIELD_INT, 0, 10000, 0);
+	first.in_list = false;
+	second.in_list = false;
+	first.shape_key = "condition_type";
+	second.shape_key = "condition_type";
+	const Shape unused;
+	// In condition order: Always, Turn, HP, MP, State, Party Level, Switch.
+	first.shapes = { unused, shape(TTRC("First Turn"), 0, 9999, 1), percent_shape(TTRC("HP From"), 0), percent_shape(TTRC("MP From"), 0), id_shape(TTRC("State"), "states"), shape(TTRC("Party Level"), 1, 99, 1, TTRC("or above")), shape(TTRC("Switch"), 1, 9999, 1, TTRC("is on")) };
+	second.shapes = { unused, shape(TTRC("Then Every"), 0, 9999, 0, TTRC("turns (0: once)")), percent_shape(TTRC("HP To"), 10000), percent_shape(TTRC("MP To"), 10000), unused, unused, unused };
+	actions.fields.push_back(first);
+	actions.fields.push_back(second);
 	actions.fields.push_back(field("rating", TTRC("Rating"), FIELD_INT, 1, 9, 5));
 	specs.push_back(actions);
 
@@ -323,7 +388,18 @@ const Spec *find_spec(const Object *p_object, const String &p_property) {
 	return nullptr;
 }
 
+const Shape *get_shape(const Field &p_field, const Dictionary &p_row) {
+	if (String(p_field.shape_key).is_empty()) {
+		return nullptr;
+	}
+	const int index = p_row.get(p_field.shape_key, 0);
+	return (index >= 0 && index < p_field.shapes.size()) ? &p_field.shapes[index] : nullptr;
+}
+
 String get_target(const Field &p_field, const Dictionary &p_row) {
+	if (const Shape *s = get_shape(p_field, p_row)) {
+		return s->type == FIELD_ID ? String(s->target) : String();
+	}
 	if (String(p_field.target_key).is_empty()) {
 		return p_field.target;
 	}
@@ -331,29 +407,24 @@ String get_target(const Field &p_field, const Dictionary &p_row) {
 	return (index >= 0 && index < p_field.targets.size()) ? String(p_field.targets[index]) : String();
 }
 
-String id_text(const String &p_target, int p_id, const Ref<JRPGDatabase> &p_database) {
-	if (p_id == 0) {
-		return TTR("None");
-	}
-	if (p_database.is_null() || p_target.is_empty()) {
-		return vformat("%04d", p_id);
-	}
-	const PackedStringArray names = JRPGReferenceScanner::get_target_names(p_database, p_target);
-	if (p_id < 1 || p_id > names.size()) {
-		return vformat(TTR("%04d (missing)"), p_id);
-	}
-	return names[p_id - 1].is_empty() ? vformat("%04d", p_id) : vformat("%04d  %s", p_id, names[p_id - 1]);
-}
-
 String format_field(const Field &p_field, const Dictionary &p_row, const Ref<JRPGDatabase> &p_database) {
+	if (p_field.describe) {
+		return p_field.describe(p_row, p_database);
+	}
 	switch (p_field.type) {
-		case FIELD_INT:
-			return itos(int64_t(p_row.get(p_field.key, p_field.default_value)));
+		case FIELD_INT: {
+			const Shape *s = get_shape(p_field, p_row);
+			const int64_t value = p_row.get(p_field.key, p_field.default_value);
+			if (s && s->type == FIELD_ID) {
+				return JRPGPicker::id_text(p_database, s->target, value);
+			}
+			return (s && s->percent) ? percent_text(value) : itos(value);
+		}
 		case FIELD_ID:
-			return id_text(get_target(p_field, p_row), p_row.get(p_field.key, p_field.default_value), p_database);
+			return JRPGPicker::id_text(p_database, get_target(p_field, p_row), int64_t(p_row.get(p_field.key, p_field.default_value)));
 		case FIELD_ENUM: {
 			const int index = p_row.get(p_field.key, p_field.default_value);
-			return (index >= 0 && index < p_field.options.size()) ? TTRGET(p_field.options[index]) : itos(index);
+			return (index >= 0 && index < p_field.options.size()) ? TTRGET(p_field.options[index]) : vformat(TTR("%d (unknown)"), index);
 		}
 		case FIELD_STRING:
 			return p_row.get(p_field.key, String());
@@ -385,41 +456,173 @@ Dictionary make_default(const Spec &p_spec) {
 
 // JRPGRecordDialog.
 
-void JRPGRecordDialog::_fill_id_choices(int p_field, int p_select) {
+const JRPGRecordSpecs::Shape *JRPGRecordDialog::_shape(int p_field) const {
 	const JRPGRecordSpecs::Field &f = spec->fields[p_field];
-	OptionButton *options = Object::cast_to<OptionButton>(controls[p_field]);
-	const String target = JRPGRecordSpecs::get_target(f, get_row());
-	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
-	const Ref<JRPGDatabase> db = editing ? editing->get_database() : Ref<JRPGDatabase>();
-	options->clear();
-	if (f.min <= 0) {
-		options->add_item(TTR("None"));
-		options->set_item_metadata(-1, 0);
+	if (String(f.shape_key).is_empty()) {
+		return nullptr;
 	}
-	const PackedStringArray names = (db.is_valid() && !target.is_empty()) ? JRPGReferenceScanner::get_target_names(db, target) : PackedStringArray();
-	for (int i = 0; i < names.size(); i++) {
-		options->add_item(names[i].is_empty() ? vformat("%04d", i + 1) : vformat("%04d  %s", i + 1, names[i]));
-		options->set_item_metadata(-1, i + 1);
-	}
-	int found = -1;
-	for (int i = 0; i < options->get_item_count(); i++) {
-		if (int(options->get_item_metadata(i)) == p_select) {
-			found = i;
+	for (int i = 0; i < spec->fields.size(); i++) {
+		if (String(spec->fields[i].key) == f.shape_key) {
+			const int index = Object::cast_to<OptionButton>(controls[i])->get_selected(); // -1: an unknown value.
+			return (index >= 0 && index < f.shapes.size()) ? &f.shapes[index] : nullptr;
 		}
 	}
-	if (found < 0 && p_select != 0) {
-		options->add_item(JRPGRecordSpecs::id_text(target, p_select, db)); // Kept, never silently changed.
-		options->set_item_metadata(-1, p_select);
-		found = options->get_item_count() - 1;
+	return nullptr;
+}
+
+String JRPGRecordDialog::_target(int p_field) const {
+	const JRPGRecordSpecs::Field &f = spec->fields[p_field];
+	if (const JRPGRecordSpecs::Shape *s = _shape(p_field)) {
+		return s->type == JRPGRecordSpecs::FIELD_ID ? String(s->target) : String();
 	}
-	options->select(found >= 0 ? found : (options->get_item_count() > 0 ? 0 : -1));
+	if (String(f.target_key).is_empty()) {
+		return f.target;
+	}
+	for (int i = 0; i < spec->fields.size(); i++) {
+		if (String(spec->fields[i].key) == f.target_key) {
+			const int index = Object::cast_to<OptionButton>(controls[i])->get_selected();
+			return (index >= 0 && index < f.targets.size()) ? String(f.targets[index]) : String();
+		}
+	}
+	return String();
+}
+
+Array JRPGRecordDialog::_id_choices(int p_field) const {
+	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
+	const JRPGRecordSpecs::Shape *s = _shape(p_field);
+	return JRPGPicker::id_choices(editing ? editing->get_database() : Ref<JRPGDatabase>(), _target(p_field), s ? s->min : spec->fields[p_field].min);
+}
+
+String JRPGRecordDialog::_id_text(int64_t p_id, int p_field) const {
+	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
+	return JRPGPicker::id_text(editing ? editing->get_database() : Ref<JRPGDatabase>(), _target(p_field), p_id);
+}
+
+void JRPGRecordDialog::_set_field(int p_field, const Variant &p_value, bool p_stored) {
+	const JRPGRecordSpecs::Field &f = spec->fields[p_field];
+	const JRPGRecordSpecs::Shape *s = _shape(p_field);
+	// Range::set_min and set_max clamp and emit value_changed while in the tree (scene/gui/range.cpp:137,224-232):
+	// that is not the user touching the field.
+	const bool was_updating = updating;
+	updating = true;
+	switch (f.type) {
+		case JRPGRecordSpecs::FIELD_INT: {
+			if (s && s->type == JRPGRecordSpecs::FIELD_ID) {
+				shape_pickers[p_field]->set_value(int64_t(p_value));
+				break;
+			}
+			SpinBox *spin = Object::cast_to<SpinBox>(controls[p_field]);
+			const bool percent = s && s->percent;
+			const double scale = percent ? 100.0 : 1.0;
+			const double shown = double(int64_t(p_value)) / scale;
+			const double low = (s ? s->min : f.min) / scale;
+			const double high = (s ? s->max : f.max) / scale;
+			// A stored value outside the range is shown as it is, not clamped (review finding 26).
+			spin->set_allow_lesser(p_stored && shown < low);
+			spin->set_allow_greater(p_stored && shown > high);
+			spin->set_min(low);
+			spin->set_max(high);
+			spin->set_suffix(percent ? String("%") : (s ? TTRGET(s->suffix) : String()));
+			spin->set_value_no_signal(shown);
+		} break;
+		case JRPGRecordSpecs::FIELD_ID:
+			Object::cast_to<JRPGPicker>(controls[p_field])->set_value(int64_t(p_value));
+			break;
+		case JRPGRecordSpecs::FIELD_ENUM: {
+			OptionButton *options = Object::cast_to<OptionButton>(controls[p_field]);
+			const int index = p_value;
+			if (index >= 0 && index < options->get_item_count()) {
+				options->select(index);
+			} else {
+				options->select(-1); // Kept unless the user picks another (review finding 26).
+				options->set_text(vformat(TTR("%d (unknown)"), index));
+			}
+		} break;
+		case JRPGRecordSpecs::FIELD_STRING:
+			Object::cast_to<LineEdit>(controls[p_field])->set_text(p_value);
+			break;
+		case JRPGRecordSpecs::FIELD_BOOL:
+			Object::cast_to<CheckBox>(controls[p_field])->set_pressed_no_signal(p_value);
+			break;
+	}
+	updating = was_updating;
+}
+
+Variant JRPGRecordDialog::_get_field(int p_field) const {
+	const JRPGRecordSpecs::Field &f = spec->fields[p_field];
+	const JRPGRecordSpecs::Shape *s = _shape(p_field);
+	switch (f.type) {
+		case JRPGRecordSpecs::FIELD_INT: {
+			if (s && s->type == JRPGRecordSpecs::FIELD_ID) {
+				return shape_pickers[p_field]->get_value();
+			}
+			const double value = Object::cast_to<SpinBox>(controls[p_field])->get_value();
+			return int64_t(Math::round((s && s->percent) ? value * 100.0 : value));
+		}
+		case JRPGRecordSpecs::FIELD_ID:
+			return Object::cast_to<JRPGPicker>(controls[p_field])->get_value();
+		case JRPGRecordSpecs::FIELD_ENUM:
+			return MAX(0, Object::cast_to<OptionButton>(controls[p_field])->get_selected());
+		case JRPGRecordSpecs::FIELD_STRING:
+			return Object::cast_to<LineEdit>(controls[p_field])->get_text();
+		case JRPGRecordSpecs::FIELD_BOOL:
+			return Object::cast_to<CheckBox>(controls[p_field])->is_pressed();
+	}
+	return Variant();
+}
+
+void JRPGRecordDialog::_apply_shapes() {
+	for (int i = 0; i < spec->fields.size(); i++) {
+		const JRPGRecordSpecs::Field &f = spec->fields[i];
+		if (String(f.shape_key).is_empty()) {
+			continue;
+		}
+		const JRPGRecordSpecs::Shape *s = _shape(i);
+		const bool used = !s || !String(s->label).is_empty(); // An unknown condition shows the plain value.
+		const bool id = s && s->type == JRPGRecordSpecs::FIELD_ID;
+		labels[i]->set_text(TTRGET(s ? s->label : f.label));
+		labels[i]->set_visible(used);
+		controls[i]->get_parent_control()->set_visible(used);
+		controls[i]->set_visible(!id);
+		shape_pickers[i]->set_visible(id);
+		controls[i]->set_accessibility_name(TTRGET(s ? s->label : f.label));
+		shape_pickers[i]->set_accessibility_name(TTRGET(s ? s->label : f.label));
+	}
+	reset_size();
+}
+
+void JRPGRecordDialog::_touched(int p_field) {
+	if (!updating) {
+		touched.write[p_field] = true;
+	}
 }
 
 void JRPGRecordDialog::_field_changed(int p_field) {
-	// A field other ID fields take their list from (a drop's kind): refill them.
+	_touched(p_field);
+	const String key = spec->fields[p_field].key;
+	bool reshaped = false;
 	for (int i = 0; i < spec->fields.size(); i++) {
-		if (String(spec->fields[i].target_key) == spec->fields[p_field].key) {
-			_fill_id_choices(i, 0);
+		const JRPGRecordSpecs::Field &f = spec->fields[i];
+		if (String(f.target_key) == key) {
+			// A field other ID fields take their list from (a drop's kind): they start over.
+			_set_field(i, f.default_value, false);
+			touched.write[i] = true;
+		}
+		if (String(f.shape_key) == key) {
+			reshaped = true;
+		}
+	}
+	if (!reshaped) {
+		return;
+	}
+	_apply_shapes();
+	for (int i = 0; i < spec->fields.size(); i++) {
+		const JRPGRecordSpecs::Field &f = spec->fields[i];
+		if (String(f.shape_key) == key) {
+			// The values meant something else under the previous condition: they start from this one's defaults.
+			const JRPGRecordSpecs::Shape *s = _shape(i);
+			_set_field(i, s ? s->default_value : f.default_value, false);
+			touched.write[i] = true;
 		}
 	}
 }
@@ -431,102 +634,99 @@ void JRPGRecordDialog::setup(const JRPGRecordSpecs::Spec *p_spec) {
 		Label *label = memnew(Label);
 		label->set_text(TTRGET(f.label));
 		grid->add_child(label);
+		labels.push_back(label);
 		Control *control = nullptr;
+		JRPGPicker *shape_picker = nullptr;
+		const Callable touch = callable_mp(this, &JRPGRecordDialog::_touched).bind(i).unbind(1);
 		switch (f.type) {
 			case JRPGRecordSpecs::FIELD_INT: {
 				SpinBox *spin = memnew(SpinBox);
 				spin->set_min(f.min);
 				spin->set_max(f.max);
 				spin->set_step(1);
+				spin->connect(SceneStringName(value_changed), touch);
 				control = spin;
+				if (!String(f.shape_key).is_empty()) {
+					shape_picker = memnew(JRPGPicker); // For shapes that pick an ID (an action's state).
+					shape_picker->setup(callable_mp(this, &JRPGRecordDialog::_id_choices).bind(i), callable_mp(this, &JRPGRecordDialog::_id_text).bind(i));
+					shape_picker->connect(SceneStringName(item_selected), touch);
+				}
 			} break;
-			case JRPGRecordSpecs::FIELD_ID:
+			case JRPGRecordSpecs::FIELD_ID: {
+				JRPGPicker *picker = memnew(JRPGPicker);
+				picker->setup(callable_mp(this, &JRPGRecordDialog::_id_choices).bind(i), callable_mp(this, &JRPGRecordDialog::_id_text).bind(i));
+				picker->connect(SceneStringName(item_selected), touch);
+				control = picker;
+			} break;
 			case JRPGRecordSpecs::FIELD_ENUM: {
 				OptionButton *options = memnew(OptionButton);
 				options->set_clip_text(true);
 				options->set_fit_to_longest_item(false);
-				options->set_search_bar_enabled(true);
-				options->set_search_bar_min_item_count(10);
-				if (f.type == JRPGRecordSpecs::FIELD_ENUM) {
-					for (const char *option : f.options) {
-						options->add_item(TTRGET(option));
-					}
-				} else {
-					options->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED); // Entry names are project data.
+				for (const char *option : f.options) {
+					options->add_item(TTRGET(option));
 				}
 				options->connect(SceneStringName(item_selected), callable_mp(this, &JRPGRecordDialog::_field_changed).bind(i).unbind(1));
 				control = options;
 			} break;
-			case JRPGRecordSpecs::FIELD_STRING:
-				control = memnew(LineEdit);
-				break;
-			case JRPGRecordSpecs::FIELD_BOOL:
-				control = memnew(CheckBox);
-				break;
+			case JRPGRecordSpecs::FIELD_STRING: {
+				LineEdit *line = memnew(LineEdit);
+				line->connect(SceneStringName(text_changed), touch);
+				control = line;
+			} break;
+			case JRPGRecordSpecs::FIELD_BOOL: {
+				CheckBox *check = memnew(CheckBox);
+				check->connect(SceneStringName(toggled), touch);
+				control = check;
+			} break;
 		}
 		control->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 		control->set_custom_minimum_size(Size2(220, 0) * EDSCALE);
 		control->set_accessibility_name(TTRGET(f.label));
-		grid->add_child(control);
+		HBoxContainer *cell = memnew(HBoxContainer); // Holds the field's control, and a shaped field's picker.
+		cell->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+		grid->add_child(cell);
+		cell->add_child(control);
+		if (shape_picker) {
+			shape_picker->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+			shape_picker->set_custom_minimum_size(Size2(220, 0) * EDSCALE);
+			cell->add_child(shape_picker);
+		}
 		controls.push_back(control);
+		shape_pickers.push_back(shape_picker);
+		touched.push_back(false);
 	}
 }
 
 void JRPGRecordDialog::popup_for(const Dictionary &p_row) {
 	original = p_row;
-	const Dictionary row = p_row.is_empty() ? JRPGRecordSpecs::make_default(*spec) : p_row;
-	// Plain fields first: ID fields may take their list from one of them.
+	const bool stored = !p_row.is_empty();
+	const Dictionary row = stored ? p_row : JRPGRecordSpecs::make_default(*spec);
+	// Fields that decide other fields (an enum: a drop's kind, an action's condition) first.
 	for (int i = 0; i < spec->fields.size(); i++) {
-		const JRPGRecordSpecs::Field &f = spec->fields[i];
-		switch (f.type) {
-			case JRPGRecordSpecs::FIELD_INT:
-				Object::cast_to<SpinBox>(controls[i])->set_value_no_signal(int64_t(row.get(f.key, f.default_value)));
-				break;
-			case JRPGRecordSpecs::FIELD_ENUM:
-				Object::cast_to<OptionButton>(controls[i])->select(int(row.get(f.key, f.default_value)));
-				break;
-			case JRPGRecordSpecs::FIELD_STRING:
-				Object::cast_to<LineEdit>(controls[i])->set_text(row.get(f.key, String()));
-				break;
-			case JRPGRecordSpecs::FIELD_BOOL:
-				Object::cast_to<CheckBox>(controls[i])->set_pressed_no_signal(row.get(f.key, f.default_value != 0));
-				break;
-			case JRPGRecordSpecs::FIELD_ID:
-				break;
+		touched.write[i] = false;
+		if (spec->fields[i].type == JRPGRecordSpecs::FIELD_ENUM) {
+			_set_field(i, row.get(spec->fields[i].key, spec->fields[i].default_value), stored);
 		}
 	}
+	_apply_shapes();
 	for (int i = 0; i < spec->fields.size(); i++) {
-		if (spec->fields[i].type == JRPGRecordSpecs::FIELD_ID) {
-			_fill_id_choices(i, row.get(spec->fields[i].key, spec->fields[i].default_value));
+		if (spec->fields[i].type != JRPGRecordSpecs::FIELD_ENUM) {
+			_set_field(i, row.get(spec->fields[i].key, spec->fields[i].default_value), stored);
 		}
 	}
-	set_title(vformat(p_row.is_empty() ? TTR("Add %s") : TTR("Edit %s"), TTRGET(spec->noun)));
-	set_ok_button_text(p_row.is_empty() ? TTR("Add") : TTR("Apply"));
+	set_title(vformat(stored ? TTR("Edit %s") : TTR("Add %s"), TTRGET(spec->noun)));
+	set_ok_button_text(stored ? TTR("Apply") : TTR("Add"));
 	popup_centered(Size2(420, 0) * EDSCALE);
 }
 
 Dictionary JRPGRecordDialog::get_row() const {
 	Dictionary row = original.duplicate(); // Keys the spec does not know are kept as they were.
 	for (int i = 0; i < spec->fields.size(); i++) {
-		const JRPGRecordSpecs::Field &f = spec->fields[i];
-		switch (f.type) {
-			case JRPGRecordSpecs::FIELD_INT:
-				row[f.key] = int64_t(Object::cast_to<SpinBox>(controls[i])->get_value());
-				break;
-			case JRPGRecordSpecs::FIELD_ID: {
-				const OptionButton *options = Object::cast_to<OptionButton>(controls[i]);
-				row[f.key] = options->get_selected() >= 0 ? int(options->get_item_metadata(options->get_selected())) : 0;
-			} break;
-			case JRPGRecordSpecs::FIELD_ENUM:
-				row[f.key] = MAX(0, Object::cast_to<OptionButton>(controls[i])->get_selected());
-				break;
-			case JRPGRecordSpecs::FIELD_STRING:
-				row[f.key] = Object::cast_to<LineEdit>(controls[i])->get_text();
-				break;
-			case JRPGRecordSpecs::FIELD_BOOL:
-				row[f.key] = Object::cast_to<CheckBox>(controls[i])->is_pressed();
-				break;
+		const String key = spec->fields[i].key;
+		if (!touched[i] && original.has(key)) {
+			continue; // Left alone: exactly as stored, even outside the dialog's ranges (review finding 26).
 		}
+		row[key] = _get_field(i);
 	}
 	return row;
 }

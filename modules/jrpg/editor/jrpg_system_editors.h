@@ -36,9 +36,9 @@
 class Button;
 class ConfirmationDialog;
 class GridContainer;
+class JRPGPicker;
 class Label;
 class LineEdit;
-class OptionButton;
 class VBoxContainer;
 
 // A list of IDs of one table (the System's starting party): one picker per row with a remove button, and Add.
@@ -48,7 +48,7 @@ class JRPGEditorPropertyIDList : public EditorProperty {
 	String target;
 	VBoxContainer *rows = nullptr;
 	Button *add_button = nullptr;
-	Vector<OptionButton *> pickers;
+	Vector<JRPGPicker *> pickers;
 	Vector<Button *> removers;
 
 	void _picked(int p_index, int p_row);

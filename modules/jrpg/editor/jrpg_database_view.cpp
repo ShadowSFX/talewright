@@ -84,6 +84,21 @@ int JRPGDatabaseView::_selected_entry() const {
 	return (selected.is_empty() || !entries->is_visible()) ? 0 : int(entries->get_item_metadata(selected[0]));
 }
 
+void JRPGDatabaseView::_on_entry_changed(const String &p_table, int p_id) {
+	entry_change = true;
+	if (p_table == built_table && p_id > 0) {
+		changed_rows.insert(p_id);
+	}
+}
+
+void JRPGDatabaseView::_on_database_changed() {
+	if (!entry_change) {
+		entries_stale = true; // Anything but one entry (Change Maximum, undo, reload, save): the list is built again.
+	}
+	entry_change = false;
+	_queue_refresh();
+}
+
 void JRPGDatabaseView::_queue_refresh() {
 	if (!refresh_queued) {
 		refresh_queued = true;
@@ -152,30 +167,49 @@ void JRPGDatabaseView::_refresh_tables() {
 	status->set_text(unsaved_paths.is_empty() ? TTR("All changes are saved.") : vformat(TTR("Unsaved: %s"), String(", ").join(unsaved_paths)));
 }
 
+void JRPGDatabaseView::_set_row(int p_index, int p_id, const String &p_name) {
+	entries->set_item_text(p_index, p_name.is_empty() ? vformat("%04d", p_id) : vformat("%04d  %s", p_id, p_name));
+	// An empty slot, ready to fill, is dimmed.
+	entries->set_item_custom_fg_color(p_index, p_name.is_empty() ? get_theme_color(SNAME("font_readonly_color"), EditorStringName(Editor)) : Color());
+}
+
 void JRPGDatabaseView::_refresh_entries() {
 	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
 	const String key = _selected_table();
-	entries->clear();
 	const Ref<JRPGTable> table = (editing && !key.is_empty()) ? editing->get_table(key) : Ref<JRPGTable>();
 	entries->set_visible(table.is_valid());
 	maximum_button->set_visible(table.is_valid());
 	list_panel->set_visible(table.is_valid() || key.is_empty()); // The form takes the room of a single resource.
 	if (table.is_null()) {
+		entries->clear();
+		built_table = String();
+		changed_rows.clear();
 		table_title->set_text(key.is_empty() ? String() : key.capitalize());
 		form_hint->set_text(key.is_empty() ? TTR("Set up the project to edit its database.") : String());
 		return;
 	}
 	table_title->set_text(vformat(TTR("%s (%d)"), key.capitalize(), table->get_maximum()));
+	if (!entries_stale && key == built_table && entries->get_item_count() == table->get_maximum()) {
+		// Only the rows of entries that changed: typing a name renames one row of a table that may hold up to
+		// JRPGTable::MAX_ENTRIES (review finding 27).
+		for (const int id : changed_rows) {
+			if (id <= table->get_maximum()) {
+				_set_row(id - 1, id, table->get_entry(id)->get_entry_name());
+			}
+		}
+		changed_rows.clear();
+		return;
+	}
+	entries->clear();
+	built_table = key;
+	entries_stale = false;
+	changed_rows.clear();
 	// The remembered entry, or the last one when the table shrank below it.
 	const int selected = MIN(selected_ids.has(key) ? selected_ids[key] : 1, table->get_maximum());
-	const Color empty_color = get_theme_color(SNAME("font_readonly_color"), EditorStringName(Editor));
 	for (int id = 1; id <= table->get_maximum(); id++) {
-		const String name = table->get_entry(id)->get_entry_name();
-		const int index = entries->add_item(name.is_empty() ? vformat("%04d", id) : vformat("%04d  %s", id, name));
+		const int index = entries->add_item(String());
 		entries->set_item_metadata(index, id);
-		if (name.is_empty()) {
-			entries->set_item_custom_fg_color(index, empty_color); // An empty slot, ready to fill.
-		}
+		_set_row(index, id, table->get_entry(id)->get_entry_name());
 		if (id == selected) {
 			entries->select(index);
 		}
@@ -262,7 +296,19 @@ void JRPGDatabaseView::_on_maximum_value_changed(double p_value) {
 }
 
 void JRPGDatabaseView::_on_maximum_confirmed() {
-	JRPGDatabaseEditing::get_singleton()->set_maximum(dialog_table, int(maximum_spin->get_value()));
+	// Typed text is applied as it is typed (set_update_on_text_changed), so the warning shown is the one for the value
+	// OK applies, except for text typed in the frame OK came in: the SpinBox takes typed text deferred
+	// (scene/gui/spin_box.cpp:595,746-747), so apply() takes it now. If that turns the change into a cut whose warning
+	// has not been seen, the dialog shows it first (review finding 5).
+	const int shown = int(maximum_spin->get_value());
+	maximum_spin->apply();
+	const int count = int(maximum_spin->get_value());
+	const Ref<JRPGTable> table = JRPGDatabaseEditing::get_singleton()->get_table(dialog_table);
+	if (count != shown && table.is_valid() && count < table->get_maximum()) {
+		maximum_dialog->popup_centered(Size2(420, 0) * EDSCALE);
+		return;
+	}
+	JRPGDatabaseEditing::get_singleton()->set_maximum(dialog_table, count);
 }
 
 void JRPGDatabaseView::_on_clear_pressed() {
@@ -344,13 +390,15 @@ void JRPGDatabaseView::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
 			if (JRPGDatabaseEditing::get_singleton()) {
-				JRPGDatabaseEditing::get_singleton()->connect(SNAME("database_changed"), callable_mp(this, &JRPGDatabaseView::_queue_refresh));
+				JRPGDatabaseEditing::get_singleton()->connect(SNAME("entry_changed"), callable_mp(this, &JRPGDatabaseView::_on_entry_changed));
+				JRPGDatabaseEditing::get_singleton()->connect(SNAME("database_changed"), callable_mp(this, &JRPGDatabaseView::_on_database_changed));
 			}
 			refresh();
 		} break;
 		case NOTIFICATION_EXIT_TREE: {
 			if (JRPGDatabaseEditing::get_singleton()) {
-				JRPGDatabaseEditing::get_singleton()->disconnect(SNAME("database_changed"), callable_mp(this, &JRPGDatabaseView::_queue_refresh));
+				JRPGDatabaseEditing::get_singleton()->disconnect(SNAME("entry_changed"), callable_mp(this, &JRPGDatabaseView::_on_entry_changed));
+				JRPGDatabaseEditing::get_singleton()->disconnect(SNAME("database_changed"), callable_mp(this, &JRPGDatabaseView::_on_database_changed));
 			}
 		} break;
 		case NOTIFICATION_THEME_CHANGED: {
@@ -475,6 +523,7 @@ JRPGDatabaseView::JRPGDatabaseView() {
 	maximum_spin->set_min(0);
 	maximum_spin->set_max(JRPGTable::MAX_ENTRIES);
 	maximum_spin->set_step(1);
+	maximum_spin->set_update_on_text_changed(true); // The warning follows what is typed.
 	maximum_spin->connect(SceneStringName(value_changed), callable_mp(this, &JRPGDatabaseView::_on_maximum_value_changed));
 	maximum_box->add_child(maximum_spin);
 	maximum_warning = memnew(Label);

@@ -32,20 +32,18 @@
 #include "jrpg_inspector_plugin.h"
 
 #include "jrpg_curve_editor.h"
-#include "jrpg_database_editing.h"
 #include "jrpg_equipment_editor.h"
 #include "jrpg_list_editors.h"
 #include "jrpg_param_editor.h"
+#include "jrpg_picker.h"
 #include "jrpg_system_editors.h"
 #include "jrpg_trait_editor.h"
 
 #include "core/object/callable_mp.h"
 #include "editor/inspector/editor_properties.h"
-#include "scene/gui/option_button.h"
 
 #include "modules/jrpg/core/jrpg_actor_data.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
-#include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_terms_data.h"
@@ -53,64 +51,31 @@
 #include "modules/jrpg/core/jrpg_types_data.h"
 
 void JRPGEditorPropertyID::_set_read_only(bool p_read_only) {
-	options->set_disabled(p_read_only);
+	picker->set_disabled(p_read_only);
 }
 
 void JRPGEditorPropertyID::_option_selected(int p_index) {
-	emit_changed(get_edited_property(), int64_t(options->get_item_metadata(p_index)));
+	emit_changed(get_edited_property(), int64_t(picker->get_item_metadata(p_index)));
 }
 
-void JRPGEditorPropertyID::setup(const String &p_target, bool p_normal_attack) {
-	target = p_target;
-	normal_attack = p_normal_attack;
-	options->set_tooltip_text(vformat(TTR("A %s from the database."), JRPGReferenceScanner::get_target_label(target).to_lower()));
+void JRPGEditorPropertyID::setup(const String &p_target, int p_min) {
+	picker->setup_ids(p_target, p_min);
+	picker->set_tooltip_text(vformat(TTR("A %s from the database."), JRPGReferenceScanner::get_target_label(p_target).to_lower()));
 }
 
 void JRPGEditorPropertyID::update_property() {
-	// Rebuilt on every update: names change while the database is edited, and the list is short-lived.
-	const int64_t current = get_edited_property_value();
-	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
-	const Ref<JRPGDatabase> db = editing ? editing->get_database() : Ref<JRPGDatabase>();
-	const PackedStringArray names = db.is_valid() ? JRPGReferenceScanner::get_target_names(db, target) : PackedStringArray();
-	options->clear();
-	if (normal_attack) {
-		options->add_item(TTR("Normal Attack"));
-		options->set_item_metadata(-1, -1);
-	}
-	options->add_item(TTR("None"));
-	options->set_item_metadata(-1, 0);
-	for (int i = 0; i < names.size(); i++) {
-		options->add_item(names[i].is_empty() ? vformat("%04d", i + 1) : vformat("%04d  %s", i + 1, names[i]));
-		options->set_item_metadata(-1, i + 1);
-	}
-	if (current > names.size()) {
-		// Kept and shown, never silently changed: the dangling-reference report lists it too. Without a project
-		// database (a resource opened outside a set-up project) nothing is known about it.
-		options->add_item(db.is_valid() ? vformat(TTR("%04d (missing)"), current) : vformat("%04d", current));
-		options->set_item_metadata(-1, current);
-	}
-	for (int i = 0; i < options->get_item_count(); i++) {
-		if (int64_t(options->get_item_metadata(i)) == current) {
-			options->select(i);
-			return;
-		}
-	}
-	options->select(-1);
-	options->set_text(itos(current)); // A negative value the property does not name.
+	// Only the current value is shown; the entries are listed when the picker opens (review finding 27). A missing ID
+	// is kept and shown, never silently changed: the dangling-reference report lists it too.
+	picker->set_value(int64_t(get_edited_property_value()));
 }
 
 JRPGEditorPropertyID::JRPGEditorPropertyID() {
-	options = memnew(OptionButton);
-	options->set_clip_text(true);
-	options->set_fit_to_longest_item(false);
-	options->set_flat(true);
-	options->set_theme_type_variation(SNAME("EditorInspectorButton"));
-	options->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED); // Entry names are project data.
-	options->set_search_bar_enabled(true);
-	options->set_search_bar_min_item_count(10);
-	add_child(options);
-	add_focusable(options);
-	options->connect(SceneStringName(item_selected), callable_mp(this, &JRPGEditorPropertyID::_option_selected));
+	picker = memnew(JRPGPicker);
+	picker->set_flat(true);
+	picker->set_theme_type_variation(SNAME("EditorInspectorButton"));
+	add_child(picker);
+	add_focusable(picker);
+	picker->connect(SceneStringName(item_selected), callable_mp(this, &JRPGEditorPropertyID::_option_selected));
 }
 
 bool JRPGInspectorPlugin::can_handle(Object *p_object) {
@@ -184,7 +149,7 @@ bool JRPGInspectorPlugin::parse_property(Object *p_object, const Variant::Type p
 		return false;
 	}
 	JRPGEditorPropertyID *editor = memnew(JRPGEditorPropertyID);
-	editor->setup(target, p_hint == PROPERTY_HINT_RANGE && p_hint_text.get_slicec(',', 0).to_int() < 0);
+	editor->setup(target, p_hint == PROPERTY_HINT_RANGE ? p_hint_text.get_slicec(',', 0).to_int() : 0);
 	add_property_editor(p_path, editor);
 	return true;
 }

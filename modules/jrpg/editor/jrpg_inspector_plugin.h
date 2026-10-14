@@ -33,7 +33,7 @@
 
 #include "editor/inspector/editor_inspector.h"
 
-class OptionButton;
+class JRPGPicker;
 
 // An integer property that holds one database ID (JRPGReferenceScanner.get_id_target), shown as a searchable list of
 // the target's entries ("0003  Fire") instead of a number, like EditorPropertyEnum
@@ -42,9 +42,7 @@ class OptionButton;
 class JRPGEditorPropertyID : public EditorProperty {
 	GDCLASS(JRPGEditorPropertyID, EditorProperty);
 
-	OptionButton *options = nullptr;
-	String target;
-	bool normal_attack = false;
+	JRPGPicker *picker = nullptr;
 
 	void _option_selected(int p_index);
 
@@ -52,7 +50,8 @@ protected:
 	virtual void _set_read_only(bool p_read_only) override;
 
 public:
-	void setup(const String &p_target, bool p_normal_attack);
+	// p_min: the property's range minimum; -1 offers Normal Attack, 0 offers None (a troop page's actor starts at 1).
+	void setup(const String &p_target, int p_min);
 	virtual void update_property() override;
 
 	JRPGEditorPropertyID();

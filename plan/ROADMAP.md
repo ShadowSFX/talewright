@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 126, in_progress: 0, done: 95, blocked: 0, deferred: 3 (of 224)
+**Totals:** pending: 125, in_progress: 0, done: 96, blocked: 0, deferred: 3 (of 224)
 
 ## [x] 0 Bootstrap and task system
 
@@ -129,8 +129,8 @@ Setup tool, managed addon, main-screen workspace, database editor, authoring API
     - [x] **6.5.3.2** System party, type lists and slice field check (P1) _(deps: 6.5.3.1; commit: c98c01be4b)_
 - [x] **6.6** Database authoring API + bridge tools (P1) _(deps: 6.5; commit: c788b268bc)_
 - [ ] **6.7** Epic review: workspace (P1) _(deps: 6.6)_
-  - [x] **6.7.1** Review fixes: database data integrity (P1) _(commit: pending)_
-  - [ ] **6.7.2** Review fixes: database UI (P1) _(deps: 6.7.1)_
+  - [x] **6.7.1** Review fixes: database data integrity (P1) _(commit: b7501e870c)_
+  - [x] **6.7.2** Review fixes: database UI (P1) _(deps: 6.7.1; commit: pending)_
   - [ ] **6.7.3** Review fixes: bridge UI tools (P1)
   - [ ] **6.7.4** Review fixes: addon, setup, hints, tests, docs (P1) _(deps: 6.7.1, 6.7.3)_
   - [ ] **6.7.5** Epic 6 review close-out (P1) _(deps: 6.7.1, 6.7.2, 6.7.3, 6.7.4)_

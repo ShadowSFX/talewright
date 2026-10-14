@@ -469,3 +469,15 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   the Boss Collapse sounds), 2 Instant (vanishes at once), 3 Stays (remains on screen). `JRPGTraits::CollapseEffect`.
 - **Why:** covers the documented Boss case plus the common needs; the battle scene (epic 11) implements them.
 - **Reversal:** renumbering needs a `JRPGSchema` migration of saved traits.
+
+## D-033 — Enemy action condition values
+- **Context:** an enemy action pattern stores its condition's values in `param1`/`param2` (spec 02). The public help
+  describes Turn as A + B·X but does not say what B = 0 means (RM-ENM-013, not verified), nor the ranges of the
+  Party Level and Switch values (RM-ENM-017/018).
+- **Choice:** Turn: `param1` is the first turn A, `param2` the repeat B, and B = 0 means turn A only. HP and MP:
+  `param1`..`param2` is the band in basis points of the maximum, inclusive. State: `param1` is the state ID. Party
+  Level: `param1` is the level, met at that level or above (1..99). Switch: `param1` is the switch ID (met while
+  on). Unused values are 0. The database form shows these labels and units (`JRPGRecordSpecs::Shape`, task 6.7.2).
+- **Why:** a single meaning for the form, the bridge and the battle epic (12.x) to implement; B = 0 as "once" is the
+  only reading that gives the value a use instead of an infinite loop of turn A.
+- **Reversal:** a `JRPGSchema` migration of saved actions if the meaning changes; the form follows the shapes.

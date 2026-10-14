@@ -21,7 +21,7 @@ hints, tests, docs).
 | 2 | high | `editor_ui_find`/`editor_ui_act` reached controls inside the edited scene (input-disabled SubViewport), breaking D-031 | pending (6.7.3) |
 | 3 | med | `jrpg_db_set` could truncate type lists and set IDs that do not exist without warning | fixed (6.7.1): `jrpg_db_set` refuses shrinking a used type list (uses listed) unless `allow_broken_references`; reports `dangling_references` of the record, and for type lists the data pointing at removed types |
 | 4 | med | `create_entry` could fill a blank slot that other data still points at | fixed (6.7.1): `create_entry` skips blank slots that `collect_references` finds referenced |
-| 5 | med | Change Maximum: a value typed but not yet applied was ignored on confirm (deferred SpinBox apply) | pending (6.7.2) |
+| 5 | med | Change Maximum: a value typed but not yet applied was ignored on confirm (deferred SpinBox apply) | fixed (6.7.2): the maximum field applies typed text as it is typed (warning follows); confirm applies pending text and re-opens to show the warning of an unseen cut |
 | 6 | med | UI tools ignored open modal dialogs | pending (6.7.3) |
 | 7 | med | `press` emitted `pressed` only, not the click path (`pressed()` virtual, button_down/up); MenuButton/OptionButton did not open | pending (6.7.3) |
 | 8 | med | `set_text` without a value typed `<null>`; `submit` replaced a TextEdit's text; numbers typed as "42.0" | pending (6.7.3) |
@@ -40,13 +40,13 @@ hints, tests, docs).
 | 21 | low | The view's Save left the editor's global history unsaved | fixed (6.7.1): `save_all` clears the saved files' edited flags and, when no other project file has edits, saves the global history and emits `history_changed` (the title's "(*)" clears; bridge check part 2) |
 | 22 | low | Undo of an EXP edit baked an empty table; dialogs emitted without changes; unknown trait codes replaced on Apply | fixed (6.7.1): EXP setters re-bake only a baked table (undo exact; preview computes); list and curve dialogs skip no-op applies; unknown trait codes keep Apply disabled until a kind is chosen |
 | 23 | low | List edits applied by the row index captured at popup | fixed (6.7.1): `_apply_row` re-finds the row opened in the dialog, or warns and skips |
-| 24 | low | Troop page actor picker offered None (setter clamps to 1); equipment pickers stale after a dual-wield change | pending (6.7.2) |
-| 25 | low | Enemy action conditions as raw numbers (HP/MP basis points, state ID without picker) | pending (6.7.2) |
-| 26 | low | Record dialog: out-of-range enums and untouched out-of-range ints changed on Apply | pending (6.7.2) |
-| 27 | low | Large tables rebuilt the whole list and every picker on each change | pending (6.7.2) |
+| 24 | low | Troop page actor picker offered None (setter clamps to 1); equipment pickers stale after a dual-wield change | fixed (6.7.2): ID pickers take the range minimum (no None for a troop page's actor); equipment pickers list choices when opened and relabel on database changes (Dual Wield) |
+| 25 | low | Enemy action conditions as raw numbers (HP/MP basis points, state ID without picker) | fixed (6.7.2): action values shaped by condition (`JRPGRecordSpecs::Shape`, D-033): turn A/B, HP/MP percent band, state picker, level, switch; one Condition column ("HP 0% to 50%") |
+| 26 | low | Record dialog: out-of-range enums and untouched out-of-range ints changed on Apply | fixed (6.7.2): the record dialog keeps untouched fields exactly (out-of-range ints shown unclamped, unknown enums as "n (unknown)") |
+| 27 | low | Large tables rebuilt the whole list and every picker on each change | fixed (6.7.2): `entry_changed` signal; the entry list updates changed rows in place; `JRPGPicker` lists entries only when opened |
 | 28 | low | `JRPGEntry.assign_from` shared sub-resources despite its docs | fixed (6.7.1): `JRPGEntry::copy_value` deep-duplicates arrays, dictionaries and internal sub-resources |
 | 29 | low | Setup and addon install errors hidden | pending (6.7.4) |
 | 30 | low | Addon tool robustness (directory, pruning, zero-byte files, addon.cfg rewrites, builder paths) | pending (6.7.4) |
 | 31 | low | UI tool gaps (hidden OK, toggle values, non-integral indexes, hidden tab bars, root path, cross-window search, non-editable ranges, duplicate tool names) | pending (6.7.3) |
 | 32 | low | Missing setup idempotency and UI-tool dialog tests; unused include; static checks pass when tools are skipped | pending (6.7.4) |
-| 33 | low | Stale workspace guide, untranslatable non-literal strings, "before closing" on reload, double refresh on section select | pending (6.7.2/6.7.4) |
+| 33 | low | Stale workspace guide, untranslatable non-literal strings, "before closing" on reload, double refresh on section select | double refresh fixed (6.7.2: `select_section` refreshes once); guide, TTRC and wording pending (6.7.4) |

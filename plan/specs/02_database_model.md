@@ -53,7 +53,8 @@ small dictionaries or packed ints so tables stay compact:
 - **Effect**: `{code:int, data_id:int, value1:int, value2:int}` (percentages in basis points) — codes for RM-EFF-002..014 (recover HP/MP, gain
   TP, add/remove state, add/remove buff/debuff, special effect, grow, learn skill, common event).
 - **Learning**: `{level:int, skill_id:int, note:String}`; **Drop**: `{kind:int, data_id:int, denominator:int}`;
-  **Enemy action**: `{skill_id:int, condition_type:int, param1:int, param2:int, rating:int}` (HP/MP conditions in basis points);
+  **Enemy action**: `{skill_id:int, condition_type:int, param1:int, param2:int, rating:int}` (values by condition, D-033:
+  Turn A and repeat B, HP/MP band in basis points, State ID, Party Level, Switch ID);
   **Troop member**: `{enemy_id:int, x:int, y:int, hidden:bool}`.
 - Parameter curves: `PackedInt32Array` of 8 params × (max_level+1) values.
 Full field lists per table follow the inventory slices (03/04/05). The vertical slice (M1) implements the
@@ -92,7 +93,9 @@ Full field lists per table follow the inventory slices (03/04/05). The vertical 
   avoid huge inspectors; task 6.4.2). `JRPGInspectorPlugin` serves it and the main Inspector: integer properties that
   hold one ID (`JRPGReferenceScanner.get_id_target`, one table shared with the scanner) are searchable lists of the
   target's entries ("0003  Fire"; 0 None, -1 Normal Attack where the range allows it, missing IDs shown as such);
-  the name is shown first. Engine `resource_*` properties are hidden from inspectors (the table owns paths and
+  the name is shown first. A picker lists its entries only when it opens and otherwise shows just the current
+  value (`JRPGPicker`, 6.7.2: tables hold up to 100000 entries and forms refresh on every change); None and Normal
+  Attack are offered only where the property's range allows them (a troop page's actor starts at 1). Engine `resource_*` properties are hidden from inspectors (the table owns paths and
   scene-unique ids). Traits and effects (task 6.5.1) are a two-column list (Type, Content: "Fire × 150%") edited
   through a dialog with one tab per group (traits: Rates, Parameters, Attack, Skills, Equipment, Other; effects:
   Recover, States, Parameters, Other) and one radio row per kind; `JRPGTraitKinds` (editor) holds each code's
@@ -108,7 +111,12 @@ Full field lists per table follow the inventory slices (03/04/05). The vertical 
   weapons in slot 1, and in slot 2 with Dual Wield on the actor or its class; armors of the slot's type elsewhere.
 - Parameter arrays (weapon and armor bonuses, enemy parameters) are eight labeled number fields limited to the
   class's ranges (`JRPGEquipData` / `JRPGEnemyData::get_param_limits`); enemy drops (at most 3), enemy actions
-  and troop members (at most 8) are record lists. Form editors never report a change while only showing a value
+  and troop members (at most 8) are record lists. An enemy action's two values take their meaning from its condition
+  (`JRPGRecordSpecs::Shape`, 6.7.2): first turn and repeat for Turn, a percent band for HP and MP (stored in basis
+  points), a state picker for State, a level for Party Level, a switch for Switch; the list shows the condition with
+  its values ("HP 0% to 50%"). The record dialog keeps every field the user leaves alone exactly as stored, values
+  outside its ranges and unknown enum values included ("9 (unknown)"). Equipment pickers follow a Dual Wield trait
+  added to the actor or its class at once. Form editors never report a change while only showing a value
   (`Range::set_min` clamps and emits, scene/gui/range.cpp:224-232): viewing every table changes nothing.
 - System: the starting party is a list of actor pickers; the start position's map is an ID until the map list
   exists (picker with 8.3). Types: numbered rows whose IDs never move (rename in place, Add appends, Remove Last

@@ -36,6 +36,7 @@
 #include "core/io/dir_access.h"
 #include "core/io/file_access.h"
 #include "core/io/resource_loader.h"
+#include "tests/signal_watcher.h"
 #include "tests/test_macros.h"
 #include "tests/test_utils.h"
 
@@ -493,6 +494,35 @@ TEST_CASE("[JRPG][DatabaseEditing] Values are checked down to list elements, and
 	CHECK(set_one("system", 0, "battle_rules/tp_max", 60) == ERR_INVALID_PARAMETER);
 	ERR_PRINT_ON;
 	CHECK(rules->get_tp_max() == 50);
+	memdelete(editing);
+}
+
+TEST_CASE("[JRPG][DatabaseEditing] A change inside one entry names the entry; other changes do not") {
+	// Review finding 27: the Database section then updates that row instead of building the list again.
+	JRPGDatabaseEditing *editing = memnew(JRPGDatabaseEditing);
+	Ref<JRPGDatabase> db = JRPGProjectSetup::create_starter_database("Lantern Road");
+	editing->set_database(db);
+	SIGNAL_WATCH(editing, "entry_changed");
+	const auto once = [](const String &p_table, int p_id) {
+		Array emissions;
+		emissions.push_back(Array({ p_table, p_id })); // Array({ Array(...) }) would copy the inner array.
+		return emissions;
+	};
+	Ref<JRPGEntry> item = db->get_table(JRPGDatabase::TABLE_ITEMS)->get_entry(2);
+	item->set_entry_name("Ether");
+	SIGNAL_CHECK("entry_changed", once("items", 2));
+	CHECK(editing->set_maximum("items", 20) == OK); // The table itself changed.
+	SIGNAL_CHECK_FALSE("entry_changed");
+	Ref<JRPGTroopData> troop = db->get_table(JRPGDatabase::TABLE_TROOPS)->get_entry(1);
+	Ref<JRPGTroopPage> page;
+	page.instantiate();
+	troop->set_pages(TypedArray<JRPGTroopPage>({ page }));
+	SIGNAL_CHECK("entry_changed", once("troops", 1));
+	page->set_turn_end(true); // Inside an entry: its name did not change.
+	SIGNAL_CHECK("entry_changed", once("troops", 0));
+	db->get_system()->set_game_title("Lantern Road II"); // Not a table.
+	SIGNAL_CHECK_FALSE("entry_changed");
+	SIGNAL_UNWATCH(editing, "entry_changed");
 	memdelete(editing);
 }
 

@@ -32,11 +32,11 @@
 #include "jrpg_equipment_editor.h"
 
 #include "jrpg_database_editing.h"
+#include "jrpg_picker.h"
 
 #include "core/object/callable_mp.h"
 #include "scene/gui/grid_container.h"
 #include "scene/gui/label.h"
-#include "scene/gui/option_button.h"
 
 #include "modules/jrpg/core/jrpg_actor_data.h"
 #include "modules/jrpg/core/jrpg_armor_data.h"
@@ -124,6 +124,25 @@ Array get_choices(const Ref<JRPGDatabase> &p_database, const JRPGActorData *p_ac
 	return choices;
 }
 
+String get_choice_text(const Ref<JRPGDatabase> &p_database, const JRPGActorData *p_actor, int p_slot, int p_id) {
+	if (p_id == 0) {
+		return TTR("None");
+	}
+	if (p_database.is_valid()) {
+		const bool weapon = is_weapon_slot(p_database, p_actor, p_slot);
+		const Ref<JRPGTable> table = p_database->get_table(weapon ? JRPGDatabase::TABLE_WEAPONS : JRPGDatabase::TABLE_ARMORS);
+		if (table.is_valid() && table->has_entry(p_id)) {
+			const Ref<JRPGEntry> entry = table->get_entry(p_id);
+			const Ref<JRPGArmorData> armor = entry;
+			if (weapon || (armor.is_valid() && armor->get_equip_type_id() == p_slot + 1)) {
+				return entry_text(p_id, entry->get_entry_name());
+			}
+		}
+	}
+	// Kept and shown, never silently changed: an item of another slot, or one past its table.
+	return vformat(TTR("%04d (not for this slot)"), p_id);
+}
+
 } // namespace JRPGEquipmentSlots
 
 void JRPGEditorPropertyEquipment::_slot_selected(int p_index, int p_slot) {
@@ -140,29 +159,35 @@ void JRPGEditorPropertyEquipment::_slot_selected(int p_index, int p_slot) {
 }
 
 void JRPGEditorPropertyEquipment::_set_read_only(bool p_read_only) {
-	for (OptionButton *picker : pickers) {
+	for (JRPGPicker *picker : pickers) {
 		picker->set_disabled(p_read_only);
 	}
+}
+
+Array JRPGEditorPropertyEquipment::_slot_choices(int p_slot) {
+	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
+	return JRPGEquipmentSlots::get_choices(editing ? editing->get_database() : Ref<JRPGDatabase>(), Object::cast_to<JRPGActorData>(get_edited_object()), p_slot);
+}
+
+String JRPGEditorPropertyEquipment::_slot_text(int64_t p_id, int p_slot) {
+	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
+	return JRPGEquipmentSlots::get_choice_text(editing ? editing->get_database() : Ref<JRPGDatabase>(), Object::cast_to<JRPGActorData>(get_edited_object()), p_slot, int(p_id));
 }
 
 void JRPGEditorPropertyEquipment::update_property() {
 	const PackedInt32Array items = get_edited_property_value();
 	JRPGDatabaseEditing *editing = JRPGDatabaseEditing::get_singleton();
 	const Ref<JRPGDatabase> db = editing ? editing->get_database() : Ref<JRPGDatabase>();
-	const JRPGActorData *actor = Object::cast_to<JRPGActorData>(get_edited_object());
 	const PackedStringArray names = JRPGEquipmentSlots::get_slot_names(db, items.size());
 	while (pickers.size() < names.size()) {
+		const int slot = pickers.size();
 		Label *slot_label = memnew(Label);
 		grid->add_child(slot_label);
 		labels.push_back(slot_label);
-		OptionButton *picker = memnew(OptionButton);
+		JRPGPicker *picker = memnew(JRPGPicker);
 		picker->set_h_size_flags(SIZE_EXPAND_FILL);
-		picker->set_clip_text(true);
-		picker->set_fit_to_longest_item(false);
-		picker->set_search_bar_enabled(true);
-		picker->set_search_bar_min_item_count(10);
-		picker->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED); // Entry names are project data.
-		picker->connect(SceneStringName(item_selected), callable_mp(this, &JRPGEditorPropertyEquipment::_slot_selected).bind(pickers.size()));
+		picker->setup(callable_mp(this, &JRPGEditorPropertyEquipment::_slot_choices).bind(slot), callable_mp(this, &JRPGEditorPropertyEquipment::_slot_text).bind(slot));
+		picker->connect(SceneStringName(item_selected), callable_mp(this, &JRPGEditorPropertyEquipment::_slot_selected).bind(slot));
 		grid->add_child(picker);
 		add_focusable(picker);
 		pickers.push_back(picker);
@@ -176,25 +201,7 @@ void JRPGEditorPropertyEquipment::update_property() {
 		}
 		labels[slot]->set_text(names[slot]);
 		pickers[slot]->set_accessibility_name(names[slot]);
-		const int current = slot < items.size() ? items[slot] : 0;
-		OptionButton *picker = pickers[slot];
-		picker->clear();
-		int select_index = -1;
-		for (const Variant &v : JRPGEquipmentSlots::get_choices(db, actor, slot)) {
-			const Dictionary choice = v;
-			picker->add_item(choice["text"]);
-			picker->set_item_metadata(-1, choice["id"]);
-			if (int(choice["id"]) == current) {
-				select_index = picker->get_item_count() - 1;
-			}
-		}
-		if (select_index < 0) {
-			// Kept and shown, never silently changed: an item of another slot, or one past its table.
-			picker->add_item(vformat(TTR("%04d (not for this slot)"), current));
-			picker->set_item_metadata(-1, current);
-			select_index = picker->get_item_count() - 1;
-		}
-		picker->select(select_index);
+		pickers[slot]->set_value(slot < items.size() ? items[slot] : 0);
 	}
 }
 

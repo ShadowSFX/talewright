@@ -32,6 +32,7 @@
 #include "jrpg_system_editors.h"
 
 #include "jrpg_database_editing.h"
+#include "jrpg_picker.h"
 
 #include "core/object/callable_mp.h"
 #include "editor/themes/editor_scale.h"
@@ -40,7 +41,6 @@
 #include "scene/gui/grid_container.h"
 #include "scene/gui/label.h"
 #include "scene/gui/line_edit.h"
-#include "scene/gui/option_button.h"
 
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
@@ -103,13 +103,9 @@ void JRPGEditorPropertyIDList::update_property() {
 		const int row = pickers.size();
 		HBoxContainer *line = memnew(HBoxContainer);
 		rows->add_child(line);
-		OptionButton *picker = memnew(OptionButton);
+		JRPGPicker *picker = memnew(JRPGPicker);
 		picker->set_h_size_flags(SIZE_EXPAND_FILL);
-		picker->set_clip_text(true);
-		picker->set_fit_to_longest_item(false);
-		picker->set_search_bar_enabled(true);
-		picker->set_search_bar_min_item_count(10);
-		picker->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED); // Entry names are project data.
+		picker->setup_ids(target, 1); // Party members are actors; there is no "None" member.
 		picker->connect(SceneStringName(item_selected), callable_mp(this, &JRPGEditorPropertyIDList::_picked).bind(row));
 		line->add_child(picker);
 		add_focusable(picker);
@@ -131,25 +127,8 @@ void JRPGEditorPropertyIDList::update_property() {
 		pickers.remove_at(pickers.size() - 1);
 		removers.remove_at(removers.size() - 1);
 	}
-	const Ref<JRPGDatabase> db = current_database();
-	const PackedStringArray names = db.is_valid() ? JRPGReferenceScanner::get_target_names(db, target) : PackedStringArray();
 	for (int row = 0; row < values.size(); row++) {
-		OptionButton *picker = pickers[row];
-		picker->clear();
-		int selected_index = -1;
-		for (int i = 0; i < names.size(); i++) {
-			picker->add_item(names[i].is_empty() ? vformat("%04d", i + 1) : vformat("%04d  %s", i + 1, names[i]));
-			picker->set_item_metadata(-1, i + 1);
-			if (i + 1 == values[row]) {
-				selected_index = i;
-			}
-		}
-		if (selected_index < 0) {
-			picker->add_item(vformat(TTR("%04d (missing)"), values[row])); // Kept, never silently changed.
-			picker->set_item_metadata(-1, values[row]);
-			selected_index = picker->get_item_count() - 1;
-		}
-		picker->select(selected_index);
+		pickers[row]->set_value(values[row]); // Entries are listed when the picker opens (review finding 27).
 	}
 }
 
