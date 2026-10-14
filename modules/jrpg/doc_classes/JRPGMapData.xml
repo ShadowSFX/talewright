@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGMapData" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The data of one JRPG map: tile layers, shadows, regions and the map's properties.
+	</brief_description>
+	<description>
+		Each map is a scene whose root [JRPGMap] holds its [JRPGMapData] as a built-in resource, so map edits follow the scene's own undo history. Tools and servers read it without creating nodes ([method JRPGMapFiles.read_map_data]).
+		The four tile layers hold one palette index of the map's tileset per cell, row by row (0 for an empty cell). An autotile or wall cell holds only its kind; [JRPGAutotileResolver] picks the shape it shows. Shadows (four quarter bits) and regions (0 to 255) take one byte per cell. Every array always holds [code]size.x * size.y[/code] cells: data of another shape is fitted with a warning.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="bump_revision">
+			<return type="void" />
+			<description>
+				Raises [member revision] by one. Saves that change the layers or the events call it.
+			</description>
+		</method>
+		<method name="get_cell" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="layer" type="int" />
+			<param index="1" name="cell" type="Vector2i" />
+			<description>
+				Returns the palette index at [param cell] of [param layer] (one of [enum Layer]), or 0 outside the map.
+			</description>
+		</method>
+		<method name="get_cell_index" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="cell" type="Vector2i" />
+			<description>
+				Returns the position of [param cell] in the layer, region and shadow arrays (row by row).
+			</description>
+		</method>
+		<method name="get_layer" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<param index="0" name="layer" type="int" />
+			<description>
+				Returns the palette indexes of [param layer], row by row.
+			</description>
+		</method>
+		<method name="get_region" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="cell" type="Vector2i" />
+			<description>
+				Returns the region (0 to 255) of [param cell], or 0 outside the map.
+			</description>
+		</method>
+		<method name="get_resolver_flags" qualifiers="const">
+			<return type="int" enum="JRPGAutotileResolver.Flags" is_bitfield="true" />
+			<param index="0" name="edge_mode" type="int" enum="JRPGTilesetData.EdgeMode" />
+			<description>
+				Returns the [JRPGAutotileResolver] flags of this map drawn with a tileset whose edge mode is [param edge_mode]: its looping axes from [member scroll_type] and the edge mode.
+			</description>
+		</method>
+		<method name="get_shadow" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="cell" type="Vector2i" />
+			<description>
+				Returns the shadow quarters (4 bits) of [param cell], or 0 outside the map.
+			</description>
+		</method>
+		<method name="has_cell" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="cell" type="Vector2i" />
+			<description>
+				Returns [code]true[/code] if [param cell] is inside the map.
+			</description>
+		</method>
+		<method name="paint">
+			<return type="void" />
+			<param index="0" name="layer" type="int" />
+			<param index="1" name="cells" type="PackedInt32Array" />
+			<param index="2" name="values" type="PackedInt32Array" />
+			<description>
+				Writes [code]values[i][/code] to the cell at position [code]cells[i][/code] (from [method get_cell_index]) of [param layer], as one paint stroke or undo step. Cells outside the map are skipped with an error. Emits [signal cells_changed] once.
+			</description>
+		</method>
+		<method name="paint_regions">
+			<return type="void" />
+			<param index="0" name="cells" type="PackedInt32Array" />
+			<param index="1" name="values" type="PackedInt32Array" />
+			<description>
+				Writes regions (clamped to 0 to 255) to the cells at the given positions. Emits [signal cells_changed] with layer -1.
+			</description>
+		</method>
+		<method name="paint_shadows">
+			<return type="void" />
+			<param index="0" name="cells" type="PackedInt32Array" />
+			<param index="1" name="values" type="PackedInt32Array" />
+			<description>
+				Writes shadow quarters (the low 4 bits of each value) to the cells at the given positions. Emits [signal cells_changed] with layer -1.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="autoplay_bgm" type="bool" setter="set_autoplay_bgm" getter="is_autoplay_bgm" default="false">
+			If [code]true[/code], [member bgm] starts when the map is entered.
+		</member>
+		<member name="autoplay_bgs" type="bool" setter="set_autoplay_bgs" getter="is_autoplay_bgs" default="false">
+			If [code]true[/code], [member bgs] starts when the map is entered.
+		</member>
+		<member name="battleback" type="Dictionary" setter="set_battleback" getter="get_battleback" default="{}">
+			The battle backgrounds of encounters on this map: [code]image1[/code] and [code]image2[/code] as image paths. Empty for the defaults.
+		</member>
+		<member name="bgm" type="JRPGAudioCue" setter="set_bgm" getter="get_bgm">
+			The music this map plays when [member autoplay_bgm] is on.
+		</member>
+		<member name="bgs" type="JRPGAudioCue" setter="set_bgs" getter="get_bgs">
+			The background sound this map plays when [member autoplay_bgs] is on.
+		</member>
+		<member name="disable_dash" type="bool" setter="set_disable_dash" getter="is_disable_dash" default="false">
+			If [code]true[/code], the player cannot dash on this map.
+		</member>
+		<member name="display_name" type="String" setter="set_display_name" getter="get_display_name" default="&quot;&quot;">
+			The name the game shows for this map.
+		</member>
+		<member name="encounter_steps" type="int" setter="set_encounter_steps" getter="get_encounter_steps" default="30">
+			The average number of steps between random encounters.
+		</member>
+		<member name="encounters" type="Array" setter="set_encounters" getter="get_encounters" default="[]">
+			Random encounters, as dictionaries with [code]troop_id[/code], [code]weight[/code] and [code skip-lint]regions[/code] (a [PackedInt32Array]; empty for the whole map).
+		</member>
+		<member name="events" type="Array" setter="set_events" getter="get_events" default="[]">
+			The map's events.
+		</member>
+		<member name="layers" type="Array" setter="set_layers" getter="get_layers" default="[PackedInt32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), PackedInt32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), PackedInt32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), PackedInt32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]">
+			The four tile layers ([enum Layer]), each a [PackedInt32Array] of palette indexes, row by row.
+		</member>
+		<member name="map_id" type="int" setter="set_map_id" getter="get_map_id" default="0">
+			The map's ID, given by the map list ([JRPGMapList]). It never changes.
+		</member>
+		<member name="next_event_id" type="int" setter="set_next_event_id" getter="get_next_event_id" default="1">
+			The ID the next event added to this map gets.
+		</member>
+		<member name="note" type="String" setter="set_note" getter="get_note" default="&quot;&quot;">
+			Free text for the map's author.
+		</member>
+		<member name="parallax" type="Dictionary" setter="set_parallax" getter="get_parallax" default="{}">
+			The parallax background: [code]image[/code], [code]loop_x[/code], [code]loop_y[/code], [code]scroll_x[/code], [code]scroll_y[/code] and [code]show_in_editor[/code].
+		</member>
+		<member name="regions" type="PackedByteArray" setter="set_regions" getter="get_regions" default="PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)">
+			The region of every cell (0 to 255), row by row.
+		</member>
+		<member name="revision" type="int" setter="set_revision" getter="get_revision" default="0">
+			Raised by every save that changes the layers or the events, so saved games can tell the map changed.
+		</member>
+		<member name="schema_version" type="int" setter="set_schema_version" getter="get_schema_version" default="-1">
+			The data format version this map follows.
+		</member>
+		<member name="scroll_type" type="int" setter="set_scroll_type" getter="get_scroll_type" enum="JRPGMapData.ScrollType" default="0">
+			Which axes of the map loop around.
+		</member>
+		<member name="shadows" type="PackedByteArray" setter="set_shadows" getter="get_shadows" default="PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)">
+			The shadow quarters of every cell (4 bits: top left, top right, bottom left, bottom right), row by row.
+		</member>
+		<member name="size" type="Vector2i" setter="set_size" getter="get_size" default="Vector2i(20, 15)">
+			The map's size in cells (1 to [constant MAX_SIDE] on each axis). Changing it keeps the cells both sizes share, from the top left.
+		</member>
+		<member name="tileset_id" type="int" setter="set_tileset_id" getter="get_tileset_id" default="1">
+			The database tileset ([JRPGTilesetData]) whose palette the layers use.
+		</member>
+	</members>
+	<signals>
+		<signal name="cells_changed">
+			<param index="0" name="layer" type="int" />
+			<param index="1" name="cells" type="PackedInt32Array" />
+			<description>
+				Emitted when cells of [param layer] (-1 for regions and shadows) were painted. [param cells] holds their positions.
+			</description>
+		</signal>
+		<signal name="layout_changed">
+			<description>
+				Emitted when the size, the tileset, the scroll type or whole arrays changed, so views build everything again.
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="SCROLL_NONE" value="0" enum="ScrollType">
+			The map does not loop.
+		</constant>
+		<constant name="SCROLL_LOOP_VERTICAL" value="1" enum="ScrollType">
+			The top and bottom edges are neighbors.
+		</constant>
+		<constant name="SCROLL_LOOP_HORIZONTAL" value="2" enum="ScrollType">
+			The left and right edges are neighbors.
+		</constant>
+		<constant name="SCROLL_LOOP_BOTH" value="3" enum="ScrollType">
+			Both axes loop.
+		</constant>
+		<constant name="LAYER_GROUND" value="0" enum="Layer">
+			The bottom tile layer.
+		</constant>
+		<constant name="LAYER_GROUND_DETAIL" value="1" enum="Layer">
+			The tile layer above the ground.
+		</constant>
+		<constant name="LAYER_OBJECTS" value="2" enum="Layer">
+			The tile layer for objects.
+		</constant>
+		<constant name="LAYER_UPPER" value="3" enum="Layer">
+			The top tile layer.
+		</constant>
+		<constant name="LAYER_COUNT" value="4" enum="Layer">
+			The number of tile layers.
+		</constant>
+		<constant name="MAX_SIDE" value="512">
+			The largest number of cells on one axis.
+		</constant>
+	</constants>
+</class>

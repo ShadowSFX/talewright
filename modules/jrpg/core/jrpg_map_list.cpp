@@ -1,0 +1,200 @@
+/**************************************************************************/
+/*  jrpg_map_list.cpp                                                     */
+/**************************************************************************/
+/*                         This file is part of:                          */
+/*                               TALEWRIGHT                               */
+/*         a JRPG-focused fork of the Godot Engine (MIT License)          */
+/**************************************************************************/
+/* Copyright (c) 2026-present Talewright contributors.                    */
+/* Based on the Godot Engine, Copyright (c) 2014-present Godot Engine     */
+/* contributors and (c) 2007-2014 Juan Linietsky, Ariel Manzur.           */
+/*                                                                        */
+/* Permission is hereby granted, free of charge, to any person obtaining  */
+/* a copy of this software and associated documentation files (the        */
+/* "Software"), to deal in the Software without restriction, including    */
+/* without limitation the rights to use, copy, modify, merge, publish,    */
+/* distribute, sublicense, and/or sell copies of the Software, and to     */
+/* permit persons to whom the Software is furnished to do so, subject to  */
+/* the following conditions:                                              */
+/*                                                                        */
+/* The above copyright notice and this permission notice shall be         */
+/* included in all copies or substantial portions of the Software.        */
+/*                                                                        */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY   */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,   */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE      */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
+/**************************************************************************/
+
+#include "jrpg_map_list.h"
+
+#include "jrpg_schema.h"
+
+#include "core/object/class_db.h"
+#include "core/templates/hash_set.h"
+
+int JRPGMapList::_find(int p_map_id) const {
+	for (int i = 0; i < maps.size(); i++) {
+		if (int(Dictionary(maps[i]).get("map_id", 0)) == p_map_id) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+void JRPGMapList::set_maps(const Array &p_maps) {
+	maps.clear();
+	HashSet<int> seen;
+	for (int i = 0; i < p_maps.size(); i++) {
+		const Dictionary map = p_maps[i];
+		const int id = map.get("map_id", 0);
+		if (id <= 0 || seen.has(id)) {
+			WARN_PRINT(vformat("JRPGMapList \"%s\": entry %d has %s map_id %d; it is dropped.", get_path(), i, id <= 0 ? "no valid" : "a repeated", id));
+			continue;
+		}
+		seen.insert(id);
+		Dictionary entry;
+		entry["map_id"] = id;
+		entry["name"] = String(map.get("name", ""));
+		entry["parent_id"] = int(map.get("parent_id", 0));
+		entry["scene"] = String(map.get("scene", ""));
+		maps.push_back(entry);
+		next_map_id = MAX(next_map_id, id + 1);
+	}
+	emit_changed();
+}
+
+void JRPGMapList::set_next_map_id(int p_id) {
+	next_map_id = MAX(next_map_id, MAX(1, p_id)); // Never lowered: ids are not reused.
+	emit_changed();
+}
+
+int JRPGMapList::reserve_id() {
+	const int id = next_map_id++;
+	emit_changed();
+	return id;
+}
+
+int JRPGMapList::add_map(const String &p_name, const String &p_scene, int p_parent_id) {
+	ERR_FAIL_COND_V_MSG(p_parent_id != 0 && !has_map(p_parent_id), 0, vformat("JRPGMapList: there is no map %d to add under.", p_parent_id));
+	const int id = next_map_id;
+	add_map_with_id(id, p_name, p_scene, p_parent_id);
+	return id;
+}
+
+Error JRPGMapList::add_map_with_id(int p_map_id, const String &p_name, const String &p_scene, int p_parent_id) {
+	ERR_FAIL_COND_V_MSG(p_map_id <= 0 || has_map(p_map_id), ERR_ALREADY_IN_USE, vformat("JRPGMapList: map id %d is not free.", p_map_id));
+	ERR_FAIL_COND_V(p_parent_id != 0 && !has_map(p_parent_id), ERR_DOES_NOT_EXIST);
+	Dictionary entry;
+	entry["map_id"] = p_map_id;
+	entry["name"] = p_name;
+	entry["parent_id"] = p_parent_id;
+	entry["scene"] = p_scene;
+	// After the parent's last descendant, so the list order stays the tree order.
+	int at = maps.size();
+	if (p_parent_id != 0) {
+		HashSet<int> family;
+		family.insert(p_parent_id);
+		at = _find(p_parent_id) + 1;
+		while (at < maps.size() && family.has(int(Dictionary(maps[at]).get("parent_id", 0)))) {
+			family.insert(int(Dictionary(maps[at]).get("map_id", 0)));
+			at++;
+		}
+	}
+	maps.insert(at, entry);
+	next_map_id = MAX(next_map_id, p_map_id + 1);
+	emit_changed();
+	return OK;
+}
+
+Error JRPGMapList::remove_map(int p_map_id) {
+	const int index = _find(p_map_id);
+	ERR_FAIL_COND_V(index < 0, ERR_DOES_NOT_EXIST);
+	const int parent = Dictionary(maps[index]).get("parent_id", 0);
+	maps.remove_at(index);
+	for (int i = 0; i < maps.size(); i++) {
+		Dictionary map = maps[i];
+		if (int(map.get("parent_id", 0)) == p_map_id) {
+			map["parent_id"] = parent;
+		}
+	}
+	emit_changed();
+	return OK;
+}
+
+Dictionary JRPGMapList::get_map(int p_map_id) const {
+	const int index = _find(p_map_id);
+	return index >= 0 ? Dictionary(maps[index]).duplicate() : Dictionary();
+}
+
+PackedInt32Array JRPGMapList::get_map_ids() const {
+	PackedInt32Array ids;
+	for (int i = 0; i < maps.size(); i++) {
+		ids.push_back(Dictionary(maps[i]).get("map_id", 0));
+	}
+	return ids;
+}
+
+String JRPGMapList::get_scene(int p_map_id) const {
+	const int index = _find(p_map_id);
+	return index >= 0 ? String(Dictionary(maps[index]).get("scene", "")) : String();
+}
+
+Error JRPGMapList::set_map_name(int p_map_id, const String &p_name) {
+	const int index = _find(p_map_id);
+	ERR_FAIL_COND_V(index < 0, ERR_DOES_NOT_EXIST);
+	Dictionary map = maps[index]; // Shared with the list: edited in place.
+	map["name"] = p_name;
+	emit_changed();
+	return OK;
+}
+
+Error JRPGMapList::set_scene(int p_map_id, const String &p_scene) {
+	const int index = _find(p_map_id);
+	ERR_FAIL_COND_V(index < 0, ERR_DOES_NOT_EXIST);
+	Dictionary map = maps[index];
+	map["scene"] = p_scene;
+	emit_changed();
+	return OK;
+}
+
+int JRPGMapList::find_by_scene(const String &p_scene) const {
+	for (int i = 0; i < maps.size(); i++) {
+		const Dictionary map = maps[i];
+		if (String(map.get("scene", "")) == p_scene) {
+			return map.get("map_id", 0);
+		}
+	}
+	return 0;
+}
+
+bool JRPGMapList::_set(const StringName &p_name, const Variant &p_value) {
+	return JRPGSchema::set_renamed(this, p_name, p_value);
+}
+
+void JRPGMapList::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_schema_version", "version"), &JRPGMapList::set_schema_version);
+	ClassDB::bind_method(D_METHOD("get_schema_version"), &JRPGMapList::get_schema_version);
+	ClassDB::bind_method(D_METHOD("set_maps", "maps"), &JRPGMapList::set_maps);
+	ClassDB::bind_method(D_METHOD("get_maps"), &JRPGMapList::get_maps);
+	ClassDB::bind_method(D_METHOD("set_next_map_id", "id"), &JRPGMapList::set_next_map_id);
+	ClassDB::bind_method(D_METHOD("get_next_map_id"), &JRPGMapList::get_next_map_id);
+	ClassDB::bind_method(D_METHOD("reserve_id"), &JRPGMapList::reserve_id);
+	ClassDB::bind_method(D_METHOD("add_map", "name", "scene", "parent_id"), &JRPGMapList::add_map, DEFVAL(0));
+	ClassDB::bind_method(D_METHOD("add_map_with_id", "map_id", "name", "scene", "parent_id"), &JRPGMapList::add_map_with_id, DEFVAL(0));
+	ClassDB::bind_method(D_METHOD("remove_map", "map_id"), &JRPGMapList::remove_map);
+	ClassDB::bind_method(D_METHOD("has_map", "map_id"), &JRPGMapList::has_map);
+	ClassDB::bind_method(D_METHOD("get_map", "map_id"), &JRPGMapList::get_map);
+	ClassDB::bind_method(D_METHOD("get_map_ids"), &JRPGMapList::get_map_ids);
+	ClassDB::bind_method(D_METHOD("get_scene", "map_id"), &JRPGMapList::get_scene);
+	ClassDB::bind_method(D_METHOD("set_map_name", "map_id", "name"), &JRPGMapList::set_map_name);
+	ClassDB::bind_method(D_METHOD("set_scene", "map_id", "scene"), &JRPGMapList::set_scene);
+	ClassDB::bind_method(D_METHOD("find_by_scene", "scene"), &JRPGMapList::find_by_scene);
+
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "schema_version", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR), "set_schema_version", "get_schema_version");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "maps", PROPERTY_HINT_ARRAY_TYPE, "Dictionary"), "set_maps", "get_maps");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "next_map_id", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR), "set_next_map_id", "get_next_map_id");
+}

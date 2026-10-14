@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGMap" inherits="Node2D" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The root node of a JRPG map scene.
+	</brief_description>
+	<description>
+		Holds the map's [JRPGMapData] as a built-in resource of the scene, so the map's edits follow the scene's undo history and save with it. Any other node can be added under it.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="map_data" type="JRPGMapData" setter="set_map_data" getter="get_map_data">
+			The map's data.
+		</member>
+	</members>
+</class>

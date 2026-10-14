@@ -25,13 +25,25 @@ Each map is a scene `res://jrpg/maps/map_NNNN.tscn` whose root is a `JRPGMap` no
 | `tileset_id` | int | JRPGTilesetData |
 | `size` | Vector2i | cells (1..256 per axis default, 512 max) |
 | `layers` | Array[PackedInt32Array] | 4 tile layers (ground, ground detail, objects, upper), `size.x*size.y` each; cell value = palette index (0 empty) |
-| `shadow` | PackedByteArray | 4 bits per cell (quarter shadows) |
+| `shadows` | PackedByteArray | 4 bits per cell (quarter shadows), one byte per cell |
 | `regions` | PackedByteArray | region id 0..255 per cell |
 | `scroll_type` | enum | none / loop vertical / loop horizontal / loop both |
-| `bgm`, `bgs`, `battleback1/2`, `parallax` | dictionaries | autoplay + parameters |
+| `bgm`, `bgs` + `autoplay_bgm`, `autoplay_bgs` | `JRPGAudioCue` + bool | the System's cue type (7.x reuse) |
+| `battleback`, `parallax` | dictionaries | `{image1, image2}`; `{image, loop_x, loop_y, scroll_x, scroll_y, show_in_editor}` |
 | `encounters` | Array[Dictionary] | `{troop_id, weight, regions:PackedInt32Array}` + `encounter_steps` (see below) |
 | `disable_dash`, `next_event_id` | | |
 | `events` | Array[JRPGEventData] | spec 03 |
+
+Implementation (8.1.1): every array always holds `size.x * size.y` cells (other shapes are fitted with a warning);
+`set_size` keeps the top-left overlap; `paint` / `paint_regions` / `paint_shadows` take cell positions and values as
+one stroke and emit `cells_changed(layer, cells)` (layer -1 for regions and shadows) so views update only around them;
+size, tileset, scroll type or whole-array changes emit `layout_changed`; `get_resolver_flags(edge_mode)` gives the
+resolver's flags. `JRPGMapList` stores `{map_id, name, parent_id, scene}` in tree order with a `next_map_id` that only
+grows (ids are never reused). `JRPGMapFiles` (runtime) reads a scene's `JRPGMapData` from its `SceneState` and scans
+map scenes: an id claimed twice stays with the scene the list names (else the older file), the other gets a fresh id
+past every claimed one, saved into its scene with a warning; unlisted scenes are added.
+Authority (D-007): map data is content, identical on clients and servers and never changed at runtime; the server
+owns what happens on the map (positions, events), the client's `JRPGMap` only presents it.
 
 ### Random encounters
 `encounter_steps` is the documented *average* number of steps between encounters (RM-MPR-008; the distribution is

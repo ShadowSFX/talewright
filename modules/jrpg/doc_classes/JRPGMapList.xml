@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGMapList" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		The project's maps: their IDs, names, tree order and scene files.
+	</brief_description>
+	<description>
+		The map list ([code]res://jrpg/map_list.tres[/code]) is the source of truth for map IDs. Each map is a dictionary with [code]map_id[/code], [code]name[/code], [code]parent_id[/code] (0 for the top level) and [code]scene[/code] (the path of its scene). The list order is the tree order. IDs are never reused: a removed map's ID never comes back for another map.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_map">
+			<return type="int" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="scene" type="String" />
+			<param index="2" name="parent_id" type="int" default="0" />
+			<description>
+				Adds a map at the end of the children of [param parent_id] and returns its new ID, or 0 when [param parent_id] is not a map.
+			</description>
+		</method>
+		<method name="add_map_with_id">
+			<return type="int" enum="Error" />
+			<param index="0" name="map_id" type="int" />
+			<param index="1" name="name" type="String" />
+			<param index="2" name="scene" type="String" />
+			<param index="3" name="parent_id" type="int" default="0" />
+			<description>
+				Adds a map with an ID found elsewhere (a scene scan). Fails when the ID is in use.
+			</description>
+		</method>
+		<method name="find_by_scene" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="scene" type="String" />
+			<description>
+				Returns the ID of the map whose scene is [param scene], or 0.
+			</description>
+		</method>
+		<method name="get_map" qualifiers="const">
+			<return type="Dictionary" />
+			<param index="0" name="map_id" type="int" />
+			<description>
+				Returns a copy of the map [param map_id], or an empty dictionary.
+			</description>
+		</method>
+		<method name="get_map_ids" qualifiers="const">
+			<return type="PackedInt32Array" />
+			<description>
+				Returns every map ID in tree order.
+			</description>
+		</method>
+		<method name="get_scene" qualifiers="const">
+			<return type="String" />
+			<param index="0" name="map_id" type="int" />
+			<description>
+				Returns the scene path of the map [param map_id], or an empty string.
+			</description>
+		</method>
+		<method name="has_map" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="map_id" type="int" />
+			<description>
+				Returns [code]true[/code] if the list has the map [param map_id].
+			</description>
+		</method>
+		<method name="remove_map">
+			<return type="int" enum="Error" />
+			<param index="0" name="map_id" type="int" />
+			<description>
+				Removes the map [param map_id]. Its children move up to its parent.
+			</description>
+		</method>
+		<method name="reserve_id">
+			<return type="int" />
+			<description>
+				Returns an ID never handed out before.
+			</description>
+		</method>
+		<method name="set_map_name">
+			<return type="int" enum="Error" />
+			<param index="0" name="map_id" type="int" />
+			<param index="1" name="name" type="String" />
+			<description>
+				Renames the map [param map_id].
+			</description>
+		</method>
+		<method name="set_scene">
+			<return type="int" enum="Error" />
+			<param index="0" name="map_id" type="int" />
+			<param index="1" name="scene" type="String" />
+			<description>
+				Sets the scene path of the map [param map_id].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="maps" type="Array" setter="set_maps" getter="get_maps" default="[]">
+			The maps in tree order. Entries without a positive, unique [code]map_id[/code] are dropped with a warning.
+		</member>
+		<member name="next_map_id" type="int" setter="set_next_map_id" getter="get_next_map_id" default="1">
+			The ID the next new map gets. It only grows.
+		</member>
+		<member name="schema_version" type="int" setter="set_schema_version" getter="get_schema_version" default="1">
+			The data format version this list follows.
+		</member>
+	</members>
+</class>

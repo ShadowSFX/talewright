@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 03:17 -0600
+- **Updated:** 2026-10-14 03:28 -0600
 - **Current task:** none
-- **Last completed:** 7.6.3 Epic 7 close-out
-- **Next task:** 8.1 JRPGMap node + spike
-- **Done leaf tasks:** 97
+- **Last completed:** 8.1.1 Map data and map list
+- **Next task:** 8.1.2 JRPGMap node
+- **Done leaf tasks:** 98
 <!-- status:end -->
 
 ## Log
@@ -262,4 +262,7 @@
 | 2026-10-14 03:07 -0600 | 7.6.2 | started: Review fixes: tile flags, tileset form, bridge tools (containers: 7.6 pending->in_progress, 7 pending->in_progress) |  |
 | 2026-10-14 03:16 -0600 | 7.6.2 | done: Review fixes: tile flags, tileset form, bridge tools — Part B review fixes (plan/evidence/reviews/epic_7.md): stale bakes from Godot's TileSet editor count as changes to save (get_stale_tilesets/has_changes_to_save in the unsaved status, save_external_data, Database section Save + status; watched TileSets), cleared bake without a TileSet; overlay/click rects unexpanded and RTL-mirrored (icon_rect); set_image timeout 25 s and rescans; set_tile_flags reports changes (tool changed/undoable); jrpg_tileset_flags reports sources/terrain sets, round trips compare them, create round-tripped (74/74); per-form mode; Menu key ignored; force_fixed_history; mixed marker + transformed note; create_tileset refuses to orphan a palette unless replace; save_all reports what it wrote; frames 1-64. Doctests for each; bridge evidence 7.6.2-*. (containers: 7.6 in_progress->pending, 7 in_progress->pending) | 133cb6e076 |
 | 2026-10-14 03:16 -0600 | 7.6.3 | started: Epic 7 close-out (containers: 7.6 pending->in_progress, 7 pending->in_progress) |  |
-| 2026-10-14 03:17 -0600 | 7.6.3 | done: Epic 7 close-out — Epic 7 close-out: review log plan/evidence/reviews/epic_7.md (23 findings, all fixed or answered); plain_2d/plain_3d smoke ALL PASS with a rebuilt release template; core_diff_check 0 unlisted; tests 1532 pass; static checks ALL PASS; pushed talewright to origin. (containers: 7.6 in_progress->done, 7 in_progress->done) | pending |
+| 2026-10-14 03:17 -0600 | 7.6.3 | done: Epic 7 close-out — Epic 7 close-out: review log plan/evidence/reviews/epic_7.md (23 findings, all fixed or answered); plain_2d/plain_3d smoke ALL PASS with a rebuilt release template; core_diff_check 0 unlisted; tests 1532 pass; static checks ALL PASS; pushed talewright to origin. (containers: 7.6 in_progress->done, 7 in_progress->done) | c2fabd838a |
+| 2026-10-14 03:18 -0600 | - | imported 3 new / 1 updated tasks | |
+| 2026-10-14 03:18 -0600 | 8.1.1 | started: Map data and map list (containers: 8.1 pending->in_progress, 8 pending->in_progress) |  |
+| 2026-10-14 03:28 -0600 | 8.1.1 | done: Map data and map list — Core JRPGMapData (spec 05 properties, 4 palette-index layers + shadow/region bytes always sized to the map, fitted with a warning; set_size keeps the top-left overlap; paint/paint_regions/paint_shadows as strokes emitting cells_changed; layout_changed for structural changes; schema version; get_resolver_flags) and JRPGMapList (map_id/name/parent/scene in tree order, ids never reused); runtime JRPGMapFiles (map data from a scene's SceneState without instancing; scan: an id claimed twice stays with the listed scene, else the older file; the other gets a fresh id past all claimed ids, saved into its scene with a warning; unlisted scenes added); minimal JRPGMap node (map_data). Docs for the 4 classes; doctests (sizes, paint, resize, fitting, flags, save/load, list tree order and id reuse, SceneState read, duplicate scan with a newer copy). Spec 05 updated (cues, authority D-007). (containers: 8.1 in_progress->pending, 8 in_progress->pending) | pending |

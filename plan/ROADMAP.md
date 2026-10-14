@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 110, in_progress: 0, done: 122, blocked: 0, deferred: 3 (of 235)
+**Totals:** pending: 112, in_progress: 0, done: 123, blocked: 0, deferred: 3 (of 238)
 
 ## [x] 0 Bootstrap and task system
 
@@ -158,13 +158,16 @@ Original generated assets, autotile importer and resolver, tileset flags.
 - [x] **7.6** Epic review: assets (P1) _(deps: 7.5, 7.4)_
   - [x] **7.6.1** Review fixes: assets, autotile core, importer, resolver (P1) _(commit: a47cb524f1)_
   - [x] **7.6.2** Review fixes: tile flags, tileset form, bridge tools (P1) _(deps: 7.6.1; commit: 133cb6e076)_
-  - [x] **7.6.3** Epic 7 close-out (P1) _(deps: 7.6.2; commit: pending)_
+  - [x] **7.6.3** Epic 7 close-out (P1) _(deps: 7.6.2; commit: c2fabd838a)_
 
 ## [ ] 8 Maps
 
 JRPGMap scenes, map editor canvas, cell cache, runtime map and movement.
 
 - [ ] **8.1** JRPGMap node + spike (P1)
+  - [x] **8.1.1** Map data and map list (P1) _(commit: pending)_
+  - [ ] **8.1.2** JRPGMap node (P1) _(deps: 8.1.1)_
+  - [ ] **8.1.3** Map scene spike (P1) _(deps: 8.1.2)_
 - [ ] **8.2** Map cell cache compiler (P1) _(deps: 8.1)_
 - [ ] **8.3** Map list and properties (P1) _(deps: 8.1)_
 - [ ] **8.4** Map canvas tools (P1) _(deps: 8.3, 7.4)_

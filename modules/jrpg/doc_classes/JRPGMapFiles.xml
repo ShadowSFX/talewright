@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGMapFiles" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Reads map scenes without instancing them and keeps map IDs unique.
+	</brief_description>
+	<description>
+		Tools, the map list and servers read a map's [JRPGMapData] from its scene file through the scene's stored state, without creating any node.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="read_map_data" qualifiers="static">
+			<return type="JRPGMapData" />
+			<param index="0" name="path" type="String" />
+			<description>
+				Returns the [JRPGMapData] of the map scene at [param path], or [code]null[/code].
+			</description>
+		</method>
+		<method name="read_map_data_from" qualifiers="static">
+			<return type="JRPGMapData" />
+			<param index="0" name="scene" type="PackedScene" />
+			<description>
+				Returns the [JRPGMapData] stored by the root node of [param scene], or [code]null[/code].
+			</description>
+		</method>
+		<method name="scan" qualifiers="static">
+			<return type="Dictionary" />
+			<param index="0" name="list" type="JRPGMapList" />
+			<param index="1" name="scene_paths" type="PackedStringArray" />
+			<description>
+				Checks the map scenes [param scene_paths] against [param list]. When two scenes claim one map ID (a copied file), the scene the list names, or else the one modified first, keeps it; the other gets a fresh ID, saved into its scene, with a warning. Scenes the list lacks are added. Returns a dictionary with [code]reassigned[/code] ([code]{scene, old_id, new_id}[/code] entries) and [code]added[/code] ([code]{scene, map_id}[/code] entries).
+			</description>
+		</method>
+	</methods>
+</class>
