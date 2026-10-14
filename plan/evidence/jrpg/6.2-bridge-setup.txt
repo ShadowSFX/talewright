@@ -1,0 +1,83 @@
+# 6.2 bridge verification (scratch project with a user-mapped jrpg_ok = K)
+## first run (jrpg_setup_project)
+{
+  "enabled_setting": "turned_on",
+  "addon": {
+    "version": "1-67c20d5c6fe4",
+    "added": [
+      "LICENSE.txt",
+      "README.md"
+    ],
+    "replaced": [],
+    "unchanged": [],
+    "kept_modified": []
+  },
+  "changed": true,
+  "created": [
+    "res://jrpg",
+    "res://jrpg/db",
+    "res://jrpg/maps",
+    "res://jrpg/db/actors.tres",
+    "res://jrpg/db/classes.tres",
+    "res://jrpg/db/skills.tres",
+    "res://jrpg/db/items.tres",
+    "res://jrpg/db/weapons.tres",
+    "res://jrpg/db/armors.tres",
+    "res://jrpg/db/enemies.tres",
+    "res://jrpg/db/troops.tres",
+    "res://jrpg/db/states.tres",
+    "res://jrpg/db/animations.tres",
+    "res://jrpg/db/tilesets.tres",
+    "res://jrpg/db/common_events.tres",
+    "res://jrpg/db/system.tres",
+    "res://jrpg/db/types.tres",
+    "res://jrpg/db/terms.tres",
+    "res://jrpg/database.tres"
+  ],
+  "input_actions_added": [
+    "jrpg_up",
+    "jrpg_down",
+    "jrpg_left",
+    "jrpg_right",
+    "jrpg_cancel",
+    "jrpg_menu",
+    "jrpg_dash",
+    "jrpg_page_prev",
+    "jrpg_page_next"
+  ],
+  "input_actions_kept": [
+    "jrpg_ok"
+  ],
+  "game_id": "3fa9418bf07c80b3"
+}
+## second run
+{
+  "enabled_setting": "already_on",
+  "addon": {
+    "version": "1-67c20d5c6fe4",
+    "added": [],
+    "replaced": [],
+    "unchanged": [
+      "LICENSE.txt",
+      "README.md"
+    ],
+    "kept_modified": []
+  },
+  "changed": false,
+  "created": [],
+  "input_actions_added": [],
+  "input_actions_kept": [
+    "jrpg_up",
+    "jrpg_down",
+    "jrpg_left",
+    "jrpg_right",
+    "jrpg_ok",
+    "jrpg_cancel",
+    "jrpg_menu",
+    "jrpg_dash",
+    "jrpg_page_prev",
+    "jrpg_page_next"
+  ],
+  "game_id": "3fa9418bf07c80b3"
+}
+## jrpg_ok kept as mapped by the user: keycode 75 (K); 10 jrpg_* actions; jrpg/enabled=true (project.godot)

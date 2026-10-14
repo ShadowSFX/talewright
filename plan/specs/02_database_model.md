@@ -13,6 +13,19 @@ res://jrpg/db/terms.tres            JRPGTermsData
 ```
 Text `.tres` keeps diffs readable; exports convert to binary automatically.
 
+## Starter database (setup tool, task 6.2)
+`JRPGProjectSetup` (Project ▸ Tools ▸ Set Up JRPG Project…) writes the files above when missing, with Talewright's
+own starter content: actors (4 slots; 1 "Hero", class 1, starting with weapon 1 and armor 1), classes (4; 1
+"Adventurer": baked EXP table, linear parameter curves, can equip swords, clothing, light armor and shields, attacks
+with element 1, 95 % hit / 5 % evasion), skills (8; 1 "Attack" `a.atk * 3 - b.def * 2`, 2 "Guard" adding state 2),
+items (8; 1 "Herb Tonic" restoring 300 HP), weapons (8; 1 "Short Sword", attack +10), armors (8; 1 "Leather Vest",
+body, defense +5), enemies (8; 1 "Moss Blob" using skill 1, dropping item 1 at 1 in 4), troops (8; 1 with two Moss
+Blobs), states (8; 1 "Knocked Out", 2 "Guarding" with the guard flag for one turn), animations (8), tilesets (4),
+common events (8), System (game title from the project name, a new game id, starting party [1], no start map until
+maps exist), default types and terms. Every reference resolves (`JRPGReferenceScanner.find_dangling` is empty).
+Existing files are never overwritten; a table missing from an existing manifest is added. Theme and placeholder
+assets join when the asset generator exists (task 7.1).
+
 ## IDs
 - **ID = slot** (RPG Maker model): `entries[0]` is ID 1. IDs never move: no reordering, "delete" clears an entry to
   its defaults, "Change Maximum" grows/shrinks the array (shrinking warns when the reference scanner finds uses).

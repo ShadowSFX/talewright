@@ -38,9 +38,10 @@ class Label;
 class LinkButton;
 class PanelContainer;
 
-// Contents of the JRPG main screen. Until the project is set up (task 6.2) it shows an empty state: what setting up
-// does, the setup action, a way to turn the workspace off, and a link to the guide. Colors, fonts and frames come
-// from the editor theme only.
+// Contents of the JRPG main screen. Until the project is set up it shows an empty state: what setting up does, the
+// setup action, a way to turn the workspace off, and a link to the guide. Once res://jrpg/database.tres exists it
+// shows a "ready" state that opens the starter database (the full workspace shell is task 6.3). Colors, fonts and
+// frames come from the editor theme only.
 class JRPGWorkspaceView : public VBoxContainer {
 	GDCLASS(JRPGWorkspaceView, VBoxContainer);
 
@@ -53,7 +54,11 @@ class JRPGWorkspaceView : public VBoxContainer {
 	Button *turn_off_button = nullptr;
 	LinkButton *guide_link = nullptr;
 
+	bool ready_state = false;
+
 	void _update_column_width();
+	void _update_state();
+	void _on_primary_pressed();
 	void _turn_off_workspace();
 	void _open_guide();
 

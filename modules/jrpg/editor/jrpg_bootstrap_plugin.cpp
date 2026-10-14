@@ -31,10 +31,12 @@
 
 #include "jrpg_bootstrap_plugin.h"
 
+#include "jrpg_setup_dialog.h"
 #include "jrpg_workspace_plugin.h"
 
 #include "core/config/project_settings.h"
 #include "core/object/callable_mp.h"
+#include "editor/editor_interface.h"
 #include "editor/editor_node.h"
 
 void JRPGBootstrapPlugin::_sync_workspace() {
@@ -62,6 +64,9 @@ void JRPGBootstrapPlugin::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
 			ProjectSettings::get_singleton()->connect("settings_changed", callable_mp(this, &JRPGBootstrapPlugin::_on_project_settings_changed));
+			setup_dialog = memnew(JRPGSetupDialog);
+			EditorInterface::get_singleton()->get_base_control()->add_child(setup_dialog);
+			add_tool_menu_item(TTR(SETUP_MENU_ITEM), callable_mp_static(&JRPGSetupDialog::run_setup));
 			// Deferred so the JRPG tab is added after the editor's own main screens.
 			callable_mp(this, &JRPGBootstrapPlugin::_sync_workspace).call_deferred();
 		} break;
@@ -69,6 +74,8 @@ void JRPGBootstrapPlugin::_notification(int p_what) {
 			// Only happens when the editor shuts down; the workspace plugin is a child of EditorNode and is freed
 			// with it.
 			ProjectSettings::get_singleton()->disconnect("settings_changed", callable_mp(this, &JRPGBootstrapPlugin::_on_project_settings_changed));
+			remove_tool_menu_item(TTR(SETUP_MENU_ITEM));
+			setup_dialog = nullptr; // Freed with the editor's base control.
 			workspace = nullptr;
 		} break;
 	}

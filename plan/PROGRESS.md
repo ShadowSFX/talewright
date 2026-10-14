@@ -1,10 +1,10 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 20:51 -0600
-- **Current task:** 6.2 Set up JRPG Project tool
-- **Last completed:** 1.9 Fork CI: templates compile the tests; clangd-tidy clean
-- **Next task:** none ready (see `tasks.py next`)
+- **Updated:** 2026-10-13 20:57 -0600
+- **Current task:** 1.9 Fork CI: templates compile the tests; clangd-tidy clean
+- **Last completed:** 6.2 Set up JRPG Project tool
+- **Next task:** 6.3 Workspace shell
 - **Done leaf tasks:** 65
 <!-- status:end -->
 
@@ -170,4 +170,8 @@
 | 2026-10-13 20:40 -0600 | 6.2 | started: Set up JRPG Project tool (containers: 6 pending->in_progress) |  |
 | 2026-10-13 20:51 -0600 | - | imported 1 new / 0 updated tasks (containers: 1 done->pending) | |
 | 2026-10-13 20:51 -0600 | 1.9 | started: Fork CI: templates compile the tests; clangd-tidy clean (containers: 1 pending->in_progress) |  |
-| 2026-10-13 20:51 -0600 | 1.9 | done: Fork CI: templates compile the tests; clangd-tidy clean — Includes fixed (ClassDB/ResourceLoader/JRPGItemData/JRPGTraits where used; unused ones removed; window.h kept with IWYU pragma; jrpg_random.h includes type_info.h for VARIANT_ENUM_CAST); clang_check.py also checks tests without TOOLS_ENABLED; static_checks.py runs pip clangd-tidy on changed C/C++ files (0 diagnostics in 23 files); CI result recorded by the next push (containers: 1 in_progress->done) | pending |
+| 2026-10-13 20:51 -0600 | 1.9 | done: Fork CI: templates compile the tests; clangd-tidy clean — Includes fixed (ClassDB/ResourceLoader/JRPGItemData/JRPGTraits where used; unused ones removed; window.h kept with IWYU pragma; jrpg_random.h includes type_info.h for VARIANT_ENUM_CAST); clang_check.py also checks tests without TOOLS_ENABLED; static_checks.py runs pip clangd-tidy on changed C/C++ files (0 diagnostics in 23 files); CI result recorded by the next push (containers: 1 in_progress->done) | 9ccf49e3bb |
+| 2026-10-13 20:52 -0600 | - | imported 0 new / 1 updated tasks (containers: 1 done->in_progress) | |
+| 2026-10-13 20:56 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 20:57 -0600 | - | imported 0 new / 1 updated tasks | |
+| 2026-10-13 20:57 -0600 | 6.2 | done: Set up JRPG Project tool — JRPGProjectSetup (idempotent: folders, manifest + per-table files with original starter content, game_id, spec 01 jrpg_* actions keeping user maps, jrpg/enabled, managed addon) + Project > Tools > Set Up JRPG Project... with a report dialog (frontend-design: collapsed outcome sections with counts, compact nothing-changed and error variants) + workspace empty/ready states + jrpg_setup_project bridge tool (show_report); verified live: first run created 19 paths and 9 actions, kept the user's jrpg_ok (K), JRPG tab appeared; second run changed=false; screenshots in plan/evidence/jrpg/6.2-*; 2 doctests; full suite 1479/1479 (containers: 6 in_progress->pending) | pending |

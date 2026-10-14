@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 130, in_progress: 2, done: 78, blocked: 0, deferred: 3 (of 213)
+**Totals:** pending: 131, in_progress: 2, done: 77, blocked: 0, deferred: 3 (of 213)
 
 ## [x] 0 Bootstrap and task system
 
@@ -15,7 +15,7 @@ Fork, local clone, working branch, persistent tracker, resume protocol, persiste
 - [x] **0.3** CLAUDE.md resume protocol, NOTICE and fork README (P1) _(deps: 0.2; commit: 12253dd0a5)_
 - [x] **0.4** Persist planning research reports (P1) _(deps: 0.2; commit: d611bf476c)_
 
-## [x] 1 Toolchain baseline
+## [~] 1 Toolchain baseline
 
 Reproducible builds and a recorded vanilla baseline before any engine change.
 
@@ -27,7 +27,7 @@ Reproducible builds and a recorded vanilla baseline before any engine change.
 - [x] **1.6** Epic 0+1 review fixes (P1) _(commit: a6fbf412ba)_
 - [x] **1.7** Fork files pass upstream CI static checks (P1) _(commit: b1fb0940d7)_
 - [x] **1.8** Fork CI: every Linux job green (P1) _(deps: 1.7; commit: 803d0e2f7c)_
-- [x] **1.9** Fork CI: templates compile the tests; clangd-tidy clean (P1) _(deps: 1.8; commit: pending)_
+- [~] **1.9** Fork CI: templates compile the tests; clangd-tidy clean (P1) _(deps: 1.8; commit: 9ccf49e3bb)_
 
 ## [x] 2 Research (Phase 1)
 
@@ -107,12 +107,12 @@ modules/jrpg with pure-logic core (no Node dependency), database, game state, RN
 - [x] **5.6** Reference scanner (P2) _(deps: 5.5; commit: dbea2b98f0)_
 - [x] **5.7** Epic review: JRPG core (P1) _(deps: 5.6; commit: 7cfb5653ce)_
 
-## [~] 6 JRPG workspace and database editor
+## [ ] 6 JRPG workspace and database editor
 
 Setup tool, managed addon, main-screen workspace, database editor, authoring API.
 
 - [x] **6.1** Managed addon embedding (P1) _(commit: 554066373a)_
-- [~] **6.2** Set up JRPG Project tool (P1) _(deps: 6.1)_
+- [x] **6.2** Set up JRPG Project tool (P1) _(deps: 6.1; commit: pending)_
 - [ ] **6.3** Workspace shell (P1) _(deps: 6.2)_
 - [ ] **6.4** Database editor framework (P1) _(deps: 6.3)_
   - [ ] **6.4.1** Database window, tabs and entry list (P1)

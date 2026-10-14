@@ -34,6 +34,8 @@
 #ifdef MODULE_CLAUDE_BRIDGE_ENABLED
 
 #include "jrpg_managed_addon.h"
+#include "jrpg_project_setup.h"
+#include "jrpg_setup_dialog.h"
 
 #include "modules/claude_bridge/claude_bridge_registry.h"
 #include "modules/claude_bridge/claude_bridge_tools.h"
@@ -64,6 +66,18 @@ void tool_addon_install(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall
 	}
 }
 
+void tool_setup_project(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
+	const Dictionary report = JRPGProjectSetup::run();
+	if (bool(p_args.get("show_report", false)) && JRPGSetupDialog::get_singleton()) {
+		JRPGSetupDialog::get_singleton()->show_report(report); // The same report the menu item shows.
+	}
+	if (report.has("error")) {
+		p_call->fail(report["error"]);
+		return;
+	}
+	p_call->complete_data(report);
+}
+
 Dictionary directory_schema() {
 	Dictionary directory;
 	directory["type"] = "string";
@@ -91,6 +105,21 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	install.destructive = false; // Never overwrites a file the user changed.
 	install.func = &tool_addon_install;
 	r_mcp.register_tool(install);
+
+	ClaudeBridgeMCP::Tool setup;
+	setup.name = "jrpg_setup_project";
+	setup.title = "Set up the JRPG project";
+	setup.description = "Same as Project > Tools > Set Up JRPG Project: creates what is missing (res://jrpg folders, the database manifest and tables with starter entries, the jrpg_* input actions, the jrpg/enabled setting, the managed addon) and keeps everything that exists. Returns what was created and kept; a second run reports changed=false.";
+	Dictionary show_report;
+	show_report["type"] = "boolean";
+	show_report["description"] = "Also show the setup report dialog in the editor (default false).";
+	Dictionary setup_properties;
+	setup_properties["show_report"] = show_report;
+	setup.input_schema = ClaudeBridgeMCP::object_schema(setup_properties);
+	setup.read_only = false;
+	setup.destructive = false; // Only adds what is missing.
+	setup.func = &tool_setup_project;
+	r_mcp.register_tool(setup);
 }
 
 } // namespace

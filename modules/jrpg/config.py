@@ -28,6 +28,7 @@ def get_doc_classes():
         "JRPGGameState",
         "JRPGItemData",
         "JRPGManagedAddon",
+        "JRPGProjectSetup",
         "JRPGRandom",
         "JRPGRandomStreams",
         "JRPGReferenceScanner",

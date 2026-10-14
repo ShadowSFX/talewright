@@ -32,11 +32,16 @@
 #include "jrpg_workspace_view.h"
 
 #include "jrpg_bootstrap_plugin.h"
+#include "jrpg_project_setup.h"
+#include "jrpg_setup_dialog.h"
 
 #include "core/config/project_settings.h"
+#include "core/io/resource_loader.h"
 #include "core/object/callable_mp.h"
 #include "core/os/os.h"
+#include "editor/editor_interface.h"
 #include "editor/editor_string_names.h"
+#include "editor/file_system/editor_file_system.h"
 #include "editor/settings/editor_settings.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/button.h"
@@ -52,6 +57,33 @@ void JRPGWorkspaceView::_update_column_width() {
 	const real_t margin = 16 * EDSCALE;
 	const real_t width = MAX(real_t(0), MIN(MAX_COLUMN_WIDTH * EDSCALE, get_size().x - 2 * margin));
 	column->set_custom_minimum_size(Size2(width, 0));
+}
+
+void JRPGWorkspaceView::_update_state() {
+	ready_state = JRPGProjectSetup::is_project_set_up();
+	if (ready_state) {
+		title->set_text(TTR("Your JRPG project is set up"));
+		body->set_text(TTR("The database, the JRPG input actions and the Talewright addon are in place. The map, event and database editors open in this tab as they arrive; until then, open the starter database to look through it in the Inspector."));
+		setup_button->set_text(TTR("Open the starter database"));
+		setup_button->set_tooltip_text(JRPGProjectSetup::DATABASE_PATH);
+	} else {
+		title->set_text(TTR("This project has no JRPG data yet"));
+		body->set_text(TTR("Setting it up creates the JRPG database with a few starter entries, the JRPG input actions and the Talewright addon. Scenes, scripts and settings you already have stay as they are."));
+		setup_button->set_text(TTR("Set up JRPG project"));
+		setup_button->set_tooltip_text(TTR("Same as Project > Tools > Set Up JRPG Project. Running it again only adds what is missing."));
+	}
+}
+
+void JRPGWorkspaceView::_on_primary_pressed() {
+	if (ready_state) {
+		const Ref<Resource> database = ResourceLoader::load(JRPGProjectSetup::DATABASE_PATH);
+		if (database.is_valid()) {
+			EditorInterface::get_singleton()->edit_resource(database);
+		}
+	} else {
+		JRPGSetupDialog::run_setup();
+		_update_state();
+	}
 }
 
 void JRPGWorkspaceView::_turn_off_workspace() {
@@ -84,6 +116,18 @@ void JRPGWorkspaceView::_notification(int p_what) {
 		case NOTIFICATION_RESIZED: {
 			_update_column_width();
 		} break;
+		case NOTIFICATION_ENTER_TREE: {
+			_update_state();
+			if (EditorFileSystem::get_singleton()) {
+				// The database can also appear or disappear through the FileSystem dock or version control.
+				EditorFileSystem::get_singleton()->connect("filesystem_changed", callable_mp(this, &JRPGWorkspaceView::_update_state));
+			}
+		} break;
+		case NOTIFICATION_EXIT_TREE: {
+			if (EditorFileSystem::get_singleton()) {
+				EditorFileSystem::get_singleton()->disconnect("filesystem_changed", callable_mp(this, &JRPGWorkspaceView::_update_state));
+			}
+		} break;
 	}
 }
 
@@ -110,12 +154,10 @@ JRPGWorkspaceView::JRPGWorkspaceView() {
 	message->add_child(message_box);
 
 	title = memnew(Label);
-	title->set_text(TTR("This project has no JRPG data yet"));
 	title->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
 	message_box->add_child(title);
 
 	body = memnew(Label);
-	body->set_text(TTR("Setting it up creates the JRPG database, a first map and the JRPG input actions. Scenes, scripts and settings you already have stay as they are."));
 	body->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
 	message_box->add_child(body);
 
@@ -131,9 +173,7 @@ JRPGWorkspaceView::JRPGWorkspaceView() {
 	column->add_child(actions);
 
 	setup_button = memnew(Button);
-	setup_button->set_text(TTR("Set up JRPG project"));
-	setup_button->set_disabled(true);
-	setup_button->set_tooltip_text(TTR("The setup tool is not available in this build yet."));
+	setup_button->connect(SceneStringName(pressed), callable_mp(this, &JRPGWorkspaceView::_on_primary_pressed));
 	actions->add_child(setup_button);
 
 	turn_off_button = memnew(Button);

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGProjectSetup" inherits="RefCounted" api_type="editor" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Makes a project ready for the JRPG workspace (Project &gt; Tools &gt; Set Up JRPG Project...).
+	</brief_description>
+	<description>
+		Every step only creates what is missing, so running it again changes nothing:
+		- the folders [code]res://jrpg[/code], [code]res://jrpg/db[/code] and [code]res://jrpg/maps[/code];
+		- the database manifest [code]res://jrpg/database.tres[/code] with one file per table plus System, types and terms in [code]res://jrpg/db[/code], filled with a few original starter entries (a hero and a class, Attack and Guard, a healing item, a weapon and an armor, an enemy and a troop, the Knocked Out and Guarding states). A table missing from an existing manifest is added; existing tables are never changed;
+		- a System game id when it is empty;
+		- the [code]jrpg_*[/code] input actions with keyboard and gamepad bindings; actions that already exist keep the user's mapping;
+		- the [code]jrpg/enabled[/code] project setting, which shows the JRPG workspace;
+		- the managed addon (see [JRPGManagedAddon]).
+		Editor only. The Claude bridge exposes it as the [code]jrpg_setup_project[/code] tool.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="create_starter_database" qualifiers="static">
+			<return type="JRPGDatabase" />
+			<param index="0" name="game_title" type="String" />
+			<description>
+				Returns the starter database (not saved): every table with a few original entries, System data titled [param game_title] with a new game id and the hero as the starting party, and the default types and terms.
+			</description>
+		</method>
+		<method name="get_default_input_actions" qualifiers="static">
+			<return type="Dictionary" />
+			<description>
+				Returns the [code]jrpg_*[/code] actions and their default events as a [Dictionary] of [Array]s of [InputEvent]: arrows, WASD (physical keys), Enter/Space/Z to confirm, Escape/X/Backspace to cancel, Tab/M for the menu, Shift to dash, Q/E and Page Up/Page Down to change pages, and the matching gamepad buttons and left stick.
+			</description>
+		</method>
+		<method name="is_project_set_up" qualifiers="static">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] when [code]res://jrpg/database.tres[/code] exists.
+			</description>
+		</method>
+		<method name="run" qualifiers="static">
+			<return type="Dictionary" />
+			<description>
+				Runs every step and returns a report [Dictionary]: [code]changed[/code] (whether anything was created or added), [code]created[/code] (folders and files), [code]input_actions_added[/code], [code]input_actions_kept[/code], [code]enabled_setting[/code] ([code]turned_on[/code] or [code]already_on[/code]), [code]game_id[/code], [code]addon[/code] (the report of [method JRPGManagedAddon.install]) and, when a step failed, [code]error[/code] with what went wrong and how to fix it.
+			</description>
+		</method>
+	</methods>
+</class>

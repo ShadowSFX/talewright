@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "1.9 Fork CI: templates compile the tests; clangd-tidy clean",
+  "last_completed": "6.2 Set up JRPG Project tool",
   "tasks": [
     {
       "id": "0",
@@ -114,7 +114,7 @@
       "dependencies": [
         "0"
       ],
-      "status": "done",
+      "status": "in_progress",
       "priority": 1,
       "acceptance_criteria": [
         "Vanilla editor + templates build",
@@ -123,7 +123,7 @@
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "children",
+      "commit": "",
       "notes": "Closed automatically when all children closed."
     },
     {
@@ -345,9 +345,9 @@
         "CLAUDE.md",
         "plan/DECISIONS.md"
       ],
-      "status": "done",
-      "commit": "pending",
-      "notes": ""
+      "status": "in_progress",
+      "commit": "9ccf49e3bb",
+      "notes": "Fix committed in 9ccf49e3bb; waiting for the CI run of that push before marking done (acceptance needs a green run)."
     },
     {
       "id": "2",
@@ -1723,7 +1723,7 @@
       "dependencies": [
         "5"
       ],
-      "status": "in_progress",
+      "status": "pending",
       "priority": 1,
       "acceptance_criteria": [
         "Setup idempotent",
@@ -1777,7 +1777,7 @@
       "dependencies": [
         "6.1"
       ],
-      "status": "in_progress",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Idempotent on an empty project (second run changes nothing)",
@@ -1785,9 +1785,28 @@
         "jrpg_* actions exist with the spec 01 defaults; an existing user remap is kept"
       ],
       "test_strategy": "Bridge on a temp project.",
-      "files": [],
-      "commit": "",
-      "notes": ""
+      "files": [
+        "modules/jrpg/editor/jrpg_project_setup.h",
+        "modules/jrpg/editor/jrpg_project_setup.cpp",
+        "modules/jrpg/editor/jrpg_setup_dialog.h",
+        "modules/jrpg/editor/jrpg_setup_dialog.cpp",
+        "modules/jrpg/editor/jrpg_bootstrap_plugin.h",
+        "modules/jrpg/editor/jrpg_bootstrap_plugin.cpp",
+        "modules/jrpg/editor/jrpg_workspace_view.h",
+        "modules/jrpg/editor/jrpg_workspace_view.cpp",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGProjectSetup.xml",
+        "modules/jrpg/tests/test_jrpg_project_setup.h",
+        "plan/specs/02_database_model.md",
+        "plan/evidence/jrpg/6.2-bridge-setup.txt",
+        "plan/evidence/jrpg/6.2-setup-report.png",
+        "plan/evidence/jrpg/6.2-setup-second-run.png",
+        "plan/evidence/jrpg/6.2-workspace-ready.png"
+      ],
+      "commit": "pending",
+      "notes": "Theme and placeholder assets (D-008) are installed by the setup tool once the asset generator exists: criterion added to 7.1."
     },
     {
       "id": "6.3",
@@ -1996,7 +2015,8 @@
       "priority": 1,
       "acceptance_criteria": [
         "Deterministic hashes",
-        "Licenses recorded"
+        "Licenses recorded",
+        "The setup tool (JRPGProjectSetup, task 6.2) installs the generated placeholder assets and the default UI theme into new projects when missing, as D-008 lists (deferred from 6.2: no assets existed yet)"
       ],
       "test_strategy": "Run twice, compare hashes.",
       "files": [],
