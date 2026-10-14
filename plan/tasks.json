@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "6.7.4 Review fixes: addon, setup, hints, tests, docs",
+  "last_completed": "6.7.5 Epic 6 review close-out",
   "tasks": [
     {
       "id": "0",
@@ -1723,7 +1723,7 @@
       "dependencies": [
         "5"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Setup idempotent",
@@ -1731,8 +1731,8 @@
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "6.1",
@@ -2256,15 +2256,15 @@
       "dependencies": [
         "6.6"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "Findings fixed"
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "6.7.1",
@@ -2332,7 +2332,7 @@
       "test_strategy": "Doctests + automated bridge checks.",
       "status": "done",
       "files": [],
-      "commit": "pending",
+      "commit": "a72b7240a6",
       "notes": ""
     },
     {
@@ -2352,9 +2352,9 @@
         "Smoke ALL PASS, 0 unlisted core paths, CI green after the push"
       ],
       "test_strategy": "Epic gate.",
-      "status": "pending",
+      "status": "done",
       "files": [],
-      "commit": "",
+      "commit": "pending",
       "notes": ""
     },
     {

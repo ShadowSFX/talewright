@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 123, in_progress: 0, done: 98, blocked: 0, deferred: 3 (of 224)
+**Totals:** pending: 120, in_progress: 0, done: 101, blocked: 0, deferred: 3 (of 224)
 
 ## [x] 0 Bootstrap and task system
 
@@ -107,7 +107,7 @@ modules/jrpg with pure-logic core (no Node dependency), database, game state, RN
 - [x] **5.6** Reference scanner (P2) _(deps: 5.5; commit: dbea2b98f0)_
 - [x] **5.7** Epic review: JRPG core (P1) _(deps: 5.6; commit: 7cfb5653ce)_
 
-## [ ] 6 JRPG workspace and database editor
+## [x] 6 JRPG workspace and database editor
 
 Setup tool, managed addon, main-screen workspace, database editor, authoring API.
 
@@ -128,12 +128,12 @@ Setup tool, managed addon, main-screen workspace, database editor, authoring API
     - [x] **6.5.3.1** Parameter grids, enemy drops and actions, troop members (P1) _(commit: 27dfc497c0)_
     - [x] **6.5.3.2** System party, type lists and slice field check (P1) _(deps: 6.5.3.1; commit: c98c01be4b)_
 - [x] **6.6** Database authoring API + bridge tools (P1) _(deps: 6.5; commit: c788b268bc)_
-- [ ] **6.7** Epic review: workspace (P1) _(deps: 6.6)_
+- [x] **6.7** Epic review: workspace (P1) _(deps: 6.6)_
   - [x] **6.7.1** Review fixes: database data integrity (P1) _(commit: b7501e870c)_
   - [x] **6.7.2** Review fixes: database UI (P1) _(deps: 6.7.1; commit: f8e005287c)_
   - [x] **6.7.3** Review fixes: bridge UI tools (P1) _(commit: b40024f3dc)_
-  - [x] **6.7.4** Review fixes: addon, setup, hints, tests, docs (P1) _(deps: 6.7.1, 6.7.3; commit: pending)_
-  - [ ] **6.7.5** Epic 6 review close-out (P1) _(deps: 6.7.1, 6.7.2, 6.7.3, 6.7.4)_
+  - [x] **6.7.4** Review fixes: addon, setup, hints, tests, docs (P1) _(deps: 6.7.1, 6.7.3; commit: a72b7240a6)_
+  - [x] **6.7.5** Epic 6 review close-out (P1) _(deps: 6.7.1, 6.7.2, 6.7.3, 6.7.4; commit: pending)_
 
 ## [ ] 7 Assets and tilesets
 

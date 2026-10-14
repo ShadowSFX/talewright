@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-14 00:54 -0600
+- **Updated:** 2026-10-14 00:56 -0600
 - **Current task:** none
-- **Last completed:** 6.7.4 Review fixes: addon, setup, hints, tests, docs
-- **Next task:** 6.7.5 Epic 6 review close-out
-- **Done leaf tasks:** 81
+- **Last completed:** 6.7.5 Epic 6 review close-out
+- **Next task:** 7.1.1 Generated tiles and autotile templates
+- **Done leaf tasks:** 82
 <!-- status:end -->
 
 ## Log
@@ -223,4 +223,6 @@
 | 2026-10-14 00:27 -0600 | 6.7.3 | started: Review fixes: bridge UI tools (containers: 6.7 pending->in_progress, 6 pending->in_progress) |  |
 | 2026-10-14 00:42 -0600 | 6.7.3 | done: Review fixes: bridge UI tools — Epic 6 review findings 2, 6, 7, 8, 9, 10, 14, 15, 31 fixed in editor_ui_find/editor_ui_act: edited scene and anything behind a modal dialog unreachable; press as a ui_accept click through gui_input; text typed as text; select via each widget's click path; menus opened first; secrets masked; results safe when the dialog closes; smaller gaps; unique tool names. Doctests + bridge evidence plan/evidence/bridge/6.7.3-ui-tools-review-fixes.txt. (containers: 6.7 in_progress->pending, 6 in_progress->pending) | b40024f3dc |
 | 2026-10-14 00:42 -0600 | 6.7.4 | started: Review fixes: addon, setup, hints, tests, docs (containers: 6.7 pending->in_progress, 6 pending->in_progress) |  |
-| 2026-10-14 00:54 -0600 | 6.7.4 | done: Review fixes: addon, setup, hints, tests, docs — Epic 6 review findings 12, 16, 17, 18, 29, 30, 32, 33 fixed: jrpg_bridge_checks.py (setup idempotency + undo/redo round trips of every database tool in a real editor, 39 checks); tool-level and dialog doctests; CRLF-normalized addon hashes; addon prune/zero-byte/cfg-on-change/failed reports and res://addons-only directory; setup refuses wrong-type files; honest MCP hints; show_dialog wording; static checks fail on skips; guide, TTRC and prompt wording. (containers: 6.7 in_progress->pending, 6 in_progress->pending) | pending |
+| 2026-10-14 00:54 -0600 | 6.7.4 | done: Review fixes: addon, setup, hints, tests, docs — Epic 6 review findings 12, 16, 17, 18, 29, 30, 32, 33 fixed: jrpg_bridge_checks.py (setup idempotency + undo/redo round trips of every database tool in a real editor, 39 checks); tool-level and dialog doctests; CRLF-normalized addon hashes; addon prune/zero-byte/cfg-on-change/failed reports and res://addons-only directory; setup refuses wrong-type files; honest MCP hints; show_dialog wording; static checks fail on skips; guide, TTRC and prompt wording. (containers: 6.7 in_progress->pending, 6 in_progress->pending) | a72b7240a6 |
+| 2026-10-14 00:54 -0600 | 6.7.5 | started: Epic 6 review close-out (containers: 6.7 pending->in_progress, 6 pending->in_progress) |  |
+| 2026-10-14 00:56 -0600 | 6.7.5 | done: Epic 6 review close-out — Epic 6 review: all 33 findings fixed (6.7.1 data integrity: nested sub-resources tracked, structured values checked with reasons, nested paths, type cuts guarded, referenced blanks kept, Save clears the title; 6.7.2 database UI: typed maximum, JRPGPicker, condition-shaped action values D-033, exact record dialog, in-place rows; 6.7.3 bridge UI tools: user reachability (edited scene, modal dialogs), clicks via gui_input, click-accurate selection, masked secrets, unique tool names; 6.7.4 addon/setup/hints/tests/docs: jrpg_bridge_checks.py 39 end-to-end undo/setup checks, tool and dialog doctests, CRLF hashes, addon prune, strict static checks); smoke ALL PASS with rebuilt template, bridge absent from template, core_diff 0 unlisted; record in plan/evidence/reviews/epic_6.md (containers: 6.7 in_progress->done, 6 in_progress->done) | pending |

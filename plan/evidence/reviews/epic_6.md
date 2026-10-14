@@ -12,8 +12,11 @@ trait/effect units and ranges match RM-TRT-002..026 and RM-EFF-002..014 and D-03
 limits; equipment slot filtering and dual wield; core files include no editor or scene headers; editor tests are
 `TOOLS_ENABLED`-guarded; either module builds alone; "Save & Quit" cannot lose database edits.
 
-Fixes land in tasks 6.7.1 (data integrity), 6.7.2 (database UI), 6.7.3 (bridge UI tools) and 6.7.4 (addon, setup,
-hints, tests, docs).
+Fixes landed in tasks 6.7.1 (data integrity), 6.7.2 (database UI), 6.7.3 (bridge UI tools) and 6.7.4 (addon, setup,
+hints, tests, docs): **all 33 findings fixed** (2026-10-14). Evidence: `plan/evidence/jrpg/6.7.1-*`, `6.7.2-*`,
+`6.7.4-jrpg-bridge-checks.txt` (39 end-to-end checks) and `plan/evidence/bridge/6.7.3-*`; new decisions D-033 (enemy
+action values) and the D-031 reachability note. Close-out (6.7.5): plain_2d/plain_3d smoke ALL PASS with a rebuilt
+release template, core_diff_check 0 unlisted, full test suite and static checks pass, pushed with CI watched.
 
 | # | Sev | Finding | Fix |
 |---|---|---|---|
