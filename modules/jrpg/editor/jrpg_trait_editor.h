@@ -31,10 +31,10 @@
 
 #pragma once
 
-#include "editor/inspector/editor_inspector.h"
+#include "jrpg_list_editors.h"
+
 #include "scene/gui/dialogs.h"
 
-class Button;
 class ButtonGroup;
 class CheckBox;
 class JRPGDatabase;
@@ -42,7 +42,6 @@ class Label;
 class OptionButton;
 class SpinBox;
 class TabContainer;
-class Tree;
 
 // What each trait and effect code means in the editor (codes in jrpg_traits.h, storage in
 // plan/specs/02_database_model.md): its tab, its label, what its data_id picks and how its values read. Percentages
@@ -152,37 +151,23 @@ public:
 	JRPGTraitDialog();
 };
 
-// The traits or effects list of an entry: a two-column list (Type, Content) with Add, Edit and Remove; double-click
-// edits. A full-width bottom editor like EditorPropertyArray's (editor/inspector/editor_properties_array_dict.cpp).
-// Changes are the inspector's own undoable property edits.
-class JRPGEditorPropertyTraits : public EditorProperty {
-	GDCLASS(JRPGEditorPropertyTraits, EditorProperty);
+// The traits or effects list of an entry: Type and Content columns ("Element Rate", "Fire × 150%"), edited through
+// JRPGTraitDialog.
+class JRPGEditorPropertyTraits : public JRPGEditorPropertyList {
+	GDCLASS(JRPGEditorPropertyTraits, JRPGEditorPropertyList);
 
 	bool effects = false;
-	VBoxContainer *container = nullptr;
-	Tree *list = nullptr;
-	Label *empty = nullptr;
-	Button *add_button = nullptr;
-	Button *edit_button = nullptr;
-	Button *remove_button = nullptr;
 	JRPGTraitDialog *dialog = nullptr;
-	int editing = -1; // Index being edited; -1 while adding.
-	int keep_selected = -1;
 
-	int _selected() const;
-	void _update_buttons();
-	void _add();
-	void _edit();
-	void _remove();
 	void _dialog_confirmed();
 
 protected:
-	virtual void _set_read_only(bool p_read_only) override;
-	void _notification(int p_what);
+	virtual PackedStringArray _get_columns() const override;
+	virtual PackedStringArray _describe(const Dictionary &p_row) const override;
+	virtual void _popup_row_editor(const Dictionary &p_row) override;
 
 public:
 	void setup(bool p_effects);
-	virtual void update_property() override;
 
 	JRPGEditorPropertyTraits();
 };

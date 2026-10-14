@@ -33,19 +33,27 @@
 
 #include "core/object/class_db.h"
 
+// The curve setters re-bake the table, so it can never disagree with the curve, whoever edits it (form, bridge,
+// script, undo). A saved table loads after the curve values and replaces the baked one.
 void JRPGClassData::set_exp_base(int p_value) {
 	exp_base = MAX(0, p_value);
-	emit_changed();
+	bake_exp_table();
 }
 
 void JRPGClassData::set_exp_growth(int p_value) {
 	exp_growth = CLAMP(p_value, 0, 100);
-	emit_changed();
+	bake_exp_table();
 }
 
 void JRPGClassData::set_exp_extra(int p_value) {
 	exp_extra = MAX(0, p_value);
-	emit_changed();
+	bake_exp_table();
+}
+
+void JRPGClassData::_validate_property(PropertyInfo &p_property) const {
+	if (p_property.name == "exp_table") {
+		p_property.usage |= PROPERTY_USAGE_READ_ONLY; // Derived from the curve values.
+	}
 }
 
 namespace {

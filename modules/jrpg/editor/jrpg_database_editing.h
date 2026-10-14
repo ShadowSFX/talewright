@@ -80,7 +80,9 @@ public:
 	// have its property's type; the read-only "id" and engine properties (resource_*, script, metadata) are refused,
 	// and nothing changes unless every value is valid.
 	Error set_record_properties(const String &p_table, int p_id, const Dictionary &p_values);
-	// Stored, inspector-visible, writable data properties (what the form edits and the bridge reports).
+	// Stored, inspector-visible data properties (what the form shows and the bridge reports), and those of them that are
+	// not read-only (derived values such as a class's baked EXP table are read-only).
+	static bool is_data_property(const PropertyInfo &p_property);
 	static bool is_editable_property(const PropertyInfo &p_property);
 
 	// [{id, name}] for IDs p_from .. p_from + p_count - 1 (clamped to the table).

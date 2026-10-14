@@ -72,8 +72,12 @@ void JRPGDatabaseEditing::_watch_table(const Ref<JRPGTable> &p_table) {
 	}
 }
 
+bool JRPGDatabaseEditing::is_data_property(const PropertyInfo &p_property) {
+	return (p_property.usage & PROPERTY_USAGE_STORAGE) && (p_property.usage & PROPERTY_USAGE_EDITOR) && !p_property.name.begins_with("resource_") && p_property.name != "script" && !p_property.name.begins_with("metadata/");
+}
+
 bool JRPGDatabaseEditing::is_editable_property(const PropertyInfo &p_property) {
-	return (p_property.usage & PROPERTY_USAGE_STORAGE) && (p_property.usage & PROPERTY_USAGE_EDITOR) && !(p_property.usage & PROPERTY_USAGE_READ_ONLY) && !p_property.name.begins_with("resource_") && p_property.name != "script" && !p_property.name.begins_with("metadata/");
+	return is_data_property(p_property) && !(p_property.usage & PROPERTY_USAGE_READ_ONLY);
 }
 
 bool JRPGDatabaseEditing::_is_database_file(const Ref<Resource> &p_resource) const {

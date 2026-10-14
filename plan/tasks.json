@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "6.5.1 Trait and effect editors",
+  "last_completed": "6.5.2.1 Class EXP curve and learnings",
   "tasks": [
     {
       "id": "0",
@@ -2004,7 +2004,7 @@
         "plan/evidence/jrpg/6.5.1-add-trait-dialog.png",
         "plan/evidence/jrpg/6.5.1-add-effect-dialog.png"
       ],
-      "commit": "pending",
+      "commit": "8c9f5fcbe9",
       "notes": "frontend-design applied; Godot patterns followed: EditorProperty bottom editor like EditorPropertyArray, Tree with column titles, flat icon buttons, ConfirmationDialog + TabContainer, CheckBox rows in a ButtonGroup. Memorable element: the dialog's preview line reads exactly like the list row it creates. Verified live through editor_ui_* (6.5.0): add, undo/redo, edit by double-click (dialog pre-filled), remove, a two-value effect, save (one-line .tres diffs, integers).",
       "status": "done"
     },
@@ -2025,6 +2025,85 @@
       "commit": "",
       "notes": "",
       "status": "pending"
+    },
+    {
+      "id": "6.5.2.1",
+      "parent": "6.5.2",
+      "title": "Class EXP curve and learnings",
+      "description": "EXP table re-baked by the curve setters (never stale), shown read-only as a level table; learnings edited as a list (Level, Skill, Note) through a field-spec record list editor reusable for drops, actions and troop members.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Changing base/growth/extra through the form or the bridge updates the baked table in the same undo step",
+        "Learnings can be added, edited, removed through the form, with undo"
+      ],
+      "test_strategy": "Doctests (bake on set, record rows) + editor_ui_* run on class 1.",
+      "files": [
+        "modules/jrpg/core/jrpg_class_data.h",
+        "modules/jrpg/core/jrpg_class_data.cpp",
+        "modules/jrpg/editor/jrpg_list_editors.h",
+        "modules/jrpg/editor/jrpg_list_editors.cpp",
+        "modules/jrpg/editor/jrpg_trait_editor.h",
+        "modules/jrpg/editor/jrpg_trait_editor.cpp",
+        "modules/jrpg/editor/jrpg_inspector_plugin.cpp",
+        "modules/jrpg/editor/jrpg_database_editing.h",
+        "modules/jrpg/editor/jrpg_database_editing.cpp",
+        "modules/jrpg/editor/jrpg_bridge_tools.cpp",
+        "modules/claude_bridge/claude_bridge_ui_tools.h",
+        "modules/claude_bridge/claude_bridge_ui_tools.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/tests/test_jrpg_tables_a.h",
+        "modules/jrpg/tests/test_jrpg_list_editors.h",
+        "plan/specs/02_database_model.md",
+        "talewright/docs/claude_bridge.md",
+        "plan/evidence/jrpg/6.5.2.1-bridge-exp-learnings.txt",
+        "plan/evidence/jrpg/6.5.2.1-class-form.png"
+      ],
+      "status": "done",
+      "commit": "pending",
+      "notes": "JRPGEditorPropertyList base class now shared by the trait/effect list and the record lists. Inspector edits of one property within 800 ms merge into one undo step (core/object/undo_redo.cpp:97,122), Godot's normal behavior: the transcript waits between steps. editor_ui_find now also matches Tree column titles; jrpg_db_get reports read-only data (exp_table) and lists it under read_only."
+    },
+    {
+      "id": "6.5.2.2",
+      "parent": "6.5.2",
+      "title": "Parameter curve editor",
+      "description": "Class parameter curves as eight small graphs (level 1 and 99 values); a dialog per parameter edits single levels and generates a curve from level 1 and 99 values and a growth shape.",
+      "dependencies": [
+        "6.5.2.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "A curve can be generated and a single level changed through the form, with undo; values stay in the documented ranges"
+      ],
+      "test_strategy": "Doctests (curve generation, ranges) + editor_ui_* run.",
+      "files": [
+        "modules/jrpg/editor/jrpg_curve_editor.h",
+        "modules/jrpg/editor/jrpg_curve_editor.cpp"
+      ],
+      "status": "pending",
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "6.5.2.3",
+      "parent": "6.5.2",
+      "title": "Actor initial equipment and slice field check",
+      "description": "Initial equipment as one picker per equipment slot (slot names from Types; weapons for slot 1, and slot 2 with dual wield; armors of the slot's equipment type); check every actor, class, skill and item slice field is editable through form and bridge.",
+      "dependencies": [
+        "6.5.2.2"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Every slice field of actors, classes, skills and items is editable through the form and through the bridge, with undo"
+      ],
+      "test_strategy": "Doctests (slot choices) + editor_ui_* run over the four tables.",
+      "files": [
+        "modules/jrpg/editor/jrpg_equipment_editor.h",
+        "modules/jrpg/editor/jrpg_equipment_editor.cpp"
+      ],
+      "status": "pending",
+      "commit": "",
+      "notes": ""
     },
     {
       "id": "6.5.3",

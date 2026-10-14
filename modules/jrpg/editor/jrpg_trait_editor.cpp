@@ -36,14 +36,12 @@
 #include "core/object/callable_mp.h"
 #include "editor/editor_string_names.h"
 #include "editor/themes/editor_scale.h"
-#include "scene/gui/button.h"
 #include "scene/gui/check_box.h"
 #include "scene/gui/label.h"
 #include "scene/gui/option_button.h"
 #include "scene/gui/separator.h"
 #include "scene/gui/spin_box.h"
 #include "scene/gui/tab_container.h"
-#include "scene/gui/tree.h"
 
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_traits.h"
@@ -576,150 +574,29 @@ JRPGTraitDialog::JRPGTraitDialog() {
 
 // JRPGEditorPropertyTraits.
 
-int JRPGEditorPropertyTraits::_selected() const {
-	const TreeItem *item = list->get_selected();
-	return item ? int(item->get_metadata(0)) : -1;
-}
-
-void JRPGEditorPropertyTraits::_update_buttons() {
-	const bool has = _selected() >= 0;
-	add_button->set_disabled(is_read_only());
-	edit_button->set_disabled(is_read_only() || !has);
-	remove_button->set_disabled(is_read_only() || !has);
-}
-
-void JRPGEditorPropertyTraits::_add() {
-	editing = -1;
-	dialog->popup_for(Dictionary());
-}
-
-void JRPGEditorPropertyTraits::_edit() {
-	const int index = _selected();
-	const Array current = get_edited_property_value();
-	if (is_read_only() || index < 0 || index >= current.size()) {
-		return;
-	}
-	editing = index;
-	dialog->popup_for(current[index]);
-}
-
-void JRPGEditorPropertyTraits::_remove() {
-	const int index = _selected();
-	Array current = Array(get_edited_property_value()).duplicate();
-	if (is_read_only() || index < 0 || index >= current.size()) {
-		return;
-	}
-	current.remove_at(index);
-	keep_selected = MIN(index, current.size() - 1);
-	emit_changed(get_edited_property(), current);
-}
-
 void JRPGEditorPropertyTraits::_dialog_confirmed() {
-	Array current = Array(get_edited_property_value()).duplicate();
-	const Dictionary entry = dialog->get_entry();
-	if (editing >= 0 && editing < current.size()) {
-		current[editing] = entry;
-		keep_selected = editing;
-	} else {
-		current.push_back(entry);
-		keep_selected = current.size() - 1;
-	}
-	emit_changed(get_edited_property(), current);
+	_apply_row(dialog->get_entry());
 }
 
-void JRPGEditorPropertyTraits::_set_read_only(bool p_read_only) {
-	_update_buttons();
+PackedStringArray JRPGEditorPropertyTraits::_get_columns() const {
+	return PackedStringArray({ TTR("Type"), TTR("Content") });
+}
+
+PackedStringArray JRPGEditorPropertyTraits::_describe(const Dictionary &p_row) const {
+	return JRPGTraitKinds::describe(effects, p_row, _get_database());
+}
+
+void JRPGEditorPropertyTraits::_popup_row_editor(const Dictionary &p_row) {
+	dialog->popup_for(p_row);
 }
 
 void JRPGEditorPropertyTraits::setup(bool p_effects) {
 	effects = p_effects;
 	dialog->setup(effects);
-	add_button->set_text(effects ? TTR("Add Effect") : TTR("Add Trait"));
-	empty->set_text(effects ? TTR("No effects yet. Add one to say what using this does to the target.") : TTR("No traits yet. Add one to change rates, parameters, attacks, skills or equipment."));
-}
-
-void JRPGEditorPropertyTraits::update_property() {
-	const Array current = get_edited_property_value();
-	const int select_index = keep_selected >= 0 ? keep_selected : _selected();
-	keep_selected = -1;
-	JRPGDatabaseEditing *editing_api = JRPGDatabaseEditing::get_singleton();
-	const Ref<JRPGDatabase> db = editing_api ? editing_api->get_database() : Ref<JRPGDatabase>();
-	list->clear();
-	TreeItem *root = list->create_item();
-	for (int i = 0; i < current.size(); i++) {
-		const PackedStringArray row = JRPGTraitKinds::describe(effects, current[i], db);
-		TreeItem *item = list->create_item(root);
-		item->set_text(0, row[0]);
-		item->set_text(1, row[1]);
-		item->set_tooltip_text(1, row[1]);
-		item->set_metadata(0, i);
-		if (i == select_index) {
-			item->select(0);
-		}
-	}
-	list->set_visible(!current.is_empty());
-	empty->set_visible(current.is_empty());
-	// Room for the rows without a scrollbar up to 8 of them.
-	const int shown = CLAMP(current.size(), 1, 8) + 1; // Plus the column titles.
-	list->set_custom_minimum_size(Size2(0, (shown * 26 + 16) * EDSCALE));
-	_update_buttons();
-}
-
-void JRPGEditorPropertyTraits::_notification(int p_what) {
-	if (p_what == NOTIFICATION_THEME_CHANGED) {
-		add_button->set_button_icon(get_editor_theme_icon(SNAME("Add")));
-		edit_button->set_button_icon(get_editor_theme_icon(SNAME("Edit")));
-		remove_button->set_button_icon(get_editor_theme_icon(SNAME("Remove")));
-		empty->add_theme_color_override(SceneStringName(font_color), get_theme_color(SNAME("font_readonly_color"), EditorStringName(Editor)));
-	}
+	_setup_list(effects ? TTR("Add Effect") : TTR("Add Trait"), effects ? TTR("No effects yet. Add one to say what using this does to the target.") : TTR("No traits yet. Add one to change rates, parameters, attacks, skills or equipment."));
 }
 
 JRPGEditorPropertyTraits::JRPGEditorPropertyTraits() {
-	container = memnew(VBoxContainer);
-	add_child(container);
-	set_bottom_editor(container);
-
-	list = memnew(Tree);
-	list->set_columns(2);
-	list->set_column_titles_visible(true);
-	list->set_column_title(0, TTR("Type"));
-	list->set_column_title(1, TTR("Content"));
-	list->set_column_expand_ratio(1, 2);
-	list->set_column_clip_content(1, true);
-	list->set_hide_root(true);
-	list->set_select_mode(Tree::SELECT_ROW);
-	list->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED); // Rows hold project names.
-	list->set_accessibility_name(TTR("Entries"));
-	list->connect("item_selected", callable_mp(this, &JRPGEditorPropertyTraits::_update_buttons));
-	list->connect("item_activated", callable_mp(this, &JRPGEditorPropertyTraits::_edit));
-	container->add_child(list);
-	add_focusable(list);
-
-	empty = memnew(Label);
-	empty->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
-	empty->set_custom_minimum_size(Size2(120, 0) * EDSCALE);
-	container->add_child(empty);
-
-	HBoxContainer *buttons = memnew(HBoxContainer);
-	container->add_child(buttons);
-	add_button = memnew(Button);
-	add_button->set_theme_type_variation("FlatButton");
-	add_button->connect(SceneStringName(pressed), callable_mp(this, &JRPGEditorPropertyTraits::_add));
-	buttons->add_child(add_button);
-	edit_button = memnew(Button);
-	edit_button->set_text(TTR("Edit"));
-	edit_button->set_theme_type_variation("FlatButton");
-	edit_button->connect(SceneStringName(pressed), callable_mp(this, &JRPGEditorPropertyTraits::_edit));
-	buttons->add_child(edit_button);
-	remove_button = memnew(Button);
-	remove_button->set_text(TTR("Remove"));
-	remove_button->set_theme_type_variation("FlatButton");
-	remove_button->connect(SceneStringName(pressed), callable_mp(this, &JRPGEditorPropertyTraits::_remove));
-	buttons->add_child(remove_button);
-	for (Button *b : { add_button, edit_button, remove_button }) {
-		add_focusable(b);
-	}
-
 	dialog = memnew(JRPGTraitDialog);
 	dialog->connect(SceneStringName(confirmed), callable_mp(this, &JRPGEditorPropertyTraits::_dialog_confirmed));
 	add_child(dialog);

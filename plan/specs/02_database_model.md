@@ -97,7 +97,11 @@ Full field lists per table follow the inventory slices (03/04/05). The vertical 
   through a dialog with one tab per group (traits: Rates, Parameters, Attack, Skills, Equipment, Other; effects:
   Recover, States, Parameters, Other) and one radio row per kind; `JRPGTraitKinds` (editor) holds each code's
   label, data list and value style; percentages are entered in percent and stored in basis points. Collapse effect
-  values: D-032. Curves and other lists come with the per-tab tasks (6.5.2, 6.5.3).
+  values: D-032. Other lists of small dictionaries (learnings now; drops, enemy actions and troop members with
+  6.5.3) use the same list with a field-spec dialog (`JRPGRecordSpecs`: int, ID, enum, text and flag fields; an ID
+  field can take its table from another field, such as a drop's kind). A class's EXP table is re-baked by the
+  base/growth/extra setters, so it never disagrees with the curve, and is shown read-only as a level table.
+  Parameter curves and actor equipment slots come with 6.5.2.2 and 6.5.2.3.
 - Entries added by Change Maximum get their `file::Kind_id` path at once (as the loader and saver would,
   scene/resources/resource_format_text.cpp:633,1942), so inspector edits of an unsaved new entry also go to the
   global history.

@@ -194,6 +194,11 @@ bool matches(Node *p_node, const String &p_needle) {
 	if (const AcceptDialog *d = Object::cast_to<AcceptDialog>(p_node)) {
 		haystack.push_back(d->get_text());
 	}
+	if (const Tree *tree = Object::cast_to<Tree>(p_node)) {
+		for (int c = 0; c < tree->get_columns(); c++) {
+			haystack.push_back(tree->get_column_title(c));
+		}
+	}
 	for (const String &s : haystack) {
 		if (s.to_lower().contains(p_needle)) {
 			return true;
@@ -423,6 +428,13 @@ Dictionary describe(Node *p_root, Node *p_node) {
 		if (sel) {
 			d["selected"] = sel->get_text(0);
 		}
+		if (tree->are_column_titles_visible()) {
+			PackedStringArray columns;
+			for (int c = 0; c < tree->get_columns(); c++) {
+				columns.push_back(tree->get_column_title(c));
+			}
+			d["columns"] = columns;
+		}
 	} else if (const TabBar *tabs = tab_bar_of(p_node)) {
 		d["selected"] = tabs->get_current_tab();
 	}
@@ -626,7 +638,7 @@ void register_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool find_tool;
 	find_tool.name = "editor_ui_find";
 	find_tool.title = "Find editor controls";
-	find_tool.description = "Lists visible editor controls and dialogs whose text, tooltip, placeholder, list items or title contain \"text\" (case-insensitive), optionally of a class and under a path. Each match has the path editor_ui_act takes, plus its text, state, value and items. Also lists open dialogs.";
+	find_tool.description = "Lists visible editor controls and dialogs whose text, tooltip, placeholder, list items, column titles or title contain \"text\" (case-insensitive), optionally of a class and under a path. Each match has the path editor_ui_act takes, plus its text, state, value and items. Also lists open dialogs.";
 	Dictionary find_properties;
 	find_properties["text"] = schema_property("string", "Text to look for (empty: every visible control, use with class or under).");
 	find_properties["class"] = schema_property("string", "Only controls of this class or a subclass, e.g. Button, LineEdit, Tree, AcceptDialog.");

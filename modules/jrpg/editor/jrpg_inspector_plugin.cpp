@@ -32,12 +32,14 @@
 #include "jrpg_inspector_plugin.h"
 
 #include "jrpg_database_editing.h"
+#include "jrpg_list_editors.h"
 #include "jrpg_trait_editor.h"
 
 #include "core/object/callable_mp.h"
 #include "editor/inspector/editor_properties.h"
 #include "scene/gui/option_button.h"
 
+#include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_troop_data.h"
@@ -122,6 +124,18 @@ bool JRPGInspectorPlugin::parse_property(Object *p_object, const Variant::Type p
 		JRPGEditorPropertyTraits *editor = memnew(JRPGEditorPropertyTraits);
 		editor->setup(p_path == "effects");
 		add_property_editor(p_path, editor);
+		return true;
+	}
+	if (p_type == Variant::ARRAY) {
+		if (const JRPGRecordSpecs::Spec *spec = JRPGRecordSpecs::find_spec(p_object, p_path)) {
+			JRPGEditorPropertyRecords *editor = memnew(JRPGEditorPropertyRecords);
+			editor->setup(spec);
+			add_property_editor(p_path, editor);
+			return true;
+		}
+	}
+	if (p_type == Variant::PACKED_INT64_ARRAY && p_path == "exp_table" && Object::cast_to<JRPGClassData>(p_object)) {
+		add_property_editor(p_path, memnew(JRPGEditorPropertyExpTable));
 		return true;
 	}
 	if (p_type != Variant::INT) {

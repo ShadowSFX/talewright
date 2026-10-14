@@ -390,11 +390,15 @@ void tool_db_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_ca
 	Dictionary properties;
 	Dictionary id_targets;
 	Dictionary readable;
+	PackedStringArray read_only;
 	List<PropertyInfo> list;
 	record->get_property_list(&list);
 	for (const PropertyInfo &pi : list) {
-		if (pi.name == "id" || JRPGDatabaseEditing::is_editable_property(pi)) {
+		if (pi.name == "id" || JRPGDatabaseEditing::is_data_property(pi)) {
 			properties[pi.name] = ClaudeBridgeTools::variant_to_json(record->get(pi.name));
+			if ((pi.usage & PROPERTY_USAGE_READ_ONLY) || pi.name == "id") {
+				read_only.push_back(pi.name);
+			}
 			const String target = JRPGReferenceScanner::get_id_target(record.ptr(), pi.name);
 			if (!target.is_empty()) {
 				id_targets[pi.name] = target;
@@ -418,6 +422,7 @@ void tool_db_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_ca
 	result["properties"] = properties;
 	result["id_targets"] = id_targets; // Integer properties that hold an ID, and the table or type list they point into.
 	result["readable"] = readable; // Traits and effects as the form lists them.
+	result["read_only"] = read_only; // Shown but derived or managed: jrpg_db_set refuses them.
 	p_call->complete_data(result);
 }
 

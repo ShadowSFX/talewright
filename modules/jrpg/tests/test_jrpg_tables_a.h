@@ -112,6 +112,17 @@ TEST_CASE("[JRPG][Database] EXP curve matches values worked out by hand") {
 	for (int level = 2; level <= JRPGClassData::LEVEL_LIMIT; level++) {
 		CHECK_MESSAGE(cls->get_exp_for_level(level) > cls->get_exp_for_level(level - 1), "EXP must grow at level ", level);
 	}
+
+	// Changing the curve re-bakes the table at once, so it never goes stale.
+	cls->set_exp_growth(0);
+	CHECK(cls->get_exp_table()[1] == JRPGClassData::compute_total_exp(25, 0, 10, 2));
+	cls->set_exp_base(40);
+	cls->set_exp_extra(0);
+	CHECK(cls->get_exp_table()[JRPGClassData::LEVEL_LIMIT - 1] == JRPGClassData::compute_total_exp(40, 0, 0, JRPGClassData::LEVEL_LIMIT));
+	Ref<JRPGClassData> fresh;
+	fresh.instantiate();
+	fresh->set_exp_extra(5);
+	CHECK(fresh->get_exp_table().size() == JRPGClassData::LEVEL_LIMIT);
 }
 
 TEST_CASE("[JRPG][Database] Parameter curves keep documented ranges") {

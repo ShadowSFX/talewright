@@ -1,0 +1,26 @@
+# 6.5.2.1 bridge verification: class 1 (Adventurer) EXP curve and learnings
+## EXP curve values and table (levels 2-4, 99)
+25 30 10 [35, 107, 211] 96953
+## the form's EXP table preview (first rows)
+['1 | 0 | 35', '2 | 35 | 72', '3 | 107 | 104']
+## set Growth to 50 in the form (editor_ui_act set_value on the property)
+50 [35, 120, 255] 241080
+## one undo restores the curve value and the table together
+30 [35, 107, 211] 96953
+## jrpg_db_set exp_base 40 through the bridge, then undo
+40 [50, 159, 319]
+25 [35, 107, 211]
+## Add Learning: level 3, Guard, a note
+[{'level': 3, 'skill_id': 2, 'note': 'Taught by the captain'}]
+['3 | 0002  Guard | Taught by the captain']
+## double-click it, change the level to 4, apply
+[{'level': 4, 'skill_id': 2, 'note': 'Taught by the captain'}]
+## undo (back to level 3), redo, then Remove
+[{'level': 3, 'skill_id': 2, 'note': 'Taught by the captain'}]
+[{'level': 4, 'skill_id': 2, 'note': 'Taught by the captain'}]
+[]
+## the traits list still lists the class traits
+['Equip Weapon | Sword', 'Equip Armor | Clothing', 'Equip Armor | Light Armor', 'Equip Armor | Shield', 'Attack Element | Physical', 'Ex-Parameter | Hit Rate + 95%', 'Ex-Parameter | Evasion Rate + 5%']
+## errors
+    "errors": 0,
+    "warnings": 0,

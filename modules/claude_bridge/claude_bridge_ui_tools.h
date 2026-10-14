@@ -40,7 +40,7 @@ class Node;
 // controls inside the given root (the editor's windows) are reachable, and disabled or read-only ones refuse actions.
 namespace ClaudeBridgeUI {
 
-// Visible controls and dialogs under p_root, in tree order, whose text, tooltip, accessibility name, placeholder,
+// Visible controls and dialogs under p_root, in tree order, whose text, tooltip, accessibility name, placeholder, column titles,
 // list items or window title contain p_text (case-insensitive; empty matches everything) and whose class is p_class
 // or inherits it (empty: any). At most p_limit results; each is described as by describe().
 Array find(Node *p_root, Node *p_under, const String &p_text, const String &p_class, int p_limit);
