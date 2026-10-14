@@ -33,21 +33,30 @@
 
 #include "core/object/class_db.h"
 
-// The curve setters re-bake the table, so it can never disagree with the curve, whoever edits it (form, bridge,
-// script, undo). A saved table loads after the curve values and replaces the baked one.
+// The curve setters re-bake a baked table, so it can never disagree with the curve, whoever edits it (form, bridge,
+// script, undo). An empty table stays empty (get_exp_for_level computes the values), so undoing an edit restores the
+// class exactly. A saved table loads after the curve values and replaces the baked one.
+void JRPGClassData::_curve_changed() {
+	if (exp_table.is_empty()) {
+		emit_changed();
+	} else {
+		bake_exp_table();
+	}
+}
+
 void JRPGClassData::set_exp_base(int p_value) {
 	exp_base = MAX(0, p_value);
-	bake_exp_table();
+	_curve_changed();
 }
 
 void JRPGClassData::set_exp_growth(int p_value) {
 	exp_growth = CLAMP(p_value, 0, 100);
-	bake_exp_table();
+	_curve_changed();
 }
 
 void JRPGClassData::set_exp_extra(int p_value) {
 	exp_extra = MAX(0, p_value);
-	bake_exp_table();
+	_curve_changed();
 }
 
 void JRPGClassData::_validate_property(PropertyInfo &p_property) const {

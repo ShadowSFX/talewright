@@ -1,0 +1,61 @@
+# 6.7.1 bridge verification: review findings 1, 3, 4, 13, 19, 20 (scratch project)
+## finding 13: jrpg_db_get shows troop pages and System sub-resources as dictionaries
+[]
+(None, None)
+## finding 13: battle rules created from a dictionary, then a nested path edits one field
+  "changed": {
+    "battle_rules": {
+      "class": "JRPGBattleRules",
+      "crit_multiplier_bp": 20000,
+      "guard_reduction_bp": 4000,
+      "speed_spread_bp": 1000,
+      "buff_step_bp": 2500,
+  "changed": {
+    "battle_rules/tp_max": 120
+  },
+  "dangling_references": [],
+## finding 1: the battle rules got the system.tres path, and the edit marked system.tres unsaved
+{'class': 'JRPGBattleRules', 'crit_multiplier_bp': 20000, 'guard_reduction_bp': 4000, 'speed_spread_bp': 1000, 'buff_step_bp': 2500, 'buff_max_levels': 2, 'tp_max': 120, 'tp_start_max': 24, 'tp_on_damage_base': 2, 'tp_on_damage_scale': 30, 'tpb_fill_steps': 240, 'escape_base_percent': 50, 'escape_agility_percent': 50, 'escape_failure_bonus_percent': 15, 'escape_min_percent': 5, 'escape_max_percent': 95, 'max_hp_limit': 9999999, 'max_mp_limit': 9999999, 'param_limit': 999999}
+unsaved: ['res://jrpg/db/system.tres']
+unsaved: []
+## finding 13: troop pages from dictionaries (get/set round trip shape), then a nested page field
+2
+  "changed": {
+    "pages/1/switch_id": 7
+  },
+  "dangling_references": [],
+[(True, 1, False, 1), (False, 0, True, 7)]
+## finding 1: editing a page field through the form's sub-inspector path marks troops.tres unsaved
+unsaved: ['res://jrpg/db/troops.tres']
+0
+## finding 13: bad shapes are refused, nothing changes
+traits[0] has an unknown code 999. Nothing was changed.
+pages/0 must be a dictionary of JRPGTroopPage data; nothing was changed.
+"pages/9/turn_end" does not lead to data of this JRPGTroopData (jrpg_db_get shows it); nothing was changed.
+learning filled with defaults: [{'level': 3, 'skill_id': 1, 'note': ''}]
+## finding 3: a used type cannot be cut by jrpg_db_set; a dangling ID is reported
+Types past 1 of armor_types are still used; nothing was changed. Pass allow_broken_references=true to remove them anyway. Uses:
+Class 1, traits[2].data_id: armor type 2
+Class 1, traits[3].data_id: armor type 5
+Armor 1, armor_type_id: armor type 2
+  "dangling_references": [
+    "Class 1, traits[2].data_id: armor type 2 (missing)",
+    "Class 1, traits[3].data_id: armor type 5 (missing)",
+    "Armor 1, armor_type_id: armor type 2 (missing)"
+  ],
+  "undoable": true
+}
+  "dangling_references": [
+    "Actor 1, class_id: class 99 (missing)"
+  ],
+## finding 4: a blank item that a drop points at is skipped by jrpg_db_create
+  "id": 3,
+## finding 19: whole numbers, digit strings and fractions
+  "class": "JRPGItemData",
+"id" must be a whole number.
+  "param": "Attack",
+  "level_1": 0,
+  "level_99": 999,
+## errors
+    "errors": 0,
+    "warnings": 0,

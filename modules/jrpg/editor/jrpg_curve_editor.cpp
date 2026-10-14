@@ -56,8 +56,9 @@ PackedInt32Array generate(int p_first, int p_last, int p_growth, int p_min, int 
 	const double exponent = Math::pow(2.0, -CLAMP(p_growth, -10, 10) / 5.0);
 	for (int level = 1; level < LEVELS; level++) {
 		const double t = double(level - 1) / double(LEVELS - 2);
-		const double v = p_first + (p_last - p_first) * Math::pow(t, exponent);
-		out.set(level, CLAMP(int(Math::round(v)), p_min, p_max));
+		// In doubles, clamped before converting: any int inputs are safe (review finding 19).
+		const double v = double(p_first) + (double(p_last) - double(p_first)) * Math::pow(t, exponent);
+		out.set(level, int(CLAMP(Math::round(v), double(p_min), double(p_max))));
 	}
 	out.set(0, out[1]);
 	return out;
@@ -265,7 +266,11 @@ void JRPGEditorPropertyParamCurves::_open(int p_param) {
 }
 
 void JRPGEditorPropertyParamCurves::_dialog_confirmed() {
-	emit_changed(get_edited_property(), JRPGCurves::set_param_values(get_edited_property_value(), dialog->get_param(), dialog->get_values()));
+	const PackedInt32Array current = get_edited_property_value();
+	const PackedInt32Array updated = JRPGCurves::set_param_values(current, dialog->get_param(), dialog->get_values());
+	if (updated != current) { // Applying without a change adds no undo step (review finding 22).
+		emit_changed(get_edited_property(), updated);
+	}
 }
 
 void JRPGEditorPropertyParamCurves::_set_read_only(bool p_read_only) {

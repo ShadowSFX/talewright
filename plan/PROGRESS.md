@@ -1,11 +1,11 @@
 # Talewright Progress
 
 <!-- status:begin -->
-- **Updated:** 2026-10-13 23:07 -0600
+- **Updated:** 2026-10-13 23:57 -0600
 - **Current task:** none
-- **Last completed:** 6.6 Database authoring API + bridge tools
-- **Next task:** 6.7 Epic review: workspace
-- **Done leaf tasks:** 77
+- **Last completed:** 6.7.1 Review fixes: database data integrity
+- **Next task:** 6.7.2 Review fixes: database UI
+- **Done leaf tasks:** 78
 <!-- status:end -->
 
 ## Log
@@ -213,4 +213,8 @@
 | 2026-10-13 23:03 -0600 | 6.5.3.2 | done: System party, type lists and slice field check — System starting party as actor pickers (add, pick, remove); type lists as numbered rows with stable IDs (rename, Add, Remove Last with a reference warning); terms as one field per known term with the default as placeholder (empty = default); engine resource_* fields hidden on every persisted JRPG resource (JRPGSchema::hide_engine_property); single resources use the whole width; slice-field doctest for weapons, armors, enemies, troops, states, system, types, terms + view-without-edit doctests; verified live via editor_ui_*: party, element rename, Remove Last warning, term edit/clear/undo, priority edit, labels of all eight forms, undone run saves to identical files, viewing changes nothing, errors 0; full suite 1500/1500 (containers: 6.5.3 in_progress->done, 6.5 in_progress->done, 6 in_progress->pending) | c98c01be4b |
 | 2026-10-13 23:03 -0600 | 6.6 | started: Database authoring API + bridge tools (containers: 6 pending->in_progress) |  |
 | 2026-10-13 23:07 -0600 | - | imported 0 new / 1 updated tasks | |
-| 2026-10-13 23:07 -0600 | 6.6 | done: Database authoring API + bridge tools — Database authoring API completed: JRPGDatabaseEditing::create_entry (fills the first blank entry, or appends with at_end; one undo action; all-or-nothing validation via the shared check_values) and is_blank_entry; bridge jrpg_db_create (values converted for a fresh entry of the table's class, shared convert_values with jrpg_db_set); doctest (181 assertions in the editing tests); verified live: Claude created the item Elixir with two effects in slot 2, saved (diff = the entry's fields only), undo/redo, at_end + undo, a bad value refused, errors 0; full suite 1501/1501 (containers: 6 in_progress->pending) | pending |
+| 2026-10-13 23:07 -0600 | 6.6 | done: Database authoring API + bridge tools — Database authoring API completed: JRPGDatabaseEditing::create_entry (fills the first blank entry, or appends with at_end; one undo action; all-or-nothing validation via the shared check_values) and is_blank_entry; bridge jrpg_db_create (values converted for a fresh entry of the table's class, shared convert_values with jrpg_db_set); doctest (181 assertions in the editing tests); verified live: Claude created the item Elixir with two effects in slot 2, saved (diff = the entry's fields only), undo/redo, at_end + undo, a bad value refused, errors 0; full suite 1501/1501 (containers: 6 in_progress->pending) | c788b268bc |
+| 2026-10-13 23:07 -0600 | 6.7 | started: Epic review: workspace (containers: 6 pending->in_progress) |  |
+| 2026-10-13 23:29 -0600 | - | imported 5 new / 0 updated tasks (containers: 6.7 in_progress->pending, 6 in_progress->pending) | |
+| 2026-10-13 23:29 -0600 | 6.7.1 | started: Review fixes: database data integrity (containers: 6.7 pending->in_progress, 6 pending->in_progress) |  |
+| 2026-10-13 23:57 -0600 | 6.7.1 | done: Review fixes: database data integrity — Epic 6 review findings 1, 3, 4, 11, 13, 19, 20, 21, 22, 23, 28 fixed: nested sub-resources watched and given file::id paths; values checked down to list elements with the reason reported by the bridge; nested paths and sub-resource dictionaries in jrpg_db_get/set; type-list truncation guarded and dangling references reported; create skips referenced blanks; setup changes tracked; whole-number arguments; missing singles fail; Save clears the title's (*); exact EXP undo; no-op applies skipped; unknown trait codes kept; list edits by verified row; assign_from deep-copies internal sub-resources. Doctests + bridge evidence 6.7.1-bridge-review-fixes*.txt. (containers: 6.7 in_progress->pending, 6 in_progress->pending) | pending |

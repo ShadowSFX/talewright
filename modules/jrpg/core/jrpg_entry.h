@@ -70,6 +70,9 @@ public:
 	// id), which is what "deleting" an entry means in an ID = slot table.
 	void reset_to_defaults();
 	// Copies every stored property of p_source (same class) into this entry in place, keeping this entry's ID and
-	// scene-unique id; arrays and dictionaries are copied, not shared. Used by paste and by undo.
+	// scene-unique id; arrays, dictionaries and sub-resources saved in the same file are copied, not shared. Used by
+	// paste and by undo.
 	void assign_from(const Ref<JRPGEntry> &p_source);
+	// p_value copied as assign_from copies a property value.
+	static Variant copy_value(const Variant &p_value);
 };

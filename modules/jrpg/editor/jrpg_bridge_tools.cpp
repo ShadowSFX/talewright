@@ -36,6 +36,7 @@
 #include "jrpg_curve_editor.h"
 #include "jrpg_database_editing.h"
 #include "jrpg_database_view.h"
+#include "jrpg_list_editors.h"
 #include "jrpg_managed_addon.h"
 #include "jrpg_project_setup.h"
 #include "jrpg_setup_dialog.h"
@@ -49,7 +50,9 @@
 #include "modules/claude_bridge/claude_bridge_tools.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
+#include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
+#include "modules/jrpg/core/jrpg_types_data.h"
 
 namespace {
 
@@ -142,6 +145,32 @@ JRPGDatabaseEditing *database_editing(const Ref<ClaudeBridgeToolCall> &p_call) {
 	return editing;
 }
 
+// A whole-number argument: an integer, a float without a fraction or a string of digits (review finding 19); false
+// after failing the call.
+bool int_arg(const Dictionary &p_args, const String &p_key, int64_t p_default, const Ref<ClaudeBridgeToolCall> &p_call, int64_t &r_value) {
+	if (!p_args.has(p_key)) {
+		r_value = p_default;
+		return true;
+	}
+	const Variant v = p_args[p_key];
+	if (v.get_type() == Variant::INT) {
+		r_value = v;
+		return true;
+	}
+	if (v.get_type() == Variant::FLOAT) {
+		const double d = v;
+		if (Math::is_finite(d) && d == Math::floor(d) && Math::abs(d) < 9.0e15) {
+			r_value = int64_t(d);
+			return true;
+		}
+	} else if (v.get_type() == Variant::STRING && String(v).strip_edges().is_valid_int()) {
+		r_value = String(v).strip_edges().to_int();
+		return true;
+	}
+	p_call->fail(vformat("\"%s\" must be a whole number.", p_key));
+	return false;
+}
+
 // The table named by "table", or null after failing the call.
 Ref<JRPGTable> database_table(JRPGDatabaseEditing *p_editing, const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call) {
 	const String name = p_args.get("table", "");
@@ -154,8 +183,11 @@ Ref<JRPGTable> database_table(JRPGDatabaseEditing *p_editing, const Dictionary &
 
 // The entry ID named by "id" (1 .. maximum), or 0 after failing the call.
 int database_id(const Ref<JRPGTable> &p_table, const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call) {
-	const int id = p_args.get("id", 0);
-	if (!p_table->has_entry(id)) {
+	int64_t id = 0;
+	if (!int_arg(p_args, "id", 0, p_call, id)) {
+		return 0;
+	}
+	if (id < 1 || id > p_table->get_maximum()) {
 		p_call->fail(vformat("\"id\" must be between 1 and %d.", p_table->get_maximum()));
 		return 0;
 	}
@@ -223,7 +255,12 @@ void tool_db_list(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_c
 	result["table"] = p_args["table"];
 	result["maximum"] = table->get_maximum();
 	result["unsaved"] = editing->is_unsaved(table);
-	result["entries"] = editing->list_entries(p_args["table"], p_args.get("from", 1), CLAMP(int(p_args.get("count", 100)), 1, 1000));
+	int64_t from = 1;
+	int64_t count = 100;
+	if (!int_arg(p_args, "from", 1, p_call, from) || !int_arg(p_args, "count", 100, p_call, count)) {
+		return;
+	}
+	result["entries"] = editing->list_entries(p_args["table"], int(CLAMP(from, int64_t(1), int64_t(JRPGTable::MAX_ENTRIES))), int(CLAMP(count, int64_t(1), int64_t(1000))));
 	p_call->complete_data(result);
 }
 
@@ -234,17 +271,20 @@ void tool_db_set_maximum(const Dictionary &p_args, const Ref<ClaudeBridgeToolCal
 		return;
 	}
 	const String name = p_args["table"];
-	const int maximum = p_args.get("maximum", -1);
+	int64_t maximum = -1;
+	if (!int_arg(p_args, "maximum", -1, p_call, maximum)) {
+		return;
+	}
 	if (maximum < 0 || maximum > JRPGTable::MAX_ENTRIES) {
 		p_call->fail(vformat("\"maximum\" must be between 0 and %d.", JRPGTable::MAX_ENTRIES));
 		return;
 	}
 	// Same rule as the Change Maximum dialog: cutting referenced entries needs an explicit confirmation.
-	const PackedStringArray broken = describe_uses(editing->get_uses_beyond(name, maximum));
+	const PackedStringArray broken = describe_uses(editing->get_uses_beyond(name, int(maximum)));
 	if (bool(p_args.get("show_dialog", false))) {
 		JRPGDatabaseView *view = database_view_on(name, 0, p_call);
 		if (view) {
-			view->popup_change_maximum(maximum);
+			view->popup_change_maximum(int(maximum));
 			Dictionary result;
 			result["dialog"] = "Change Maximum";
 			result["references_that_would_break"] = broken;
@@ -257,7 +297,7 @@ void tool_db_set_maximum(const Dictionary &p_args, const Ref<ClaudeBridgeToolCal
 		return;
 	}
 	const int before = table->get_maximum();
-	if (editing->set_maximum(name, maximum) != OK) {
+	if (editing->set_maximum(name, int(maximum)) != OK) {
 		p_call->fail("The maximum could not be changed; see the editor log.");
 		return;
 	}
@@ -347,14 +387,19 @@ void tool_db_save(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_c
 }
 
 // The record named by "table" and "id" (System, Types and Terms take no id), or null after failing the call.
-Ref<Resource> database_record(JRPGDatabaseEditing *p_editing, const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call) {
+Ref<Resource> database_record(JRPGDatabaseEditing *p_editing, const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, int &r_id) {
+	r_id = 0;
 	const String name = p_args.get("table", "");
 	if (name == "system" || name == "types" || name == "terms") {
-		return p_editing->get_record(name, 0);
+		const Ref<Resource> single = p_editing->get_record(name, 0);
+		if (single.is_null()) {
+			p_call->fail(vformat("The database has no %s data: run jrpg_setup_project to add it.", name)); // Review finding 20.
+		}
+		return single;
 	}
 	const Ref<JRPGTable> table = database_table(p_editing, p_args, p_call);
-	const int id = table.is_valid() ? database_id(table, p_args, p_call) : 0;
-	return id > 0 ? p_editing->get_record(name, id) : Ref<Resource>();
+	r_id = table.is_valid() ? database_id(table, p_args, p_call) : 0;
+	return r_id > 0 ? p_editing->get_record(name, r_id) : Ref<Resource>();
 }
 
 // JSON has one number type: whole numbers inside lists and dictionaries (traits, effects...) become integers, as the
@@ -384,9 +429,48 @@ Variant whole_numbers(const Variant &p_value) {
 	}
 }
 
+bool is_internal(const Ref<Resource> &p_resource) {
+	return p_resource.is_valid() && (p_resource->get_path().is_empty() || p_resource->get_path().contains("::"));
+}
+
+// Record data as JSON: sub-resources saved in the same file become dictionaries of their data (with "class"), so
+// jrpg_db_set can take them back; resources with a file of their own become their res:// path.
+Variant data_to_json(const Variant &p_value, int p_depth) {
+	if (p_value.get_type() == Variant::OBJECT) {
+		const Ref<Resource> res = p_value;
+		if (res.is_null()) {
+			return Variant();
+		}
+		if (!is_internal(res)) {
+			return res->get_path();
+		}
+		Dictionary out;
+		out["class"] = res->get_class();
+		if (p_depth > 0) {
+			List<PropertyInfo> props;
+			res->get_property_list(&props);
+			for (const PropertyInfo &pi : props) {
+				if (JRPGDatabaseEditing::is_data_property(pi)) {
+					out[pi.name] = data_to_json(res->get(pi.name), p_depth - 1);
+				}
+			}
+		}
+		return out;
+	}
+	if (p_value.get_type() == Variant::ARRAY) {
+		Array out;
+		for (const Variant &v : Array(p_value)) {
+			out.push_back(v.get_type() == Variant::OBJECT ? data_to_json(v, p_depth) : ClaudeBridgeTools::variant_to_json(v));
+		}
+		return out;
+	}
+	return ClaudeBridgeTools::variant_to_json(p_value);
+}
+
 void tool_db_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
 	JRPGDatabaseEditing *editing = database_editing(p_call);
-	const Ref<Resource> record = editing ? database_record(editing, p_args, p_call) : Ref<Resource>();
+	int id = 0;
+	const Ref<Resource> record = editing ? database_record(editing, p_args, p_call, id) : Ref<Resource>();
 	if (record.is_null()) {
 		return;
 	}
@@ -398,7 +482,7 @@ void tool_db_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_ca
 	record->get_property_list(&list);
 	for (const PropertyInfo &pi : list) {
 		if (pi.name == "id" || JRPGDatabaseEditing::is_data_property(pi)) {
-			properties[pi.name] = ClaudeBridgeTools::variant_to_json(record->get(pi.name));
+			properties[pi.name] = data_to_json(record->get(pi.name), 4);
 			if ((pi.usage & PROPERTY_USAGE_READ_ONLY) || pi.name == "id") {
 				read_only.push_back(pi.name);
 			}
@@ -437,18 +521,150 @@ void tool_db_get(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_ca
 	p_call->complete_data(result);
 }
 
-// The "values" argument converted to p_record's property types (JSON, Godot literals, res:// paths); false after
-// failing the call.
+bool json_to_property(const PropertyInfo &p_info, const Object *p_holder, const Variant &p_current, const Variant &p_json, const String &p_where, const Ref<ClaudeBridgeToolCall> &p_call, Variant &r_value);
+
+// A sub-resource of class p_class built from a dictionary of its data: the current one copied (so fields left out keep
+// their values) or a new one.
+bool json_to_sub_resource(const String &p_class, const Variant &p_current, const Dictionary &p_json, const String &p_where, const Ref<ClaudeBridgeToolCall> &p_call, Variant &r_value) {
+	const String given = p_json.get("class", p_class);
+	if (!ClassDB::class_exists(given) || !ClassDB::is_parent_class(given, p_class) || !ClassDB::is_parent_class(given, "Resource")) {
+		p_call->fail(vformat("%s: \"class\" must be %s; nothing was changed.", p_where, p_class));
+		return false;
+	}
+	const Ref<Resource> current = p_current;
+	Ref<Resource> made = (is_internal(current) && current->is_class(given)) ? current->duplicate_deep(RESOURCE_DEEP_DUPLICATE_INTERNAL) : Ref<Resource>(Object::cast_to<Resource>(ClassDB::instantiate(given)));
+	if (made.is_null()) {
+		p_call->fail(vformat("%s: a %s cannot be created; nothing was changed.", p_where, given));
+		return false;
+	}
+	List<PropertyInfo> props;
+	made->get_property_list(&props);
+	for (const KeyValue<Variant, Variant> &kv : p_json) {
+		const String key = kv.key;
+		if (key == "class") {
+			continue;
+		}
+		const PropertyInfo *info = nullptr;
+		for (const PropertyInfo &pi : props) {
+			if (pi.name == key && JRPGDatabaseEditing::is_editable_property(pi)) {
+				info = &pi;
+				break;
+			}
+		}
+		if (!info) {
+			p_call->fail(vformat("%s: %s has no editable property \"%s\"; nothing was changed.", p_where, given, key));
+			return false;
+		}
+		Variant value;
+		if (!json_to_property(*info, made.ptr(), made->get(key), kv.value, p_where + "/" + key, p_call, value)) {
+			return false;
+		}
+		Dictionary one;
+		one[key] = value;
+		String reason;
+		if (JRPGDatabaseEditing::check_values(made.ptr(), one, &reason) != OK) {
+			p_call->fail(vformat("%s: %s Nothing was changed.", p_where, reason)); // The same checks as the record's own fields.
+			return false;
+		}
+		made->set(key, value);
+	}
+	r_value = made;
+	return true;
+}
+
+// p_json converted for the property p_info of p_holder (current value p_current).
+bool json_to_property(const PropertyInfo &p_info, const Object *p_holder, const Variant &p_current, const Variant &p_json, const String &p_where, const Ref<ClaudeBridgeToolCall> &p_call, Variant &r_value) {
+	if (p_info.type == Variant::OBJECT) {
+		if (p_json.get_type() == Variant::DICTIONARY) {
+			return json_to_sub_resource(p_info.hint_string, p_current, p_json, p_where, p_call, r_value);
+		}
+		bool ok = false;
+		r_value = ClaudeBridgeTools::json_to_resource(p_json, p_info.hint_string, ok);
+		if (!ok) {
+			p_call->fail(vformat("\"%s\" takes null, a res:// path of a %s or a dictionary of its data; nothing was changed.", p_where, p_info.hint_string));
+		}
+		return ok;
+	}
+	if (p_info.type == Variant::ARRAY && p_info.hint == PROPERTY_HINT_ARRAY_TYPE && ClassDB::is_parent_class(p_info.hint_string, "Resource")) {
+		if (p_json.get_type() != Variant::ARRAY) {
+			p_call->fail(vformat("\"%s\" takes a list of %s dictionaries; nothing was changed.", p_where, p_info.hint_string));
+			return false;
+		}
+		const Array current = p_current;
+		const Array list = p_json;
+		Array out;
+		for (int i = 0; i < list.size(); i++) {
+			if (list[i].get_type() != Variant::DICTIONARY) {
+				p_call->fail(vformat("%s/%d must be a dictionary of %s data; nothing was changed.", p_where, i, p_info.hint_string));
+				return false;
+			}
+			Variant made;
+			if (!json_to_sub_resource(p_info.hint_string, i < current.size() ? current[i] : Variant(), list[i], vformat("%s/%d", p_where, i), p_call, made)) {
+				return false;
+			}
+			out.push_back(made);
+		}
+		r_value = out;
+		return true;
+	}
+	Variant json = whole_numbers(p_json);
+	if (p_info.type == Variant::ARRAY && json.get_type() == Variant::ARRAY) {
+		// Record lists take their missing fields from the defaults the Add dialog uses; traits and effects from 0.
+		const JRPGRecordSpecs::Spec *spec = JRPGRecordSpecs::find_spec(p_holder, p_info.name);
+		const bool traits = (p_info.name == "traits" || p_info.name == "effects") && Object::cast_to<JRPGEntry>(p_holder);
+		if (spec || traits) {
+			Array filled;
+			for (const Variant &v : Array(json)) {
+				if (v.get_type() != Variant::DICTIONARY) {
+					filled.push_back(v); // Refused with its position by the checks.
+					continue;
+				}
+				Dictionary row = spec ? JRPGRecordSpecs::make_default(*spec) : Dictionary();
+				if (traits) {
+					for (const char *key : { "code", "data_id" }) {
+						row[key] = 0;
+					}
+					if (p_info.name == "effects") {
+						row["value1"] = 0;
+						row["value2"] = 0;
+					} else {
+						row["value"] = 0;
+					}
+				}
+				for (const KeyValue<Variant, Variant> &kv : Dictionary(v)) {
+					row[kv.key] = kv.value;
+				}
+				filled.push_back(row);
+			}
+			json = filled;
+		}
+	}
+	bool ok = false;
+	r_value = ClaudeBridgeTools::json_to_value(json, p_info.type, ok);
+	if (!ok) {
+		p_call->fail(vformat("\"%s\" takes type %s; nothing was changed.", p_where, Variant::get_type_name(p_info.type)));
+	}
+	return ok;
+}
+
+// The "values" argument converted to the property types of p_record (or of the sub-resource a nested key such as
+// "battle_rules/tp_max" leads to); false after failing the call.
 bool convert_values(const Object *p_record, const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, Dictionary &r_values) {
 	const Dictionary values = p_args.get("values", Dictionary());
 	if (values.is_empty()) {
 		p_call->fail("\"values\" must be an object such as {\"name\": \"Fire\", \"price\": 50}.");
 		return false;
 	}
-	List<PropertyInfo> list;
-	p_record->get_property_list(&list);
 	for (const KeyValue<Variant, Variant> &kv : values) {
-		const String name = kv.key;
+		const String key = kv.key;
+		StringName name;
+		const Object *holder = JRPGDatabaseEditing::resolve_path(const_cast<Object *>(p_record), key, name);
+		if (!holder) {
+			p_call->fail(vformat("\"%s\" does not lead to data of this %s (jrpg_db_get shows it); nothing was changed.", key, p_record->get_class()));
+			return false;
+		}
+		List<PropertyInfo> list;
+		holder->get_property_list(&list);
 		const PropertyInfo *info = nullptr;
 		for (const PropertyInfo &pi : list) {
 			if (pi.name == name && JRPGDatabaseEditing::is_editable_property(pi)) {
@@ -457,44 +673,75 @@ bool convert_values(const Object *p_record, const Dictionary &p_args, const Ref<
 			}
 		}
 		if (!info) {
-			p_call->fail(vformat("%s has no editable property \"%s\" (jrpg_db_get lists them); nothing was changed.", p_record->get_class(), name));
+			p_call->fail(vformat("%s has no editable property \"%s\" (jrpg_db_get lists them); nothing was changed.", holder->get_class(), name));
 			return false;
 		}
-		bool ok = false;
-		const Variant value = info->type == Variant::OBJECT ? ClaudeBridgeTools::json_to_resource(kv.value, info->hint_string, ok) : ClaudeBridgeTools::json_to_value(whole_numbers(kv.value), info->type, ok);
-		if (!ok) {
-			p_call->fail(vformat("\"%s\" takes type %s; nothing was changed.", name, info->type == Variant::OBJECT ? info->hint_string : Variant::get_type_name(info->type)));
+		Variant value;
+		if (!json_to_property(*info, holder, holder->get(name), kv.value, key, p_call, value)) {
 			return false;
 		}
-		r_values[name] = value;
+		r_values[key] = value;
 	}
 	return true;
 }
 
-Dictionary changed_values(const Object *p_record, const Dictionary &p_values) {
+Dictionary changed_values(Object *p_record, const Dictionary &p_values) {
 	Dictionary changed;
 	for (const KeyValue<Variant, Variant> &kv : p_values) {
-		changed[kv.key] = ClaudeBridgeTools::variant_to_json(p_record->get(StringName(kv.key)));
+		StringName name;
+		const Object *holder = JRPGDatabaseEditing::resolve_path(p_record, kv.key, name);
+		changed[kv.key] = holder ? data_to_json(holder->get(name), 4) : Variant();
 	}
 	return changed;
 }
 
 void tool_db_set(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p_call, void *p_userdata) {
 	JRPGDatabaseEditing *editing = database_editing(p_call);
-	const Ref<Resource> record = editing ? database_record(editing, p_args, p_call) : Ref<Resource>();
+	int id = 0;
+	const Ref<Resource> record = editing ? database_record(editing, p_args, p_call, id) : Ref<Resource>();
 	Dictionary converted;
 	if (record.is_null() || !convert_values(record.ptr(), p_args, p_call, converted)) {
 		return;
 	}
 	const String table = p_args.get("table", "");
-	if (editing->set_record_properties(table, p_args.get("id", 0), converted) != OK) {
+	// A type list may only lose IDs from its end, and not while data still uses them, as Remove Last in the form
+	// (review finding 3). IDs never move: a list of the same length only renames.
+	if (Object::cast_to<JRPGTypesData>(record.ptr()) && !bool(p_args.get("allow_broken_references", false))) {
+		for (const KeyValue<Variant, Variant> &kv : converted) {
+			const PackedStringArray before = record->get(StringName(kv.key));
+			const PackedStringArray after = kv.value;
+			const PackedStringArray uses = after.size() < before.size() ? describe_uses(editing->get_uses_beyond(kv.key, after.size())) : PackedStringArray();
+			if (!uses.is_empty()) {
+				p_call->fail(vformat("Types past %d of %s are still used; nothing was changed. Pass allow_broken_references=true to remove them anyway. Uses:\n%s", after.size(), String(kv.key), String("\n").join(uses)));
+				return;
+			}
+		}
+	}
+	String reason;
+	if (JRPGDatabaseEditing::check_values(record.ptr(), converted, &reason) != OK) {
+		p_call->fail(reason + " Nothing was changed.");
+		return;
+	}
+	if (editing->set_record_properties(table, id, converted) != OK) {
 		p_call->fail("The values were refused; see the editor log. Nothing was changed.");
 		return;
+	}
+	// IDs this record now points at that do not exist or are empty entries; for type lists, the data that points at the
+	// types removed or emptied by this call (allow_broken_references).
+	const String source = Object::cast_to<JRPGSystemData>(record.ptr()) ? String("system") : table;
+	const bool types = Object::cast_to<JRPGTypesData>(record.ptr());
+	PackedStringArray dangling;
+	for (const Variant &v : JRPGReferenceScanner::find_dangling(editing->get_database())) {
+		const Dictionary reference = v;
+		if ((String(reference["source"]) == source && int(reference["source_id"]) == id) || (types && converted.has(reference["target"]))) {
+			dangling.push_back(JRPGReferenceScanner::describe(reference) + " (" + String(reference["problem"]) + ")");
+		}
 	}
 	Dictionary result;
 	result["table"] = table;
 	result["class"] = record->get_class();
 	result["changed"] = changed_values(record.ptr(), converted);
+	result["dangling_references"] = dangling;
 	result["undoable"] = true;
 	p_call->complete_data(result);
 }
@@ -512,6 +759,11 @@ void tool_db_create(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p
 		return;
 	}
 	const String name = p_args["table"];
+	String reason;
+	if (JRPGDatabaseEditing::check_values(sample.ptr(), converted, &reason) != OK) {
+		p_call->fail(reason + " Nothing was changed.");
+		return;
+	}
 	int id = 0;
 	if (editing->create_entry(name, converted, p_args.get("at_end", false), id) != OK) {
 		p_call->fail("The entry could not be created; see the editor log. Nothing was changed.");
@@ -535,8 +787,12 @@ void tool_db_generate_curve(const Dictionary &p_args, const Ref<ClaudeBridgeTool
 	}
 	const Variant which = p_args.get("param", Variant());
 	int param = -1;
-	if (which.get_type() == Variant::INT || which.get_type() == Variant::FLOAT) {
-		param = which;
+	int64_t index = -1;
+	if (which.get_type() == Variant::INT || which.get_type() == Variant::FLOAT || String(which).strip_edges().is_valid_int()) {
+		if (!int_arg(p_args, "param", -1, p_call, index)) {
+			return;
+		}
+		param = int(CLAMP(index, int64_t(-1), int64_t(JRPGCurves::PARAM_COUNT)));
 	} else {
 		for (int i = 0; i < JRPGCurves::PARAM_COUNT; i++) {
 			if (JRPGCurves::get_param_label(i).nocasecmp_to(String(which)) == 0) {
@@ -552,15 +808,22 @@ void tool_db_generate_curve(const Dictionary &p_args, const Ref<ClaudeBridgeTool
 		p_call->fail(vformat("\"param\" must be 0-7 or one of: %s.", String(", ").join(labels)));
 		return;
 	}
-	const int id = p_args.get("id", 0);
-	if (editing->generate_param_curve(id, param, p_args.get("level_1", 0), p_args.get("level_99", 0), p_args.get("growth", 0)) != OK) {
+	int64_t id = 0;
+	int64_t first = 0;
+	int64_t last = 0;
+	int64_t growth = 0;
+	if (!int_arg(p_args, "id", 0, p_call, id) || !int_arg(p_args, "level_1", 0, p_call, first) || !int_arg(p_args, "level_99", 0, p_call, last) || !int_arg(p_args, "growth", 0, p_call, growth)) {
+		return;
+	}
+	// Values past the parameter's range are clamped by generate_param_curve.
+	if (editing->generate_param_curve(int(CLAMP(id, int64_t(0), int64_t(INT32_MAX))), param, int(CLAMP(first, int64_t(INT32_MIN), int64_t(INT32_MAX))), int(CLAMP(last, int64_t(INT32_MIN), int64_t(INT32_MAX))), int(CLAMP(growth, int64_t(-10), int64_t(10)))) != OK) {
 		p_call->fail(vformat("Class %d does not exist; nothing was changed.", id));
 		return;
 	}
-	const Ref<JRPGClassData> cls = editing->get_record("classes", id);
+	const Ref<JRPGClassData> cls = editing->get_record("classes", int(id));
 	const PackedInt32Array values = JRPGCurves::get_param_values(cls->get_param_curves(), param);
 	Dictionary result;
-	result["class"] = id;
+	result["class"] = int(id);
 	result["param"] = JRPGCurves::get_param_label(param);
 	result["level_1"] = values[1];
 	result["level_50"] = values[50];
@@ -585,8 +848,12 @@ void tool_db_select(const Dictionary &p_args, const Ref<ClaudeBridgeToolCall> &p
 		p_call->fail(vformat("\"table\" must be one of: %s, system, types, terms.", String(", ").join(JRPGDatabaseEditing::get_table_names())));
 		return;
 	}
-	if (p_args.has("id") && !view->select_entry(p_args["id"])) {
-		p_call->fail(vformat("%s has no entry %d.", name, int(p_args["id"])));
+	int64_t id = 0;
+	if (!int_arg(p_args, "id", 0, p_call, id)) {
+		return;
+	}
+	if (p_args.has("id") && !view->select_entry(int(id))) {
+		p_call->fail(vformat("%s has no entry %d.", name, id));
 		return;
 	}
 	Dictionary result;
@@ -752,10 +1019,11 @@ void provide_tools(ClaudeBridgeMCP &r_mcp) {
 	ClaudeBridgeMCP::Tool set;
 	set.name = "jrpg_db_set";
 	set.title = "Edit a JRPG database entry";
-	set.description = "Sets properties of an entry (or System, Types, Terms data) as one undoable editor action, like editing them in the Database section's form. Values use JSON; math and engine types use Godot literal strings such as \"Color(1, 0, 0, 1)\"; resources are res:// paths. Every value is checked first: nothing changes unless all are valid. Save with jrpg_db_save.";
+	set.description = "Sets properties of an entry (or System, Types, Terms data) as one undoable editor action, like editing them in the Database section's form. Values use JSON; math and engine types use Godot literal strings such as \"Color(1, 0, 0, 1)\". A key may be a path into sub-resources (\"battle_rules/tp_max\", \"pages/0/turn_end\"); a sub-resource or a list of them may be given as dictionaries of their data, as jrpg_db_get shows them; a resource with a file of its own is a res:// path. Every value is checked first, list elements included: nothing changes unless all are valid. A type list may only shrink while no data uses the removed IDs, unless allow_broken_references is true. The result lists the references of this record that now point at missing or empty entries (for type lists, the data that points at removed or empty types). Save with jrpg_db_save.";
 	Dictionary set_properties = record_properties.duplicate();
-	Dictionary values_property = schema_property("object", "Property names and new values, e.g. {\"name\": \"Fire\", \"mp_cost\": 5}.");
+	Dictionary values_property = schema_property("object", "Property names (or paths) and new values, e.g. {\"name\": \"Fire\", \"mp_cost\": 5}.");
 	set_properties["values"] = values_property;
+	set_properties["allow_broken_references"] = allow_property;
 	set.input_schema = ClaudeBridgeMCP::object_schema(set_properties, PackedStringArray({ "table", "values" }));
 	set.read_only = false;
 	set.destructive = false; // Undoable.

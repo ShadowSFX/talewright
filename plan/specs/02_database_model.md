@@ -117,13 +117,23 @@ Full field lists per table follow the inventory slices (03/04/05). The vertical 
   every persisted JRPG resource (`JRPGSchema::hide_engine_property`).
 - Data properties are the stored ones (not engine `resource_*`), whether or not the inspector shows them right now
   (an item's damage fields are hidden while it deals no damage): the bridge reads and sets them all; derived ones
-  (a class's EXP table) are read-only.
+  (a class's EXP table) are read-only. `JRPGDatabaseEditing.check_values` checks every value before anything
+  changes (6.7.1): its type, and for lists each element (traits and effects with a known code and only their keys,
+  record lists with their spec's fields and enum ranges, resource lists of their class). Keys may be paths into
+  sub-resources saved in the same file (`battle_rules/tp_max`, `pages/0/turn_end`; `resolve_path`); a resource with
+  a file of its own is not part of the record. The bridge shows sub-resources as dictionaries with their `class` and
+  takes them back the same way (missing record fields get their defaults), refuses a type list shrink while data
+  uses the removed IDs (as Remove Last) unless `allow_broken_references`, and reports the references left dangling.
 - Entries added by Change Maximum get their `file::Kind_id` path at once (as the loader and saver would,
   scene/resources/resource_format_text.cpp:633,1942), so inspector edits of an unsaved new entry also go to the
-  global history.
+  global history. Sub-resources nested in an entry or in System/Types/Terms (troop pages, music and sound cues,
+  battle rules; up to 4 levels deep) get a `file::<scene unique id>` path the same way and are watched with their
+  file as owner, so a change inside them marks that file unsaved (6.7.1). Creating an entry (`create_entry`,
+  `jrpg_db_create`) fills the first blank slot that nothing points at.
 - List operations (task 6.4.1, `JRPGDatabaseEditing`, shared by the workspace's Database section and the `jrpg_db_*`
   bridge tools): Change Maximum, Clear, Copy, Paste. The clipboard holds a deep copy taken at copy time; paste only
-  into the same table; each paste gets its own arrays and dictionaries (`JRPGEntry.assign_from`). Change Maximum and
+  into the same table; each paste gets its own arrays, dictionaries and sub-resources (`JRPGEntry.assign_from`,
+  deep duplicate of internal resources). Change Maximum and
   Clear list the references they would break (`JRPGReferenceScanner`) before confirming; the bridge refuses them
   unless `allow_broken_references` is set.
 - Undo: database edits use the global undo history (D-005). Each action is created for `GLOBAL_HISTORY` with
@@ -133,7 +143,8 @@ Full field lists per table follow the inventory slices (03/04/05). The vertical 
   shown as "(*)" on the table. `JRPGBootstrapPlugin::save_external_data()` saves them with the editor's own saves
   (scene save, Ctrl+S without a scene, before running: editor/editor_node.cpp:2525,3495,2603); quitting or reloading
   asks first through `get_unsaved_status()` (editor/editor_node.cpp:3794). The Save button and `jrpg_db_save` save
-  them too. Only changed files are written.
+  them too. Only changed files are written; saving also marks the editor's global history saved (the title's "(*)")
+  when no other project file has edits (scenes keep their own history; viewing entries only unfolds sections).
 - External changes (files edited on disk while the editor runs) are reloaded through Godot's resource reload
   (editor/editor_node.cpp:1291-1323); reloaded files lose their unsaved mark; the database UI refreshes on the
   resources' `changed` signal.

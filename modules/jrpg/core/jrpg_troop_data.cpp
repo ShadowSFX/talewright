@@ -188,10 +188,10 @@ Dictionary JRPGTroopData::make_member(int p_enemy_id, const Vector2i &p_position
 
 void JRPGTroopData::set_pages(const TypedArray<JRPGTroopPage> &p_pages) {
 	pages = p_pages;
-	emit_changed();
 	if (get_id() > 0) {
-		assign_sub_resource_ids(get_kind() + "_" + itos(get_id()));
+		assign_sub_resource_ids(get_kind() + "_" + itos(get_id())); // Before listeners see the new pages.
 	}
+	emit_changed();
 }
 
 void JRPGTroopData::assign_sub_resource_ids(const String &p_prefix) {

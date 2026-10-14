@@ -354,7 +354,7 @@ int JRPGTraitDialog::_selected_row() const {
 			return i;
 		}
 	}
-	return rows.is_empty() ? -1 : 0;
+	return -1; // An entry with an unknown code, until a kind is chosen.
 }
 
 void JRPGTraitDialog::_fill_choices(const Dictionary &p_entry) {
@@ -410,6 +410,10 @@ void JRPGTraitDialog::_update() {
 		}
 	}
 	get_ok_button()->set_disabled(!complete);
+	if (selected < 0) {
+		preview->set_text(vformat(TTR("This entry has an unknown code (%d). Choose a kind to replace it, or cancel to keep it."), int(original.get("code", 0))));
+		return;
+	}
 	if (!complete) {
 		preview->set_text(TTR("This kind picks from a list that is empty: add entries to the database first."));
 		return;
@@ -510,7 +514,15 @@ void JRPGTraitDialog::popup_for(const Dictionary &p_entry) {
 			row.value2->set_value_no_signal(current ? JRPGTraitKinds::to_display(row.kind.value2, int64_t(p_entry.get("value2", 0))) : double(row.kind.default_value2));
 		}
 	}
-	choose(known ? code : rows[0].kind.code);
+	if (known || adding) {
+		choose(known ? code : rows[0].kind.code);
+	} else {
+		// Kept as it is unless the user chooses a kind: Apply stays disabled (review finding 22).
+		for (Row &row : rows) {
+			row.radio->set_pressed_no_signal(false);
+		}
+		tabs->set_current_tab(0);
+	}
 	if (effects) {
 		set_title(adding ? TTR("Add Effect") : TTR("Edit Effect"));
 	} else {

@@ -64,6 +64,8 @@ private:
 	Array learnings; // Dictionaries {level, skill_id, note}.
 	Array traits; // Dictionaries {code, data_id, value}.
 
+	void _curve_changed();
+
 protected:
 	static void _bind_methods();
 	void _validate_property(PropertyInfo &p_property) const;
@@ -78,7 +80,8 @@ public:
 
 	// Talewright's EXP curve (spec 04): total EXP to reach level L is
 	// round(base * (L - 1)^(1.5 + growth / 100)) + extra * (L - 1), computed with integer fixed-point math (within 1
-	// of the real-number value, identical on every platform). The curve setters bake it; games read the table.
+	// of the real-number value, identical on every platform). Once baked, the curve setters keep it baked; games read the
+	// table (or compute the value while it is empty).
 	static int64_t compute_total_exp(int p_base, int p_growth, int p_extra, int p_level);
 	void bake_exp_table();
 	void set_exp_table(const PackedInt64Array &p_table);

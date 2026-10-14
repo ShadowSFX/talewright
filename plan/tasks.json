@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "6.6 Database authoring API + bridge tools",
+  "last_completed": "6.7.1 Review fixes: database data integrity",
   "tasks": [
     {
       "id": "0",
@@ -2245,7 +2245,7 @@
         "talewright/docs/claude_bridge.md",
         "plan/evidence/jrpg/6.6-bridge-create-item.txt"
       ],
-      "commit": "pending",
+      "commit": "c788b268bc",
       "notes": "Database bridge tools now: jrpg_db_list, jrpg_db_get, jrpg_db_set, jrpg_db_create, jrpg_db_clear, jrpg_db_copy, jrpg_db_paste, jrpg_db_set_maximum, jrpg_db_generate_curve, jrpg_db_save, jrpg_db_select (all undoable where they change data; all validate before changing anything)."
     },
     {
@@ -2262,6 +2262,97 @@
         "Findings fixed"
       ],
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "6.7.1",
+      "parent": "6.7",
+      "title": "Review fixes: database data integrity",
+      "description": "Epic 6 review findings 1, 3, 4, 11, 13, 19, 20, 21, 22, 23, 28: nested sub-resources tracked and given paths; type-list truncation and dangling references guarded in jrpg_db_set; create skips referenced blank slots; setup changes tracked; structured values validated and sub-resources editable through the bridge; numeric arguments checked; missing System/Types/Terms fail; Save marks the global history; exact undo and apply; list edits by verified row; assign_from copies internal sub-resources.",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Each listed finding fixed with a doctest or a bridge check, logged in plan/evidence/reviews/epic_6.md"
+      ],
+      "test_strategy": "Doctests + bridge checks.",
+      "status": "done",
+      "files": [],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "6.7.2",
+      "parent": "6.7",
+      "title": "Review fixes: database UI",
+      "description": "Epic 6 review findings 5, 24, 25, 26, 27 and the double refresh of 33: Change Maximum applies typed values; pickers honor minimums and refresh on dual wield; enemy action conditions in their units with a state picker; record dialog keeps unknown enums and untouched values; large tables update rows in place and pickers fill lazily.",
+      "dependencies": [
+        "6.7.1"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Each listed finding fixed and verified through editor_ui_* or a doctest, logged in the review file"
+      ],
+      "test_strategy": "Doctests + editor_ui_* run.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "6.7.3",
+      "parent": "6.7",
+      "title": "Review fixes: bridge UI tools",
+      "description": "Epic 6 review findings 2, 6, 7, 8, 9, 10, 14, 15, 31: edited scene excluded; modal dialogs respected; press/confirm drive the real click path; set_text/submit argument rules; select mirrors each widget's click; disabled MenuButtons refused and menus opened first; secret text hidden; confirm/cancel describe safely and cancel like Esc; remaining gaps (hidden OK, toggle values, integral indexes, hidden tab bars, root, same-window search, editable ranges only, duplicate tool names).",
+      "dependencies": [],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Each listed finding fixed with a doctest, logged in the review file"
+      ],
+      "test_strategy": "SceneTree doctests + live run.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "6.7.4",
+      "parent": "6.7",
+      "title": "Review fixes: addon, setup, hints, tests, docs",
+      "description": "Epic 6 review findings 12, 16, 17, 18, 29, 30, 32, 33: undo/bridge-tool/dialog tests (automated bridge checks), CRLF-normalized addon hashes, honest MCP hints, show_dialog wording, setup/install errors reported, addon directory and upgrade robustness, setup idempotency test, static check strict mode, docs and translatable strings.",
+      "dependencies": [
+        "6.7.1",
+        "6.7.3"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Each listed finding fixed, logged in the review file"
+      ],
+      "test_strategy": "Doctests + automated bridge checks.",
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "6.7.5",
+      "parent": "6.7",
+      "title": "Epic 6 review close-out",
+      "description": "All findings logged as fixed in plan/evidence/reviews/epic_6.md and PROGRESS.md; plain_2d/plain_3d smoke; core_diff_check; push; CI green.",
+      "dependencies": [
+        "6.7.1",
+        "6.7.2",
+        "6.7.3",
+        "6.7.4"
+      ],
+      "priority": 1,
+      "acceptance_criteria": [
+        "Findings fixed and logged",
+        "Smoke ALL PASS, 0 unlisted core paths, CI green after the push"
+      ],
+      "test_strategy": "Epic gate.",
+      "status": "pending",
       "files": [],
       "commit": "",
       "notes": ""

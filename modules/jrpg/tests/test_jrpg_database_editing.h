@@ -39,12 +39,18 @@
 #include "tests/test_macros.h"
 #include "tests/test_utils.h"
 
+#include "modules/jrpg/core/jrpg_audio_cue.h"
+#include "modules/jrpg/core/jrpg_battle_rules.h"
+#include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_database.h"
+#include "modules/jrpg/core/jrpg_enemy_data.h"
 #include "modules/jrpg/core/jrpg_item_data.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_skill_data.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_terms_data.h"
+#include "modules/jrpg/core/jrpg_traits.h"
+#include "modules/jrpg/core/jrpg_troop_data.h"
 #include "modules/jrpg/core/jrpg_types_data.h"
 #include "modules/jrpg/editor/jrpg_database_editing.h"
 #include "modules/jrpg/editor/jrpg_project_setup.h"
@@ -90,6 +96,21 @@ TEST_CASE("[JRPG][DatabaseEditing] assign_from copies an entry in place") {
 	ERR_PRINT_ON;
 	CHECK(item->get_entry_name().is_empty());
 	CHECK(target->get_entry_name() == "Ember");
+
+	// Sub-resources saved in the same file are copied too (review finding 28).
+	Ref<JRPGTroopData> troop;
+	troop.instantiate();
+	Ref<JRPGTroopPage> page;
+	page.instantiate();
+	troop->set_pages(TypedArray<JRPGTroopPage>({ page }));
+	Ref<JRPGTroopData> copy;
+	copy.instantiate();
+	copy->assign_from(troop);
+	REQUIRE(copy->get_pages().size() == 1);
+	const Ref<JRPGTroopPage> copied_page = copy->get_pages()[0];
+	CHECK(copied_page != page);
+	copied_page->set_turn_end(true);
+	CHECK_FALSE(page->is_turn_end());
 }
 
 // The starter database with its files placed in a fresh temp folder, so save_all can write them.
@@ -364,6 +385,114 @@ TEST_CASE("[JRPG][DatabaseEditing] Creating an entry fills the first blank slot 
 	CHECK(id == 0);
 	CHECK(items->get_maximum() == count + 1);
 	CHECK(JRPGDatabaseEditing::is_blank_entry(items->get_entry(4)));
+
+	// A blank slot that other data still points at is skipped (review finding 4): a drop of item 4.
+	Ref<JRPGEnemyData> moss = db->get_table(JRPGDatabase::TABLE_ENEMIES)->get_entry(1);
+	moss->set_drops(Array({ JRPGEnemyData::make_drop(JRPGEnemyData::DROP_ITEM, 4, 2) }));
+	CHECK(editing->create_entry("items", elixir, false, id) == OK);
+	CHECK(id == 5);
+	CHECK(JRPGDatabaseEditing::is_blank_entry(items->get_entry(4)));
+	memdelete(editing);
+}
+
+TEST_CASE("[JRPG][DatabaseEditing] Changes inside troop pages, music cues and battle rules mark their file unsaved") {
+	// Review finding 1: nested sub-resources are tracked and get "file::id" paths (their inspector edits then go to
+	// the global undo history).
+	JRPGDatabaseEditing *editing = memnew(JRPGDatabaseEditing);
+	Ref<JRPGDatabase> db = database_in_folder(TestUtils::get_temp_path("jrpg_database_nested"));
+	editing->set_database(db);
+	const Ref<JRPGTable> troops = db->get_table(JRPGDatabase::TABLE_TROOPS);
+	Ref<JRPGTroopData> troop = troops->get_entry(1);
+	Ref<JRPGTroopPage> page;
+	page.instantiate();
+	troop->set_pages(TypedArray<JRPGTroopPage>({ page }));
+	CHECK(editing->is_unsaved(troops));
+	CHECK(page->get_path() == troops->get_path() + "::Troop_1_Page1");
+	REQUIRE(editing->save_all() == OK);
+	CHECK_FALSE(editing->has_unsaved_changes());
+	page->set_turn_end(true);
+	CHECK(editing->is_unsaved(troops)); // An edit inside a page.
+
+	const Ref<JRPGSystemData> system = db->get_system();
+	REQUIRE(editing->save_all() == OK);
+	Ref<JRPGAudioCue> cue;
+	cue.instantiate();
+	system->set_music(JRPGSystemData::MUSIC_TITLE, cue);
+	CHECK(editing->is_unsaved(system));
+	CHECK(cue->get_path() == system->get_path() + "::Music_Title");
+	REQUIRE(editing->save_all() == OK);
+	cue->set_volume(50);
+	CHECK(editing->is_unsaved(system)); // An edit inside a music cue.
+
+	REQUIRE(editing->save_all() == OK);
+	Ref<JRPGBattleRules> rules;
+	rules.instantiate();
+	system->set_battle_rules(rules);
+	CHECK(rules->get_path() == system->get_path() + "::BattleRules");
+	REQUIRE(editing->save_all() == OK);
+	rules->set_tp_max(50);
+	CHECK(editing->is_unsaved(system)); // An edit inside the battle rules.
+	memdelete(editing);
+}
+
+TEST_CASE("[JRPG][DatabaseEditing] Values are checked down to list elements, and nested paths reach sub-resources") {
+	// Review finding 13.
+	JRPGDatabaseEditing *editing = memnew(JRPGDatabaseEditing);
+	Ref<JRPGDatabase> db = JRPGProjectSetup::create_starter_database("Lantern Road");
+	editing->set_database(db);
+	const auto set_one = [&](const String &p_table, int p_id, const String &p_key, const Variant &p_value) {
+		Dictionary values;
+		values[p_key] = p_value;
+		return editing->set_record_properties(p_table, p_id, values);
+	};
+	const auto dict = [](const PackedStringArray &p_keys, const Array &p_values) {
+		Dictionary d;
+		for (int i = 0; i < p_keys.size(); i++) {
+			d[p_keys[i]] = p_values[i];
+		}
+		return d;
+	};
+	ERR_PRINT_OFF;
+	CHECK(set_one("classes", 1, "traits", Array({ dict({ "code", "data_id", "value" }, Array({ 1, 2, 15000 })) })) == OK);
+	CHECK(set_one("classes", 1, "traits", Array({ dict({ "code", "data_id", "rate" }, Array({ 1, 2, 15000 })) })) == ERR_INVALID_PARAMETER);
+	CHECK(set_one("classes", 1, "traits", Array({ dict({ "code" }, Array({ 999 })) })) == ERR_INVALID_PARAMETER);
+	CHECK(set_one("classes", 1, "traits", Array({ dict({ "code", "value" }, Array({ 1, "lots" })) })) == ERR_INVALID_PARAMETER);
+	CHECK(set_one("classes", 1, "traits", Array({ 5 })) == ERR_INVALID_PARAMETER);
+	CHECK(set_one("items", 1, "effects", Array({ dict({ "code", "value1" }, Array({ JRPGTraits::TRAIT_SPECIAL_FLAG, 1 })) })) == ERR_INVALID_PARAMETER); // A trait code, not an effect.
+	CHECK(set_one("classes", 1, "learnings", Array({ dict({ "level", "skill_id" }, Array({ 3, 2 })) })) == OK);
+	CHECK(set_one("classes", 1, "learnings", Array({ dict({ "level", "spell" }, Array({ 3, 2 })) })) == ERR_INVALID_PARAMETER);
+	CHECK(set_one("classes", 1, "learnings", Array({ dict({ "level", "note" }, Array({ 3, 7 })) })) == ERR_INVALID_PARAMETER);
+	CHECK(set_one("enemies", 1, "drops", Array({ dict({ "kind", "data_id" }, Array({ 9, 1 })) })) == ERR_INVALID_PARAMETER);
+	CHECK(set_one("troops", 1, "pages", Array({ Dictionary() })) == ERR_INVALID_PARAMETER); // Pages are JRPGTroopPage objects.
+	ERR_PRINT_ON;
+	const Ref<JRPGClassData> adventurer = db->get_table(JRPGDatabase::TABLE_CLASSES)->get_entry(1);
+	CHECK(Array(adventurer->get_learnings()).size() == 1); // Only the valid sets applied.
+	// The bridge asks for the reason instead of an engine error.
+	Dictionary bad_code;
+	bad_code["traits"] = Array({ dict({ "code" }, Array({ 999 })) });
+	String reason;
+	CHECK(JRPGDatabaseEditing::check_values(adventurer.ptr(), bad_code, &reason) == ERR_INVALID_PARAMETER);
+	CHECK(reason == "traits[0] has an unknown code 999.");
+
+	Ref<JRPGTroopData> troop = db->get_table(JRPGDatabase::TABLE_TROOPS)->get_entry(1);
+	Ref<JRPGTroopPage> page;
+	page.instantiate();
+	troop->set_pages(TypedArray<JRPGTroopPage>({ page }));
+	CHECK(set_one("troops", 1, "pages/0/turn_end", true) == OK);
+	CHECK(page->is_turn_end());
+	Ref<JRPGBattleRules> rules;
+	rules.instantiate();
+	db->get_system()->set_battle_rules(rules);
+	CHECK(set_one("system", 0, "battle_rules/tp_max", 50) == OK);
+	CHECK(rules->get_tp_max() == 50);
+	ERR_PRINT_OFF;
+	CHECK(set_one("troops", 1, "pages/3/turn_end", true) == ERR_INVALID_PARAMETER);
+	CHECK(set_one("troops", 1, "pages/0/nope", true) == ERR_INVALID_PARAMETER);
+	CHECK(set_one("system", 0, "battle_rules/tp_max", "fifty") == ERR_INVALID_PARAMETER);
+	rules->set_path("res://some_rules.tres", true); // A resource with a file of its own is not part of system.tres.
+	CHECK(set_one("system", 0, "battle_rules/tp_max", 60) == ERR_INVALID_PARAMETER);
+	ERR_PRINT_ON;
+	CHECK(rules->get_tp_max() == 50);
 	memdelete(editing);
 }
 

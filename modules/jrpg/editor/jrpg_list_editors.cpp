@@ -35,6 +35,7 @@
 
 #include "core/object/callable_mp.h"
 #include "editor/editor_string_names.h"
+#include "editor/gui/editor_toaster.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/button.h"
 #include "scene/gui/check_box.h"
@@ -45,6 +46,7 @@
 #include "scene/gui/spin_box.h"
 #include "scene/gui/tree.h"
 
+#include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_enemy_data.h"
 #include "modules/jrpg/core/jrpg_reference_scanner.h"
 #include "modules/jrpg/core/jrpg_troop_data.h"
@@ -83,6 +85,7 @@ void JRPGEditorPropertyList::_edit() {
 		return;
 	}
 	editing = index;
+	editing_row = current[index];
 	_popup_row_editor(current[index]);
 }
 
@@ -99,9 +102,24 @@ void JRPGEditorPropertyList::_remove() {
 
 void JRPGEditorPropertyList::_apply_row(const Dictionary &p_row) {
 	Array current = Array(get_edited_property_value()).duplicate();
-	if (editing >= 0 && editing < current.size()) {
-		current[editing] = p_row;
-		keep_selected = editing;
+	if (editing >= 0) {
+		// The row the dialog was opened on, wherever it is now: the list can change while the dialog is open (undo, the
+		// same entry in the Inspector dock) (review finding 23).
+		int index = editing;
+		if (index >= current.size() || Dictionary(current[index]) != editing_row) {
+			index = current.find(editing_row);
+		}
+		if (index < 0) {
+			if (EditorToaster::get_singleton()) {
+				EditorToaster::get_singleton()->popup_str(TTR("The list changed while the dialog was open; the edit was not applied."), EditorToaster::SEVERITY_WARNING);
+			}
+			return;
+		}
+		if (Dictionary(current[index]) == p_row) {
+			return; // Nothing changed: no undo step, no unsaved mark (review finding 22).
+		}
+		current[index] = p_row;
+		keep_selected = index;
 	} else {
 		current.push_back(p_row);
 		keep_selected = current.size() - 1;
@@ -565,7 +583,14 @@ JRPGEditorPropertyRecords::JRPGEditorPropertyRecords() {
 // JRPGEditorPropertyExpTable.
 
 void JRPGEditorPropertyExpTable::update_property() {
-	const PackedInt64Array exp = get_edited_property_value();
+	PackedInt64Array exp = get_edited_property_value();
+	const JRPGClassData *cls = Object::cast_to<JRPGClassData>(get_edited_object());
+	if (exp.is_empty() && cls) {
+		// Not baked: the values games compute from the curve (JRPGClassData::get_exp_for_level).
+		for (int level = 1; level <= JRPGClassData::LEVEL_LIMIT; level++) {
+			exp.push_back(cls->get_exp_for_level(level));
+		}
+	}
 	table->clear();
 	TreeItem *root = table->create_item();
 	for (int i = 0; i < exp.size(); i++) {

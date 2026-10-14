@@ -92,10 +92,29 @@ void JRPGEntry::assign_from(const Ref<JRPGEntry> &p_source) {
 		if (!(pi.usage & PROPERTY_USAGE_STORAGE) || pi.name.begins_with("resource_") || pi.name == "script" || pi.name.begins_with("metadata/")) {
 			continue;
 		}
-		const Variant value = p_source->get(pi.name);
-		set(pi.name, (value.get_type() == Variant::ARRAY || value.get_type() == Variant::DICTIONARY) ? value.duplicate(true) : value);
+		set(pi.name, copy_value(p_source->get(pi.name)));
 	}
 	emit_changed();
+}
+
+Variant JRPGEntry::copy_value(const Variant &p_value) {
+	// Arrays, dictionaries and the sub-resources saved inside the same file (troop pages...) are copied; resources with
+	// a file of their own stay shared (review finding 28).
+	switch (p_value.get_type()) {
+		case Variant::ARRAY:
+			return Array(p_value).duplicate_deep(RESOURCE_DEEP_DUPLICATE_INTERNAL);
+		case Variant::DICTIONARY:
+			return Dictionary(p_value).duplicate_deep(RESOURCE_DEEP_DUPLICATE_INTERNAL);
+		case Variant::OBJECT: {
+			const Ref<Resource> res = p_value;
+			if (res.is_valid() && (res->get_path().is_empty() || res->get_path().contains("::"))) {
+				return res->duplicate_deep(RESOURCE_DEEP_DUPLICATE_INTERNAL);
+			}
+			return p_value;
+		}
+		default:
+			return p_value;
+	}
 }
 
 bool JRPGEntry::_set(const StringName &p_name, const Variant &p_value) {

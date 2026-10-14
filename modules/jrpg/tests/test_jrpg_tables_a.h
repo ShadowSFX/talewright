@@ -119,10 +119,14 @@ TEST_CASE("[JRPG][Database] EXP curve matches values worked out by hand") {
 	cls->set_exp_base(40);
 	cls->set_exp_extra(0);
 	CHECK(cls->get_exp_table()[JRPGClassData::LEVEL_LIMIT - 1] == JRPGClassData::compute_total_exp(40, 0, 0, JRPGClassData::LEVEL_LIMIT));
+	// An empty table stays empty (values computed on demand), so undoing a curve edit restores the class exactly.
 	Ref<JRPGClassData> fresh;
 	fresh.instantiate();
 	fresh->set_exp_extra(5);
-	CHECK(fresh->get_exp_table().size() == JRPGClassData::LEVEL_LIMIT);
+	CHECK(fresh->get_exp_table().is_empty());
+	CHECK(fresh->get_exp_for_level(2) == JRPGClassData::compute_total_exp(25, 30, 5, 2));
+	fresh->set_exp_extra(10);
+	CHECK(fresh->get_exp_table().is_empty());
 }
 
 TEST_CASE("[JRPG][Database] Parameter curves keep documented ranges") {

@@ -31,6 +31,7 @@
 
 #include "jrpg_project_setup.h"
 
+#include "jrpg_database_editing.h"
 #include "jrpg_managed_addon.h"
 
 #include "core/config/project_settings.h"
@@ -332,6 +333,10 @@ Dictionary JRPGProjectSetup::run() {
 					error = vformat("Could not write %s. Check that the project folder is writable, then run setup again.", system->get_path());
 				} else {
 					created.push_back(system->get_path() + " (game id)");
+					// The file on disk now holds everything System had, edited or not (review finding 11).
+					if (JRPGDatabaseEditing::get_singleton()) {
+						JRPGDatabaseEditing::get_singleton()->forget_unsaved(PackedStringArray({ system->get_path() }));
+					}
 				}
 			}
 			game_id = system.is_valid() ? system->get_game_id() : String();

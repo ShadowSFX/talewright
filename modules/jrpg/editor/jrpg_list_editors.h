@@ -54,6 +54,7 @@ class JRPGEditorPropertyList : public EditorProperty {
 	Button *edit_button = nullptr;
 	Button *remove_button = nullptr;
 	int editing = -1; // Row being edited; -1 while adding.
+	Dictionary editing_row; // That row as it was when the dialog opened.
 	int keep_selected = -1;
 
 	int _selected() const;

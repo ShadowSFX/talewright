@@ -33,6 +33,7 @@
 
 #include "core/object/object.h"
 #include "core/object/ref_counted.h"
+#include "core/templates/hash_set.h"
 #include "core/templates/local_vector.h"
 
 class JRPGDatabase;
@@ -55,10 +56,17 @@ class JRPGDatabaseEditing : public Object {
 	String clipboard_table;
 	LocalVector<Ref<Resource>> unsaved;
 
+	static constexpr int NESTED_DEPTH = 4; // Entry, troop page, and room for the event commands of later epics.
+
 	void _watch(const Ref<Resource> &p_resource, const Ref<Resource> &p_owner);
+	void _adopt(const Ref<Resource> &p_sub, const Ref<Resource> &p_owner, int p_depth);
+	void _watch_nested(const Ref<Resource> &p_holder, const Ref<Resource> &p_owner, int p_depth);
 	void _watch_table(const Ref<JRPGTable> &p_table);
+	void _watch_all();
+	void _on_manifest_changed();
+	void _mark_saved(const HashSet<String> &p_files);
 	bool _is_database_file(const Ref<Resource> &p_resource) const;
-	void _on_resource_changed(ObjectID p_owner, bool p_owner_itself);
+	void _on_resource_changed(ObjectID p_owner, ObjectID p_emitter);
 
 protected:
 	static void _bind_methods();
@@ -76,17 +84,24 @@ public:
 
 	// The entry p_id of a table, or the System, Types or Terms data for "system", "types", "terms" (p_id ignored).
 	Ref<Resource> get_record(const String &p_table, int p_id);
-	// Sets properties of a record ({name: value}) as one undoable action (the bridge's authoring tool). Each value must
-	// have its property's type; the read-only "id" and engine properties (resource_*, script, metadata) are refused,
-	// and nothing changes unless every value is valid.
+	// Sets properties of a record ({name or nested path: value}) as one undoable action (the bridge's authoring tool).
+	// Values are checked by check_values; the read-only "id" and engine properties (resource_*, script, metadata) are
+	// refused, and nothing changes unless every value is valid.
 	Error set_record_properties(const String &p_table, int p_id, const Dictionary &p_values);
 	// Creates an entry from p_values ({property: value}): fills the first blank entry of p_table (every field at its
-	// default, is_blank_entry), or adds one at the end when there is none or p_at_end. One undoable action; nothing
-	// changes unless every value is valid. r_id: the new entry's ID.
+	// default, is_blank_entry) that no other data points at, or adds one at the end when there is none or p_at_end.
+	// One undoable action; nothing changes unless every value is valid. r_id: the new entry's ID.
 	Error create_entry(const String &p_table, const Dictionary &p_values, bool p_at_end, int &r_id);
 	static bool is_blank_entry(const Ref<JRPGEntry> &p_entry);
-	// OK when every value of p_values names an editable property of p_record and has its type.
-	static Error check_values(const Object *p_record, const Dictionary &p_values);
+	// OK when every key of p_values names an editable property of p_record (or a nested path into its sub-resources,
+	// resolve_path) and every value has its type and, for lists, the shape of its elements: traits and effects with a
+	// known code, record lists (learnings, drops, actions, members) with their fields, resource lists of their class.
+	// With r_message, the reason for a refusal is written there instead of the log.
+	static Error check_values(const Object *p_record, const Dictionary &p_values, String *r_message = nullptr);
+	static Error check_element(const Object *p_target, const PropertyInfo &p_property, const Variant &p_element, int p_index, String *r_message = nullptr);
+	// "battle_rules/tp_max", "pages/0/turn_end": the object that holds the last property of p_path, walking resource
+	// properties and array indexes, or null. Only p_record itself and sub-resources saved in its file qualify.
+	static Object *resolve_path(Object *p_record, const String &p_path, StringName &r_property);
 	// Replaces parameter p_param's curve of class p_class_id with one generated from p_first (level 1) to p_last
 	// (level 99) with growth shape p_growth (-10..10, JRPGCurves::generate), clamped to the parameter's range; undoable.
 	Error generate_param_curve(int p_class_id, int p_param, int p_first, int p_last, int p_growth);
