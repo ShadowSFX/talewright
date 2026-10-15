@@ -46,6 +46,12 @@
 				Returns the event's id.
 			</description>
 		</method>
+		<method name="get_motion" qualifiers="const">
+			<return type="JRPGCharacterMotion" />
+			<description>
+				Returns the event's movement of its own ([JRPGCharacterMotion]), which follows the active page's movement type, speed, frequency, route and options; the scene manager steps it.
+			</description>
+		</method>
 		<method name="get_mover" qualifiers="const">
 			<return type="JRPGMover" />
 			<description>

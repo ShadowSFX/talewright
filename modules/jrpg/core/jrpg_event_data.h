@@ -40,11 +40,12 @@
 
 class JRPGCommandList;
 class JRPGGameState;
+class JRPGMoveRoute;
 
 // One page of a map event (spec 03, RM-EVT-003, RM-EVT-022..043): when it is the event's active page (its appearance
 // conditions), how the event looks and moves while it is, how it meets characters (priority) and what starts it
-// (trigger). The page's commands join with the command model (task 9.2) and its custom move route with movement
-// (task 9.6).
+// (trigger). Its commands run in the command model (task 9.2); its custom move route (move_route) is followed when
+// the movement type is Custom (task 9.6.1).
 // Authority (D-007, D-025): server. The zone decides which page is active (a per-player event's from the triggering
 // player's character state); clients only show the page they are told.
 class JRPGEventPage : public Resource {
@@ -112,6 +113,7 @@ private:
 	bool stepping_animation = false;
 	bool direction_fix = false;
 	bool through = false;
+	Ref<JRPGMoveRoute> move_route; // The Custom movement's route; null: none.
 
 	Priority priority = PRIORITY_BELOW;
 	Trigger trigger = TRIGGER_ACTION;
@@ -179,6 +181,8 @@ public:
 	void set_trigger(Trigger p_trigger);
 	Trigger get_trigger() const { return trigger; }
 	// What the page runs when it starts (task 9.2.2.3); null for none.
+	void set_move_route(const Ref<JRPGMoveRoute> &p_route);
+	Ref<JRPGMoveRoute> get_move_route() const;
 	void set_commands(const Ref<JRPGCommandList> &p_commands);
 	Ref<JRPGCommandList> get_commands() const;
 

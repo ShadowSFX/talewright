@@ -35,6 +35,7 @@
 
 #include "modules/jrpg/core/jrpg_event_data.h"
 
+class JRPGCharacterMotion;
 class JRPGCharacterSprite;
 class JRPGEventState;
 class JRPGGameState;
@@ -55,6 +56,7 @@ class JRPGEvent : public Node2D {
 	Ref<JRPGEventData> data;
 	Ref<JRPGEventState> state;
 	Ref<JRPGMover> mover;
+	Ref<JRPGCharacterMotion> motion; // Its movement of its own (task 9.6.1.2).
 	JRPGCharacterSprite *sprite = nullptr;
 	JRPGMap *map = nullptr; // The map it registered with while in the tree.
 	Vector2i cell_size = Vector2i(48, 48);
@@ -78,6 +80,8 @@ public:
 	Ref<JRPGEventData> get_data() const { return data; }
 	Ref<JRPGEventState> get_state() const { return state; }
 	Ref<JRPGMover> get_mover() const { return mover; }
+	// Its movement of its own, as its active page sets it (task 9.6.1.2): the scene manager steps it.
+	Ref<JRPGCharacterMotion> get_motion() const;
 	int get_event_id() const;
 	Vector2i get_cell() const;
 	JRPGSystemData::Direction get_direction() const;

@@ -9,6 +9,7 @@
 		Each map shown gets a [JRPGEvent] node for each of its events, from the states the game state keeps for that map (a resumed game) or new ones from the events' data. Every step the events' pages are picked again when the game state changed since the last time (a switch, a variable, a self switch, an item or the party). Events Same as characters stop the player stepping onto their cells.
 		Every step also runs the map's event processes ([method get_event_runner]) after a transfer's step and before the player moves. While an autorun or an event started by a trigger runs, the player stands still (a step under way still ends); a transfer's fade pauses the processes; entering another map stops the old map's parallel processes, while an event that moved the player goes on with its remaining commands.
 		The events ask the player through a local presentation port ([method get_local_port]) that shows the requests in the message, choice, number input and gold windows of the manager's message layer ([constant MESSAGE_LAYER]); the player also stands still while a request waits for an answer.
+		Events move by themselves as their pages say ([method JRPGEvent.get_motion]), each step before the player, in the order of the map's events: events Same as characters block one another and are blocked by the player; Below and Above events pass under and over everyone.
 		When it enters a running game's tree (not in the editor) with [member autostart] on, it starts a new game at the System start position, after every [method Node._ready] call: a script that continues a loaded game there with [method resume] comes first.
 		A transfer that cannot happen (a map the map list lacks, a scene that cannot load or is not a map, a cell outside the map) leaves the player where they are, prints one warning and returns an error.
 		Authority: in a single-player game the manager decides transfers itself; online, the server decides them and the client's manager only applies what it is told.
@@ -135,6 +136,12 @@
 			<return type="bool" />
 			<description>
 				Returns [code]true[/code] while a transfer is fading out or in.
+			</description>
+		</method>
+		<method name="rebuild_events">
+			<return type="void" />
+			<description>
+				Builds the current map's event nodes again from its data, keeping the event states the game holds: for tools and tests that change the running map's events.
 			</description>
 		</method>
 		<method name="refresh_player_character">

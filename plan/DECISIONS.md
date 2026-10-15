@@ -1275,3 +1275,19 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** plain arrays pack deterministically and keep route data editable as data; a capped search makes Approach
   actually reach the player around walls while staying deterministic and cheap; core logic lets the zone run it.
 - **Reversal:** `JRPGCharacterMotion::update` and `_path_step`; `JRPGMoveRoute` codes are saved data (append only).
+
+## D-073 — Events move on the running map
+- **Context:** task 9.6.1.2 puts JRPGCharacterMotion (D-072) on the map's event nodes. The help says Below-characters
+  events can be walked onto and Same-as-characters ones cannot, but not how moving events meet each other or the
+  player, nor in which order events and the player move within a frame.
+- **Options:** events before or after the player; every event blocking every other, or only Same-as-characters ones.
+- **Choice:** JRPGEventPage gains `move_route` (the Custom route). Each JRPGEvent owns a motion set from its active
+  page (a page change restarts the route; the first page after a load goes on with the saved position). Every
+  simulation step, outside transfers, JRPGSceneManager advances each present event's mover and steps its motion in
+  the map's event order, before the player: events Same as characters are blocked by the other blocking events'
+  cells (kept up to date as each moves) and by the player; Below and Above events are blocked by blocking events only
+  and pass under or over the player. The map_ai stream drives every choice, so a walker on the map takes exactly the
+  core motion's path. `rebuild_events()` rebuilds the nodes from the map data for tools and tests.
+- **Why:** a fixed order and one stream keep movement deterministic on every machine and on the zone; letting only
+  characters at the characters' level collide matches what priority means to authors.
+- **Reversal:** `JRPGSceneManager::_move_events`, `JRPGEvent::refresh_page`.

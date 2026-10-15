@@ -769,6 +769,7 @@ def run(checks: Checks) -> None:
     run_messages(c)
     run_choices(c)
     run_event_messages(c)
+    run_approach(c)
 
 
 # Windows (task 10.1.1) on a plain backdrop: open with a scroll mark, tinted with the pause mark, and three quarters open (its
@@ -1265,6 +1266,122 @@ def run_event_messages(c: Checks) -> None:
             evidence.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(shot["path"], evidence)
             print(f"[EVIDENCE] wrote {evidence.relative_to(ROOT)}")
+
+
+# An NPC that approaches (task 9.6.1.2): a game started at the start position gets an event, as far from the player as the
+# map lets it be, whose page moves toward the player; it ends next to them.
+APPROACH_SCENE = """[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui_checks/approach.gd" id="1_script"]
+
+[node name="ApproachCheck" type="Node"]
+script = ExtResource("1_script")
+"""
+APPROACH_SCRIPT = r"""extends Node
+
+var manager: JRPGSceneManager
+var npc_id := 0
+var start := Vector2i()
+
+
+func _ready() -> void:
+	manager = JRPGSceneManager.new()
+	manager.name = "Game"
+	manager.autostart = false
+	add_child(manager)
+	manager.start_new_game(1)
+	start = _farthest_cell()
+	var page := JRPGEventPage.new()
+	page.movement_type = JRPGEventPage.MOVEMENT_APPROACH
+	page.move_speed = 5
+	page.move_frequency = 5
+	page.priority = JRPGEventPage.PRIORITY_SAME
+	var actors: JRPGTable = manager.get_database().get_table(JRPGDatabase.TABLE_ACTORS)
+	if actors and actors.has_entry(1):
+		page.character = actors.get_entry(1).character
+	var event := manager.get_map().get_map_data().add_event(start)
+	event.pages = [page]
+	npc_id = event.event_id
+	manager.rebuild_events()
+
+
+# The reachable cell farthest from the player, walking the map's cells from the player's.
+func _farthest_cell() -> Vector2i:
+	var cache: JRPGMapCellCache = manager.get_cell_cache()
+	var from: Vector2i = manager.get_player().get_cell()
+	var seen := {from: true}
+	var queue: Array[Vector2i] = [from]
+	var at := 0
+	while at < queue.size():
+		var cell: Vector2i = queue[at]
+		at += 1
+		for side in 4:
+			var next: Vector2i = cache.get_neighbor(cell, side)
+			if next.x >= 0 and not seen.has(next) and cache.can_step(cell, side):
+				seen[next] = true
+				queue.append(next)
+	return queue[queue.size() - 1]
+
+
+func cells() -> Dictionary:
+	var npc: JRPGEvent = manager.get_event_node(npc_id)
+	var player: Vector2i = manager.get_player().get_cell()
+	return {
+		"npc": [npc.get_cell().x, npc.get_cell().y],
+		"player": [player.x, player.y],
+		"start": [start.x, start.y],
+		"path": str(npc.get_path()),
+	}
+"""
+
+
+def run_approach(c: Checks) -> None:
+    (c.project / "ui_checks" / "approach.gd").write_text(APPROACH_SCRIPT, encoding="utf-8")
+    (c.project / "ui_checks" / "approach.tscn").write_text(APPROACH_SCENE, encoding="utf-8")
+    c.call("editor_rescan")
+    c.call("run_project", {"scene": "res://ui_checks/approach.tscn"})
+    connected = False
+    for _ in range(120):
+        if c.call("run_status").get("debugger_connected"):
+            connected = True
+            break
+        time.sleep(0.5)
+    connected = connected and c.wait_for_node("/root/ApproachCheck/Game")
+    c.check("JRPGCharacterMotion: the approach scene runs", connected)
+    if not connected:
+        c.call("stop_project")
+        return
+    first = c.call("game_call", {"path": "/root/ApproachCheck", "method": "cells"}).get("result") or {}
+    last: dict[str, Any] = first
+    for _ in range(60):
+        c.call("game_wait", {"frames": 20})
+        last = c.call("game_call", {"path": "/root/ApproachCheck", "method": "cells"}).get("result") or {}
+        npc, player = last.get("npc"), last.get("player")
+        if npc and player and abs(npc[0] - player[0]) + abs(npc[1] - player[1]) == 1:
+            break
+    node = (
+        c.call("game_node_get", {"path": last.get("path", ""), "properties": ["position"]}) if last.get("path") else {}
+    )
+    shot = c.call("game_screenshot", {"include_image": False})
+    c.call("stop_project")
+    npc, player, start = last.get("npc"), last.get("player"), first.get("start")
+    far = bool(start and player and abs(start[0] - player[0]) + abs(start[1] - player[1]) >= 3)
+    c.check("JRPGCharacterMotion: the NPC starts away from the player", far, json.dumps(first))
+    c.check(
+        "JRPGCharacterMotion: the approaching NPC ends next to the player",
+        bool(npc and player and abs(npc[0] - player[0]) + abs(npc[1] - player[1]) == 1),
+        json.dumps(last),
+    )
+    c.check(
+        "JRPGCharacterMotion: the NPC node's position reads through the bridge",
+        "position" in json.dumps(node),
+        json.dumps(node)[:200],
+    )
+    evidence = ROOT / "plan" / "evidence" / "jrpg" / "9.6.1.2-approaching-npc.png"
+    if WRITE_EVIDENCE and shot.get("path"):
+        evidence.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(shot["path"], evidence)
+        print(f"[EVIDENCE] wrote {evidence.relative_to(ROOT)}")
 
 
 def main() -> int:

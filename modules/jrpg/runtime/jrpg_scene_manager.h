@@ -152,6 +152,9 @@ private:
 	void _build_events();
 	// Picks every event's page again when the game state changed since the last time (at most once per step).
 	void _refresh_events(bool p_force = false);
+	// Advances every event's step and lets it move by itself (task 9.6.1.2): events Same as characters block one another
+	// and are blocked by the player; Below and Above events pass under and over them.
+	void _move_events();
 
 protected:
 	void _notification(int p_what);
@@ -207,6 +210,9 @@ public:
 	JRPGChoiceWindow *get_choice_window() const { return choice_window; }
 	JRPGNumberInputWindow *get_number_window() const { return number_window; }
 	JRPGGoldWindow *get_gold_window() const { return gold_window; }
+	// Builds the current map's event nodes again from its data, keeping the states the game holds (tools and tests that
+	// change the running map's events).
+	void rebuild_events();
 	// The cells characters cannot step onto because an event there blocks them (JRPGEvent::blocks_characters).
 	HashSet<Vector2i> get_blocked_cells() const;
 	// Runs p_steps simulation steps now, as frames would (tests, tools).

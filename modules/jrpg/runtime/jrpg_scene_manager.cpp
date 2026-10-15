@@ -47,6 +47,7 @@
 
 #include "modules/jrpg/core/jrpg_actor_data.h"
 #include "modules/jrpg/core/jrpg_audio_cue.h"
+#include "modules/jrpg/core/jrpg_character_motion.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_event_data.h"
 #include "modules/jrpg/core/jrpg_event_runner.h"
@@ -56,6 +57,7 @@
 #include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_map_list.h"
 #include "modules/jrpg/core/jrpg_mover.h"
+#include "modules/jrpg/core/jrpg_random.h"
 #include "modules/jrpg/core/jrpg_sim_clock.h"
 #include "modules/jrpg/core/jrpg_system_data.h"
 #include "modules/jrpg/core/jrpg_table.h"
@@ -411,6 +413,58 @@ Ref<JRPGLocalHost> JRPGSceneManager::get_local_host() const {
 	return local_host;
 }
 
+void JRPGSceneManager::rebuild_events() {
+	ERR_FAIL_COND_MSG(!map || game_state.is_null(), "JRPGSceneManager: no game is running.");
+	if (events_root) {
+		map->remove_child(events_root);
+		events_root->queue_free();
+		events_root = nullptr;
+	}
+	_build_events();
+	event_runner->change_map(map->get_map_data(), map_id); // The events' processes from their pages again.
+}
+
+void JRPGSceneManager::_move_events() {
+	if (!events_root || cell_cache.is_null()) {
+		return;
+	}
+	// The cells taken by events that block characters, kept up to date as each event moves.
+	HashSet<Vector2i> taken = get_blocked_cells();
+	const Vector2i player_cell = player->get_cell();
+	const Ref<JRPGRandom> random = game_state->get_random()->get_stream(JRPGRandomStreams::STREAM_MAP_AI);
+	for (int i = 0; i < events_root->get_child_count(false); i++) {
+		JRPGEvent *event = Object::cast_to<JRPGEvent>(events_root->get_child(i, false));
+		if (!event || !event->is_present()) {
+			continue;
+		}
+		if (event->get_mover()->advance()) {
+			event->get_state()->set_cell(event->get_cell());
+		}
+		const bool blocks = event->blocks_characters();
+		if (blocks) {
+			taken.erase(event->get_cell());
+		}
+		HashSet<Vector2i> blocked;
+		for (const Vector2i &cell : taken) {
+			blocked.insert(cell);
+		}
+		if (blocks) {
+			blocked.insert(player_cell); // Only events Same as characters bump into the player.
+		}
+		JRPGCharacterMotion::Context context;
+		context.cell_cache = cell_cache;
+		context.blocked = &blocked;
+		context.player_cell = player_cell;
+		context.game_state = game_state;
+		context.random = random;
+		event->get_motion()->update(context);
+		if (blocks) {
+			taken.insert(event->get_cell());
+		}
+		event->update_position();
+	}
+}
+
 JRPGEvent *JRPGSceneManager::get_event_node(int p_event_id) const {
 	return map ? Object::cast_to<JRPGEvent>(map->get_event_node(p_event_id)) : nullptr;
 }
@@ -563,6 +617,9 @@ void JRPGSceneManager::_simulation_step() {
 		event_runner->step(); // The map's events, before the player: an autorun that starts now holds the player now.
 	}
 	local_port->step(); // A message window no request uses any more closes.
+	if (!transferring) {
+		_move_events(); // Before the player, who then sees where they went.
+	}
 	const Ref<JRPGMover> mover = player->get_mover();
 	if (mover->advance()) {
 		game_state->increase_steps(); // Arrived on a new cell.
@@ -646,6 +703,7 @@ void JRPGSceneManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_cell_cache"), &JRPGSceneManager::get_cell_cache);
 	ClassDB::bind_method(D_METHOD("get_event_node", "event_id"), &JRPGSceneManager::get_event_node);
 	ClassDB::bind_method(D_METHOD("get_event_nodes"), &JRPGSceneManager::get_event_nodes);
+	ClassDB::bind_method(D_METHOD("rebuild_events"), &JRPGSceneManager::rebuild_events);
 	ClassDB::bind_method(D_METHOD("get_event_runner"), &JRPGSceneManager::get_event_runner);
 	ClassDB::bind_method(D_METHOD("get_local_port"), &JRPGSceneManager::get_local_port);
 	ClassDB::bind_method(D_METHOD("get_local_host"), &JRPGSceneManager::get_local_host);

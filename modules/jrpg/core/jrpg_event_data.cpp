@@ -35,6 +35,7 @@
 #include "jrpg_database.h" // IWYU pragma: keep (JRPGGameState returns Ref<JRPGDatabase> inline).
 #include "jrpg_event_state.h"
 #include "jrpg_game_state.h"
+#include "jrpg_move_route.h"
 #include "jrpg_schema.h"
 
 #include "core/object/class_db.h"
@@ -174,6 +175,15 @@ void JRPGEventPage::set_trigger(Trigger p_trigger) {
 	emit_changed();
 }
 
+void JRPGEventPage::set_move_route(const Ref<JRPGMoveRoute> &p_route) {
+	move_route = p_route;
+	emit_changed();
+}
+
+Ref<JRPGMoveRoute> JRPGEventPage::get_move_route() const {
+	return move_route;
+}
+
 void JRPGEventPage::set_commands(const Ref<JRPGCommandList> &p_commands) {
 	commands = p_commands;
 	emit_changed();
@@ -288,6 +298,8 @@ void JRPGEventPage::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_priority"), &JRPGEventPage::get_priority);
 	ClassDB::bind_method(D_METHOD("set_trigger", "trigger"), &JRPGEventPage::set_trigger);
 	ClassDB::bind_method(D_METHOD("get_trigger"), &JRPGEventPage::get_trigger);
+	ClassDB::bind_method(D_METHOD("set_move_route", "route"), &JRPGEventPage::set_move_route);
+	ClassDB::bind_method(D_METHOD("get_move_route"), &JRPGEventPage::get_move_route);
 	ClassDB::bind_method(D_METHOD("set_commands", "commands"), &JRPGEventPage::set_commands);
 	ClassDB::bind_method(D_METHOD("get_commands"), &JRPGEventPage::get_commands);
 	ClassDB::bind_method(D_METHOD("has_any_condition"), &JRPGEventPage::has_any_condition);
@@ -325,6 +337,7 @@ void JRPGEventPage::_bind_methods() {
 	ADD_GROUP("", "");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "priority", PROPERTY_HINT_ENUM, "Below Characters,Same as Characters,Above Characters"), "set_priority", "get_priority");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "trigger", PROPERTY_HINT_ENUM, "Action Button,Player Touch,Event Touch,Autorun,Parallel"), "set_trigger", "get_trigger");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "move_route", PROPERTY_HINT_RESOURCE_TYPE, "JRPGMoveRoute"), "set_move_route", "get_move_route");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "commands", PROPERTY_HINT_RESOURCE_TYPE, "JRPGCommandList"), "set_commands", "get_commands");
 
 	BIND_ENUM_CONSTANT(SELF_SWITCH_A);

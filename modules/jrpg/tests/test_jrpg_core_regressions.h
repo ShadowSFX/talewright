@@ -260,7 +260,7 @@ TEST_CASE("[JRPG][Regression] Stored defaults are frozen (finding 6)") {
 		{ "JRPGMapList", "5c0b0e581e8b80536101a25af5bc9c9c" }, // Epic 8 review A5.
 		{ "JRPGMapData", "a67392046cb3f5e08be7c58e7cd950d8" },
 		{ "JRPGEventData", "4e0a30e273eef5edc7c2997849b05c5f" }, // Task 9.1.1.
-		{ "JRPGEventPage", "3cad2d21baed261dd8f10df3cf411b79" }, // Task 9.2.2.3: commands (new, none by default).
+		{ "JRPGEventPage", "d6da1786c0fc7833a93a8f716cd72f40" }, // Task 9.6.1.2: move_route (new, none by default).
 	};
 	for (const auto &entry : frozen) {
 		const String fingerprint = defaults_fingerprint(entry[0]);

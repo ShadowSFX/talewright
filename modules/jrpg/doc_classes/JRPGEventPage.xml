@@ -61,6 +61,9 @@
 		<member name="move_frequency" type="int" setter="set_move_frequency" getter="get_move_frequency" default="3">
 			How often the event moves on its own, from [constant MIN_FREQUENCY] to [constant MAX_FREQUENCY] (higher: more often).
 		</member>
+		<member name="move_route" type="JRPGMoveRoute" setter="set_move_route" getter="get_move_route">
+			The route the event follows while its movement type is Custom ([JRPGMoveRoute]); [code]null[/code] for none.
+		</member>
 		<member name="move_speed" type="int" setter="set_move_speed" getter="get_move_speed" default="3">
 			How fast the event moves, from [constant MIN_SPEED] to [constant MAX_SPEED] (higher: faster).
 		</member>

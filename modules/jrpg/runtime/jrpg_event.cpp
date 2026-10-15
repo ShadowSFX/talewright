@@ -38,9 +38,11 @@
 #include "core/object/class_db.h"
 #include "scene/resources/sprite_frames.h"
 
+#include "modules/jrpg/core/jrpg_character_motion.h"
 #include "modules/jrpg/core/jrpg_database.h" // IWYU pragma: keep (JRPGGameState returns Ref<JRPGDatabase> inline).
 #include "modules/jrpg/core/jrpg_event_state.h"
 #include "modules/jrpg/core/jrpg_game_state.h"
+#include "modules/jrpg/core/jrpg_move_route.h"
 #include "modules/jrpg/core/jrpg_mover.h"
 
 void JRPGEvent::setup(const Ref<JRPGEventData> &p_data, const Ref<JRPGEventState> &p_state, bool p_saved_state) {
@@ -52,6 +54,8 @@ void JRPGEvent::setup(const Ref<JRPGEventData> &p_data, const Ref<JRPGEventState
 	set_name(vformat("Event%d", data->get_event_id()));
 	mover->set_cell(state->get_cell());
 	mover->set_direction(state->get_direction());
+	motion->setup(mover, state);
+	motion->set_page_movement(JRPGEventPage::MOVEMENT_FIXED, JRPGMover::SPEED_NORMAL, 3, Ref<JRPGMoveRoute>(), false, false, false);
 	_show_page();
 	update_position();
 }
@@ -97,6 +101,12 @@ bool JRPGEvent::refresh_page(const Ref<JRPGGameState> &p_game_state, int p_map_i
 	}
 	page_index = found;
 	const Ref<JRPGEventPage> page = get_page();
+	// Its movement: the new page's (a page from a save goes on with its saved route position).
+	if (page.is_valid()) {
+		motion->set_page_movement(page->get_movement_type(), page->get_move_speed(), page->get_move_frequency(), page->get_move_route(), page->is_direction_fix(), page->is_through(), !keep_direction);
+	} else {
+		motion->set_page_movement(JRPGEventPage::MOVEMENT_FIXED, JRPGMover::SPEED_NORMAL, 3, Ref<JRPGMoveRoute>(), false, false, true);
+	}
 	if (page.is_valid() && !keep_direction) {
 		// RM-EVT-030: the event faces its new page's image direction (a saved facing stays for the page it was saved on).
 		mover->set_direction(page->get_direction());
@@ -209,6 +219,7 @@ void JRPGEvent::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_direction"), &JRPGEvent::get_direction);
 	ClassDB::bind_method(D_METHOD("refresh_page", "game_state", "map_id"), &JRPGEvent::refresh_page);
 	ClassDB::bind_method(D_METHOD("get_page_index"), &JRPGEvent::get_page_index);
+	ClassDB::bind_method(D_METHOD("get_motion"), &JRPGEvent::get_motion);
 	ClassDB::bind_method(D_METHOD("get_page"), &JRPGEvent::get_page);
 	ClassDB::bind_method(D_METHOD("is_present"), &JRPGEvent::is_present);
 	ClassDB::bind_method(D_METHOD("blocks_characters"), &JRPGEvent::blocks_characters);
@@ -217,7 +228,12 @@ void JRPGEvent::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("update_position"), &JRPGEvent::update_position);
 }
 
+Ref<JRPGCharacterMotion> JRPGEvent::get_motion() const {
+	return motion;
+}
+
 JRPGEvent::JRPGEvent() {
+	motion.instantiate();
 	mover.instantiate();
 	sprite = memnew(JRPGCharacterSprite);
 	sprite->set_name("Sprite");
