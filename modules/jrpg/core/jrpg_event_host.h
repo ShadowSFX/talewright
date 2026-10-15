@@ -31,6 +31,8 @@
 
 #pragma once
 
+#include "jrpg_move_route.h" // Its virtual methods take routes by reference.
+
 #include "core/math/vector2i.h"
 #include "core/object/gdvirtual.gen.h"
 #include "core/object/ref_counted.h"
@@ -46,6 +48,7 @@ class JRPGEventHost : public RefCounted {
 
 public:
 	static constexpr int DIRECTION_RETAIN = -1; // The player keeps facing the way they face.
+	static constexpr int CHARACTER_PLAYER = -1; // The player, where a character is an event ID.
 	enum Fade {
 		FADE_BLACK,
 		FADE_WHITE,
@@ -57,6 +60,8 @@ protected:
 
 	GDVIRTUAL4R(Error, _transfer_player, int, Vector2i, int, int)
 	GDVIRTUAL0RC(bool, _is_transferring)
+	GDVIRTUAL2R(Error, _set_move_route, int, Ref<JRPGMoveRoute>)
+	GDVIRTUAL1RC(bool, _is_route_running, int)
 
 public:
 	// Moves the player to p_cell of map p_map_id facing p_direction (0-3, or DIRECTION_RETAIN), through p_fade. OK
@@ -65,6 +70,12 @@ public:
 	virtual Error transfer_player(int p_map_id, const Vector2i &p_cell, int p_direction, Fade p_fade);
 	// A transfer is under way (its fade has not ended).
 	virtual bool is_transferring() const;
+	// Set Movement Route (task 9.6.3): character p_character (CHARACTER_PLAYER, or an event of the current map) follows
+	// p_route instead of its own movement until the route ends. An error, with a warning, for a character that is not
+	// there; ERR_UNAVAILABLE when the host cannot move characters.
+	virtual Error set_move_route(int p_character, const Ref<JRPGMoveRoute> &p_route);
+	// A route given with set_move_route still runs on p_character.
+	virtual bool is_route_running(int p_character) const;
 };
 
 VARIANT_ENUM_CAST(JRPGEventHost::Fade);

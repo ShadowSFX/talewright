@@ -55,4 +55,6 @@ public:
 
 	virtual Error transfer_player(int p_map_id, const Vector2i &p_cell, int p_direction, Fade p_fade) override;
 	virtual bool is_transferring() const override;
+	virtual Error set_move_route(int p_character, const Ref<JRPGMoveRoute> &p_route) override;
+	virtual bool is_route_running(int p_character) const override;
 };

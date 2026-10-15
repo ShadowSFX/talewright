@@ -53,12 +53,14 @@
 #include "modules/jrpg/core/jrpg_character_motion.h"
 #include "modules/jrpg/core/jrpg_database.h"
 #include "modules/jrpg/core/jrpg_event_data.h"
+#include "modules/jrpg/core/jrpg_event_host.h"
 #include "modules/jrpg/core/jrpg_event_runner.h"
 #include "modules/jrpg/core/jrpg_event_state.h"
 #include "modules/jrpg/core/jrpg_game_state.h"
 #include "modules/jrpg/core/jrpg_map_cell_cache.h"
 #include "modules/jrpg/core/jrpg_map_data.h"
 #include "modules/jrpg/core/jrpg_map_list.h"
+#include "modules/jrpg/core/jrpg_move_route.h"
 #include "modules/jrpg/core/jrpg_mover.h"
 #include "modules/jrpg/core/jrpg_random.h"
 #include "modules/jrpg/core/jrpg_sim_clock.h"
@@ -417,6 +419,29 @@ Ref<JRPGLocalHost> JRPGSceneManager::get_local_host() const {
 	return local_host;
 }
 
+Error JRPGSceneManager::set_move_route(int p_character, const Ref<JRPGMoveRoute> &p_route) {
+	ERR_FAIL_COND_V(p_route.is_null(), ERR_INVALID_PARAMETER);
+	if (p_character == JRPGEventHost::CHARACTER_PLAYER) {
+		player_motion->force_route(p_route);
+		return OK;
+	}
+	JRPGEvent *event = get_event_node(p_character);
+	if (!event) {
+		WARN_PRINT(vformat("JRPG: Set Movement Route: the map has no event %d; nothing moves.", p_character));
+		return ERR_DOES_NOT_EXIST;
+	}
+	event->get_motion()->force_route(p_route);
+	return OK;
+}
+
+bool JRPGSceneManager::is_route_running(int p_character) const {
+	if (p_character == JRPGEventHost::CHARACTER_PLAYER) {
+		return player_motion->is_route_forced();
+	}
+	const JRPGEvent *event = get_event_node(p_character);
+	return event && event->get_motion()->is_route_forced();
+}
+
 void JRPGSceneManager::rebuild_events() {
 	ERR_FAIL_COND_MSG(!map || game_state.is_null(), "JRPGSceneManager: no game is running.");
 	if (events_root) {
@@ -710,9 +735,12 @@ void JRPGSceneManager::_simulation_step() {
 	}
 	const Ref<JRPGMover> mover = player->get_mover();
 	if (mover->advance()) {
-		game_state->increase_steps(); // Arrived on a new cell.
+		if (!player_route_step) {
+			game_state->increase_steps(); // Arrived on a new cell (a route's steps do not count, RM-CMD-041).
+		}
+		player_route_step = false;
 		_sync_player();
-		if (_can_trigger()) {
+		if (_can_trigger() && !player_motion->is_route_forced()) {
 			// Player Touch and Event Touch events the player steps onto (RM-EVT-040/041).
 			_trigger_at(player->get_cell(), false, (1 << JRPGEventPage::TRIGGER_PLAYER_TOUCH) | (1 << JRPGEventPage::TRIGGER_EVENT_TOUCH));
 		}
@@ -723,6 +751,21 @@ void JRPGSceneManager::_simulation_step() {
 	// keys then (epic 10 review B4), nor while an autorun or a triggered event runs (a step under way still ends), nor
 	// while an event asks the player something (a parallel event's message too).
 	const bool interface_active = is_inside_tree() && get_viewport()->gui_get_focus_owner() != nullptr;
+	if (player_motion->is_route_forced() && !transferring && cell_cache.is_valid()) {
+		// A route moves the player: input waits until it ends.
+		const bool was_moving = mover->is_moving();
+		HashSet<Vector2i> blocked = get_blocked_cells();
+		JRPGCharacterMotion::Context context;
+		context.cell_cache = cell_cache;
+		context.blocked = &blocked;
+		context.player_cell = player->get_cell();
+		context.game_state = game_state;
+		context.random = game_state->get_random()->get_stream(JRPGRandomStreams::STREAM_MAP_AI);
+		player_motion->update(context);
+		player_route_step = player_route_step || (!was_moving && mover->is_moving());
+		_sync_player();
+		return;
+	}
 	if (transferring || interface_active || mover->is_moving() || cell_cache.is_null() || event_runner->is_main_running() || local_port->is_busy()) {
 		return;
 	}
@@ -806,6 +849,8 @@ void JRPGSceneManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_event_node", "event_id"), &JRPGSceneManager::get_event_node);
 	ClassDB::bind_method(D_METHOD("get_event_nodes"), &JRPGSceneManager::get_event_nodes);
 	ClassDB::bind_method(D_METHOD("rebuild_events"), &JRPGSceneManager::rebuild_events);
+	ClassDB::bind_method(D_METHOD("set_move_route", "character", "route"), &JRPGSceneManager::set_move_route);
+	ClassDB::bind_method(D_METHOD("is_route_running", "character"), &JRPGSceneManager::is_route_running);
 	ClassDB::bind_method(D_METHOD("get_event_runner"), &JRPGSceneManager::get_event_runner);
 	ClassDB::bind_method(D_METHOD("get_local_port"), &JRPGSceneManager::get_local_port);
 	ClassDB::bind_method(D_METHOD("get_local_host"), &JRPGSceneManager::get_local_host);
@@ -858,6 +903,9 @@ JRPGSceneManager::JRPGSceneManager() {
 
 	player = memnew(JRPGPlayer);
 	player->set_name("Player");
+	player_route_state.instantiate();
+	player_motion.instantiate();
+	player_motion->setup(player->get_mover(), player_route_state);
 	event_runner.instantiate();
 
 	// The windows the events ask the player through (task 9.4.2), closed until a request shows.

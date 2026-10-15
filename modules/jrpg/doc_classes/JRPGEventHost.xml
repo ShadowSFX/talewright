@@ -11,10 +11,25 @@
 	<tutorials>
 	</tutorials>
 	<methods>
+		<method name="_is_route_running" qualifiers="virtual const">
+			<return type="bool" />
+			<param index="0" name="character" type="int" />
+			<description>
+				Returns whether a route given with [method set_move_route] still runs on [param character].
+			</description>
+		</method>
 		<method name="_is_transferring" qualifiers="virtual const">
 			<return type="bool" />
 			<description>
 				Returns whether a transfer is under way.
+			</description>
+		</method>
+		<method name="_set_move_route" qualifiers="virtual">
+			<return type="int" enum="Error" />
+			<param index="0" name="character" type="int" />
+			<param index="1" name="route" type="JRPGMoveRoute" />
+			<description>
+				Makes [param character] follow [param route]; returns [constant OK] once it started.
 			</description>
 		</method>
 		<method name="_transfer_player" qualifiers="virtual">
@@ -27,10 +42,25 @@
 				Moves the player to [param cell] of map [param map_id] facing [param direction] through [param fade] ([enum Fade]); returns [constant OK] once the transfer started.
 			</description>
 		</method>
+		<method name="is_route_running" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="character" type="int" />
+			<description>
+				Returns whether a route given with [method set_move_route] still runs on [param character].
+			</description>
+		</method>
 		<method name="is_transferring" qualifiers="const">
 			<return type="bool" />
 			<description>
 				Returns [code]true[/code] while a transfer is under way (its fade has not ended).
+			</description>
+		</method>
+		<method name="set_move_route">
+			<return type="int" enum="Error" />
+			<param index="0" name="character" type="int" />
+			<param index="1" name="route" type="JRPGMoveRoute" />
+			<description>
+				Set Movement Route: [param character] ([constant CHARACTER_PLAYER], or an event of the current map) follows [param route] instead of its own movement until it ends. Returns an error, with a warning, for a character that is not there, and [constant ERR_UNAVAILABLE] when the host cannot move characters.
 			</description>
 		</method>
 		<method name="transfer_player">
@@ -47,6 +77,9 @@
 	<constants>
 		<constant name="DIRECTION_RETAIN" value="-1">
 			The player keeps facing the way they face.
+		</constant>
+		<constant name="CHARACTER_PLAYER" value="-1">
+			The character of the player, where characters are event IDs.
 		</constant>
 		<constant name="FADE_BLACK" value="0" enum="Fade">
 			The screen fades out to black and back in.

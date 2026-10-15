@@ -42,8 +42,11 @@ class ColorRect;
 class JRPGAudioCue;
 class JRPGChoiceWindow;
 class JRPGDatabase;
+class JRPGCharacterMotion;
 class JRPGEvent;
 class JRPGEventRunner;
+class JRPGEventState;
+class JRPGMoveRoute;
 class JRPGGameState;
 class JRPGGoldWindow;
 class JRPGLocalHost;
@@ -103,6 +106,9 @@ private:
 	Ref<JRPGLocalPort> local_port; // What the events ask the player through.
 	Ref<JRPGLocalHost> local_host; // What the events ask of the world (transfers).
 	int locked_event_id = 0; // The event a trigger started: it faces the player and stays put while it runs.
+	Ref<JRPGCharacterMotion> player_motion; // Runs the routes Set Movement Route gives the player.
+	Ref<JRPGEventState> player_route_state; // Its route position (not saved).
+	bool player_route_step = false; // The step under way comes from a route: it is not counted.
 	bool ok_was_down = false; // The action button at the last step.
 	bool ok_blocked = false; // Held while something was busy: it counts again once released.
 	bool ok_latched = false; // Pressed since the last step (a tap shorter than a step still counts).
@@ -227,6 +233,10 @@ public:
 	JRPGChoiceWindow *get_choice_window() const { return choice_window; }
 	JRPGNumberInputWindow *get_number_window() const { return number_window; }
 	JRPGGoldWindow *get_gold_window() const { return gold_window; }
+	// Set Movement Route (task 9.6.3): the player (JRPGEventHost::CHARACTER_PLAYER) or event p_character of the current
+	// map follows p_route until it ends; the player's route steps are not counted as steps and the player's input waits.
+	Error set_move_route(int p_character, const Ref<JRPGMoveRoute> &p_route);
+	bool is_route_running(int p_character) const;
 	// Builds the current map's event nodes again from its data, keeping the states the game holds (tools and tests that
 	// change the running map's events).
 	void rebuild_events();

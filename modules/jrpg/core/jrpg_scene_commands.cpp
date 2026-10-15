@@ -35,6 +35,7 @@
 #include "jrpg_event_host.h"
 #include "jrpg_game_state.h"
 #include "jrpg_interpreter.h"
+#include "jrpg_move_route.h"
 
 #include "core/math/expression.h"
 #include "core/object/class_db.h"
@@ -124,6 +125,70 @@ void JRPGTransferPlayerCommand::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "y_variable", PROPERTY_HINT_RANGE, "1,100000,1"), "set_y_variable", "get_y_variable");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "direction", PROPERTY_HINT_ENUM, "Retain:-1,Up:0,Right:1,Down:2,Left:3"), "set_direction", "get_direction");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "fade", PROPERTY_HINT_ENUM, "Black,White,None"), "set_fade", "get_fade");
+}
+
+// Set Movement Route.
+
+int JRPGSetMovementRouteCommand::_target(const JRPGInterpreter *p_interpreter) const {
+	if (character != CHARACTER_THIS_EVENT) {
+		return character;
+	}
+	const Ref<JRPGGameState> state = p_interpreter->get_game_state();
+	const bool on_map = p_interpreter->get_event_id() > 0 && state.is_valid() && p_interpreter->get_event_map_id() == state->get_events_map_id();
+	return on_map ? p_interpreter->get_event_id() : 0;
+}
+
+String JRPGSetMovementRouteCommand::get_summary() const {
+	const String who_moves = character == CHARACTER_PLAYER ? String("Player") : character == CHARACTER_THIS_EVENT ? String("This event")
+																												  : vformat("Event %d", character);
+	return vformat("Set Movement Route: %s, %d command%s%s", who_moves, route_commands.size(), route_commands.size() == 1 ? "" : "s", wait ? " (wait)" : "");
+}
+
+JRPGEventCommand::ExecuteResult JRPGSetMovementRouteCommand::execute(Object *p_context) {
+	JRPGInterpreter *interpreter = Object::cast_to<JRPGInterpreter>(p_context);
+	ERR_FAIL_NULL_V(interpreter, EXECUTE_CONTINUE);
+	const Ref<JRPGEventHost> host = interpreter->get_host();
+	const int target = _target(interpreter);
+	if (interpreter->is_command_resumed()) {
+		return host.is_valid() && target != 0 && host->is_route_running(target) ? EXECUTE_WAIT : EXECUTE_CONTINUE;
+	}
+	if (host.is_null() || target == 0) {
+		if (!warned) {
+			warned = true;
+			WARN_PRINT(vformat("JRPG: %s, Set Movement Route: %s; nothing moves.", who(interpreter), host.is_null() ? String("nothing moves characters here (no event host)") : String("\"this event\" is not on the map")));
+		}
+		return EXECUTE_CONTINUE;
+	}
+	Ref<JRPGMoveRoute> route;
+	route.instantiate();
+	route->set_commands(route_commands);
+	route->set_repeat(repeat);
+	route->set_skippable(skippable);
+	route->set_wait(wait);
+	if (host->set_move_route(target, route) != OK) {
+		return EXECUTE_CONTINUE; // The host warned.
+	}
+	return wait && host->is_route_running(target) ? EXECUTE_WAIT : EXECUTE_CONTINUE;
+}
+
+void JRPGSetMovementRouteCommand::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_character", "character"), &JRPGSetMovementRouteCommand::set_character);
+	ClassDB::bind_method(D_METHOD("get_character"), &JRPGSetMovementRouteCommand::get_character);
+	ClassDB::bind_method(D_METHOD("set_route_commands", "commands"), &JRPGSetMovementRouteCommand::set_route_commands);
+	ClassDB::bind_method(D_METHOD("get_route_commands"), &JRPGSetMovementRouteCommand::get_route_commands);
+	ClassDB::bind_method(D_METHOD("set_repeat", "repeat"), &JRPGSetMovementRouteCommand::set_repeat);
+	ClassDB::bind_method(D_METHOD("is_repeat"), &JRPGSetMovementRouteCommand::is_repeat);
+	ClassDB::bind_method(D_METHOD("set_skippable", "skippable"), &JRPGSetMovementRouteCommand::set_skippable);
+	ClassDB::bind_method(D_METHOD("is_skippable"), &JRPGSetMovementRouteCommand::is_skippable);
+	ClassDB::bind_method(D_METHOD("set_wait", "wait"), &JRPGSetMovementRouteCommand::set_wait);
+	ClassDB::bind_method(D_METHOD("is_wait"), &JRPGSetMovementRouteCommand::is_wait);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "character"), "set_character", "get_character");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "route_commands"), "set_route_commands", "get_route_commands");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "repeat"), "set_repeat", "is_repeat");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "skippable"), "set_skippable", "is_skippable");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "wait"), "set_wait", "is_wait");
+	BIND_CONSTANT(CHARACTER_PLAYER);
+	BIND_CONSTANT(CHARACTER_THIS_EVENT);
 }
 
 // Wait.

@@ -45,14 +45,31 @@ bool JRPGEventHost::is_transferring() const {
 	return transferring;
 }
 
+Error JRPGEventHost::set_move_route(int p_character, const Ref<JRPGMoveRoute> &p_route) {
+	Error result = ERR_UNAVAILABLE;
+	GDVIRTUAL_CALL(_set_move_route, p_character, p_route, result);
+	return result;
+}
+
+bool JRPGEventHost::is_route_running(int p_character) const {
+	bool running = false;
+	GDVIRTUAL_CALL(_is_route_running, p_character, running);
+	return running;
+}
+
 void JRPGEventHost::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("transfer_player", "map_id", "cell", "direction", "fade"), &JRPGEventHost::transfer_player);
 	ClassDB::bind_method(D_METHOD("is_transferring"), &JRPGEventHost::is_transferring);
+	ClassDB::bind_method(D_METHOD("set_move_route", "character", "route"), &JRPGEventHost::set_move_route);
+	ClassDB::bind_method(D_METHOD("is_route_running", "character"), &JRPGEventHost::is_route_running);
 
 	GDVIRTUAL_BIND(_transfer_player, "map_id", "cell", "direction", "fade");
 	GDVIRTUAL_BIND(_is_transferring);
+	GDVIRTUAL_BIND(_set_move_route, "character", "route");
+	GDVIRTUAL_BIND(_is_route_running, "character");
 
 	BIND_CONSTANT(DIRECTION_RETAIN);
+	BIND_CONSTANT(CHARACTER_PLAYER);
 	BIND_ENUM_CONSTANT(FADE_BLACK);
 	BIND_ENUM_CONSTANT(FADE_WHITE);
 	BIND_ENUM_CONSTANT(FADE_NONE);

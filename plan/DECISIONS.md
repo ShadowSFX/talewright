@@ -1313,3 +1313,21 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** event order is the authors' order; release-after-busy is what players expect when closing a dialog; the
   latches keep the fixed-step game responsive to quick taps (bridge input holds two frames).
 - **Reversal:** `JRPGSceneManager::_trigger_action`, `_trigger_at`, `unhandled_input`; `JRPGPlayer::unhandled_input`.
+
+## D-075 — Set Movement Route
+- **Context:** task 9.6.3 (RM-CMD-041): the player or an event follows a route; a new route replaces the old one; with
+  Wait for Completion the event waits; a blocked character stalls unless Skip If Cannot Move; the player's route steps
+  do not add to the step count. Commands hold plain data (D-058), so a route cannot be stored as an object.
+- **Options:** the command stores a JRPGMoveRoute resource or the route's data; the player moved by input code or by
+  the same motion as events.
+- **Choice:** `JRPGSetMovementRouteCommand` (code `set_movement_route`) stores `character` (-1 player, 0 this event,
+  n an event), `route_commands` ([code, args...] arrays), `repeat`, `skippable`, `wait`, and builds a JRPGMoveRoute
+  when it runs. It goes through the event host (`JRPGEventHost.set_move_route` / `is_route_running`, scripts may
+  implement them); `JRPGLocalHost` calls `JRPGSceneManager.set_move_route`, which forces the route on an event's
+  motion or on the player's own JRPGCharacterMotion (a private, unsaved route state). While a route moves the player,
+  input and triggers wait and its steps are not counted. With wait, the command runs again until the route no longer
+  runs (JRPGInterpreter.is_command_resumed).
+- **Why:** plain data packs and diffs like every other command; one motion engine for events and the player keeps
+  routes identical for both and for the zone server.
+- **Reversal:** `JRPGSetMovementRouteCommand`, `JRPGSceneManager::set_move_route` and the player's route branch in
+  `_simulation_step`.

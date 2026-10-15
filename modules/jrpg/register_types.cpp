@@ -226,6 +226,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGWaitCommand);
 		GDREGISTER_CLASS(JRPGEraseEventCommand);
 		GDREGISTER_CLASS(JRPGScriptCommand);
+		GDREGISTER_CLASS(JRPGSetMovementRouteCommand);
 		JRPGCommandRegistry::register_command(JRPGShowTextCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGShowChoicesCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGInputNumberCommand::get_class_static());
@@ -253,6 +254,7 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		JRPGCommandRegistry::register_command(JRPGWaitCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGEraseEventCommand::get_class_static());
 		JRPGCommandRegistry::register_command(JRPGScriptCommand::get_class_static());
+		JRPGCommandRegistry::register_command(JRPGSetMovementRouteCommand::get_class_static());
 		GDREGISTER_CLASS(JRPGReferenceScanner);
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotile); // Static methods only.
 		GDREGISTER_ABSTRACT_CLASS(JRPGAutotileResolver);

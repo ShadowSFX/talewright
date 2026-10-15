@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGSetMovementRouteCommand" inherits="JRPGEventCommand" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Event command: makes the player or an event follow a movement route.
+	</brief_description>
+	<description>
+		The player ([constant CHARACTER_PLAYER]), the event running the command ([constant CHARACTER_THIS_EVENT]) or event [member character] of the map follows a route ([member route_commands], with [member repeat] and [member skippable], see [JRPGMoveRoute]) instead of its own movement until the route ends; a route given while another runs replaces it. With [member wait] the event waits until the route has ended (a repeating route never does); a blocked move waits for the way to clear unless the route is skippable. The player's route steps are not counted as steps, and the player's input waits while a route moves them. It goes through the event host ([method JRPGEventHost.set_move_route]); without one, or without such a character on the map, nothing moves, with a warning.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="character" type="int" setter="set_character" getter="get_character" default="0">
+			Who follows the route: [constant CHARACTER_PLAYER], [constant CHARACTER_THIS_EVENT] or an event's ID.
+		</member>
+		<member name="repeat" type="bool" setter="set_repeat" getter="is_repeat" default="false">
+			The route starts again when it ends.
+		</member>
+		<member name="route_commands" type="Array" setter="set_route_commands" getter="get_route_commands" default="[]">
+			The route's commands, each [lb]code, arguments...[rb] (see [enum JRPGMoveRoute.Code]).
+		</member>
+		<member name="skippable" type="bool" setter="set_skippable" getter="is_skippable" default="false">
+			A blocked move is skipped rather than waited out.
+		</member>
+		<member name="wait" type="bool" setter="set_wait" getter="is_wait" default="true">
+			The event waits until the route has ended.
+		</member>
+	</members>
+	<constants>
+		<constant name="CHARACTER_PLAYER" value="-1">
+			The [member character] of the player.
+		</constant>
+		<constant name="CHARACTER_THIS_EVENT" value="0">
+			The [member character] of the event running the command.
+		</constant>
+	</constants>
+</class>

@@ -94,6 +94,7 @@ def get_doc_classes():
         "JRPGSceneManager",
         "JRPGScriptCommand",
         "JRPGSelectableList",
+        "JRPGSetMovementRouteCommand",
         "JRPGShowChoicesCommand",
         "JRPGShowTextCommand",
         "JRPGSimClock",

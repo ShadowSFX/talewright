@@ -133,6 +133,13 @@
 				Returns the player's character, inside the current map once a game runs.
 			</description>
 		</method>
+		<method name="is_route_running" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="character" type="int" />
+			<description>
+				Returns whether a route given with [method set_move_route] still runs on [param character].
+			</description>
+		</method>
 		<method name="is_transferring" qualifiers="const">
 			<return type="bool" />
 			<description>
@@ -177,6 +184,14 @@
 			<param index="0" name="map_list" type="JRPGMapList" />
 			<description>
 				Sets the map list maps are found through, instead of the one at [member map_list_path].
+			</description>
+		</method>
+		<method name="set_move_route">
+			<return type="int" enum="Error" />
+			<param index="0" name="character" type="int" />
+			<param index="1" name="route" type="JRPGMoveRoute" />
+			<description>
+				Set Movement Route: the player ([constant JRPGEventHost.CHARACTER_PLAYER]) or event [param character] of the current map follows [param route] until it ends. The player's route steps are not counted as steps, and the player's input waits while a route moves them.
 			</description>
 		</method>
 		<method name="start_new_game">

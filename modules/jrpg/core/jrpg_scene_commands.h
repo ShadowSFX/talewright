@@ -34,6 +34,7 @@
 #include "jrpg_event_command.h"
 
 class Expression;
+class JRPGInterpreter;
 
 // Transfer Player (RM-CMD-037; task 9.5.3, D-071): moves the player to cell (x, y) of map map_id, or to the map and
 // cell held by variables map_variable, x_variable and y_variable (from_variables), facing direction (-1 retains the
@@ -81,6 +82,54 @@ public:
 	virtual StringName get_code() const override { return "transfer_player"; }
 	virtual Category get_category() const override { return CATEGORY_MOVEMENT; }
 	virtual String get_display_name() const override { return "Transfer Player"; }
+	virtual String get_summary() const override;
+	virtual Authority get_authority() const override { return AUTHORITY_SERVER; }
+	virtual BitField<Usable> get_usable_in() const override { return USABLE_MAP_EVENTS | USABLE_COMMON_EVENTS; }
+	virtual bool can_wait() const override { return true; }
+	virtual ExecuteResult execute(Object *p_context) override;
+};
+
+// Set Movement Route (RM-CMD-041; task 9.6.3, D-075): the player (character -1), this event (0) or event character of
+// the map follows a route (JRPGMoveRoute: route_commands, each [code, arguments...], and the options repeat, skippable,
+// wait) instead of its own movement until the route ends; a route given while another runs replaces it. With wait
+// the event waits until the route has ended (a repeating route never does). The player's route steps are not counted
+// as steps, and the player's input waits while a route moves them. Without a host, or without such a character on
+// the map, nothing moves (one warning).
+// Authority (D-007): server.
+class JRPGSetMovementRouteCommand : public JRPGEventCommand {
+	GDCLASS(JRPGSetMovementRouteCommand, JRPGEventCommand);
+
+	int character = 0;
+	Array route_commands;
+	bool repeat = false;
+	bool skippable = false;
+	bool wait = true;
+	mutable bool warned = false;
+
+	// The character to move: the player, an event ID, or 0 when this event is not on the map.
+	int _target(const JRPGInterpreter *p_interpreter) const;
+
+protected:
+	static void _bind_methods();
+
+public:
+	static constexpr int CHARACTER_PLAYER = -1;
+	static constexpr int CHARACTER_THIS_EVENT = 0;
+
+	void set_character(int p_character) { character = p_character; }
+	int get_character() const { return character; }
+	void set_route_commands(const Array &p_commands) { route_commands = p_commands.duplicate(true); }
+	Array get_route_commands() const { return route_commands.duplicate(true); }
+	void set_repeat(bool p_repeat) { repeat = p_repeat; }
+	bool is_repeat() const { return repeat; }
+	void set_skippable(bool p_skippable) { skippable = p_skippable; }
+	bool is_skippable() const { return skippable; }
+	void set_wait(bool p_wait) { wait = p_wait; }
+	bool is_wait() const { return wait; }
+
+	virtual StringName get_code() const override { return "set_movement_route"; }
+	virtual Category get_category() const override { return CATEGORY_MOVEMENT; }
+	virtual String get_display_name() const override { return "Set Movement Route"; }
 	virtual String get_summary() const override;
 	virtual Authority get_authority() const override { return AUTHORITY_SERVER; }
 	virtual BitField<Usable> get_usable_in() const override { return USABLE_MAP_EVENTS | USABLE_COMMON_EVENTS; }

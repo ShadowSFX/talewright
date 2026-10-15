@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.6.2 Triggers and map event processes",
+  "last_completed": "9.6.3 Set Movement Route command",
   "tasks": [
     {
       "id": "0",
@@ -4397,15 +4397,15 @@
         "9.5",
         "8.7"
       ],
-      "status": "pending",
+      "status": "done",
       "priority": 1,
       "acceptance_criteria": [
         "All children done"
       ],
       "test_strategy": "Bridge.",
       "files": [],
-      "commit": "",
-      "notes": ""
+      "commit": "children",
+      "notes": "Closed automatically when all children closed."
     },
     {
       "id": "9.6.1",
@@ -4515,7 +4515,7 @@
         "plan/evidence/jrpg/9.6.2-npc-talk.png",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "bd84ec111f",
       "notes": "From 9.3.2 (D-061): use JRPGSceneManager.get_event_runner().start_event(id) for action/touch triggers; it refuses while is_main_running (an autorun page that holds counts). Autorun/parallel stepping is already done by the scene manager (9.3.2.2)."
     },
     {
@@ -4531,9 +4531,25 @@
         "Doctests: a route runs with and without wait for completion; replaced routes; blocked routes stall or skip; the step count does not change"
       ],
       "test_strategy": "Doctests [SceneTree].",
-      "status": "pending",
-      "files": [],
-      "commit": "",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_event_host.h",
+        "modules/jrpg/core/jrpg_event_host.cpp",
+        "modules/jrpg/core/jrpg_scene_commands.h",
+        "modules/jrpg/core/jrpg_scene_commands.cpp",
+        "modules/jrpg/runtime/jrpg_local_host.h",
+        "modules/jrpg/runtime/jrpg_local_host.cpp",
+        "modules/jrpg/runtime/jrpg_scene_manager.h",
+        "modules/jrpg/runtime/jrpg_scene_manager.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGSetMovementRouteCommand.xml",
+        "modules/jrpg/doc_classes/JRPGEventHost.xml",
+        "modules/jrpg/doc_classes/JRPGSceneManager.xml",
+        "modules/jrpg/tests/test_jrpg_move_route_command.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
       "notes": ""
     },
     {
