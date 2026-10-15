@@ -36,6 +36,7 @@
 #include "jrpg_map.h"
 
 #include "core/input/input.h"
+#include "core/input/input_event.h"
 #include "core/input/input_map.h"
 #include "core/object/class_db.h"
 #include "scene/2d/camera_2d.h"
@@ -88,7 +89,21 @@ int JRPGPlayer::read_direction() {
 			held.remove_at(at);
 		}
 	}
-	return held.is_empty() ? -1 : held[held.size() - 1];
+	const int tap = tapped;
+	tapped = -1;
+	if (held.is_empty()) {
+		return tap; // A tap shorter than a step still turns or moves the player once.
+	}
+	return held[held.size() - 1];
+}
+
+void JRPGPlayer::unhandled_input(const Ref<InputEvent> &p_event) {
+	const InputMap *input_map = InputMap::get_singleton();
+	for (int d = 0; p_event.is_valid() && input_map && d < 4; d++) {
+		if (input_map->has_action(DIRECTION_ACTIONS[d]) && p_event->is_action_pressed(DIRECTION_ACTIONS[d], false)) {
+			tapped = d;
+		}
+	}
 }
 
 bool JRPGPlayer::is_dash_held() const {
@@ -126,6 +141,7 @@ void JRPGPlayer::_bind_methods() {
 }
 
 JRPGPlayer::JRPGPlayer() {
+	set_process_unhandled_input(true); // Taps of the direction actions.
 	mover.instantiate();
 	set_z_index(JRPGMap::Z_CHARACTERS); // Over the map's lower tiles, under its overhead ones.
 	camera = memnew(Camera2D);

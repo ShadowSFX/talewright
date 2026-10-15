@@ -1291,3 +1291,25 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
 - **Why:** a fixed order and one stream keep movement deterministic on every machine and on the zone; letting only
   characters at the characters' level collide matches what priority means to authors.
 - **Reversal:** `JRPGSceneManager::_move_events`, `JRPGEvent::refresh_page`.
+
+## D-074 — Event triggers on the running map
+- **Context:** task 9.6.2 (RM-EVT-039..041, RM-TIL-011): the action button, Player Touch and Event Touch, counter
+  tiles, and talking to NPCs through the local port. The help gives where each trigger fires but not the order among
+  several candidates, what a triggered event does while it runs, or how the press that closes a message is kept from
+  starting the event again. The game reads input once per 60 Hz simulation step at any frame rate, so taps shorter
+  than a step can fall between steps.
+- **Options:** poll held actions only, or also latch presses from input events; block re-triggers by a cooldown or
+  by requiring a release after busy periods.
+- **Choice:** JRPGSceneManager: the action button (a new press while nothing is busy, the player standing still)
+  starts the first matching event on the player's cell (Below/Above, any of the three touch/action triggers), else in
+  front (Same as characters), else across a counter tile; arriving on a cell starts its Below/Above Player/Event
+  Touch events; a blocked step into a Same-as-characters Player/Event Touch event starts it; an Event Touch event
+  whose own move bumps into the player (JRPGCharacterMotion.get_bumped_cell) or lands on their cell starts itself.
+  Started events are locked: they face the player (unless direction fix) and their motion pauses while the main
+  interpreter runs them. Presses made while busy (transfer, focused interface, main interpreter, waiting request)
+  are ignored until the button is released; presses the GUI consumes (a message window reading OK) never reach the
+  scene manager's unhandled input. Short taps are latched from unhandled input events (OK by the scene manager,
+  directions by JRPGPlayer) and count once at the next step.
+- **Why:** event order is the authors' order; release-after-busy is what players expect when closing a dialog; the
+  latches keep the fixed-step game responsive to quick taps (bridge input holds two frames).
+- **Reversal:** `JRPGSceneManager::_trigger_action`, `_trigger_at`, `unhandled_input`; `JRPGPlayer::unhandled_input`.

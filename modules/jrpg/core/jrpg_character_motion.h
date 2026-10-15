@@ -95,6 +95,7 @@ private:
 	Ref<JRPGMoveRoute> forced_route;
 	int forced_index = 0;
 	int forced_wait = 0;
+	Vector2i bumped = Vector2i(-1, -1); // The cell the last update's blocked step was toward.
 	HashSet<int> warned_codes;
 
 	int _pause(const Context &p_context) const;
@@ -125,6 +126,9 @@ public:
 	Ref<JRPGMoveRoute> get_forced_route() const { return forced_route; }
 	int get_frequency() const { return frequency; }
 	bool is_direction_fixed() const { return direction_fix; }
+	// The cell the last update tried to step onto and could not, or (-1, -1): an event that bumps into the player
+	// (Event Touch, task 9.6.2).
+	Vector2i get_bumped_cell() const { return bumped; }
 
 	// One simulation step (after the caller advanced the mover).
 	void update(const Context &p_context);

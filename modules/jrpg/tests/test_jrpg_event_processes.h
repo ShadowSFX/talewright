@@ -90,7 +90,8 @@ struct Game {
 	JRPGSceneManager *manager = nullptr;
 	bool own_audio = false;
 
-	Game(const Array &p_map1_events, const Array &p_map2_events) {
+	// p_counters: cells of map 1 that hold a counter (blocked, the action button reaches across it).
+	Game(const Array &p_map1_events, const Array &p_map2_events, const Vector<Vector2i> &p_counters = Vector<Vector2i>()) {
 		if (!AudioServer::get_singleton()) {
 			// The scene manager's music players need an audio server (see test_jrpg_events_runtime.h).
 			AudioDriverDummy::get_dummy_singleton()->set_use_threads(false);
@@ -116,7 +117,7 @@ struct Game {
 		tilesets.instantiate();
 		tilesets->set_entry_class("JRPGTilesetData");
 		tilesets->set_maximum(1);
-		Ref<JRPGTilesetData>(tilesets->get_entry(1))->set_flags(PackedInt32Array({ 0, 0 }));
+		Ref<JRPGTilesetData>(tilesets->get_entry(1))->set_flags(PackedInt32Array({ 0, 0, int(JRPGTilesetData::pack_flags(JRPGTilesetData::PASS_BLOCKED, 0, 0, JRPGTilesetData::FLAG_COUNTER, 0)) }));
 		db->set_table(JRPGDatabase::TABLE_TILESETS, tilesets);
 
 		Ref<JRPGMapList> maps;
@@ -134,6 +135,9 @@ struct Game {
 				ground.push_back(1);
 			}
 			data->paint(JRPGMapData::LAYER_GROUND, cells, ground);
+			for (const Vector2i &counter : id == 1 ? p_counters : Vector<Vector2i>()) {
+				data->paint(JRPGMapData::LAYER_GROUND, PackedInt32Array({ data->get_cell_index(counter) }), PackedInt32Array({ 2 }));
+			}
 			data->set_events(id == 1 ? p_map1_events : p_map2_events);
 			JRPGMap *root = memnew(JRPGMap);
 			root->set_name(vformat("Map%d", id));

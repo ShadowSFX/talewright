@@ -84,6 +84,7 @@ public:
 	static constexpr int DIRECTION_RETAIN = -1; // transfer(): the player keeps facing the way they face.
 	static constexpr int FADE_STEPS = 18; // Simulation steps each way, out then in (0.3 s at 60 steps a second).
 	static constexpr int MESSAGE_LAYER = 5; // Over the map, under the game's screens (layer 10 in game.tscn).
+	static constexpr const char *ACTION_OK = "jrpg_ok"; // The action button (RM-EVT-039).
 
 private:
 	String database_path;
@@ -101,6 +102,10 @@ private:
 	Ref<JRPGEventRunner> event_runner; // The current map's event processes.
 	Ref<JRPGLocalPort> local_port; // What the events ask the player through.
 	Ref<JRPGLocalHost> local_host; // What the events ask of the world (transfers).
+	int locked_event_id = 0; // The event a trigger started: it faces the player and stays put while it runs.
+	bool ok_was_down = false; // The action button at the last step.
+	bool ok_blocked = false; // Held while something was busy: it counts again once released.
+	bool ok_latched = false; // Pressed since the last step (a tap shorter than a step still counts).
 	CanvasLayer *message_layer = nullptr;
 	JRPGMessageWindow *message_window = nullptr;
 	JRPGChoiceWindow *choice_window = nullptr;
@@ -155,10 +160,22 @@ private:
 	// Advances every event's step and lets it move by itself (task 9.6.1.2): events Same as characters block one another
 	// and are blocked by the player; Below and Above events pass under and over them.
 	void _move_events();
+	// Whether a trigger may start an event now: no transfer, no interface with the focus, nothing running on the
+	// main interpreter and no request waiting.
+	bool _can_trigger() const;
+	// Starts the first present event on p_cell whose priority is (p_same) or is not Same as characters, and whose
+	// page's trigger is in p_triggers (a bit per JRPGEventPage::Trigger); it is locked while it runs. True if one
+	// started.
+	bool _trigger_at(const Vector2i &p_cell, bool p_same, int p_triggers);
+	bool _start_triggered(JRPGEvent *p_event);
+	// The action button (RM-EVT-039/040/041): an event on the player's cell, else in front, else past a counter.
+	bool _trigger_action();
 
 protected:
 	void _notification(int p_what);
 	static void _bind_methods();
+	// The action button's presses no window took (a message or a list reading it takes them first).
+	virtual void unhandled_input(const Ref<InputEvent> &p_event) override;
 
 public:
 	// Where the database and the map list load from when none was given (the project's files by default).

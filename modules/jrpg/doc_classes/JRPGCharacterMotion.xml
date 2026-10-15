@@ -23,6 +23,12 @@
 				Set Movement Route: [param route] runs from its start instead of the page's movement until it ends; a route given while another runs replaces it.
 			</description>
 		</method>
+		<method name="get_bumped_cell" qualifiers="const">
+			<return type="Vector2i" />
+			<description>
+				Returns the cell the last step tried to step onto and could not, or [code](-1, -1)[/code]: an event whose move bumps into the player starts its Event Touch page.
+			</description>
+		</method>
 		<method name="get_forced_route" qualifiers="const">
 			<return type="JRPGMoveRoute" />
 			<description>

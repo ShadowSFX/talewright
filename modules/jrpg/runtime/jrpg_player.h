@@ -60,6 +60,7 @@ private:
 	String character;
 	Vector2i cell_size = Vector2i(48, 48);
 	LocalVector<int> held; // Direction actions held, in the order they were pressed.
+	int tapped = -1; // A direction pressed (and maybe released) since the last read.
 
 protected:
 	void _notification(int p_what);
@@ -82,6 +83,9 @@ public:
 	void update_position();
 	// Reads the direction actions now: the direction of the one held that was pressed last, or -1 with none held.
 	int read_direction();
+	// A direction pressed since the last read_direction() counts once even if it was released before (a tap shorter
+	// than a simulation step).
+	virtual void unhandled_input(const Ref<InputEvent> &p_event) override;
 	bool is_dash_held() const;
 
 	Vector2i get_cell() const { return mover->get_cell(); }

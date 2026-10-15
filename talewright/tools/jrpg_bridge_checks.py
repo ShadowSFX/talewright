@@ -770,6 +770,7 @@ def run(checks: Checks) -> None:
     run_choices(c)
     run_event_messages(c)
     run_approach(c)
+    run_npc_talk(c)
 
 
 # Windows (task 10.1.1) on a plain backdrop: open with a scroll mark, tinted with the pause mark, and three quarters open (its
@@ -1378,6 +1379,169 @@ def run_approach(c: Checks) -> None:
         json.dumps(node)[:200],
     )
     evidence = ROOT / "plan" / "evidence" / "jrpg" / "9.6.1.2-approaching-npc.png"
+    if WRITE_EVIDENCE and shot.get("path"):
+        evidence.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(shot["path"], evidence)
+        print(f"[EVIDENCE] wrote {evidence.relative_to(ROOT)}")
+
+
+# Talking to an NPC (task 9.6.2): a game started at the start position gets an NPC next to the player whose action
+# button page shows a message; the player faces it, presses OK, reads the message, and can walk again.
+NPC_SCENE = """[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui_checks/npc_talk.gd" id="1_script"]
+
+[node name="NpcCheck" type="Node"]
+script = ExtResource("1_script")
+"""
+NPC_SCRIPT = r"""extends Node
+
+const ACTIONS := ["jrpg_up", "jrpg_right", "jrpg_down", "jrpg_left"]
+const LINE := "Welcome to Brook Hollow. The mill is north."
+
+var manager: JRPGSceneManager
+var npc_id := 0
+var npc_side := 0
+var free_side := -1
+
+
+func _ready() -> void:
+	manager = JRPGSceneManager.new()
+	manager.name = "Game"
+	manager.autostart = false
+	add_child(manager)
+	manager.start_new_game(1)
+	var cache: JRPGMapCellCache = manager.get_cell_cache()
+	# A reachable cell with two ways out: the NPC stands on one, the player walks off by the other.
+	var from: Vector2i = manager.get_player().get_cell()
+	var seen := {from: true}
+	var queue: Array[Vector2i] = [from]
+	var at := 0
+	var open_sides := []
+	while at < queue.size():
+		var cell: Vector2i = queue[at]
+		at += 1
+		open_sides = _open_sides(cache, cell)
+		if open_sides.size() >= 2:
+			from = cell
+			break
+		for side in open_sides:
+			var next: Vector2i = cache.get_neighbor(cell, side)
+			if not seen.has(next):
+				seen[next] = true
+				queue.append(next)
+	manager.transfer(manager.get_map_id(), from, -1, JRPGSceneManager.FADE_NONE)
+	npc_side = open_sides[0]
+	if open_sides.size() > 1:
+		free_side = open_sides[1]
+	var text := JRPGShowTextCommand.new()
+	text.text = LINE
+	var page := JRPGEventPage.new()
+	page.trigger = JRPGEventPage.TRIGGER_ACTION
+	page.priority = JRPGEventPage.PRIORITY_SAME
+	page.commands = JRPGCommandList.new()
+	page.commands.insert_command(-1, text)
+	var actors: JRPGTable = manager.get_database().get_table(JRPGDatabase.TABLE_ACTORS)
+	if actors and actors.has_entry(1):
+		page.character = actors.get_entry(1).character
+	var event := manager.get_map().get_map_data().add_event(cache.get_neighbor(from, npc_side))
+	event.pages = [page]
+	npc_id = event.event_id
+	manager.rebuild_events()
+
+
+func _open_sides(cache: JRPGMapCellCache, cell: Vector2i) -> Array:
+	var sides := []
+	for side in 4:
+		if cache.get_neighbor(cell, side).x >= 0 and cache.can_step(cell, side):
+			sides.append(side)
+	return sides
+
+
+func face_action() -> String:
+	return ACTIONS[npc_side]
+
+
+func free_action() -> String:
+	return ACTIONS[free_side] if free_side >= 0 else ""
+
+
+func state() -> Dictionary:
+	var window: JRPGMessageWindow = manager.get_message_window()
+	var player: Vector2i = manager.get_player().get_cell()
+	return {
+		"waiting": window.is_waiting_for_input(),
+		"closed": window.is_closed(),
+		"text": manager.get_local_port().get_shown_params().get("text", ""),
+		"running": manager.get_event_runner().is_main_running(),
+		"facing": manager.get_player().get_direction(),
+		"player": [player.x, player.y],
+	}
+"""
+
+
+def run_npc_talk(c: Checks) -> None:
+    (c.project / "ui_checks" / "npc_talk.gd").write_text(NPC_SCRIPT, encoding="utf-8")
+    (c.project / "ui_checks" / "npc_talk.tscn").write_text(NPC_SCENE, encoding="utf-8")
+    c.call("editor_rescan")
+    c.call("run_project", {"scene": "res://ui_checks/npc_talk.tscn"})
+    connected = False
+    for _ in range(120):
+        if c.call("run_status").get("debugger_connected"):
+            connected = True
+            break
+        time.sleep(0.5)
+    connected = connected and c.wait_for_node("/root/NpcCheck/Game")
+    c.check("Event triggers: the NPC scene runs", connected)
+    if not connected:
+        c.call("stop_project")
+        return
+    root = "/root/NpcCheck"
+
+    def state() -> dict[str, Any]:
+        return c.call("game_call", {"path": root, "method": "state"}).get("result") or {}
+
+    face = c.call("game_call", {"path": root, "method": "face_action"}).get("result")
+    free = c.call("game_call", {"path": root, "method": "free_action"}).get("result")
+    c.call("game_input", {"action": face})  # Toward the NPC: it blocks, so the player only turns.
+    c.call("game_wait", {"frames": 20})
+    c.call("game_input", {"action": "jrpg_ok"})
+    shown: dict[str, Any] = {}
+    for _ in range(40):
+        c.call("game_wait", {"frames": 10})
+        shown = state()
+        if shown.get("waiting"):
+            break
+    c.check(
+        "Event triggers: OK facing the NPC shows its message",
+        shown.get("waiting") is True and shown.get("text") == "Welcome to Brook Hollow. The mill is north.",
+        json.dumps(shown),
+    )
+    shot = c.call("game_screenshot", {"include_image": False})
+    c.call("game_input", {"action": "jrpg_ok"})
+    after: dict[str, Any] = {}
+    for _ in range(20):
+        c.call("game_wait", {"frames": 10})
+        after = state()
+        if after.get("closed") and not after.get("running"):
+            break
+    c.check(
+        "Event triggers: OK reads the message, the window closes and the event ends",
+        after.get("closed") is True and after.get("running") is False,
+        json.dumps(after),
+    )
+    moved = after
+    if free:
+        c.call("game_input", {"action": free})
+        c.call("game_wait", {"frames": 40})
+        moved = state()
+    c.call("stop_project")
+    c.check(
+        "Event triggers: the player walks again after talking",
+        bool(free) and moved.get("player") != after.get("player"),
+        json.dumps([after.get("player"), moved.get("player"), free]),
+    )
+    evidence = ROOT / "plan" / "evidence" / "jrpg" / "9.6.2-npc-talk.png"
     if WRITE_EVIDENCE and shot.get("path"):
         evidence.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(shot["path"], evidence)

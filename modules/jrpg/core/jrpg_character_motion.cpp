@@ -98,9 +98,13 @@ void JRPGCharacterMotion::_face(JRPGSystemData::Direction p_direction) {
 
 bool JRPGCharacterMotion::_step(JRPGSystemData::Direction p_direction, const Context &p_context, bool p_keep_facing) {
 	const JRPGSystemData::Direction facing = mover->get_direction();
+	const Vector2i toward = p_context.cell_cache->get_neighbor(mover->get_cell(), JRPGMapCellCache::Direction(int(p_direction)));
 	const bool moved = p_context.blocked ? mover->move(p_direction, p_context.cell_cache, false, *p_context.blocked) : mover->move(p_direction, p_context.cell_cache);
 	if (direction_fix || p_keep_facing) {
 		mover->set_direction(facing);
+	}
+	if (!moved) {
+		bumped = toward;
 	}
 	state->set_direction(mover->get_direction());
 	state->set_cell(mover->get_cell());
@@ -292,6 +296,7 @@ JRPGCharacterMotion::RouteResult JRPGCharacterMotion::_run_route(const Ref<JRPGM
 
 void JRPGCharacterMotion::update(const Context &p_context) {
 	ERR_FAIL_COND(mover.is_null() || state.is_null());
+	bumped = Vector2i(-1, -1);
 	if (mover->is_moving() || p_context.cell_cache.is_null()) {
 		return;
 	}
@@ -364,6 +369,7 @@ void JRPGCharacterMotion::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_forced_route"), &JRPGCharacterMotion::get_forced_route);
 	ClassDB::bind_method(D_METHOD("get_frequency"), &JRPGCharacterMotion::get_frequency);
 	ClassDB::bind_method(D_METHOD("is_direction_fixed"), &JRPGCharacterMotion::is_direction_fixed);
+	ClassDB::bind_method(D_METHOD("get_bumped_cell"), &JRPGCharacterMotion::get_bumped_cell);
 	ClassDB::bind_method(D_METHOD("update_step", "cell_cache", "blocked", "player_cell", "game_state", "random"), &JRPGCharacterMotion::update_step);
 
 	BIND_CONSTANT(FREQUENCY_MIN);

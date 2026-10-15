@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 75, in_progress: 0, done: 206, blocked: 0, deferred: 3 (of 284)
+**Totals:** pending: 74, in_progress: 0, done: 207, blocked: 0, deferred: 3 (of 284)
 
 ## [x] 0 Bootstrap and task system
 
@@ -233,8 +233,8 @@ Pages, conditions, triggers, command model with authority, interpreter with pres
 - [ ] **9.6** Event characters runtime (P1) _(deps: 9.5, 8.7)_
   - [x] **9.6.1** Autonomous movement (P1)
     - [x] **9.6.1.1** Move routes and character motion (core) (P1) _(commit: 13f9323770)_
-    - [x] **9.6.1.2** Events move on the running map (P1) _(deps: 9.6.1.1; commit: pending)_
-  - [ ] **9.6.2** Triggers and map event processes (P1) _(deps: 9.6.1)_
+    - [x] **9.6.1.2** Events move on the running map (P1) _(deps: 9.6.1.1; commit: 4726f9c82e)_
+  - [x] **9.6.2** Triggers and map event processes (P1) _(deps: 9.6.1; commit: pending)_
   - [ ] **9.6.3** Set Movement Route command (P1) _(deps: 9.6.1)_
 - [ ] **9.7** Event editor UI (P1) _(deps: 9.6)_
   - [ ] **9.7.1** Event properties, pages and conditions UI (P1)

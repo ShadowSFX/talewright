@@ -32,6 +32,9 @@
 #include "jrpg_scene_manager.h"
 
 #include "core/config/engine.h"
+#include "core/input/input.h"
+#include "core/input/input_event.h"
+#include "core/input/input_map.h"
 #include "core/io/resource_loader.h"
 #include "core/io/resource_uid.h"
 #include "core/math/random_pcg.h"
@@ -173,6 +176,7 @@ void JRPGSceneManager::_begin(const Ref<JRPGGameState> &p_state) {
 	local_port->set_game_state(p_state); // The text codes read it.
 	_set_fade(0);
 	set_process_internal(true); // The game loop.
+	set_process_unhandled_input(true); // The action button.
 	refresh_player_character();
 }
 
@@ -428,6 +432,9 @@ void JRPGSceneManager::_move_events() {
 	if (!events_root || cell_cache.is_null()) {
 		return;
 	}
+	if (!event_runner->is_main_running()) {
+		locked_event_id = 0; // Its run is over.
+	}
 	// The cells taken by events that block characters, kept up to date as each event moves.
 	HashSet<Vector2i> taken = get_blocked_cells();
 	const Vector2i player_cell = player->get_cell();
@@ -457,9 +464,16 @@ void JRPGSceneManager::_move_events() {
 		context.player_cell = player_cell;
 		context.game_state = game_state;
 		context.random = random;
-		event->get_motion()->update(context);
+		if (event->get_event_id() != locked_event_id) {
+			event->get_motion()->update(context);
+		}
 		if (blocks) {
 			taken.insert(event->get_cell());
+		}
+		// Event Touch (RM-EVT-041): its own move bumps into the player, or takes it onto the player's cell.
+		const Ref<JRPGEventPage> page = event->get_page();
+		if (page.is_valid() && page->get_trigger() == JRPGEventPage::TRIGGER_EVENT_TOUCH && _can_trigger() && (event->get_motion()->get_bumped_cell() == player_cell || (!blocks && event->get_cell() == player_cell))) {
+			_start_triggered(event);
 		}
 		event->update_position();
 	}
@@ -608,7 +622,81 @@ void JRPGSceneManager::run_steps(int p_steps) {
 	player->update_position();
 }
 
+bool JRPGSceneManager::_can_trigger() const {
+	const bool interface_active = is_inside_tree() && get_viewport()->gui_get_focus_owner() != nullptr;
+	return !transferring && !interface_active && !event_runner->is_main_running() && !local_port->is_busy();
+}
+
+bool JRPGSceneManager::_start_triggered(JRPGEvent *p_event) {
+	if (!event_runner->start_event(p_event->get_event_id())) {
+		return false;
+	}
+	// Locked while it runs (RM-EVT-039): it faces the player unless its direction is fixed, and stays put.
+	locked_event_id = p_event->get_event_id();
+	const Vector2i delta = player->get_cell() - p_event->get_cell();
+	if (!p_event->get_motion()->is_direction_fixed() && delta != Vector2i()) {
+		const JRPGSystemData::Direction facing = Math::abs(delta.x) >= Math::abs(delta.y) ? (delta.x > 0 ? JRPGSystemData::DIRECTION_RIGHT : JRPGSystemData::DIRECTION_LEFT) : (delta.y > 0 ? JRPGSystemData::DIRECTION_DOWN : JRPGSystemData::DIRECTION_UP);
+		p_event->get_mover()->set_direction(facing);
+		p_event->get_state()->set_direction(facing);
+		p_event->update_position();
+	}
+	return true;
+}
+
+bool JRPGSceneManager::_trigger_at(const Vector2i &p_cell, bool p_same, int p_triggers) {
+	if (!events_root || p_cell.x < 0) {
+		return false;
+	}
+	for (int i = 0; i < events_root->get_child_count(false); i++) {
+		JRPGEvent *event = Object::cast_to<JRPGEvent>(events_root->get_child(i, false));
+		const Ref<JRPGEventPage> page = event && event->is_present() ? event->get_page() : Ref<JRPGEventPage>();
+		if (page.is_null() || event->get_cell() != p_cell || (page->get_priority() == JRPGEventPage::PRIORITY_SAME) != p_same || !(p_triggers & (1 << int(page->get_trigger())))) {
+			continue;
+		}
+		if (_start_triggered(event)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool JRPGSceneManager::_trigger_action() {
+	const int any = (1 << JRPGEventPage::TRIGGER_ACTION) | (1 << JRPGEventPage::TRIGGER_PLAYER_TOUCH) | (1 << JRPGEventPage::TRIGGER_EVENT_TOUCH);
+	const Vector2i here = player->get_cell();
+	if (_trigger_at(here, false, any)) {
+		return true; // An event the player stands on (Below or Above characters).
+	}
+	const JRPGMapCellCache::Direction facing = JRPGMapCellCache::Direction(int(player->get_direction()));
+	const Vector2i front = cell_cache->get_neighbor(here, facing);
+	if (_trigger_at(front, true, any)) {
+		return true;
+	}
+	// Across a counter, the event one cell further (RM-TIL-011: a counter extends the action button's reach).
+	if (front.x >= 0 && cell_cache->has_flag(front, JRPGTilesetData::FLAG_COUNTER)) {
+		return _trigger_at(cell_cache->get_neighbor(front, facing), true, any);
+	}
+	return false;
+}
+
+void JRPGSceneManager::unhandled_input(const Ref<InputEvent> &p_event) {
+	if (p_event.is_valid() && InputMap::get_singleton()->has_action(ACTION_OK) && p_event->is_action_pressed(ACTION_OK, false)) {
+		ok_latched = true;
+	}
+}
+
 void JRPGSceneManager::_simulation_step() {
+	// The action button counts on a new press made while nothing was busy: the press that closes a message does not
+	// start the event again.
+	const bool ok_down = InputMap::get_singleton()->has_action(ACTION_OK) && Input::get_singleton()->is_action_pressed(ACTION_OK);
+	const bool ok_new = ok_latched || (ok_down && !ok_was_down);
+	ok_latched = false;
+	ok_was_down = ok_down;
+	if (!_can_trigger()) {
+		ok_blocked = ok_blocked || ok_down || ok_new; // Pressed while busy: not a press for an event.
+	} else if (!ok_down) {
+		ok_blocked = false;
+	}
+	const bool ok_pressed = ok_new && !ok_blocked;
 	if (transferring) {
 		_transfer_step(); // May change the map: the player is then on the new one.
 	}
@@ -624,6 +712,10 @@ void JRPGSceneManager::_simulation_step() {
 	if (mover->advance()) {
 		game_state->increase_steps(); // Arrived on a new cell.
 		_sync_player();
+		if (_can_trigger()) {
+			// Player Touch and Event Touch events the player steps onto (RM-EVT-040/041).
+			_trigger_at(player->get_cell(), false, (1 << JRPGEventPage::TRIGGER_PLAYER_TOUCH) | (1 << JRPGEventPage::TRIGGER_EVENT_TOUCH));
+		}
 	}
 	// Read every step, so the direction pressed last wins even when it was pressed during a step.
 	const int direction = player->read_direction();
@@ -631,13 +723,23 @@ void JRPGSceneManager::_simulation_step() {
 	// keys then (epic 10 review B4), nor while an autorun or a triggered event runs (a step under way still ends), nor
 	// while an event asks the player something (a parallel event's message too).
 	const bool interface_active = is_inside_tree() && get_viewport()->gui_get_focus_owner() != nullptr;
-	if (direction < 0 || transferring || interface_active || mover->is_moving() || cell_cache.is_null() || event_runner->is_main_running() || local_port->is_busy()) {
+	if (transferring || interface_active || mover->is_moving() || cell_cache.is_null() || event_runner->is_main_running() || local_port->is_busy()) {
+		return;
+	}
+	if (ok_pressed && _trigger_action()) {
+		return;
+	}
+	if (direction < 0) {
 		return;
 	}
 	const Ref<JRPGMapData> map_data = map->get_map_data();
 	const bool dash = player->is_dash_held() && map_data.is_valid() && !map_data->is_disable_dash();
-	mover->move(JRPGSystemData::Direction(direction), cell_cache, dash, get_blocked_cells()); // Events Same as characters block.
+	const bool moved = mover->move(JRPGSystemData::Direction(direction), cell_cache, dash, get_blocked_cells()); // Events Same as characters block.
 	_sync_player(); // Its new cell, or only its new facing when the step was not allowed.
+	if (!moved) {
+		// Bumping into a Player Touch or Event Touch event (RM-EVT-040/041).
+		_trigger_at(cell_cache->get_neighbor(mover->get_cell(), JRPGMapCellCache::Direction(direction)), true, (1 << JRPGEventPage::TRIGGER_PLAYER_TOUCH) | (1 << JRPGEventPage::TRIGGER_EVENT_TOUCH));
+	}
 }
 
 void JRPGSceneManager::_sync_player() {
