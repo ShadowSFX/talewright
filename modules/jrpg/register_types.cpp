@@ -41,6 +41,7 @@
 #include "modules/jrpg/core/jrpg_autotile.h"
 #include "modules/jrpg/core/jrpg_autotile_resolver.h"
 #include "modules/jrpg/core/jrpg_battle_rules.h"
+#include "modules/jrpg/core/jrpg_character_motion.h"
 #include "modules/jrpg/core/jrpg_class_data.h"
 #include "modules/jrpg/core/jrpg_command_list.h"
 #include "modules/jrpg/core/jrpg_database.h"
@@ -64,6 +65,7 @@
 #include "modules/jrpg/core/jrpg_message_commands.h"
 #include "modules/jrpg/core/jrpg_message_text.h"
 #include "modules/jrpg/core/jrpg_misc_data.h"
+#include "modules/jrpg/core/jrpg_move_route.h"
 #include "modules/jrpg/core/jrpg_mover.h"
 #include "modules/jrpg/core/jrpg_presentation_port.h"
 #include "modules/jrpg/core/jrpg_random.h"
@@ -191,6 +193,8 @@ void initialize_jrpg_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(JRPGEventRunner);
 		GDREGISTER_CLASS(JRPGPresentationPort);
 		GDREGISTER_CLASS(JRPGEventHost);
+		GDREGISTER_CLASS(JRPGMoveRoute);
+		GDREGISTER_CLASS(JRPGCharacterMotion);
 		// The built-in event commands (task 9.5), known to command lists by their codes.
 		GDREGISTER_CLASS(JRPGShowTextCommand);
 		GDREGISTER_CLASS(JRPGShowChoicesCommand);

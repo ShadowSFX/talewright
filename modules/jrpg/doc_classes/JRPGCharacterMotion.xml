@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGCharacterMotion" inherits="RefCounted" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		One character's movement of its own, one simulation step at a time.
+	</brief_description>
+	<description>
+		Moves a character (its [JRPGMover], with its [JRPGEventState], where the route position and pause are saved) by itself, as its event page says ([method set_page_movement]):
+		- fixed: it stays put;
+		- random: a step in a random direction;
+		- approach: a step along the shortest way to a cell next to the player (searched through at most [constant PATH_SEARCH_LIMIT] cells); without one, along the longer axis toward the player, then the other, then a random step;
+		- custom: the page's [JRPGMoveRoute], one step at a time.
+		After each move it pauses as its frequency says: 240, 120, 60, 30 or 0 steps for frequencies 1 to 5, plus 0 to [constant RANDOM_PAUSE_MAX] steps drawn from the game's map AI stream so crowds do not move in step. A route [method force_route] gives runs instead, without pauses, until it ends.
+		Route commands that take no time (turns, switches, speed...) run together, up to [constant MAX_INSTANT_COMMANDS] a step. A blocked move waits for the way to clear unless the route is skippable. Direction fix keeps the facing through moves and turns. The caller advances the mover each step before [method update_step]; a character still moving does nothing new. Everything is drawn from the given random stream, so the same game moves the same way on every machine.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="force_route">
+			<return type="void" />
+			<param index="0" name="route" type="JRPGMoveRoute" />
+			<description>
+				Set Movement Route: [param route] runs from its start instead of the page's movement until it ends; a route given while another runs replaces it.
+			</description>
+		</method>
+		<method name="get_forced_route" qualifiers="const">
+			<return type="JRPGMoveRoute" />
+			<description>
+				Returns the route forced on the character, or [code]null[/code].
+			</description>
+		</method>
+		<method name="get_frequency" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the frequency, 1 to 5.
+			</description>
+		</method>
+		<method name="is_direction_fixed" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether the facing stays through moves and turns.
+			</description>
+		</method>
+		<method name="is_route_forced" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether a forced route is running.
+			</description>
+		</method>
+		<method name="set_page_movement">
+			<return type="void" />
+			<param index="0" name="type" type="int" enum="JRPGEventPage.MovementType" />
+			<param index="1" name="speed" type="int" />
+			<param index="2" name="frequency" type="int" />
+			<param index="3" name="route" type="JRPGMoveRoute" />
+			<param index="4" name="direction_fix" type="bool" />
+			<param index="5" name="through" type="bool" />
+			<param index="6" name="restart" type="bool" />
+			<description>
+				Sets the movement of the active page: [param type] ([enum JRPGEventPage.MovementType]), [param speed], [param frequency], its custom [param route], [param direction_fix] and [param through]. With [param restart] the page's route and pause start afresh (a new page); otherwise the saved position goes on (a loaded game).
+			</description>
+		</method>
+		<method name="setup">
+			<return type="void" />
+			<param index="0" name="mover" type="JRPGMover" />
+			<param index="1" name="state" type="JRPGEventState" />
+			<description>
+				Sets the character the motion moves: its [param mover] and its saved [param state].
+			</description>
+		</method>
+		<method name="update_step">
+			<return type="void" />
+			<param index="0" name="cell_cache" type="JRPGMapCellCache" />
+			<param index="1" name="blocked" type="Array" />
+			<param index="2" name="player_cell" type="Vector2i" />
+			<param index="3" name="game_state" type="JRPGGameState" />
+			<param index="4" name="random" type="JRPGRandom" />
+			<description>
+				Runs one simulation step: [param blocked] lists the cells other characters take ([Vector2i]s), [param player_cell] is the player's cell, [param game_state] the state route switches change, and [param random] the stream random choices come from.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="FREQUENCY_MIN" value="1">
+			The lowest frequency: the longest pause.
+		</constant>
+		<constant name="FREQUENCY_MAX" value="5">
+			The highest frequency: no pause.
+		</constant>
+		<constant name="RANDOM_PAUSE_MAX" value="15">
+			The most steps added at random to a pause.
+		</constant>
+		<constant name="MAX_INSTANT_COMMANDS" value="100">
+			Route commands that take no time run together, at most this many in a step.
+		</constant>
+		<constant name="PATH_SEARCH_LIMIT" value="1024">
+			Cells an approach looks through for a way to the player.
+		</constant>
+		<constant name="ROUTE_MOVED" value="0" enum="RouteResult">
+			A step was taken, or skipped.
+		</constant>
+		<constant name="ROUTE_WAITING" value="1" enum="RouteResult">
+			A Wait command.
+		</constant>
+		<constant name="ROUTE_STALLED" value="2" enum="RouteResult">
+			A move was blocked: it is tried again at the next step.
+		</constant>
+		<constant name="ROUTE_ENDED" value="3" enum="RouteResult">
+			The route has no more commands.
+		</constant>
+	</constants>
+</class>

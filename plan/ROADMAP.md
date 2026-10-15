@@ -4,7 +4,7 @@ _Generated from `plan/tasks.json` by `python plan/tools/tasks.py render`. Do not
 
 Legend: `[x]` done, `[~]` in progress, `[ ]` pending, `[!]` blocked, `[-]` deferred. Priority P1 (highest) .. P4.
 
-**Totals:** pending: 76, in_progress: 0, done: 203, blocked: 0, deferred: 3 (of 282)
+**Totals:** pending: 77, in_progress: 0, done: 204, blocked: 0, deferred: 3 (of 284)
 
 ## [x] 0 Bootstrap and task system
 
@@ -229,9 +229,11 @@ Pages, conditions, triggers, command model with authority, interpreter with pres
     - [x] **9.5.2.1** Control Switches, Control Variables, Control Self Switch (P1) _(commit: 8b97d866a2)_
     - [x] **9.5.2.2** Change Gold, Items, Weapons, Armors (P1) _(commit: e593120c66)_
     - [x] **9.5.2.3** Change HP, MP, TP, State; Recover All (P1) _(commit: e51c300099)_
-  - [x] **9.5.3** Event host; Transfer Player, Wait, Erase Event, Script (P1) _(deps: 9.5.2; commit: pending)_
+  - [x] **9.5.3** Event host; Transfer Player, Wait, Erase Event, Script (P1) _(deps: 9.5.2; commit: 51eb42ba80)_
 - [ ] **9.6** Event characters runtime (P1) _(deps: 9.5, 8.7)_
   - [ ] **9.6.1** Autonomous movement (P1)
+    - [x] **9.6.1.1** Move routes and character motion (core) (P1) _(commit: pending)_
+    - [ ] **9.6.1.2** Events move on the running map (P1) _(deps: 9.6.1.1)_
   - [ ] **9.6.2** Triggers and map event processes (P1) _(deps: 9.6.1)_
   - [ ] **9.6.3** Set Movement Route command (P1) _(deps: 9.6.1)_
 - [ ] **9.7** Event editor UI (P1) _(deps: 9.6)_

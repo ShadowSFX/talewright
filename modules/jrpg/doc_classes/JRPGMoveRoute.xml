@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JRPGMoveRoute" inherits="Resource" api_type="core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A movement route: route commands a character follows one after the other.
+	</brief_description>
+	<description>
+		Route commands, each an [Array] [lb]code ([enum Code]), arguments...[rb], that [JRPGCharacterMotion] runs one after the other: a page's custom route, or a route Set Movement Route forces on a character. [member repeat] starts the route again at its end; [member skippable] skips a move that is blocked rather than waiting for the way to clear; [member wait] makes Set Movement Route wait until the route has ended.
+		Codes are stable numbers that saved routes hold. The moves, turns, Wait, switches, speed, frequency, direction fix and through work now; the others come with a later version and are skipped with a warning.
+		Authority: server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="add_command">
+			<return type="void" />
+			<param index="0" name="code" type="int" enum="JRPGMoveRoute.Code" />
+			<param index="1" name="arguments" type="Array" default="[]" />
+			<description>
+				Appends command [param code] with [param arguments].
+			</description>
+		</method>
+		<method name="get_arguments" qualifiers="const">
+			<return type="Array" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns the arguments of command [param index].
+			</description>
+		</method>
+		<method name="get_code" qualifiers="const">
+			<return type="int" enum="JRPGMoveRoute.Code" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns the code of command [param index].
+			</description>
+		</method>
+		<method name="get_code_name" qualifiers="static">
+			<return type="String" />
+			<param index="0" name="code" type="int" enum="JRPGMoveRoute.Code" />
+			<description>
+				Returns the name a route editor lists command [param code] under ("Move Down").
+			</description>
+		</method>
+		<method name="get_command_count" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns how many commands the route holds.
+			</description>
+		</method>
+		<method name="is_move" qualifiers="static">
+			<return type="bool" />
+			<param index="0" name="code" type="int" enum="JRPGMoveRoute.Code" />
+			<description>
+				Returns whether command [param code] takes the character a cell (or tries to).
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="commands" type="Array" setter="set_commands" getter="get_commands" default="[]">
+			The commands, each [lb]code, arguments...[rb]. Entries that are not an array starting with a known code are left out, with an error.
+		</member>
+		<member name="repeat" type="bool" setter="set_repeat" getter="is_repeat" default="false">
+			The route starts again when it ends.
+		</member>
+		<member name="skippable" type="bool" setter="set_skippable" getter="is_skippable" default="false">
+			A move that is blocked is skipped (Skip If Cannot Move); otherwise the route waits for the way to clear.
+		</member>
+		<member name="wait" type="bool" setter="set_wait" getter="is_wait" default="false">
+			Set Movement Route waits until the route has ended (Wait for Completion).
+		</member>
+	</members>
+	<constants>
+		<constant name="MOVE_DOWN" value="1" enum="Code">
+			A step down.
+		</constant>
+		<constant name="MOVE_LEFT" value="2" enum="Code">
+			A step left.
+		</constant>
+		<constant name="MOVE_RIGHT" value="3" enum="Code">
+			A step right.
+		</constant>
+		<constant name="MOVE_UP" value="4" enum="Code">
+			A step up.
+		</constant>
+		<constant name="MOVE_LOWER_LEFT" value="5" enum="Code">
+			A diagonal step (comes with a later version).
+		</constant>
+		<constant name="MOVE_LOWER_RIGHT" value="6" enum="Code">
+			A diagonal step (comes with a later version).
+		</constant>
+		<constant name="MOVE_UPPER_LEFT" value="7" enum="Code">
+			A diagonal step (comes with a later version).
+		</constant>
+		<constant name="MOVE_UPPER_RIGHT" value="8" enum="Code">
+			A diagonal step (comes with a later version).
+		</constant>
+		<constant name="MOVE_RANDOM" value="9" enum="Code">
+			A step in a random direction.
+		</constant>
+		<constant name="MOVE_TOWARD_PLAYER" value="10" enum="Code">
+			A step toward the player.
+		</constant>
+		<constant name="MOVE_AWAY_FROM_PLAYER" value="11" enum="Code">
+			A step away from the player.
+		</constant>
+		<constant name="MOVE_FORWARD" value="12" enum="Code">
+			A step the way the character faces.
+		</constant>
+		<constant name="MOVE_BACKWARD" value="13" enum="Code">
+			A step back, keeping the facing.
+		</constant>
+		<constant name="JUMP" value="14" enum="Code">
+			A jump by [lb]x, y[rb] (comes with a later version).
+		</constant>
+		<constant name="WAIT" value="15" enum="Code">
+			Waits [lb]steps[rb] simulation steps.
+		</constant>
+		<constant name="TURN_DOWN" value="16" enum="Code">
+			Faces down.
+		</constant>
+		<constant name="TURN_LEFT" value="17" enum="Code">
+			Faces left.
+		</constant>
+		<constant name="TURN_RIGHT" value="18" enum="Code">
+			Faces right.
+		</constant>
+		<constant name="TURN_UP" value="19" enum="Code">
+			Faces up.
+		</constant>
+		<constant name="TURN_90_RIGHT" value="20" enum="Code">
+			Turns a quarter clockwise.
+		</constant>
+		<constant name="TURN_90_LEFT" value="21" enum="Code">
+			Turns a quarter counterclockwise.
+		</constant>
+		<constant name="TURN_180" value="22" enum="Code">
+			Turns around.
+		</constant>
+		<constant name="TURN_90_RIGHT_OR_LEFT" value="23" enum="Code">
+			Turns a quarter either way, at random.
+		</constant>
+		<constant name="TURN_RANDOM" value="24" enum="Code">
+			Faces a random direction.
+		</constant>
+		<constant name="TURN_TOWARD_PLAYER" value="25" enum="Code">
+			Faces the player.
+		</constant>
+		<constant name="TURN_AWAY_FROM_PLAYER" value="26" enum="Code">
+			Faces away from the player.
+		</constant>
+		<constant name="SWITCH_ON" value="27" enum="Code">
+			Turns switch [lb]ID[rb] ON.
+		</constant>
+		<constant name="SWITCH_OFF" value="28" enum="Code">
+			Turns switch [lb]ID[rb] OFF.
+		</constant>
+		<constant name="CHANGE_SPEED" value="29" enum="Code">
+			Sets the speed, [lb]1-6[rb].
+		</constant>
+		<constant name="CHANGE_FREQUENCY" value="30" enum="Code">
+			Sets the frequency, [lb]1-5[rb].
+		</constant>
+		<constant name="WALKING_ON" value="31" enum="Code">
+			Walking animation on (comes with a later version).
+		</constant>
+		<constant name="WALKING_OFF" value="32" enum="Code">
+			Walking animation off (comes with a later version).
+		</constant>
+		<constant name="STEPPING_ON" value="33" enum="Code">
+			Stepping animation on (comes with a later version).
+		</constant>
+		<constant name="STEPPING_OFF" value="34" enum="Code">
+			Stepping animation off (comes with a later version).
+		</constant>
+		<constant name="DIRECTION_FIX_ON" value="35" enum="Code">
+			The facing stays through moves and turns.
+		</constant>
+		<constant name="DIRECTION_FIX_OFF" value="36" enum="Code">
+			Moves and turns change the facing again.
+		</constant>
+		<constant name="THROUGH_ON" value="37" enum="Code">
+			Passes through terrain and characters.
+		</constant>
+		<constant name="THROUGH_OFF" value="38" enum="Code">
+			Blocked as usual again.
+		</constant>
+		<constant name="TRANSPARENT_ON" value="39" enum="Code">
+			Invisible (comes with a later version).
+		</constant>
+		<constant name="TRANSPARENT_OFF" value="40" enum="Code">
+			Visible again (comes with a later version).
+		</constant>
+		<constant name="CHANGE_IMAGE" value="41" enum="Code">
+			A new character image, [lb]path, index[rb] (comes with a later version).
+		</constant>
+		<constant name="CHANGE_OPACITY" value="42" enum="Code">
+			Opacity, [lb]0-255[rb] (comes with a later version).
+		</constant>
+		<constant name="CHANGE_BLEND_MODE" value="43" enum="Code">
+			A blend mode, [lb]mode[rb] (comes with a later version).
+		</constant>
+		<constant name="PLAY_SE" value="44" enum="Code">
+			Plays a sound, [lb]path, volume, pitch[rb] (comes with a later version).
+		</constant>
+		<constant name="SCRIPT" value="45" enum="Code">
+			Runs [lb]text[rb] (comes with a later version).
+		</constant>
+		<constant name="CODE_MAX" value="46" enum="Code">
+			The number of codes plus one.
+		</constant>
+	</constants>
+</class>

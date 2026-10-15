@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "Talewright",
-  "last_completed": "9.5.3 Event host; Transfer Player, Wait, Erase Event, Script",
+  "last_completed": "9.6.1.1 Move routes and character motion (core)",
   "tasks": [
     {
       "id": "0",
@@ -4384,7 +4384,7 @@
         "modules/jrpg/tests/test_jrpg_scene_commands.h",
         "plan/DECISIONS.md"
       ],
-      "commit": "pending",
+      "commit": "51eb42ba80",
       "notes": "Transfer Player (epic 8 review A15, D-041): JRPGSceneManager.transfer refuses a transfer while another is under way, the fade-in included (ERR_BUSY); the interpreter waits on is_transferring() / the transfer_finished signal before running the next command, as the MZ command waits for the transfer to finish. From 9.3.2 (D-061): the main interpreter goes on after a transfer, so commands that target 'This Event' must know the map their event belongs to (record the map and event ids on the interpreter) and do nothing once the player is on another map. Erase Event: JRPGEventState.set_erased does not change the game state's revision; the runner checks erasure every step, but event nodes refresh on revision changes only. Since 9.5.1.2 (D-066): JRPGInterpreter.set_event/get_event_id/get_event_map_id hold 'this event' (set by the runner, kept through common event calls); compare get_event_map_id with the game state's events map before acting on this event.",
       "status": "done"
     },
@@ -4412,13 +4412,59 @@
       "title": "Autonomous movement",
       "parent": "9.6",
       "dependencies": [],
-      "description": "Fixed, random, approach and custom-route movement with the speed/frequency tables of spec 05 and the map_ai stream; blocked moves.",
+      "description": "Fixed, random, approach and custom-route movement with the speed/frequency tables of spec 05 and the map_ai stream; blocked moves. Split into 9.6.1.1 (core route model and motion) and 9.6.1.2 (events move on the running map).",
       "acceptance_criteria": [
-        "Doctest: a random walker with a fixed seed visits the expected cells",
-        "Bridge: an approaching NPC reaches the player (positions via game_node_get)"
+        "9.6.1.1 and 9.6.1.2 done"
       ],
       "test_strategy": "Bridge-driven verification (screenshots/state) + doctests.",
       "priority": 1,
+      "status": "pending",
+      "files": [],
+      "commit": "",
+      "notes": ""
+    },
+    {
+      "id": "9.6.1.1",
+      "parent": "9.6.1",
+      "title": "Move routes and character motion (core)",
+      "priority": 1,
+      "dependencies": [],
+      "description": "JRPGMoveRoute (core Resource): a list of route commands [code, args] with codes for every RM-MRT command (stable values) and the options repeat, skip if cannot move, wait for completion. JRPGCharacterMotion (core): one character's autonomous movement each simulation step over its JRPGMover and JRPGEventState (route_index, route_wait): fixed; random and approach (toward the player along the longer axis, the other when blocked) with frequency waits 240/120/60/30/0 + 0-15 steps from the map_ai stream; custom routes (with frequency waits) and forced routes (Set Movement Route, without); the basic route commands (moves incl. random/toward/away/forward/backward, wait, turns, speed, frequency, through, direction fix, switch on/off); a blocked move stalls the route unless skip if cannot move; routes repeat or end; commands of later epics are skipped with one warning.",
+      "acceptance_criteria": [
+        "Doctest: a random walker with a fixed seed visits the expected cells, the same on every run",
+        "Doctests: approach reaches the player around an obstacle; custom routes with turns, waits, switches; blocked moves stall or skip; repeat and end"
+      ],
+      "test_strategy": "Doctests [JRPG] (core).",
+      "status": "done",
+      "files": [
+        "modules/jrpg/core/jrpg_move_route.h",
+        "modules/jrpg/core/jrpg_move_route.cpp",
+        "modules/jrpg/core/jrpg_character_motion.h",
+        "modules/jrpg/core/jrpg_character_motion.cpp",
+        "modules/jrpg/register_types.cpp",
+        "modules/jrpg/config.py",
+        "modules/jrpg/doc_classes/JRPGMoveRoute.xml",
+        "modules/jrpg/doc_classes/JRPGCharacterMotion.xml",
+        "modules/jrpg/tests/test_jrpg_character_motion.h",
+        "plan/DECISIONS.md"
+      ],
+      "commit": "pending",
+      "notes": ""
+    },
+    {
+      "id": "9.6.1.2",
+      "parent": "9.6.1",
+      "title": "Events move on the running map",
+      "priority": 1,
+      "dependencies": [
+        "9.6.1.1"
+      ],
+      "description": "JRPGEventPage gets its custom move_route; each JRPGEvent node has a JRPGCharacterMotion set from its active page; JRPGSceneManager advances every event's mover and motion each simulation step (blocked by the player, other events Same as characters and the map), keeping the event state's cell and facing, and draws the steps.",
+      "acceptance_criteria": [
+        "Doctest [SceneTree]: a random walker's path on the running map matches the core motion's; an approaching NPC reaches the player",
+        "Bridge: an approaching NPC reaches the player (positions via game_node_get)"
+      ],
+      "test_strategy": "Doctests [SceneTree]; jrpg_bridge_checks.py.",
       "status": "pending",
       "files": [],
       "commit": "",
@@ -5802,7 +5848,7 @@
       "test_strategy": "Epic gate: all children done, fresh-context reviewer subagent findings fixed and logged in PROGRESS.md, plain_2d/plain_3d re-verified, core_diff_check.py reports no unlisted core paths.",
       "files": [],
       "commit": "",
-      "notes": "Epic 10 review A7: Change Window Color (RM-CMD2-033) must reach the windows: JRPGGameState::set_window_tone_override exists; JRPGWindow takes its tone from System data (use_system_tone) and needs the game state's override as a source (e.g. the scene manager passes it to windows, or windows find the running game state) and a refresh when the command runs."
+      "notes": "Epic 10 review A7: Change Window Color (RM-CMD2-033) must reach the windows: JRPGGameState::set_window_tone_override exists; JRPGWindow takes its tone from System data (use_system_tone) and needs the game state's override as a source (e.g. the scene manager passes it to windows, or windows find the running game state) and a refresh when the command runs. From 9.6.1.1 (D-072): JRPGMoveRoute already has stable codes for every route command; JRPGCharacterMotion skips diagonals, jump, walking/stepping animation, transparency, image, opacity, blend, SE and script with a warning: implement them there."
     },
     {
       "id": "25",

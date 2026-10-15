@@ -1254,3 +1254,24 @@ Godot citations are `path:line` at tag `4.7.2-stable` (commit ed1daf0bf0) unless
   interpreter knows positions, so resumption needs no command state; Script mirrors RM's "advanced users" escape
   hatch while formulas stay sandboxed for database text (D-009).
 - **Reversal:** `JRPGEventHost`, `JRPGLocalHost`, `JRPGInterpreter::is_command_resumed`, the command classes.
+
+## D-072 — Move routes and character motion (core)
+- **Context:** task 9.6.1.1: events move by themselves (RM-EVT-031..037) and follow routes (RM-MRT, 48 commands +
+  3 options) the same way offline and on the zone server. The help says Approach "heads toward the player" and gives
+  frequency and speed only as ordered levels; spec 05 fixed the speed and frequency tables. Epic 24 owns the full
+  route command set.
+- **Options:** typed route command resources or plain [code, args] arrays; greedy approach, random approach, or a
+  path search; decisions in runtime nodes or in core.
+- **Choice:** `JRPGMoveRoute` (Resource) holds [code, args...] arrays with stable codes for all 45 commands, plus
+  repeat/skippable/wait. `JRPGCharacterMotion` (core) moves one character over its JRPGMover and JRPGEventState
+  (route_index and route_wait saved there): fixed; random (map_ai stream); approach (first step of a breadth-first
+  shortest way to a cell next to the player within 1024 cells; else greedy along the longer axis, the other axis,
+  then a random step); custom routes; a forced route (Set Movement Route) without pauses until it ends. Pauses after
+  moves: 240/120/60/30/0 steps by frequency 1-5 plus 0-15 from the stream. Instant route commands run together (100 a
+  step at most); blocked moves stall unless skippable; direction fix holds the facing (Move Backward keeps it too).
+  Implemented now: moves (four directions, random, toward/away, forward/backward), wait, turns, switch on/off, speed,
+  frequency, direction fix, through. The rest (diagonals, jump, animation, transparency, image, opacity, blend, SE,
+  script) are skipped with one warning per code until epic 24.
+- **Why:** plain arrays pack deterministically and keep route data editable as data; a capped search makes Approach
+  actually reach the player around walls while staying deterministic and cheap; core logic lets the zone run it.
+- **Reversal:** `JRPGCharacterMotion::update` and `_path_step`; `JRPGMoveRoute` codes are saved data (append only).
