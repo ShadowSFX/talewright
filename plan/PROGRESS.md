@@ -8,6 +8,31 @@
 - **Done leaf tasks:** 155
 <!-- status:end -->
 
+## Handoff (2026-10-14, end of session)
+Stopped on purpose by the owner after task 9.6.3. Everything is committed and pushed to `origin/talewright`; the
+tree is clean. Resume with the protocol in CLAUDE.md (`python plan/tools/tasks.py next` gives 9.7.1).
+
+- **Epic 9 (events) state:** 9.1-9.6 done: event data and nodes, packed command lists, interpreter (frames, waits,
+  labels, budgets, save/resume D-062), event runner (autorun/parallel/common events, D-061), presentation port + local
+  port with the epic 10 windows (D-063/D-064), event host (D-071), built-in commands so far: Show Text/Choices,
+  Input Number, Conditional Branch, Loop/Break, Label/Jump, Common Event, Comment, Exit, Control
+  Switches/Variables/Self Switch, Change Gold/Items/Weapons/Armors, Change HP/MP/TP/State, Recover All, Transfer
+  Player, Wait, Erase Event, Script, Set Movement Route; move routes + character motion (D-072/D-073); triggers,
+  locking and NPC dialog (D-074).
+- **Next:** 9.7.1-9.7.3 event editor UI (use the frontend-design skill first, citing the Godot editor patterns;
+  authoring must assign `text_key`s, see the 9.7.2 note), 9.8 event authoring tools (bridge), then 9.9 epic review
+  (fresh reviewer subagent, fixes, plain_2d/plain_3d smoke, core_diff_check, push, CI green).
+- **Moved elsewhere (notes on those tasks):** Battle Processing -> 12.3; Open Menu -> 11.1.1; Open Save -> 13.1;
+  Game Over / Return to Title -> 13.2; remaining route commands -> 24; server-side triggers -> 19.
+- **Gotchas met this session:** includers of `jrpg_game_state.h` need `#include "jrpg_database.h" // IWYU pragma:
+  keep`; classes with `Ref<T>` members of forward-declared types need the full header where they are destroyed;
+  GDVIRTUAL with `Ref<T>` needs the full type in the header; scene fixtures in tests share scene paths, so only one
+  `TestJRPGEventProcesses::Game` may live at a time; literal brackets in class docs are `[lb]`/`[rb]`; write Python
+  edit scripts with the Write tool (heredocs mangle backslashes); the bridge's `game_input` holds 2 frames, so the
+  game latches taps (D-074).
+- **Last verified:** template tests 1586/1586, editor full suite 1700/1700, JRPG bridge checks 200/200, static checks
+  ALL PASS.
+
 ## Log
 
 | Time | Task | What | Commit |
@@ -403,4 +428,4 @@
 | 2026-10-14 18:19 -0600 | 9.6.2 | started: Triggers and map event processes (containers: 9.6 pending->in_progress, 9 pending->in_progress) |  |
 | 2026-10-14 18:31 -0600 | 9.6.2 | done: Triggers and map event processes — Triggers and map event processes (D-074) — JRPGSceneManager: action button (new press, nothing busy, standing): events underfoot (Below/Above; action/touch triggers), else in front (Same), else across a counter tile (RM-TIL-011); Player/Event Touch on arriving onto Below/Above events and on bumping into Same ones; Event Touch when an event's own move bumps into the player (JRPGCharacterMotion.get_bumped_cell) or lands on them; started events locked (face the player, motion paused while running). Presses made while busy are ignored until released (the press closing a message never re-triggers); short taps latched from unhandled input (OK in the scene manager, directions in JRPGPlayer). Autorun/parallel already from 9.3.2.2; NPC dialog through the local port. Doctests [SceneTree]: touch once per step onto an event and on bump; action in front, held press counts once, across a counter, underfoot first; talking to an NPC with Show Text then walking away; event touch with lock. Bridge check: walk to an NPC, OK shows its message (evidence plan/evidence/jrpg/9.6.2-npc-talk.png), OK closes it, the player walks again. Note on epic 19. Template 1583/1583, full 1697/1697, bridge checks 200/200, static checks pass. (containers: 9.6 in_progress->pending, 9 in_progress->pending) | bd84ec111f |
 | 2026-10-14 18:31 -0600 | 9.6.3 | started: Set Movement Route command (containers: 9.6 pending->in_progress, 9 pending->in_progress) |  |
-| 2026-10-14 18:41 -0600 | 9.6.3 | done: Set Movement Route command — Set Movement Route (D-075) — JRPGSetMovementRouteCommand (set_movement_route: character -1 player / 0 this event / n event, route_commands as plain [code, args] data, repeat, skippable, wait; waits via is_command_resumed). JRPGEventHost.set_move_route/is_route_running (GDVIRTUAL); JRPGLocalHost -> JRPGSceneManager.set_move_route/is_route_running, which forces the route on an event's motion or on the player's own JRPGCharacterMotion; while a route moves the player, input and triggers wait and its steps are not counted. Doctests [SceneTree]: event route with wait (the event goes on after it ends), player route not counted as steps, this event, a new route replaces the old, a blocked route waits or skips, a missing event warns, pack/unpack. Template 1586/1586, full 1700/1700, bridge checks 200/200, static checks pass. (containers: 9.6 in_progress->done, 9 in_progress->pending) | pending |
+| 2026-10-14 18:41 -0600 | 9.6.3 | done: Set Movement Route command — Set Movement Route (D-075) — JRPGSetMovementRouteCommand (set_movement_route: character -1 player / 0 this event / n event, route_commands as plain [code, args] data, repeat, skippable, wait; waits via is_command_resumed). JRPGEventHost.set_move_route/is_route_running (GDVIRTUAL); JRPGLocalHost -> JRPGSceneManager.set_move_route/is_route_running, which forces the route on an event's motion or on the player's own JRPGCharacterMotion; while a route moves the player, input and triggers wait and its steps are not counted. Doctests [SceneTree]: event route with wait (the event goes on after it ends), player route not counted as steps, this event, a new route replaces the old, a blocked route waits or skips, a missing event warns, pack/unpack. Template 1586/1586, full 1700/1700, bridge checks 200/200, static checks pass. (containers: 9.6 in_progress->done, 9 in_progress->pending) | dab3429f22 |

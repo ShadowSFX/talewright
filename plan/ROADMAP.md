@@ -235,7 +235,7 @@ Pages, conditions, triggers, command model with authority, interpreter with pres
     - [x] **9.6.1.1** Move routes and character motion (core) (P1) _(commit: 13f9323770)_
     - [x] **9.6.1.2** Events move on the running map (P1) _(deps: 9.6.1.1; commit: 4726f9c82e)_
   - [x] **9.6.2** Triggers and map event processes (P1) _(deps: 9.6.1; commit: bd84ec111f)_
-  - [x] **9.6.3** Set Movement Route command (P1) _(deps: 9.6.1; commit: pending)_
+  - [x] **9.6.3** Set Movement Route command (P1) _(deps: 9.6.1; commit: dab3429f22)_
 - [ ] **9.7** Event editor UI (P1) _(deps: 9.6)_
   - [ ] **9.7.1** Event properties, pages and conditions UI (P1)
   - [ ] **9.7.2** Command list, picker and forms (P1) _(deps: 9.7.1)_
